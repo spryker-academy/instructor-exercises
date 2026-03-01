@@ -209,21 +209,21 @@ Open `src/SprykerAcademy/Yves/CustomerPage/Plugin/Router/CustomerPageRouteProvid
 2. Set allowed methods to `GET` and `POST` (GET for viewing, POST for form submission)
 3. Add the route to the collection
 
-#### 6.6 Register the Route Provider Plugin
+#### 6.6 Provided Scaffolding (no coding needed)
 
-The extended `CustomerPageRouteProviderPlugin` must replace the original one in your project's `RouterDependencyProvider`.
+The following files are already provided by the exercise skeleton:
 
-Open `src/Pyz/Yves/Router/RouterDependencyProvider.php` and replace the Spryker `CustomerPageRouteProviderPlugin` with your extended version from `SprykerAcademy\Yves\CustomerPage\Plugin\Router\CustomerPageRouteProviderPlugin`.
+- **`src/Pyz/Yves/Router/RouterDependencyProvider.php`** — Replaces the core `CustomerPageRouteProviderPlugin` with your extended version. This ensures your new `/customer/messages` route is registered.
+- **`src/Pyz/Yves/CustomerPage/Theme/.../customer-navigation/customer-navigation.twig`** — Adds a "My Messages" link to the customer account sidebar menu.
+- **`src/SprykerAcademy/Yves/CustomerPage/Theme/.../views/message/list.twig`** — The Twig template for the messages page, showing a table of messages and the form.
+
+Take a moment to review these files so you understand how Spryker's template override mechanism and route registration work.
 
 Clear cache:
 
 ```bash
 docker/sdk console cache:empty-all
 ```
-
-#### 6.7 Register the extended CustomerPage module classes
-
-For the Factory and DependencyProvider to be used instead of the core ones, they must live in the correct namespace. Since we use `SprykerAcademy\Yves\CustomerPage`, make sure the autoloader can find them (the `load.sh` script handles this when copying files).
 
 ---
 
