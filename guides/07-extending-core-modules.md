@@ -167,7 +167,7 @@ The locator pattern: `$container->getLocator()->helloWorld()->client()`.
 
 Open `src/SprykerAcademy/Yves/CustomerPage/CustomerPageFactory.php`:
 1. In `getHelloWorldClient()`, return the provided dependency using the `CLIENT_HELLO_WORLD` constant
-2. In `createMessageForm()`, use `$this->getFormFactory()->create()` to instantiate and return the `MessageForm`
+2. In `createMessageForm()`, use `$this->createCustomerFormFactory()->getFormFactory()->create()` to instantiate and return the `MessageForm`
 
 #### 6.3 MessageForm
 
