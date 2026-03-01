@@ -259,3 +259,24 @@ All tests should pass if your implementation is correct.
 ```bash
 ./exercises/load.sh hello-world basics/extending-core-modules/complete
 ```
+
+---
+
+## Bonus: AJAX Version
+
+An extended solution is available that uses Spryker's built-in AJAX component pattern to submit the form without a full page reload. The message table refreshes dynamically after adding a new message.
+
+This version demonstrates the Spryker AJAX trio:
+- **`ajax-provider`** — Handles XMLHttpRequest calls
+- **`ajax-form-submitter`** — Intercepts form submission and delegates to the provider
+- **`ajax-renderer`** — Listens for the response and updates the DOM
+
+Key additions:
+- `MessageAsyncController` — Returns JSON `{messages, content}` instead of a redirect
+- Async route: `POST /customer/messages/async/add`
+- `message-async.twig` — Content fragment re-rendered after each submission
+- `list.twig` — Includes the AJAX component trio with `data-message-ajax-submit` trigger
+
+```bash
+./exercises/load.sh hello-world basics/extending-core-modules/complete-ajax
+```
