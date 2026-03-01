@@ -41,6 +41,8 @@ usage() {
     echo "  basics/message-table-schema/complete"
     echo "  basics/module-layers/skeleton"
     echo "  basics/module-layers/complete"
+    echo "  basics/extending-core-modules/skeleton"
+    echo "  basics/extending-core-modules/complete"
     echo "  basics/configuration/complete"
     echo ""
     echo "Supplier branches:"
