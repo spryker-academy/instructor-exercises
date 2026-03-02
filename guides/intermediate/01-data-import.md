@@ -77,11 +77,18 @@ A `data/import/supplier_location.csv` is also provided for the location import.
 
 #### 2.2 Configure the Import YAML
 
-The import YAML (`data/import/local/full_EU.yml`) maps an import type to a CSV file path. Verify that:
-- The `data_entity` value matches the constant `SupplierDataImportConfig::IMPORT_TYPE_SUPPLIER`
-- The `source` points to the correct CSV file path
+The import YAML tells Spryker which CSV file to use for each import type. You need to register the supplier imports.
 
-Look at how other entities are configured in the same file for reference.
+**Coding time:**
+
+Open `data/import/local/full_EU.yml` and add two new entries at the bottom of the `actions:` list:
+
+- One for suppliers: `data_entity` must match the value of `SupplierDataImportConfig::IMPORT_TYPE_SUPPLIER`, and `source` must point to the supplier CSV file path (relative to project root)
+- One for supplier locations: `data_entity` must match `SupplierDataImportConfig::IMPORT_TYPE_SUPPLIER_LOCATION`, pointing to the location CSV
+
+Look at how the other entities are configured in the same file for the correct format. Be careful with YAML indentation (spaces, not tabs).
+
+> **How it works:** When you run `docker/sdk console data:import supplier`, Spryker looks up the `data_entity: supplier` entry in this YAML to find the CSV path, then passes it to the matching `DataImportPlugin` via the `DataImporterConfigurationTransfer`.
 
 ---
 
