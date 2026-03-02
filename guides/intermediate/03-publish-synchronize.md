@@ -85,12 +85,12 @@ P&S uses four queues — two per pipeline (Search + Storage):
 
 **Coding time:**
 
-Open `src/Pyz/Client/RabbitMq/RabbitMqConfig.php`:
+Open `src/Pyz/Client/SymfonyMessenger/SymfonyMessengerConfig.php`:
 
-1. In `getPyzPublishQueueConfiguration()`, add both publish queues using constants from `SupplierSearchConfig` and `SupplierStorageConfig`
-2. In `getPyzSynchronizationQueueConfiguration()`, add both sync queues
+1. In `getPublishQueueConfiguration()`, add both publish queue constants (`SupplierSearchConfig::SUPPLIER_PUBLISH` and `SupplierStorageConfig::SUPPLIER_PUBLISH`)
+2. In `getSynchronizationQueueConfiguration()`, add both sync queue constants (`SupplierSearchConfig::SUPPLIER_SYNC_SEARCH_QUEUE` and `SupplierStorageConfig::SUPPLIER_SYNC_STORAGE_QUEUE`)
 
-> **Queue auto-creation:** RabbitMQ creates the queues automatically on the next connection. If the scheduler is running, you should see them in the RabbitMQ UI at http://queue.spryker.local. Spryker creates one queue per store, so you may see the queue listed multiple times.
+> **Symfony Messenger:** Spryker 202512.0+ uses Symfony Messenger as the queue transport instead of direct RabbitMQ. Queues are configured in `SymfonyMessengerConfig` and the transport handles queue creation automatically. The queue worker processes messages through the same `queue:worker:start` command.
 
 ---
 
