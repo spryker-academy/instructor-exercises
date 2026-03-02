@@ -246,10 +246,7 @@ After importing, check:
 2. Descriptions are lowercase (the `DescriptionToLowercaseStep` transformed them)
 3. Run `data:import supplier` again — it should NOT create duplicates (idempotent import)
 
-```bash
-docker/sdk console propel:console
-> SELECT * FROM pyz_supplier;
-```
+Use any database client (DBeaver, TablePlus, CLI) to connect and verify. Connection credentials are in `deploy.dev.yml` (typically host: `localhost`, port: `3306` or `5432`, user: `spryker`, password: `secret`).
 
 ---
 
