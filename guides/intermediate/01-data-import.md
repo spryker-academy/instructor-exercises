@@ -120,11 +120,21 @@ Open `src/SprykerAcademy/Zed/SupplierDataImport/Business/DataImportStep/Supplier
 
 > **Hint:** Look at the generated class `src/Orm/Zed/Supplier/Persistence/Base/PyzSupplierQuery.php` to see all available filter and finder methods.
 
-#### 3.3 Review the DescriptionToLowercaseStep
+#### 3.3 Implement the DescriptionToLowercaseStep
 
-The skeleton provides `DescriptionToLowercaseStep` as an example of a **data processor step** — a step that transforms data without writing to the database. Open it and notice how it modifies the `DataSet` in-place.
+Before writing data to the database, we often need to normalize or transform it. The `DescriptionToLowercaseStep` is a **data processor step** — it transforms data without writing to the database.
 
-This step runs **before** the WriterStep, so the writer receives already-transformed data. Steps are executed in the order they're added to the broker.
+**Coding time:**
+
+Open `src/SprykerAcademy/Zed/SupplierDataImport/Business/DataImportStep/DescriptionToLowercaseStep.php`. The class implements `DataImportStepInterface` and its `execute()` method receives a `DataSet` for each CSV row. Your task:
+
+- Read the description value from the dataset using the appropriate constant
+- Transform it to lowercase
+- Write the result back to the same dataset key
+
+This is a one-liner, but it demonstrates the processor step pattern: modify the `DataSet` in-place so the next step receives the transformed data.
+
+> This step runs **before** the WriterStep. Steps are executed in the order they're added to the broker.
 
 #### 3.4 Wire Steps in the BusinessFactory
 
@@ -162,14 +172,16 @@ Remember to pass the `$dataImporterConfigurationTransfer` parameter through the 
 
 The plugin makes the import available through Spryker's standard `data:import` console command.
 
-#### 4.1 Review the DataImportPlugin
+#### 4.1 Implement the DataImportPlugin
+
+**Coding time:**
 
 Open `src/SprykerAcademy/Zed/SupplierDataImport/Communication/Plugin/DataImport/SupplierDataImportPlugin.php`. This class implements `DataImportPluginInterface` which requires two methods:
 
-- `import()` — should delegate to the module's Facade. The plugin extends `AbstractPlugin` which provides `getFacade()`.
-- `getImportType()` — should return the import type string. Use the constant from `SupplierDataImportConfig`.
+- `import()` — should delegate to the module's Facade. The plugin extends `AbstractPlugin` which provides `getFacade()` to access `SupplierDataImportFacade`.
+- `getImportType()` — should return the import type string. Look at `SupplierDataImportConfig` for the right constant.
 
-Verify the implementation is correct.
+> **Plugin pattern:** Plugins are the "glue" between modules. They live in the Communication layer and bridge the module's Facade to another module's plugin stack. They should contain no business logic — only delegation.
 
 #### 4.2 Register the Plugin
 
