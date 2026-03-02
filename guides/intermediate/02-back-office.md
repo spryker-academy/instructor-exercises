@@ -89,18 +89,21 @@ In `configure()`:
 
 > **Hint:** The class already has constants like `COL_ID_SUPPLIER`, `COL_NAME`, etc. Use these as array keys.
 
-> **Adding action buttons per row:** If you want Edit/Delete buttons in each table row, add an "Actions" column to the header and mark it as a raw column using `$config->setRawColumns()`. Then in `mapReturns()`, build HTML buttons for each row:
+> **Adding action buttons per row:** Spryker's `AbstractTable` provides built-in helper methods for generating table row buttons. Add an "Actions" column to the header and mark it as a raw column with `$config->setRawColumns()`, then in `mapReturns()` use the helpers:
 > ```php
-> // In mapReturns(), for each entity:
-> $editUrl = Url::generate('/supplier-gui/edit', [
->     EditController::REQUEST_PARAM_ID_SUPPLIER => $entity->getIdSupplier(),
-> ]);
-> $returns[] = [
->     // ... data columns ...
->     'actions' => '<a class="btn btn-sm btn-outline btn-primary" href="' . $editUrl . '">Edit</a>',
-> ];
+> // Available in any class extending AbstractTable:
+> $this->generateEditButton($url, 'Edit')
+> $this->generateRemoveButton($url, 'Delete')
+> $this->generateViewButton($url, 'View')
+> $this->generateCreateButton($url, 'Create')
 > ```
-> Raw columns are not HTML-escaped, so the buttons render correctly in the table.
+> Use `Url::generate()` from `Spryker\Service\UtilText\Model\Url\Url` to build URLs with query parameters:
+> ```php
+> $url = Url::generate('/supplier-gui/edit', [
+>     EditController::REQUEST_PARAM_ID_SUPPLIER => $idSupplier,
+> ]);
+> ```
+> Combine multiple buttons with `implode(' ', [...])` and assign to the Actions column.
 
 In `prepareData()`:
 4. Fetch the supplier data using `$this->runQuery()`. This method accepts the Propel query (injected via constructor), the `$config`, and a boolean `true` to get raw results. Then map the results using the provided `mapReturns()` method.
@@ -153,17 +156,15 @@ Open `src/SprykerAcademy/Zed/SupplierGui/Presentation/Index/index.twig`:
 1. Add a "Create Supplier" button linking to `/supplier-gui/create`
 2. Render the `supplierTable` variable using the `raw` filter
 
-> **Buttons in Spryker Back Office Twig templates:** Use standard HTML anchor tags styled with Bootstrap classes. Common patterns:
+> **Buttons in Spryker Back Office Twig templates:** Spryker registers Twig helper functions for consistent button rendering. Use these instead of raw HTML:
 > ```twig
-> {# Primary action button #}
-> <a class="btn btn-primary m-b-sm" href="/supplier-gui/create">Create Supplier</a>
->
-> {# Danger/delete button #}
-> <a class="btn btn-danger btn-sm" href="/supplier-gui/delete?id-supplier=1">Delete</a>
->
-> {# Back/secondary button #}
-> <a class="btn btn-default" href="{{ backUrl }}">Back</a>
+> {# Action buttons (page-level) — rendered above forms/tables #}
+> {{ createActionButton('/supplier-gui/create', 'Create Supplier') }}
+> {{ editActionButton('/supplier-gui/edit?id-supplier=' ~ id, 'Edit') }}
+> {{ backActionButton(backUrl, 'Back') }}
+> {{ removeActionButton('/supplier-gui/delete?id-supplier=' ~ id, 'Delete') }}
 > ```
+> These functions are provided by the Gui module's Twig plugins (`CreateActionButtonTwigPlugin`, etc.) and automatically apply the correct CSS classes and styling.
 >
 > **Rendering raw HTML:** The controller passes pre-rendered HTML from `$table->render()`. Use the `raw` filter to prevent Twig from escaping it:
 > ```twig
