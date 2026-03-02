@@ -10,27 +10,31 @@
 <style>
   :root { --r-heading-color: #00a89b; --r-link-color: #00a89b; }
   .reveal h1, .reveal h2, .reveal h3 { text-transform: none; }
-  .reveal h1 { font-size: 2.2em; }
-  .reveal h2 { font-size: 1.6em; }
-  .reveal h3 { font-size: 1.2em; }
-  .reveal pre { font-size: 0.55em; width: 95%; }
-  .reveal code { font-size: 0.9em; }
-  .reveal table { font-size: 0.7em; margin: 0 auto; }
-  .reveal th { background: #00a89b; color: white; padding: 8px 16px; }
-  .reveal td { padding: 6px 16px; border-bottom: 1px solid #ddd; }
-  .reveal .small { font-size: 0.6em; }
+  .reveal h1 { font-size: 2.0em; }
+  .reveal h2 { font-size: 1.4em; }
+  .reveal h3 { font-size: 1.05em; }
+  .reveal h4 { font-size: 0.85em; }
+  .reveal pre { font-size: 0.42em; width: 100%; max-height: 420px; overflow: hidden; }
+  .reveal pre code { max-height: 420px; overflow: hidden; }
+  .reveal code { font-size: 0.85em; }
+  .reveal table { font-size: 0.65em; margin: 0 auto; }
+  .reveal th { background: #00a89b; color: white; padding: 6px 12px; }
+  .reveal td { padding: 4px 12px; border-bottom: 1px solid #ddd; }
+  .reveal .small { font-size: 0.55em; }
   .reveal .accent { color: #00a89b; font-weight: bold; }
   .reveal .warning { color: #e74c3c; }
   .reveal .dim { color: #888; }
-  .reveal .cols { display: flex; gap: 2em; align-items: flex-start; }
-  .reveal .cols > * { flex: 1; }
-  .reveal .box { background: #f5f5f5; border-radius: 8px; padding: 20px; margin: 10px 0; text-align: left; }
+  .reveal .cols { display: flex; gap: 1em; align-items: flex-start; }
+  .reveal .cols > * { flex: 1; min-width: 0; }
+  .reveal .cols pre { font-size: 0.42em; }
+  .reveal .box { background: #f5f5f5; border-radius: 8px; padding: 12px 16px; margin: 8px 0; text-align: left; font-size: 0.75em; }
   .reveal .box-accent { background: #e8f8f7; border-left: 4px solid #00a89b; }
-  .reveal .diagram { font-family: monospace; font-size: 0.6em; line-height: 1.6; text-align: left; }
+  .reveal .diagram { font-family: monospace; line-height: 1.4; text-align: center; }
+  .reveal .diagram pre { font-size: 0.38em; margin: 0 auto; overflow: hidden; text-align: left; display: inline-block; }
   .reveal section { text-align: left; }
   .reveal .center { text-align: center; }
-  .reveal ul { font-size: 0.85em; }
-  .reveal li { margin-bottom: 0.3em; }
+  .reveal ul, .reveal ol { font-size: 0.75em; }
+  .reveal li { margin-bottom: 0.2em; }
   .slide-number { font-size: 12px !important; }
 </style>
 </head>
@@ -71,17 +75,17 @@
 <section>
   <section>
     <h2>Spryker Architecture Overview</h2>
-    <div class="diagram center">
+    <div class="diagram">
 <pre>
- ┌─────────────────────────────────────────────────────────────┐
- │                     APPLICATION LAYERS                       │
- ├──────────────┬──────────────┬──────────────┬────────────────┤
- │    Yves      │    Zed       │    Glue      │    Client      │
- │  Storefront  │  Back Office │  REST API    │  Yves ↔ Zed    │
- ├──────────────┴──────────────┴──────────────┴────────────────┤
- │                      SHARED LAYER                            │
- │              Transfers, Constants, Interfaces                │
- └─────────────────────────────────────────────────────────────┘
+  ┌─────────────────────────────────────────┐
+  │           APPLICATION LAYERS            │
+  ├──────────┬──────────┬─────────┬─────────┤
+  │   Yves   │   Zed    │  Glue   │ Client  │
+  │Storefront│Back Office│REST API│Yves↔Zed │
+  ├──────────┴──────────┴─────────┴─────────┤
+  │             SHARED LAYER                │
+  │     Transfers, Constants, Interfaces    │
+  └─────────────────────────────────────────┘
 </pre>
     </div>
     <ul>
@@ -93,19 +97,19 @@
   </section>
   <section>
     <h2>Zed Module Layers</h2>
-    <div class="diagram center">
+    <div class="diagram">
 <pre>
-  ┌──────────────────────────────────────┐
-  │        Communication Layer           │
-  │   Controllers, Plugins, Forms        │
-  ├──────────────────────────────────────┤
-  │          Business Layer              │
-  │   Facade ← Factory ← Reader/Writer  │
-  ├──────────────────────────────────────┤
-  │         Persistence Layer            │
-  │   Repository (R) / EntityManager (W) │
-  │         ↕ Propel ORM ↕              │
-  └──────────────────────────────────────┘
+  ┌────────────────────────────────────┐
+  │      Communication Layer           │
+  │  Controllers, Plugins, Forms       │
+  ├────────────────────────────────────┤
+  │        Business Layer              │
+  │  Facade ← Factory ← R / W / D     │
+  ├────────────────────────────────────┤
+  │       Persistence Layer            │
+  │  Repository (R) / EntityManager(W) │
+  │       ↕ Propel ORM ↕              │
+  └────────────────────────────────────┘
 </pre>
     </div>
     <ul>
@@ -323,75 +327,53 @@ class HelloController extends AbstractController
   </section>
   <section>
     <h3>Business Layer: SOLID Separation</h3>
-    <div class="cols">
-      <div>
-        <h4 class="accent">Reader</h4>
-        <pre><code class="language-php">class MessageReader
+    <table>
+      <tr><th>Class</th><th>Dependency</th><th>Methods</th><th>Responsibility</th></tr>
+      <tr><td><code>MessageReader</code></td><td>RepositoryInterface</td><td><code>findMessage()</code>, <code>findMessagesByCustomer()</code></td><td>Read only</td></tr>
+      <tr><td><code>MessageWriter</code></td><td>EntityManagerInterface</td><td><code>create()</code></td><td>Write only</td></tr>
+      <tr><td><code>MessageDeleter</code></td><td>EntityManagerInterface</td><td><code>delete()</code></td><td>Delete only</td></tr>
+    </table>
+    <pre><code class="language-php">// Each business model has ONE constructor dependency and ONE responsibility
+class MessageDeleter
 {
-  public function __construct(
-    protected HelloWorldRepositoryInterface
-      $repository,
-  ) {}
+    public function __construct(
+        protected HelloWorldEntityManagerInterface $entityManager,
+    ) {}
 
-  public function findMessage(...)
-  public function findMessagesByCustomer(...)
+    public function delete(int $idMessage): bool
+    {
+        return $this->entityManager->deleteMessage($idMessage);
+    }
 }</code></pre>
-      </div>
-      <div>
-        <h4 class="accent">Writer</h4>
-        <pre><code class="language-php">class MessageWriter
-{
-  public function __construct(
-    protected HelloWorldEntityManagerInterface
-      $entityManager,
-  ) {}
-
-  public function create(...)
-}</code></pre>
-      </div>
-      <div>
-        <h4 class="accent">Deleter</h4>
-        <pre><code class="language-php">class MessageDeleter
-{
-  public function __construct(
-    protected HelloWorldEntityManagerInterface
-      $entityManager,
-  ) {}
-
-  public function delete(int $id): bool
-}</code></pre>
-      </div>
-    </div>
     <div class="box box-accent">
-      <strong>SOLID:</strong> Each class has one responsibility. Writer writes. Reader reads. Deleter deletes.
+      <strong>Single Responsibility:</strong> Writer does NOT have <code>delete()</code>. Deleter does NOT have <code>create()</code>. Each class has one reason to change. The Facade orchestrates all three via the Factory.
     </div>
   </section>
   <section>
     <h3>Business Layer: Facade & Factory</h3>
-    <pre><code class="language-php">// Facade = Public API of the module
+    <pre><code class="language-php">// Facade = Module's public API (one method per use case)
 class HelloWorldFacade extends AbstractFacade
 {
-    public function createMessage(MessageTransfer $t): MessageTransfer
-    {
+    public function createMessage(MessageTransfer $t): MessageTransfer {
         return $this->getFactory()->createMessageWriter()->create($t);
     }
-
-    public function deleteMessage(int $idMessage): bool
-    {
-        return $this->getFactory()->createMessageDeleter()->delete($idMessage);
+    public function findMessagesByCustomer(MessageCriteriaTransfer $c): MessageCollectionTransfer {
+        return $this->getFactory()->createMessageReader()->findMessagesByCustomer($c);
+    }
+    public function deleteMessage(int $id): bool {
+        return $this->getFactory()->createMessageDeleter()->delete($id);
     }
 }
-
-// Factory = Wiring / Dependency Injection
+// Factory = Wiring (each create* instantiates with the right dependency)
 class HelloWorldBusinessFactory extends AbstractBusinessFactory
 {
-    public function createMessageWriter(): MessageWriter
-    {
+    public function createMessageReader(): MessageReader {
+        return new MessageReader($this->getRepository());
+    }
+    public function createMessageWriter(): MessageWriter {
         return new MessageWriter($this->getEntityManager());
     }
-
-    public function createMessageDeleter(): MessageDeleter
-    {
+    public function createMessageDeleter(): MessageDeleter {
         return new MessageDeleter($this->getEntityManager());
     }
 }</code></pre>
@@ -428,19 +410,19 @@ class HelloWorldBusinessFactory extends AbstractBusinessFactory
   </section>
   <section>
     <h3>Communication Flow</h3>
-    <div class="diagram center">
+    <div class="diagram">
 <pre>
- Yves (Browser)           BackendGateway             Zed
- ┌──────────┐            ┌──────────────┐         ┌──────────┐
- │ Controller│            │              │         │ Gateway  │
- │     ↓     │            │              │         │Controller│
- │ Factory   │            │   HTTP/JSON  │         │    ↓     │
- │     ↓     │ ──────────→│  Serialize   │────────→│  Facade  │
- │  Client   │            │ Deserialize  │         │    ↓     │
- │     ↓     │ ←──────────│              │←────────│ Business │
- │   Stub    │            │              │         │    ↓     │
- └──────────┘            └──────────────┘         │Persistence│
-                                                   └──────────┘
+  Yves             BackendGateway          Zed
+  ┌──────────┐    ┌─────────────┐    ┌───────────┐
+  │Controller │    │             │    │ Gateway   │
+  │    ↓      │    │  HTTP/JSON  │    │ Controller│
+  │ Factory   │───→│  Serialize  │───→│    ↓      │
+  │    ↓      │    │ Deserialize │    │  Facade   │
+  │  Client   │←───│             │←───│    ↓      │
+  │    ↓      │    │             │    │ Business  │
+  │   Stub    │    │             │    │    ↓      │
+  └──────────┘    └─────────────┘    │Persistence │
+                                      └───────────┘
 </pre>
     </div>
   </section>
@@ -630,67 +612,46 @@ class CustomerPageRouteProviderPlugin
   </section>
   <section>
     <h3>Symfony Forms in Spryker Yves</h3>
-    <div class="cols">
-      <div>
-        <h4>Form Class</h4>
-        <pre><code class="language-php">class MessageForm extends AbstractType
+    <pre><code class="language-php">// Form class — defines fields and validation only (no SubmitType)
+class MessageForm extends AbstractType
 {
-    public const string FIELD_MESSAGE
-        = 'message';
+    public const string FIELD_MESSAGE = 'message';
 
-    public function buildForm(
-        FormBuilderInterface $builder,
-        array $options,
-    ): void {
-        $builder->add(
-            static::FIELD_MESSAGE,
-            TextType::class,
-            [
-                'label' => 'Your message',
-                'constraints' => [
-                    new NotBlank(),
-                ],
-            ],
-        );
+    public function buildForm(FormBuilderInterface $builder, array $options): void
+    {
+        $builder->add(static::FIELD_MESSAGE, TextType::class, [
+            'label' => 'Your message',
+            'constraints' => [new NotBlank()],
+        ]);
     }
 }</code></pre>
-      </div>
-      <div>
-        <h4>Key Concepts</h4>
-        <ul>
-          <li><strong>No SubmitType</strong> in the class — button rendered in Twig for styling control</li>
-          <li><strong>Data binding:</strong> Pass a <code>MessageTransfer</code> as form data</li>
-          <li><strong>ArrayAccess:</strong> Transfers implement it, so Symfony can read/write properties</li>
-        </ul>
-        <pre><code class="language-php">// Factory creates form with transfer
-$form = $factory->createMessageForm(
-    new MessageTransfer()
-);
+    <pre><code class="language-php">// Usage in controller — data-mapped to a Transfer object
+$form = $this->getFactory()->createMessageForm(new MessageTransfer());
 $form->handleRequest($request);
 
-// getData() returns the hydrated transfer
-$transfer = $form->getData();
-// $transfer->getMessage() = form input</code></pre>
-      </div>
-    </div>
+if ($form->isSubmitted() && $form->isValid()) {
+    $messageTransfer = $form->getData();   // Already a MessageTransfer!
+    $messageTransfer->getMessage();         // Contains the form input
+}</code></pre>
+    <ul>
+      <li><strong>Data binding:</strong> Pass <code>MessageTransfer</code> as form data — <code>getData()</code> returns the hydrated transfer</li>
+      <li><strong>ArrayAccess:</strong> Transfers implement it, so Symfony maps fields to properties automatically</li>
+      <li><strong>No SubmitType:</strong> Button rendered in Twig for Spryker CSS control</li>
+    </ul>
   </section>
   <section>
     <h3>Form Factory Chain in Spryker</h3>
-    <div class="diagram center">
+    <div class="diagram">
 <pre>
-CustomerPageFactory
-    │
-    ├─ createCustomerFormFactory()
-    │       │
-    │       └─ FormFactory (extends AbstractFactory)
-    │              │
-    │              └─ getFormFactory()
-    │                     │
-    │                     └─ Symfony\Component\Form\FormFactory
-    │                            │
-    │                            └─ create(MessageForm::class, $transfer)
-    │
-    └─ Result: FormInterface (with CSRF, validation, data binding)
+  CustomerPageFactory
+      │
+      ├─ createCustomerFormFactory()
+      │     └─ FormFactory (extends AbstractFactory)
+      │          └─ getFormFactory()
+      │               └─ Symfony FormFactory
+      │                    └─ create(MessageForm::class, $transfer)
+      │
+      └─ Returns: FormInterface (CSRF + validation + data binding)
 </pre>
     </div>
     <div class="box box-accent">
@@ -805,32 +766,29 @@ CustomerPageFactory
   </section>
   <section>
     <h3>AJAX Flow</h3>
-    <div class="diagram center">
+    <div class="diagram">
 <pre>
- User clicks [Add Message] button
-        │  (has data-message-ajax-submit + formaction)
-        ▼
- AjaxFormSubmitter
-        │  preventDefault(), collect FormData
-        ▼
- AjaxProvider.fetch(formData)
-        │  dispatches "fetching" → AjaxLoader shows spinner
-        │  POST /customer/messages/async/add
-        ▼
- MessageAsyncController::addAction()
-        │  Creates message, re-renders table as HTML
-        │  Returns JSON: { messages: "...", content: "..." }
-        ▼
- AjaxProvider receives response
-        │  dispatches "fetched" → AjaxLoader hides spinner
-        ▼
- AjaxRenderer.render()
-        │  Parses JSON
-        │  content → replaces target element innerHTML
-        │  messages → dispatches UPDATE_DYNAMIC_MESSAGES event
-        │  mount() → re-initializes JS components in new HTML
-        ▼
- Table updated, form cleared, no page reload!
+  User clicks [Add Message]
+      │ (data-message-ajax-submit + formaction)
+      ▼
+  AjaxFormSubmitter → preventDefault, collect FormData
+      ▼
+  AjaxProvider.fetch(formData)
+      │ dispatches "fetching" → Loader shows spinner
+      │ POST /customer/messages/async/add
+      ▼
+  MessageAsyncController::addAction()
+      │ Creates message, re-renders table
+      │ Returns JSON: { messages, content }
+      ▼
+  AjaxProvider → dispatches "fetched" → Loader hides
+      ▼
+  AjaxRenderer.render()
+      │ content → replaces target innerHTML
+      │ messages → UPDATE_DYNAMIC_MESSAGES event
+      │ mount() → re-init JS in new HTML
+      ▼
+  Table updated. No page reload!
 </pre>
     </div>
   </section>
