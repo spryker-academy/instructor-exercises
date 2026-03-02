@@ -136,7 +136,9 @@ The controller needs two actions:
 
 **Coding time:**
 
-Open `src/SprykerAcademy/Zed/SupplierGui/Presentation/Index/index.twig`. Render the `supplierTable` variable using the `raw` filter so HTML is not escaped.
+Open `src/SprykerAcademy/Zed/SupplierGui/Presentation/Index/index.twig`:
+1. Add a "Create Supplier" link/button pointing to `/supplier-gui/create`
+2. Render the `supplierTable` variable using the `raw` filter so the table HTML is not escaped
 
 Clear cache:
 
