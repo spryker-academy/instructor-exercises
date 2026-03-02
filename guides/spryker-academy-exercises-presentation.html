@@ -14,8 +14,8 @@
   .reveal h2 { font-size: 1.4em; }
   .reveal h3 { font-size: 1.05em; }
   .reveal h4 { font-size: 0.85em; }
-  .reveal pre { font-size: 0.42em; width: 100%; max-height: 420px; overflow: hidden; }
-  .reveal pre code { max-height: 420px; overflow: hidden; }
+  .reveal pre { font-size: 0.42em; width: 100%; }
+  .reveal pre code { }
   .reveal code { font-size: 0.85em; }
   .reveal table { font-size: 0.65em; margin: 0 auto; }
   .reveal th { background: #00a89b; color: white; padding: 6px 12px; }
@@ -30,7 +30,7 @@
   .reveal .box { background: #f5f5f5; border-radius: 8px; padding: 12px 16px; margin: 8px 0; text-align: left; font-size: 0.75em; }
   .reveal .box-accent { background: #e8f8f7; border-left: 4px solid #00a89b; }
   .reveal .diagram { font-family: monospace; line-height: 1.4; text-align: center; }
-  .reveal .diagram pre { font-size: 0.38em; margin: 0 auto; overflow: hidden; text-align: left; display: inline-block; }
+  .reveal .diagram pre { font-size: 0.32em; margin: 0 auto; text-align: left; display: inline-block; }
   .reveal section { text-align: left; }
   .reveal .center { text-align: center; }
   .reveal ul, .reveal ol { font-size: 0.75em; }
@@ -351,8 +351,8 @@ class MessageDeleter
   </section>
   <section>
     <h3>Business Layer: Facade & Factory</h3>
-    <pre><code class="language-php">// Facade = Module's public API (one method per use case)
-class HelloWorldFacade extends AbstractFacade
+    <p><strong>Facade</strong> = Module's public API (one method per use case):</p>
+    <pre><code class="language-php">class HelloWorldFacade extends AbstractFacade
 {
     public function createMessage(MessageTransfer $t): MessageTransfer {
         return $this->getFactory()->createMessageWriter()->create($t);
@@ -363,9 +363,9 @@ class HelloWorldFacade extends AbstractFacade
     public function deleteMessage(int $id): bool {
         return $this->getFactory()->createMessageDeleter()->delete($id);
     }
-}
-// Factory = Wiring (each create* instantiates with the right dependency)
-class HelloWorldBusinessFactory extends AbstractBusinessFactory
+}</code></pre>
+    <p><strong>Factory</strong> = Wiring (each <code>create*</code> instantiates with the right dependency):</p>
+    <pre><code class="language-php">class HelloWorldBusinessFactory extends AbstractBusinessFactory
 {
     public function createMessageReader(): MessageReader {
         return new MessageReader($this->getRepository());
@@ -478,8 +478,8 @@ class HelloWorldBusinessFactory extends AbstractBusinessFactory
   </section>
   <section>
     <h3>DependencyProvider Pattern</h3>
-    <pre><code class="language-php">// Every external dependency goes through the DependencyProvider
-class HelloWorldPageDependencyProvider extends AbstractBundleDependencyProvider
+    <p>Every external dependency goes through the <strong>DependencyProvider</strong>:</p>
+    <pre><code class="language-php">class HelloWorldPageDependencyProvider extends AbstractBundleDependencyProvider
 {
     public const string CLIENT_HELLO_WORLD = 'CLIENT_HELLO_WORLD';
 
@@ -491,10 +491,9 @@ class HelloWorldPageDependencyProvider extends AbstractBundleDependencyProvider
         );
         return $container;
     }
-}
-
-// Factory retrieves it
-class HelloWorldPageFactory extends AbstractFactory
+}</code></pre>
+    <p>The <strong>Factory</strong> retrieves it:</p>
+    <pre><code class="language-php">class HelloWorldPageFactory extends AbstractFactory
 {
     public function getHelloWorldClient(): HelloWorldClientInterface
     {
@@ -519,24 +518,19 @@ class HelloWorldPageFactory extends AbstractFactory
   </section>
   <section>
     <h3>Configuration Stack</h3>
-    <pre><code class="language-php">// 1. Constants interface (Shared layer)
-interface HelloWorldConstants
+    <p><strong>1.</strong> Constants interface (Shared layer):</p>
+    <pre><code class="language-php">interface HelloWorldConstants
 {
     public const MY_CONFIG_VALUE = 'HELLO_WORLD:MY_CONFIG_VALUE';
-}
-
-// 2. config_default.php
-$config[HelloWorldConstants::MY_CONFIG_VALUE] = 'Hello from config!';
-
-// 3. Config class (Zed module root)
-class HelloWorldConfig extends AbstractBundleConfig
+}</code></pre>
+    <p><strong>2.</strong> Set the value in <code>config_default.php</code>:</p>
+    <pre><code class="language-php">$config[HelloWorldConstants::MY_CONFIG_VALUE] = 'Hello from config!';</code></pre>
+    <p><strong>3.</strong> Config class reads it (Zed module root):</p>
+    <pre><code class="language-php">class HelloWorldConfig extends AbstractBundleConfig
 {
     public function getMyConfigValue(): string
     {
-        return $this->get(
-            HelloWorldConstants::MY_CONFIG_VALUE,
-            'This is a default value', // fallback
-        );
+        return $this->get(HelloWorldConstants::MY_CONFIG_VALUE, 'default value');
     }
 }</code></pre>
   </section>
@@ -577,35 +571,30 @@ class ConfigController extends AbstractController
   <section>
     <h3>Extending Core Modules: The Pattern</h3>
     <p>Extend the core class in your namespace, override what you need:</p>
-    <pre><code class="language-php">// Extend the core DependencyProvider
-class CustomerPageDependencyProvider
-    extends SprykerCustomerPageDependencyProvider
+    <p><strong>DependencyProvider</strong> — add your dependencies alongside core ones:</p>
+    <pre><code class="language-php">class CustomerPageDependencyProvider extends SprykerCustomerPageDependencyProvider
 {
-    public const string CLIENT_HELLO_WORLD = 'CLIENT_HELLO_WORLD';
-
     public function provideDependencies(Container $container): Container
     {
         $container = parent::provideDependencies($container); // Keep core deps
         $container = $this->addHelloWorldClient($container);  // Add ours
         return $container;
     }
-}
-
-// Extend the core Factory
-class CustomerPageFactory extends SprykerCustomerPageFactory
+}</code></pre>
+    <p><strong>Factory</strong> — add factory methods for your new features:</p>
+    <pre><code class="language-php">class CustomerPageFactory extends SprykerCustomerPageFactory
 {
     public function getHelloWorldClient(): HelloWorldClientInterface { ... }
     public function createMessageForm(MessageTransfer $t): FormInterface { ... }
-}
-
-// Extend the core RouteProviderPlugin
-class CustomerPageRouteProviderPlugin
-    extends SprykerCustomerPageRouteProviderPlugin
+}</code></pre>
+    <p><strong>RouteProviderPlugin</strong> — add routes alongside core ones:</p>
+    <pre><code class="language-php">class CustomerPageRouteProviderPlugin extends SprykerCustomerPageRouteProviderPlugin
 {
     public function addRoutes(RouteCollection $c): RouteCollection
     {
-        $c = parent::addRoutes($c); // Keep all core routes
-        $c = $this->addCustomerMessagesRoute($c); // Add ours
+        $c = parent::addRoutes($c);                    // Keep all core routes
+        $c = $this->addCustomerMessagesRoute($c);      // Add ours
+        $c = $this->addCustomerMessagesDeleteRoute($c); // Add delete route
         return $c;
     }
 }</code></pre>
@@ -680,35 +669,33 @@ if ($form->isSubmitted() && $form->isValid()) {
   </section>
   <section>
     <h3>Controller Best Practices</h3>
-    <pre><code class="language-php">class MessageController extends AbstractCustomerController
+    <p><strong>listAction</strong> — strict validation + data-mapped form:</p>
+    <pre><code class="language-php">public function listAction(Request $request): View|RedirectResponse
 {
-    public function listAction(Request $request): View|RedirectResponse
-    {
-        $customer = $this->getLoggedInCustomerTransfer();
+    $customer = $this->getLoggedInCustomerTransfer();
+    $messageCriteria = new MessageCriteriaTransfer();
+    $messageCriteria->setFkCustomerOrFail($customer?->getIdCustomer()); // Fails fast
 
-        // Strict validation — fails fast if customer has no ID
-        $messageCriteria = new MessageCriteriaTransfer();
-        $messageCriteria->setFkCustomerOrFail($customer?->getIdCustomer());
+    $form = $this->getFactory()->createMessageForm(new MessageTransfer());
+    $form->handleRequest($request);
 
-        // Data-mapped form — no manual field extraction
-        $form = $this->getFactory()->createMessageForm(new MessageTransfer());
-        $form->handleRequest($request);
-
-        if ($form->isSubmitted() && $form->isValid()) {
-            $transfer = $form->getData(); // Already a MessageTransfer!
-            $transfer->setFkCustomer($customer->getIdCustomer());
-            $this->getFactory()->getHelloWorldClient()->createMessage($transfer);
-            return $this->redirectResponseInternal(static::ROUTE_CUSTOMER_MESSAGES);
-        }
-        // ...
+    if ($form->isSubmitted() && $form->isValid()) {
+        $transfer = $form->getData(); // Already a MessageTransfer!
+        $transfer->setFkCustomer($customer->getIdCustomer());
+        $this->getFactory()->getHelloWorldClient()->createMessage($transfer);
+        return $this->redirectResponseInternal(static::ROUTE_CUSTOMER_MESSAGES);
     }
-
-    public function deleteAction(Request $request): RedirectResponse
-    {
-        // Safe ID casting — throws on non-numeric/zero
-        $idMessage = $this->castId($request->request->get('idMessage'));
-        // ...
-    }
+    // ... return view
+}</code></pre>
+    <p><strong>deleteAction</strong> — safe ID casting with <code>castId()</code>:</p>
+    <pre><code class="language-php">public function deleteAction(Request $request): RedirectResponse
+{
+    $idMessage = $this->castId($request->request->get('idMessage'));
+    // Throws InvalidArgumentException if not numeric or zero
+    $messageCriteria = new MessageCriteriaTransfer();
+    $messageCriteria->setIdMessage($idMessage);
+    $this->getFactory()->getHelloWorldClient()->deleteMessage($messageCriteria);
+    return $this->redirectResponseInternal(static::ROUTE_CUSTOMER_MESSAGES);
 }</code></pre>
   </section>
   <section>
