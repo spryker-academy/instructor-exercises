@@ -3,13 +3,12 @@
 In this exercise, you will make supplier data available in Elasticsearch (search) and Redis (storage) using Spryker's Publish & Synchronize (P&S) pattern. This is a two-step process: first you **publish** data from the main database into intermediate tables, then the **synchronization** behavior automatically pushes that data to the storefront storages.
 
 You will learn how to:
-- Understand the two-step Publish & Synchronize flow
-- Add Propel event behavior to trigger events on entity changes
-- Add Propel synchronization behavior for automatic data sync to Elasticsearch/Redis
-- Create publisher plugins that react to entity events
-- Implement business logic writers for bulk-processing events
-- Configure publish and synchronize queues
-- Register publisher plugins and queue message processors
+- Configure publish and synchronize queues in RabbitMQ
+- Set up queue message processors to handle events
+- Add Propel behaviors (event + synchronization) to trigger and sync data
+- Register publisher plugins that react to entity events
+- Implement publisher plugins that delegate to business logic
+- Build writers that process events in bulk
 - Trigger publish events manually from data import
 
 ## Prerequisites
@@ -39,28 +38,20 @@ Entity change                            Synchronization behavior
     ↓                                        ↓
 Event (entity.create/update)             Auto-triggers on table write
     ↓                                        ↓
-Publisher Plugin                         Sync queue message
+Publish queue                            Sync queue
     ↓                                        ↓
-Writer (business logic)                  Queue processor
+Queue processor → Publisher Plugin       Queue processor → Sync plugin
     ↓                                        ↓
-Insert/Update pyz_*_search/storage       Elasticsearch / Redis
+Writer (business logic)                  Elasticsearch / Redis
+    ↓
+Insert/Update pyz_*_search/storage
 ```
 
 **Why two modules?** Spryker separates the logic by target storage:
 - `SupplierSearch` — publishes to Elasticsearch (for full-text search)
 - `SupplierStorage` — publishes to Redis (for key-value lookups)
 
-Both follow the same pattern but write to different intermediate tables with different synchronization behaviors.
-
-**Key components:**
-
-| Component | Role |
-|-----------|------|
-| Event behavior (Propel) | Fires events on entity create/update/delete |
-| Publisher Plugin | Listens to events, delegates to Facade |
-| Writer | Business logic: loads entities, writes to search/storage tables |
-| Synchronization behavior (Propel) | Auto-syncs table data to Elasticsearch/Redis via queues |
-| Queue processors | Process publish events and sync messages |
+Both follow the same pattern but write to different intermediate tables.
 
 ---
 
@@ -72,187 +63,228 @@ Open `src/SprykerAcademy/Shared/SupplierSearch/SupplierSearchConfig.php` and rev
 
 | Constant | Purpose |
 |----------|---------|
-| `SUPPLIER_PUBLISH_SEARCH_QUEUE` | Queue for publish events (step 1) |
-| `SUPPLIER_SYNC_SEARCH_QUEUE` | Queue for sync events (step 2) |
+| `SUPPLIER_PUBLISH_SEARCH_QUEUE` | Queue name for publish events (step 1) |
+| `SUPPLIER_SYNC_SEARCH_QUEUE` | Queue name for sync events (step 2) |
 | `ENTITY_PYZ_SUPPLIER_CREATE/UPDATE/DELETE` | Events fired by Propel's event behavior |
 | `SUPPLIER_PUBLISH` | Manual publish event (fired from code) |
-| `SUPPLIER_UNPUBLISH` | Manual unpublish event |
 
-Similar constants exist in `SupplierStorageConfig` for the Redis pipeline.
+Similar constants exist in `SupplierStorageConfig` for the Redis pipeline. You'll use these constants throughout the exercise — never use plain strings for queue names or event names.
 
 ---
 
-### Part 2: Build the Search Publish Logic
+### Part 2: Set Up the Queues
 
-#### 2.1 Implement the SupplierSearchWriter
+P&S uses four queues — two per pipeline (Search + Storage):
 
-The writer is the core business logic. It processes a batch of events: loads the affected suppliers, loads or creates search records, and persists them.
+| Queue | Purpose | Step |
+|-------|---------|------|
+| `publish.search.supplier` | Carries publish events for search | Publish |
+| `sync.search.supplier` | Carries sync messages to Elasticsearch | Synchronize |
+| `publish.storage.supplier` | Carries publish events for storage | Publish |
+| `sync.storage.supplier` | Carries sync messages to Redis | Synchronize |
 
 **Coding time:**
 
-Open `src/SprykerAcademy/Zed/SupplierSearch/Business/Writer/SupplierSearchWriter.php`. The class receives events and needs to:
+Open `src/Pyz/Client/RabbitMq/RabbitMqConfig.php`:
 
-1. Extract supplier IDs from event transfers using the `EventBehaviorFacade`
-2. Load supplier entities by those IDs using a `SupplierCriteriaTransfer`
-3. Load existing search records for those IDs using a `SupplierSearchCriteriaTransfer`
-4. For each supplier: create or update the search record with de-normalized data
+1. In `getPyzPublishQueueConfiguration()`, add both publish queues using constants from `SupplierSearchConfig` and `SupplierStorageConfig`
+2. In `getPyzSynchronizationQueueConfiguration()`, add both sync queues
 
-The skeleton has the iteration logic in place. You need to fill in the methods that load data from the facades and repositories.
+> **Queue auto-creation:** RabbitMQ creates the queues automatically on the next connection. If the scheduler is running, you should see them in the RabbitMQ UI at http://queue.spryker.local. Spryker creates one queue per store, so you may see the queue listed multiple times.
 
-> **Bulk processing:** The writer accepts an array of events and processes them in bulk. This is critical for performance — loading all suppliers in one query is much faster than one query per event.
+---
 
-#### 2.2 Provide Module Dependencies
+### Part 3: Set Up Queue Processors
+
+Each queue needs a processor to handle its messages. Spryker provides out-of-the-box processor plugins.
+
+**Coding time:**
+
+Open `src/Pyz/Zed/Queue/QueueDependencyProvider.php`. For each queue, assign the appropriate processor:
+
+| Queue | Processor Plugin |
+|-------|-----------------|
+| Publish queues (both) | `EventQueueMessageProcessorPlugin` |
+| Search sync queue | `SynchronizationSearchQueueMessageProcessorPlugin` |
+| Storage sync queue | `SynchronizationStorageQueueMessageProcessorPlugin` |
+
+> **How it works:** The queue worker reads messages from a queue and passes them to the assigned processor. Publish queues contain "event" messages (processed by `EventQueueMessageProcessorPlugin`), while sync queues contain serialized data (processed by `Synchronization*` plugins that push to Elasticsearch/Redis).
+
+---
+
+### Part 4: Add Propel Behaviors
+
+#### 4.1 Event Behavior — Fire Events on Entity Changes
+
+The `event` behavior makes Propel fire events whenever an entity is created, updated, or deleted. These events are the starting point of the P&S flow.
+
+**Coding time:**
+
+Open `src/SprykerAcademy/Zed/Supplier/Persistence/Propel/Schema/pyz_supplier.schema.xml`. Add the `event` behavior to the `pyz_supplier` table to detect changes on all columns.
+
+> **Event behavior format:** The parameter name is arbitrary (conventionally `tablename_all`), and `column="*"` watches all columns. This triggers events like `Entity.pyz_supplier.create`, `Entity.pyz_supplier.update`, and `Entity.pyz_supplier.delete`.
+
+#### 4.2 Synchronization Behavior — Auto-Sync to Storefront
+
+The `synchronization` behavior on the intermediate tables (`pyz_supplier_search`, `pyz_supplier_storage`) automatically pushes data to the sync queue whenever a record is written.
+
+**Coding time:**
+
+Open `src/SprykerAcademy/Zed/SupplierSearch/Persistence/Propel/Schema/pyz_supplier_search.schema.xml`. Add the `synchronization` behavior with these parameters:
+- `resource` — the resource name (e.g., `"supplier"`) — used to build the Elasticsearch/Redis key
+- `key_suffix_column` — the column holding the entity ID (use the `fk_supplier` column)
+- `queue_group` — which sync queue to write messages to (use the sync queue constant value)
+
+Do the same for `pyz_supplier_storage.schema.xml`.
+
+After adding both behaviors:
+
+```bash
+docker/sdk console propel:install
+```
+
+> **What the synchronization behavior does:** It auto-adds `key`, `data`, `created_at`, and `updated_at` columns to the table. When you save an entity to this table, the behavior automatically generates a key (e.g., `supplier:1`), serializes the data as JSON, and emits a message to the sync queue.
+
+---
+
+### Part 5: Register Publisher Plugins
+
+Publisher plugins react to entity events and delegate to the business logic. You need to register them so the system knows which plugins handle which events.
+
+**Coding time:**
+
+Open `src/Pyz/Zed/Publisher/PublisherDependencyProvider.php`. The format maps a queue name to an array of publisher plugins:
+
+```php
+return [
+    QueueName::CONSTANT => [
+        new MyWritePublisherPlugin(),
+    ],
+];
+```
+
+1. Create a method that returns the Search publisher plugin mapped to the search publish queue
+2. Create a method that returns the Storage publisher plugin mapped to the storage publish queue
+3. Add both to `getPublisherPlugins()`
+
+> **Queue routing:** By specifying the queue as the array key, you tell the system: "put events for these plugins on this queue." If no key is specified, events go to the default publish queue.
+
+---
+
+### Part 6: Implement Publisher Plugins
+
+The publisher plugin is the entry point for handling events. It receives a batch of event transfers and delegates to the Facade.
+
+**Coding time:**
+
+Open `src/SprykerAcademy/Zed/SupplierSearch/Communication/Plugin/Publisher/SupplierSearchWritePublisherPlugin.php`:
+
+1. `getSubscribedEvents()` — return an array of event names this plugin reacts to. Use constants from `SupplierSearchConfig`: the manual publish event, plus entity create and update events
+2. `handleBulk()` — use `$this->getFacade()` to call the write method, passing the event transfers
+
+> **Why subscribe to both manual and entity events?** Entity events (`Entity.pyz_supplier.create`) are triggered automatically by the event behavior on `pyz_supplier`. The manual event (`SupplierSearch.supplier.publish`) is triggered explicitly from code (e.g., data import). The plugin handles both the same way.
+
+Do the same for `SupplierStorageWritePublisherPlugin` using `SupplierStorageConfig` constants.
+
+---
+
+### Part 7: Build the Business Logic Chain
+
+Now implement the chain that the publisher plugin calls: Facade → Factory → Writer.
+
+#### 7.1 Implement the Writer
+
+The writer is the core business logic. It processes a batch of events in bulk.
+
+**Coding time:**
+
+Open `src/SprykerAcademy/Zed/SupplierSearch/Business/Writer/SupplierSearchWriter.php`. The skeleton has the iteration logic. You need to fill in the data-loading methods:
+
+1. Create a `SupplierCriteriaTransfer`, populate it with the supplier IDs, and use the `SupplierFacade` to load supplier entities
+2. Create a `SupplierSearchCriteriaTransfer`, populate it with the same IDs, and use the Repository to load existing search records
+3. The rest of the loop (create/update per supplier) is provided
+
+> **Bulk processing:** Loading all suppliers in one query is critical. The writer receives an array of events (potentially hundreds) — doing one query per event would be extremely slow.
+
+Apply the same pattern to `SupplierStorageWriter`.
+
+#### 7.2 Provide Module Dependencies
 
 **Coding time:**
 
 Open `src/SprykerAcademy/Zed/SupplierSearch/SupplierSearchDependencyProvider.php`:
 
-1. Implement `addEventBehaviorFacade()` — provide the `EventBehaviorFacade` via the locator
-2. Implement `addSupplierFacade()` — provide the `SupplierFacade` via the locator
-3. Call both methods in `provideBusinessLayerDependencies()`
+1. Implement `addEventBehaviorFacade()` — the `EventBehaviorFacade` provides helpers to extract entity IDs from event transfers. Access via `$container->getLocator()->eventBehavior()->facade()`
+2. Implement `addSupplierFacade()` — the core `SupplierFacade` for reading supplier data
+3. Call both in `provideBusinessLayerDependencies()`
 
-> **EventBehaviorFacade:** This Spryker core facade provides helper methods like extracting entity IDs from event transfers. Access it via `$container->getLocator()->eventBehavior()->facade()`.
+Do the same for `SupplierStorageDependencyProvider`.
 
-#### 2.3 Implement the BusinessFactory
+#### 7.3 Implement the BusinessFactory
 
 **Coding time:**
 
 Open `src/SprykerAcademy/Zed/SupplierSearch/Business/SupplierSearchBusinessFactory.php`:
 
 1. Implement `getEventBehaviorFacade()` and `getSupplierFacade()` using `getProvidedDependency()`
-2. Wire all dependencies into the `SupplierSearchWriter` constructor: the two facades, plus `getRepository()` and `getEntityManager()` which are available from the parent class
+2. Wire all four dependencies into the Writer constructor: the two facades, plus `getRepository()` and `getEntityManager()` (available from the parent class)
 
-#### 2.4 Implement the Facade
+Do the same for `SupplierStorageBusinessFactory`.
 
-**Coding time:**
-
-Open `src/SprykerAcademy/Zed/SupplierSearch/Business/SupplierSearchFacade.php`:
-
-Delegate `writeCollectionBySupplierEvents()` to the writer via the factory.
-
-#### 2.5 Implement the Publisher Plugin
+#### 7.4 Implement the Facade
 
 **Coding time:**
 
-Open `src/SprykerAcademy/Zed/SupplierSearch/Communication/Plugin/Publisher/SupplierSearchWritePublisherPlugin.php`:
+Open `src/SprykerAcademy/Zed/SupplierSearch/Business/SupplierSearchFacade.php`. Delegate `writeCollectionBySupplierEvents()` to the writer via the factory.
 
-1. In `handleBulk()` — use `getFacade()` to call the write method with the event transfers
-2. In `getSubscribedEvents()` — return an array of event names this plugin reacts to: the manual publish event plus entity create and update events (use constants from `SupplierSearchConfig`)
-
----
-
-### Part 3: Build the Storage Publish Logic
-
-The Storage module (`SupplierStorage`) follows the **exact same pattern** as Search. The only differences are the target table (`pyz_supplier_storage` instead of `pyz_supplier_search`) and the constants used.
-
-**Coding time:**
-
-Apply the same pattern to the SupplierStorage module:
-- `SupplierStorageDependencyProvider` — add facades
-- `SupplierStorageBusinessFactory` — wire dependencies
-- `SupplierStorageFacade` — delegate to writer
-- `SupplierStorageWriter` — same bulk logic
-- `SupplierStorageWritePublisherPlugin` — same plugin pattern
-
-> **DRY principle:** The Search and Storage writers have nearly identical code. In production, you might extract a shared abstract class. For the exercise, implementing both helps reinforce the pattern.
-
----
-
-### Part 4: Configure Queues
-
-Publish & Synchronize uses two types of queues per pipeline:
-- **Publish queue** — carries event messages that trigger the writer
-- **Sync queue** — carries sync messages that push data to Elasticsearch/Redis
-
-#### 4.1 Register Publish Queues
-
-**Coding time:**
-
-Open `src/Pyz/Client/RabbitMq/RabbitMqConfig.php`. In `getPyzPublishQueueConfiguration()`, add the publish queues for both Search and Storage using the constants from `SupplierSearchConfig` and `SupplierStorageConfig`.
-
-#### 4.2 Register Sync Queues
-
-In the same file, in `getPyzSynchronizationQueueConfiguration()`, add the sync queues for both pipelines.
-
----
-
-### Part 5: Register Publisher Plugins
-
-**Coding time:**
-
-Open `src/Pyz/Zed/Publisher/PublisherDependencyProvider.php`. Create methods that return arrays mapping queue names to publisher plugin instances:
-
-```php
-// Format:
-return [
-    QueueConstant::QUEUE_NAME => [
-        new MyPublisherPlugin(),
-    ],
-];
-```
-
-Register both `SupplierSearchWritePublisherPlugin` (on the search publish queue) and `SupplierStorageWritePublisherPlugin` (on the storage publish queue).
-
-Add both to the `getPublisherPlugins()` method.
-
----
-
-### Part 6: Register Queue Processors
-
-**Coding time:**
-
-Open `src/Pyz/Zed/Queue/QueueDependencyProvider.php`. For each queue, assign the appropriate processor plugin:
-
-| Queue | Processor |
-|-------|-----------|
-| Publish queues | `EventQueueMessageProcessorPlugin` |
-| Search sync queue | `SynchronizationSearchQueueMessageProcessorPlugin` |
-| Storage sync queue | `SynchronizationStorageQueueMessageProcessorPlugin` |
-
----
-
-### Part 7: Add Propel Behaviors
-
-#### 7.1 Event Behavior (Trigger Source)
-
-**Coding time:**
-
-Open `src/SprykerAcademy/Zed/Supplier/Persistence/Propel/Schema/pyz_supplier.schema.xml`. Add the `event` behavior to detect changes on all columns. This causes Propel to fire events like `Entity.pyz_supplier.create` whenever a supplier entity is saved.
-
-> **Event behavior format:** `<parameter name="pyz_supplier_all" column="*"/>` watches all columns. The parameter name is arbitrary but conventionally uses `tablename_all`.
-
-#### 7.2 Synchronization Behavior (Sync Target)
-
-**Coding time:**
-
-Open `src/SprykerAcademy/Zed/SupplierSearch/Persistence/Propel/Schema/pyz_supplier_search.schema.xml`. Add the `synchronization` behavior with parameters:
-- `resource` — name of the resource (e.g., `"supplier"`)
-- `key_suffix_column` — column holding the entity ID (the `fk_supplier` column)
-- `queue_group` — which sync queue to use
-
-Do the same for `pyz_supplier_storage.schema.xml`.
-
-After adding behaviors:
-
-```bash
-docker/sdk console propel:install
-```
+Do the same for `SupplierStorageFacade`.
 
 ---
 
 ### Part 8: Trigger Publish from Data Import
 
-The Propel event behavior is disabled during data import for performance. You need to manually trigger publish events.
+The Propel event behavior is **disabled during data import** for performance (to avoid millions of events during bulk imports). You need to manually trigger publish events.
 
 **Coding time:**
 
-Open `src/SprykerAcademy/Zed/SupplierDataImport/Business/DataImportStep/SupplierWriterStep.php`. The step extends `PublishAwareStep` which provides `addPublishEvents()`. After saving a supplier entity, call it twice — once for search, once for storage — passing the publish event constant and the supplier ID.
+Open `src/SprykerAcademy/Zed/SupplierDataImport/Business/DataImportStep/SupplierWriterStep.php`. The step extends `PublishAwareStep` which provides `addPublishEvents()`. After saving a supplier entity (inside the `isNew() || isModified()` condition), call it twice:
+- Once for search (using `SupplierSearchConfig::SUPPLIER_PUBLISH`)
+- Once for storage (using `SupplierStorageConfig::SUPPLIER_PUBLISH`)
+
+Pass the supplier ID as the second parameter.
+
+---
+
+## The Complete Flow
+
+After implementing all parts, here's what happens when a supplier is created or imported:
+
+```
+1. Supplier entity saved
+   → Event behavior fires Entity.pyz_supplier.create
+   → (or DataImport fires SupplierSearch.supplier.publish manually)
+
+2. Event goes to publish.search.supplier queue
+   → EventQueueMessageProcessorPlugin processes it
+   → SupplierSearchWritePublisherPlugin.handleBulk() called
+
+3. Plugin calls Facade → Factory → Writer
+   → Writer loads supplier data from DB
+   → Writer inserts/updates pyz_supplier_search row
+
+4. Synchronization behavior on pyz_supplier_search triggers
+   → Message goes to sync.search.supplier queue
+   → SynchronizationSearchQueueMessageProcessorPlugin processes it
+   → Data pushed to Elasticsearch
+
+(Same flow in parallel for Storage → Redis)
+```
 
 ---
 
 ## Testing the Flow
 
-1. Import suppliers with new data:
+1. Import suppliers:
    ```bash
    docker/sdk console data:import supplier
    ```
@@ -262,18 +294,15 @@ Open `src/SprykerAcademy/Zed/SupplierDataImport/Business/DataImportStep/Supplier
    docker/sdk console queue:worker:start --stop-when-empty
    ```
 
-3. Check the intermediate tables:
-   ```sql
-   SELECT * FROM pyz_supplier_search;
-   SELECT * FROM pyz_supplier_storage;
-   ```
+3. Check the intermediate tables using any DB client (credentials in `deploy.dev.yml`)
 
-4. Verify Elasticsearch has the data:
+4. Verify Elasticsearch:
    ```bash
-   curl -s 'localhost:9200/_search' -H 'Content-type: application/json' -d '{"query":{"exists":{"field":"id_supplier"}}}'
+   curl -s 'localhost:9200/_search' -H 'Content-type: application/json' \
+     -d '{"query":{"exists":{"field":"id_supplier"}}}'
    ```
 
-5. Creating a supplier via the Back Office should also trigger the full P&S flow automatically (via the event behavior).
+5. Creating a supplier via the Back Office also triggers P&S automatically (via the event behavior)
 
 ---
 
