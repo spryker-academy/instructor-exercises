@@ -146,6 +146,50 @@ if [ "$PACKAGE" = "supplier" ]; then
     [ -f "$REPO_DIR/config/Zed/oms/Demo01.xml" ] && mkdir -p "$PROJECT_DIR/config/Zed/oms" && cp "$REPO_DIR/config/Zed/oms/Demo01.xml" "$PROJECT_DIR/config/Zed/oms/Demo01.xml"
     [ -f "$REPO_DIR/data/import/supplier.csv" ] && mkdir -p "$PROJECT_DIR/data/import" && cp "$REPO_DIR/data/import/supplier.csv" "$PROJECT_DIR/data/import/supplier.csv"
     [ -f "$REPO_DIR/data/import/supplier_location.csv" ] && cp "$REPO_DIR/data/import/supplier_location.csv" "$PROJECT_DIR/data/import/supplier_location.csv"
+
+    # Add supplier data import entries to full_EU.yml if not present
+    IMPORT_YAML="$PROJECT_DIR/data/import/local/full_EU.yml"
+    if [ -f "$IMPORT_YAML" ] && [ "$(grep -c 'data_entity: supplier$' "$IMPORT_YAML" || true)" = "0" ]; then
+        cat >> "$IMPORT_YAML" << 'YAMLEOF'
+
+    # Supplier Academy exercises
+    -   data_entity: supplier
+        source: data/import/supplier.csv
+    -   data_entity: supplier-location
+        source: data/import/supplier_location.csv
+YAMLEOF
+        echo -e "  ${GREEN}Added supplier import entries to full_EU.yml${NC}"
+    fi
+
+    # Register supplier data import plugins in DataImportDependencyProvider
+    DI_PROVIDER="$PROJECT_DIR/src/Pyz/Zed/DataImport/DataImportDependencyProvider.php"
+    if [ -f "$DI_PROVIDER" ] && [ "$(grep -c 'SupplierDataImportPlugin' "$DI_PROVIDER" || true)" = "0" ]; then
+        # Use php to safely inject the use statements and plugin registrations
+        php -r '
+            $file = $argv[1];
+            $content = file_get_contents($file);
+
+            // Add use statements before class declaration
+            $useStatements = "use SprykerAcademy\Zed\SupplierDataImport\Communication\Plugin\DataImport\SupplierDataImportPlugin;\nuse SprykerAcademy\Zed\SupplierDataImport\Communication\Plugin\DataImport\SupplierLocationDataImportPlugin;\n";
+            $content = preg_replace(
+                "/(^class\s)/m",
+                $useStatements . "\n$1",
+                $content,
+                1,
+            );
+
+            // Add plugins before the last ]; in getDataImporterPlugins
+            $content = preg_replace(
+                "/(function\s+getDataImporterPlugins.*?)((\s*)\];)/s",
+                "$1$3    new SupplierDataImportPlugin(),\n$3    new SupplierLocationDataImportPlugin(),\n$2",
+                $content,
+                1,
+            );
+
+            file_put_contents($file, $content);
+        ' "$DI_PROVIDER"
+        echo -e "  ${GREEN}Registered SupplierDataImportPlugin in DataImportDependencyProvider${NC}"
+    fi
 fi
 
 # Copy exercise tests if present
