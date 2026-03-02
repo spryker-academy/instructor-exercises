@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spryker Academy - ILT Exercises</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/white.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/monokai.css">
+<style>
+  :root { --r-heading-color: #00a89b; --r-link-color: #00a89b; }
+  .reveal h1, .reveal h2, .reveal h3 { text-transform: none; }
+  .reveal h1 { font-size: 2.2em; }
+  .reveal h2 { font-size: 1.6em; }
+  .reveal h3 { font-size: 1.2em; }
+  .reveal pre { font-size: 0.55em; width: 95%; }
+  .reveal code { font-size: 0.9em; }
+  .reveal table { font-size: 0.7em; margin: 0 auto; }
+  .reveal th { background: #00a89b; color: white; padding: 8px 16px; }
+  .reveal td { padding: 6px 16px; border-bottom: 1px solid #ddd; }
+  .reveal .small { font-size: 0.6em; }
+  .reveal .accent { color: #00a89b; font-weight: bold; }
+  .reveal .warning { color: #e74c3c; }
+  .reveal .dim { color: #888; }
+  .reveal .cols { display: flex; gap: 2em; align-items: flex-start; }
+  .reveal .cols > * { flex: 1; }
+  .reveal .box { background: #f5f5f5; border-radius: 8px; padding: 20px; margin: 10px 0; text-align: left; }
+  .reveal .box-accent { background: #e8f8f7; border-left: 4px solid #00a89b; }
+  .reveal .diagram { font-family: monospace; font-size: 0.6em; line-height: 1.6; text-align: left; }
+  .reveal section { text-align: left; }
+  .reveal .center { text-align: center; }
+  .reveal ul { font-size: 0.85em; }
+  .reveal li { margin-bottom: 0.3em; }
+  .slide-number { font-size: 12px !important; }
+</style>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+
+<!-- ============================================================ -->
+<!-- TITLE -->
+<!-- ============================================================ -->
+<section class="center">
+  <h1>Spryker Academy</h1>
+  <h2>ILT Exercises - Theory & Practice</h2>
+  <p class="dim">Instructor-Led Training | 7 Progressive Exercises</p>
+  <p class="small dim">Namespace: <code>SprykerAcademy\</code> | Module: <code>HelloWorld</code></p>
+</section>
+
+<!-- ============================================================ -->
+<!-- AGENDA -->
+<!-- ============================================================ -->
+<section>
+  <h2>Agenda</h2>
+  <table>
+    <tr><th>#</th><th>Exercise</th><th>Key Concepts</th></tr>
+    <tr><td>1</td><td>Hello World Back Office</td><td>Controllers, Twig, Navigation</td></tr>
+    <tr><td>2</td><td>Data Transfer Objects</td><td>Transfer XML, Code Generation</td></tr>
+    <tr><td>3</td><td>Database Schema</td><td>Propel ORM, Schema XML</td></tr>
+    <tr><td>4</td><td>Module Layers - Back Office</td><td>Persistence, Business, Communication</td></tr>
+    <tr><td>5</td><td>Module Layers - Storefront</td><td>Client/Stub, BackendGateway</td></tr>
+    <tr><td>6</td><td>Configuration</td><td>Config class, Constants, DI</td></tr>
+    <tr><td>7</td><td>Extending Core Modules</td><td>CustomerPage, Forms, AJAX, SOLID</td></tr>
+  </table>
+</section>
+
+<!-- ============================================================ -->
+<!-- SPRYKER ARCHITECTURE OVERVIEW -->
+<!-- ============================================================ -->
+<section>
+  <section>
+    <h2>Spryker Architecture Overview</h2>
+    <div class="diagram center">
+<pre>
+ ┌─────────────────────────────────────────────────────────────┐
+ │                     APPLICATION LAYERS                       │
+ ├──────────────┬──────────────┬──────────────┬────────────────┤
+ │    Yves      │    Zed       │    Glue      │    Client      │
+ │  Storefront  │  Back Office │  REST API    │  Yves ↔ Zed    │
+ ├──────────────┴──────────────┴──────────────┴────────────────┤
+ │                      SHARED LAYER                            │
+ │              Transfers, Constants, Interfaces                │
+ └─────────────────────────────────────────────────────────────┘
+</pre>
+    </div>
+    <ul>
+      <li><span class="accent">Yves</span> — Storefront (customer-facing, stateless, fast)</li>
+      <li><span class="accent">Zed</span> — Back Office (business logic, database access)</li>
+      <li><span class="accent">Client</span> — Bridge for Yves-to-Zed communication</li>
+      <li><span class="accent">Shared</span> — DTOs and interfaces shared across all layers</li>
+    </ul>
+  </section>
+  <section>
+    <h2>Zed Module Layers</h2>
+    <div class="diagram center">
+<pre>
+  ┌──────────────────────────────────────┐
+  │        Communication Layer           │
+  │   Controllers, Plugins, Forms        │
+  ├──────────────────────────────────────┤
+  │          Business Layer              │
+  │   Facade ← Factory ← Reader/Writer  │
+  ├──────────────────────────────────────┤
+  │         Persistence Layer            │
+  │   Repository (R) / EntityManager (W) │
+  │         ↕ Propel ORM ↕              │
+  └──────────────────────────────────────┘
+</pre>
+    </div>
+    <ul>
+      <li><span class="accent">Communication</span> — HTTP entry point (controllers), no business logic</li>
+      <li><span class="accent">Business</span> — All logic lives here, exposed via <strong>Facade</strong> (public API)</li>
+      <li><span class="accent">Persistence</span> — Data access. <strong>Repository</strong> reads, <strong>EntityManager</strong> writes</li>
+    </ul>
+  </section>
+</section>
+
+<!-- ============================================================ -->
+<!-- EXERCISE 1: HELLO WORLD BACK OFFICE -->
+<!-- ============================================================ -->
+<section>
+  <section>
+    <h2>Exercise 1: Hello World Back Office</h2>
+    <h3>Creating Your First Zed Controller</h3>
+    <div class="box box-accent">
+      <strong>Goal:</strong> Display "Hello World!" in the Spryker Back Office
+    </div>
+  </section>
+  <section>
+    <h3>Zed Controllers</h3>
+    <ul>
+      <li>Extend <code>AbstractController</code></li>
+      <li>Route: <code>/module-name/controller-name/action-name</code></li>
+      <li>Return <code>viewResponse()</code> with data for the Twig template</li>
+    </ul>
+    <pre><code class="language-php">namespace SprykerAcademy\Zed\HelloWorld\Communication\Controller;
+
+use Spryker\Zed\Kernel\Communication\Controller\AbstractController;
+
+class HelloController extends AbstractController
+{
+    public function indexAction(): array
+    {
+        return $this->viewResponse([
+            'helloWorldText' => 'Hello World!',
+        ]);
+    }
+}</code></pre>
+    <p class="small dim">Route: <code>/hello-world/hello/index</code></p>
+  </section>
+  <section>
+    <h3>Twig Templates in Zed</h3>
+    <ul>
+      <li>Located in <code>Presentation/&lt;ControllerName&gt;/&lt;action&gt;.twig</code></li>
+      <li>Access data from controller via variable names</li>
+    </ul>
+    <pre><code class="language-twig">{# Presentation/Hello/index.twig #}
+{% extends '@Gui/Layout/layout.twig' %}
+
+{% block content %}
+    &lt;h1&gt;{{ helloWorldText }}&lt;/h1&gt;
+{% endblock %}</code></pre>
+  </section>
+</section>
+
+<!-- ============================================================ -->
+<!-- EXERCISE 2: DATA TRANSFER OBJECTS -->
+<!-- ============================================================ -->
+<section>
+  <section>
+    <h2>Exercise 2: Data Transfer Objects</h2>
+    <h3>Spryker's Code Generation System</h3>
+    <div class="box box-accent">
+      <strong>Goal:</strong> Define a <code>MessageTransfer</code> DTO via XML and generate PHP classes
+    </div>
+  </section>
+  <section>
+    <h3>Transfer XML Definition</h3>
+    <pre><code class="language-xml">&lt;!-- src/SprykerAcademy/Shared/HelloWorld/Transfer/helloworld.transfer.xml --&gt;
+&lt;transfers&gt;
+    &lt;transfer name="Message"&gt;
+        &lt;property name="idMessage" type="int"/&gt;
+        &lt;property name="message" type="string"/&gt;
+        &lt;property name="fkCustomer" type="int"/&gt;
+        &lt;property name="createdAt" type="string"/&gt;
+    &lt;/transfer&gt;
+
+    &lt;transfer name="MessageCriteria"&gt;
+        &lt;property name="idMessage" type="int"/&gt;
+        &lt;property name="fkCustomer" type="int"/&gt;
+    &lt;/transfer&gt;
+
+    &lt;transfer name="MessageCollection"&gt;
+        &lt;property name="messages" type="Message[]"/&gt;
+    &lt;/transfer&gt;
+&lt;/transfers&gt;</code></pre>
+  </section>
+  <section>
+    <h3>What Gets Generated</h3>
+    <pre><code class="language-bash">docker/sdk console transfer:generate</code></pre>
+    <p>Generates <code>Generated\Shared\Transfer\MessageTransfer</code> with:</p>
+    <ul>
+      <li>Typed getters/setters: <code>getMessage()</code>, <code>setMessage(string $message)</code></li>
+      <li>Strict variants: <code>getMessageOrFail()</code>, <code>setFkCustomerOrFail()</code></li>
+      <li>Array conversion: <code>toArray()</code>, <code>fromArray()</code>, <code>modifiedToArray()</code></li>
+      <li>Collection adders: <code>addMessages(MessageTransfer $message)</code></li>
+      <li>Implements <code>ArrayAccess</code> — works with Symfony forms</li>
+    </ul>
+    <div class="box box-accent">
+      <strong>Convention:</strong> Collection property <code>messages</code> (plural) generates adder <code>addMessages()</code> matching the property name.
+    </div>
+  </section>
+</section>
+
+<!-- ============================================================ -->
+<!-- EXERCISE 3: DATABASE SCHEMA -->
+<!-- ============================================================ -->
+<section>
+  <section>
+    <h2>Exercise 3: Database Schema</h2>
+    <h3>Propel ORM & Schema XML</h3>
+    <div class="box box-accent">
+      <strong>Goal:</strong> Define the <code>pyz_message</code> table with columns, foreign keys, and behaviors
+    </div>
+  </section>
+  <section>
+    <h3>Propel Schema XML</h3>
+    <pre><code class="language-xml">&lt;table name="pyz_message" phpName="PyzMessage"&gt;
+    &lt;column name="id_message" type="INTEGER"
+            primaryKey="true" autoIncrement="true"/&gt;
+    &lt;column name="message" type="VARCHAR" size="255"
+            required="true"/&gt;
+    &lt;column name="fk_customer" type="INTEGER"
+            required="false"/&gt;
+
+    &lt;unique name="pyz_message-message"&gt;
+        &lt;unique-column name="message"/&gt;
+        &lt;unique-column name="fk_customer"/&gt;
+    &lt;/unique&gt;
+
+    &lt;foreign-key foreignTable="spy_customer"
+                 onDelete="CASCADE"&gt;
+        &lt;reference local="fk_customer"
+                   foreign="id_customer"/&gt;
+    &lt;/foreign-key&gt;
+
+    &lt;behavior name="timestampable"/&gt;
+&lt;/table&gt;</code></pre>
+  </section>
+  <section>
+    <h3>Key Propel Concepts</h3>
+    <pre><code class="language-bash">docker/sdk console propel:install
+# = propel:schema:copy + propel:model:build + propel:diff + propel:migrate</code></pre>
+    <ul>
+      <li><strong>phpName</strong> — PHP class name: <code>PyzMessage</code>, <code>PyzMessageQuery</code></li>
+      <li><strong>Magic methods</strong> — <code>findOneByIdMessage()</code>, <code>filterByFkCustomer()</code></li>
+      <li><strong>Timestampable behavior</strong> — Auto-manages <code>created_at</code> / <code>updated_at</code></li>
+      <li><strong>Foreign keys</strong> — <code>onDelete="CASCADE"</code> = delete messages when customer is deleted</li>
+      <li><strong>Composite unique</strong> — Same customer can't post duplicate text, different customers can</li>
+    </ul>
+  </section>
+</section>
+
+<!-- ============================================================ -->
+<!-- EXERCISE 4: MODULE LAYERS - BACK OFFICE -->
+<!-- ============================================================ -->
+<section>
+  <section>
+    <h2>Exercise 4: Module Layers - Back Office</h2>
+    <h3>Persistence, Business, Communication</h3>
+    <div class="box box-accent">
+      <strong>Goal:</strong> Create, read, and delete messages through the three-layer architecture
+    </div>
+  </section>
+  <section>
+    <h3>Persistence Layer: Repository (Read)</h3>
+    <pre><code class="language-php">class HelloWorldRepository extends AbstractRepository
+{
+    public function findMessage(MessageCriteriaTransfer $criteria): ?MessageTransfer
+    {
+        $query = $this->getFactory()->createMessageQuery();
+
+        if ($criteria->getIdMessage()) {
+            $entity = $query->findOneByIdMessage($criteria->getIdMessage());
+        }
+
+        return $entity
+            ? $this->getFactory()->createMessageMapper()
+                ->mapEntityToMessageTransfer($entity)
+            : null;
+    }
+}</code></pre>
+    <div class="box box-accent">
+      <strong>Rule:</strong> Repository = read-only. Never call <code>save()</code> or <code>delete()</code> here.
+    </div>
+  </section>
+  <section>
+    <h3>Persistence Layer: EntityManager (Write)</h3>
+    <pre><code class="language-php">class HelloWorldEntityManager extends AbstractEntityManager
+{
+    public function createMessage(MessageTransfer $transfer): MessageTransfer
+    {
+        $entity = new PyzMessage();
+        $entity->fromArray($transfer->modifiedToArray());
+        $entity->save();
+
+        return $this->getFactory()->createMessageMapper()
+            ->mapEntityToMessageTransfer($entity);
+    }
+
+    public function deleteMessage(int $idMessage): bool
+    {
+        $entity = $this->getFactory()->createMessageQuery()
+            ->findOneByIdMessage($idMessage);
+
+        if (!$entity) { return false; }
+
+        $entity->delete();
+        return true;
+    }
+}</code></pre>
+  </section>
+  <section>
+    <h3>Business Layer: SOLID Separation</h3>
+    <div class="cols">
+      <div>
+        <h4 class="accent">Reader</h4>
+        <pre><code class="language-php">class MessageReader
+{
+  public function __construct(
+    protected HelloWorldRepositoryInterface
+      $repository,
+  ) {}
+
+  public function findMessage(...)
+  public function findMessagesByCustomer(...)
+}</code></pre>
+      </div>
+      <div>
+        <h4 class="accent">Writer</h4>
+        <pre><code class="language-php">class MessageWriter
+{
+  public function __construct(
+    protected HelloWorldEntityManagerInterface
+      $entityManager,
+  ) {}
+
+  public function create(...)
+}</code></pre>
+      </div>
+      <div>
+        <h4 class="accent">Deleter</h4>
+        <pre><code class="language-php">class MessageDeleter
+{
+  public function __construct(
+    protected HelloWorldEntityManagerInterface
+      $entityManager,
+  ) {}
+
+  public function delete(int $id): bool
+}</code></pre>
+      </div>
+    </div>
+    <div class="box box-accent">
+      <strong>SOLID:</strong> Each class has one responsibility. Writer writes. Reader reads. Deleter deletes.
+    </div>
+  </section>
+  <section>
+    <h3>Business Layer: Facade & Factory</h3>
+    <pre><code class="language-php">// Facade = Public API of the module
+class HelloWorldFacade extends AbstractFacade
+{
+    public function createMessage(MessageTransfer $t): MessageTransfer
+    {
+        return $this->getFactory()->createMessageWriter()->create($t);
+    }
+
+    public function deleteMessage(int $idMessage): bool
+    {
+        return $this->getFactory()->createMessageDeleter()->delete($idMessage);
+    }
+}
+
+// Factory = Wiring / Dependency Injection
+class HelloWorldBusinessFactory extends AbstractBusinessFactory
+{
+    public function createMessageWriter(): MessageWriter
+    {
+        return new MessageWriter($this->getEntityManager());
+    }
+
+    public function createMessageDeleter(): MessageDeleter
+    {
+        return new MessageDeleter($this->getEntityManager());
+    }
+}</code></pre>
+  </section>
+  <section>
+    <h3>Mapper Pattern</h3>
+    <pre><code class="language-php">class MessageMapper
+{
+    public function mapEntityToMessageTransfer(
+        PyzMessage $entity,
+        MessageTransfer $transfer = new MessageTransfer(),
+    ): MessageTransfer {
+        return $transfer->fromArray($entity->toArray(), true);
+    }
+}</code></pre>
+    <ul>
+      <li>Converts between ORM entities and Transfer objects</li>
+      <li>Lives in the Persistence layer (next to Repository/EntityManager)</li>
+      <li>Default parameter = fresh transfer if none provided</li>
+    </ul>
+  </section>
+</section>
+
+<!-- ============================================================ -->
+<!-- EXERCISE 5: MODULE LAYERS - STOREFRONT -->
+<!-- ============================================================ -->
+<section>
+  <section>
+    <h2>Exercise 5: Module Layers - Storefront</h2>
+    <h3>Yves-Zed Communication via Client/Stub</h3>
+    <div class="box box-accent">
+      <strong>Goal:</strong> Display messages in Yves by calling Zed through the BackendGateway
+    </div>
+  </section>
+  <section>
+    <h3>Communication Flow</h3>
+    <div class="diagram center">
+<pre>
+ Yves (Browser)           BackendGateway             Zed
+ ┌──────────┐            ┌──────────────┐         ┌──────────┐
+ │ Controller│            │              │         │ Gateway  │
+ │     ↓     │            │              │         │Controller│
+ │ Factory   │            │   HTTP/JSON  │         │    ↓     │
+ │     ↓     │ ──────────→│  Serialize   │────────→│  Facade  │
+ │  Client   │            │ Deserialize  │         │    ↓     │
+ │     ↓     │ ←──────────│              │←────────│ Business │
+ │   Stub    │            │              │         │    ↓     │
+ └──────────┘            └──────────────┘         │Persistence│
+                                                   └──────────┘
+</pre>
+    </div>
+  </section>
+  <section>
+    <h3>The Stub: Calling Zed from Yves</h3>
+    <pre><code class="language-php">class HelloWorldStub
+{
+    public function __construct(
+        protected ZedRequestClientInterface $zedRequestClient,
+    ) {}
+
+    public function findMessage(MessageCriteriaTransfer $criteria): MessageResponseTransfer
+    {
+        /** @var MessageResponseTransfer $response */
+        $response = $this->zedRequestClient->call(
+            '/hello-world/gateway/find-message',
+            $criteria,
+        );
+        return $response;
+    }
+}</code></pre>
+    <div class="box box-accent">
+      <strong>Gateway path convention:</strong><br>
+      <code>/module-name/gateway/action-name</code><br>
+      <code>deleteMessageAction()</code> → <code>/hello-world/gateway/delete-message</code>
+    </div>
+  </section>
+  <section>
+    <h3>GatewayController in Zed</h3>
+    <pre><code class="language-php">class GatewayController extends AbstractGatewayController
+{
+    public function findMessageAction(
+        MessageCriteriaTransfer $criteria
+    ): MessageResponseTransfer {
+        return $this->getFacade()->findMessage($criteria);
+    }
+
+    public function deleteMessageAction(
+        MessageCriteriaTransfer $criteria
+    ): MessageResponseTransfer {
+        $response = new MessageResponseTransfer();
+        $deleted = $this->getFacade()
+            ->deleteMessage($criteria->getIdMessage());
+        $response->setIsSuccessful($deleted);
+        return $response;
+    }
+}</code></pre>
+    <ul>
+      <li>Extends <code>AbstractGatewayController</code> (not <code>AbstractController</code>)</li>
+      <li>Transfer parameter = auto-deserialized from request</li>
+      <li>Return transfer = auto-serialized in response</li>
+    </ul>
+  </section>
+  <section>
+    <h3>DependencyProvider Pattern</h3>
+    <pre><code class="language-php">// Every external dependency goes through the DependencyProvider
+class HelloWorldPageDependencyProvider extends AbstractBundleDependencyProvider
+{
+    public const string CLIENT_HELLO_WORLD = 'CLIENT_HELLO_WORLD';
+
+    public function provideDependencies(Container $container): Container
+    {
+        $container->set(
+            static::CLIENT_HELLO_WORLD,
+            fn () => $container->getLocator()->helloWorld()->client(),
+        );
+        return $container;
+    }
+}
+
+// Factory retrieves it
+class HelloWorldPageFactory extends AbstractFactory
+{
+    public function getHelloWorldClient(): HelloWorldClientInterface
+    {
+        return $this->getProvidedDependency(
+            HelloWorldPageDependencyProvider::CLIENT_HELLO_WORLD,
+        );
+    }
+}</code></pre>
+  </section>
+</section>
+
+<!-- ============================================================ -->
+<!-- EXERCISE 6: CONFIGURATION -->
+<!-- ============================================================ -->
+<section>
+  <section>
+    <h2>Exercise 6: Configuration</h2>
+    <h3>Config Classes, Constants & Constructor Injection</h3>
+    <div class="box box-accent">
+      <strong>Goal:</strong> Read a config value from <code>config_default.php</code> and display it
+    </div>
+  </section>
+  <section>
+    <h3>Configuration Stack</h3>
+    <pre><code class="language-php">// 1. Constants interface (Shared layer)
+interface HelloWorldConstants
+{
+    public const MY_CONFIG_VALUE = 'HELLO_WORLD:MY_CONFIG_VALUE';
+}
+
+// 2. config_default.php
+$config[HelloWorldConstants::MY_CONFIG_VALUE] = 'Hello from config!';
+
+// 3. Config class (Zed module root)
+class HelloWorldConfig extends AbstractBundleConfig
+{
+    public function getMyConfigValue(): string
+    {
+        return $this->get(
+            HelloWorldConstants::MY_CONFIG_VALUE,
+            'This is a default value', // fallback
+        );
+    }
+}</code></pre>
+  </section>
+  <section>
+    <h3>Constructor Injection (Spryker 202512.0+)</h3>
+    <pre><code class="language-php">// Zed controllers now support constructor DI
+class ConfigController extends AbstractController
+{
+    public function __construct(
+        private readonly HelloWorldConfig $config,
+    ) {}
+
+    public function indexAction(): array
+    {
+        return $this->viewResponse([
+            'configValue' => $this->config->getMyConfigValue(),
+        ]);
+    }
+}</code></pre>
+    <div class="box box-accent">
+      <strong>Alternative:</strong> Traditional factory pattern still works:<br>
+      <code>$this->getFactory()->getConfig()->getMyConfigValue()</code>
+    </div>
+  </section>
+</section>
+
+<!-- ============================================================ -->
+<!-- EXERCISE 7: EXTENDING CORE MODULES -->
+<!-- ============================================================ -->
+<section>
+  <section>
+    <h2>Exercise 7: Extending Core Modules</h2>
+    <h3>CustomerPage, Forms, Delete, AJAX</h3>
+    <div class="box box-accent">
+      <strong>Goal:</strong> Add customer messages to the Yves profile area by extending Spryker's <code>CustomerPage</code> module
+    </div>
+  </section>
+  <section>
+    <h3>Extending Core Modules: The Pattern</h3>
+    <p>Extend the core class in your namespace, override what you need:</p>
+    <pre><code class="language-php">// Extend the core DependencyProvider
+class CustomerPageDependencyProvider
+    extends SprykerCustomerPageDependencyProvider
+{
+    public const string CLIENT_HELLO_WORLD = 'CLIENT_HELLO_WORLD';
+
+    public function provideDependencies(Container $container): Container
+    {
+        $container = parent::provideDependencies($container); // Keep core deps
+        $container = $this->addHelloWorldClient($container);  // Add ours
+        return $container;
+    }
+}
+
+// Extend the core Factory
+class CustomerPageFactory extends SprykerCustomerPageFactory
+{
+    public function getHelloWorldClient(): HelloWorldClientInterface { ... }
+    public function createMessageForm(MessageTransfer $t): FormInterface { ... }
+}
+
+// Extend the core RouteProviderPlugin
+class CustomerPageRouteProviderPlugin
+    extends SprykerCustomerPageRouteProviderPlugin
+{
+    public function addRoutes(RouteCollection $c): RouteCollection
+    {
+        $c = parent::addRoutes($c); // Keep all core routes
+        $c = $this->addCustomerMessagesRoute($c); // Add ours
+        return $c;
+    }
+}</code></pre>
+  </section>
+  <section>
+    <h3>Symfony Forms in Spryker Yves</h3>
+    <div class="cols">
+      <div>
+        <h4>Form Class</h4>
+        <pre><code class="language-php">class MessageForm extends AbstractType
+{
+    public const string FIELD_MESSAGE
+        = 'message';
+
+    public function buildForm(
+        FormBuilderInterface $builder,
+        array $options,
+    ): void {
+        $builder->add(
+            static::FIELD_MESSAGE,
+            TextType::class,
+            [
+                'label' => 'Your message',
+                'constraints' => [
+                    new NotBlank(),
+                ],
+            ],
+        );
+    }
+}</code></pre>
+      </div>
+      <div>
+        <h4>Key Concepts</h4>
+        <ul>
+          <li><strong>No SubmitType</strong> in the class — button rendered in Twig for styling control</li>
+          <li><strong>Data binding:</strong> Pass a <code>MessageTransfer</code> as form data</li>
+          <li><strong>ArrayAccess:</strong> Transfers implement it, so Symfony can read/write properties</li>
+        </ul>
+        <pre><code class="language-php">// Factory creates form with transfer
+$form = $factory->createMessageForm(
+    new MessageTransfer()
+);
+$form->handleRequest($request);
+
+// getData() returns the hydrated transfer
+$transfer = $form->getData();
+// $transfer->getMessage() = form input</code></pre>
+      </div>
+    </div>
+  </section>
+  <section>
+    <h3>Form Factory Chain in Spryker</h3>
+    <div class="diagram center">
+<pre>
+CustomerPageFactory
+    │
+    ├─ createCustomerFormFactory()
+    │       │
+    │       └─ FormFactory (extends AbstractFactory)
+    │              │
+    │              └─ getFormFactory()
+    │                     │
+    │                     └─ Symfony\Component\Form\FormFactory
+    │                            │
+    │                            └─ create(MessageForm::class, $transfer)
+    │
+    └─ Result: FormInterface (with CSRF, validation, data binding)
+</pre>
+    </div>
+    <div class="box box-accent">
+      Spryker doesn't expose Symfony's <code>FormFactory</code> directly on module factories.
+      Use the proxy chain: <code>createCustomerFormFactory()->getFormFactory()->create()</code>
+    </div>
+  </section>
+  <section>
+    <h3>Rendering Forms in Twig</h3>
+    <pre><code class="language-twig">{# Render the form with Symfony helpers #}
+{{ form_start(data.messageForm) }}
+    &lt;div class="form spacing-bottom"&gt;
+        {{ form_widget(data.messageForm.message) }}
+    &lt;/div&gt;
+    &lt;button type="submit" class="button button--success"&gt;
+        Add Message
+    &lt;/button&gt;
+{{ form_end(data.messageForm) }}
+{# form_end renders remaining fields including the CSRF _token #}</code></pre>
+    <ul>
+      <li><code>form_start</code> — Opens <code>&lt;form&gt;</code> tag with action and method</li>
+      <li><code>form_widget</code> — Renders the input field (applies Spryker's form theme)</li>
+      <li><code>form_end</code> — Renders hidden fields (<code>_token</code>) and closes <code>&lt;form&gt;</code></li>
+      <li class="warning">Never use <code>render_rest: false</code> on <code>form_end</code> — it skips the CSRF token!</li>
+    </ul>
+  </section>
+  <section>
+    <h3>Controller Best Practices</h3>
+    <pre><code class="language-php">class MessageController extends AbstractCustomerController
+{
+    public function listAction(Request $request): View|RedirectResponse
+    {
+        $customer = $this->getLoggedInCustomerTransfer();
+
+        // Strict validation — fails fast if customer has no ID
+        $messageCriteria = new MessageCriteriaTransfer();
+        $messageCriteria->setFkCustomerOrFail($customer?->getIdCustomer());
+
+        // Data-mapped form — no manual field extraction
+        $form = $this->getFactory()->createMessageForm(new MessageTransfer());
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $transfer = $form->getData(); // Already a MessageTransfer!
+            $transfer->setFkCustomer($customer->getIdCustomer());
+            $this->getFactory()->getHelloWorldClient()->createMessage($transfer);
+            return $this->redirectResponseInternal(static::ROUTE_CUSTOMER_MESSAGES);
+        }
+        // ...
+    }
+
+    public function deleteAction(Request $request): RedirectResponse
+    {
+        // Safe ID casting — throws on non-numeric/zero
+        $idMessage = $this->castId($request->request->get('idMessage'));
+        // ...
+    }
+}</code></pre>
+  </section>
+  <section>
+    <h3>Template Override Mechanism</h3>
+    <p>Spryker resolves Twig templates in priority order:</p>
+    <ol>
+      <li><code>src/Pyz/Yves/CustomerPage/Theme/...</code> <span class="accent">(project level — highest priority)</span></li>
+      <li><code>src/SprykerAcademy/Yves/CustomerPage/Theme/...</code></li>
+      <li><code>vendor/spryker-shop/customer-page/.../Theme/...</code> (core — lowest priority)</li>
+    </ol>
+    <p>To override a core template, create a file at the same relative path in your project namespace.</p>
+    <div class="box box-accent">
+      <strong>Example:</strong> Override the customer navigation sidebar by creating<br>
+      <code>src/Pyz/Yves/CustomerPage/Theme/default/components/molecules/navigation-sidebar/navigation-sidebar.twig</code>
+    </div>
+  </section>
+</section>
+
+<!-- ============================================================ -->
+<!-- AJAX IN SPRYKER -->
+<!-- ============================================================ -->
+<section>
+  <section>
+    <h2>Bonus: AJAX in Spryker Yves</h2>
+    <h3>The Component Trio Pattern</h3>
+    <div class="box box-accent">
+      No jQuery. No custom JS. Pure Spryker components from <code>ShopUi</code>.
+    </div>
+  </section>
+  <section>
+    <h3>The Four AJAX Components</h3>
+    <table>
+      <tr><th>Component</th><th>Role</th><th>Events</th></tr>
+      <tr>
+        <td><code>ajax-provider</code></td>
+        <td>XMLHttpRequest wrapper</td>
+        <td>Dispatches <code>fetching</code> / <code>fetched</code></td>
+      </tr>
+      <tr>
+        <td><code>ajax-form-submitter</code></td>
+        <td>Intercepts form submit via <code>data-*</code> trigger</td>
+        <td>Listens for <code>click</code> / <code>change</code></td>
+      </tr>
+      <tr>
+        <td><code>ajax-renderer</code></td>
+        <td>Parses JSON response, updates DOM</td>
+        <td>Listens for <code>fetched</code></td>
+      </tr>
+      <tr>
+        <td><code>ajax-loader</code></td>
+        <td>Shows/hides spinner</td>
+        <td>Listens for <code>fetching</code> / <code>fetched</code></td>
+      </tr>
+    </table>
+  </section>
+  <section>
+    <h3>AJAX Flow</h3>
+    <div class="diagram center">
+<pre>
+ User clicks [Add Message] button
+        │  (has data-message-ajax-submit + formaction)
+        ▼
+ AjaxFormSubmitter
+        │  preventDefault(), collect FormData
+        ▼
+ AjaxProvider.fetch(formData)
+        │  dispatches "fetching" → AjaxLoader shows spinner
+        │  POST /customer/messages/async/add
+        ▼
+ MessageAsyncController::addAction()
+        │  Creates message, re-renders table as HTML
+        │  Returns JSON: { messages: "...", content: "..." }
+        ▼
+ AjaxProvider receives response
+        │  dispatches "fetched" → AjaxLoader hides spinner
+        ▼
+ AjaxRenderer.render()
+        │  Parses JSON
+        │  content → replaces target element innerHTML
+        │  messages → dispatches UPDATE_DYNAMIC_MESSAGES event
+        │  mount() → re-initializes JS components in new HTML
+        ▼
+ Table updated, form cleared, no page reload!
+</pre>
+    </div>
+  </section>
+  <section>
+    <h3>Async Controller Response</h3>
+    <pre><code class="language-php">class MessageAsyncController extends AbstractCustomerController
+{
+    public function addAction(Request $request): JsonResponse
+    {
+        // ... validate form, create message ...
+
+        return $this->jsonResponse([
+            'messages' => $this->renderView(
+                '@ShopUi/.../flash-message-list.twig'
+            )->getContent(),
+            'content' => $this->getTwig()->render(
+                '@CustomerPage/views/message/message-async.twig',
+                ['messages' => $collection, 'messageForm' => $form],
+            ),
+        ]);
+    }
+}</code></pre>
+    <div class="box box-accent">
+      <strong>JSON contract:</strong><br>
+      <code>messages</code> → rendered flash message HTML (success/error)<br>
+      <code>content</code> → rendered HTML fragment to replace in the DOM
+    </div>
+  </section>
+  <section>
+    <h3>Twig: Wiring the Components</h3>
+    <pre><code class="language-twig">{% set providerClass = 'js-message-provider' %}
+{% set contentClass = 'js-message-content' %}
+
+{# Target area that gets replaced #}
+&lt;div class="{{ contentClass }}"&gt;
+    {# table + form + loader #}
+    &lt;button data-message-ajax-submit
+            formaction="{{ path('customer/messages/async/add') }}"&gt;
+        Add Message
+    &lt;/button&gt;
+    {% include molecule('ajax-loader') with {
+        attributes: { 'provider-class-name': providerClass }
+    } only %}
+&lt;/div&gt;
+
+{# AJAX components (outside the target!) #}
+{% include molecule('ajax-provider') with {
+    class: providerClass,
+    attributes: { method: 'POST' }
+} only %}
+
+{% include molecule('ajax-renderer') with {
+    attributes: {
+        'provider-class-name': providerClass,
+        'target-class-name': contentClass,
+        'mount-after-render': true,
+    }
+} only %}
+
+{% include molecule('ajax-form-submitter') with {
+    attributes: {
+        'trigger-attribute': 'data-message-ajax-submit',
+        'provider-class-name': providerClass,
+    }
+} only %}</code></pre>
+  </section>
+</section>
+
+<!-- ============================================================ -->
+<!-- TESTING -->
+<!-- ============================================================ -->
+<section>
+  <section>
+    <h2>Testing Strategy</h2>
+    <h3>53 Tests, No Spryker Kernel Needed</h3>
+  </section>
+  <section>
+    <h3>Test Types Used</h3>
+    <table>
+      <tr><th>Type</th><th>What</th><th>How</th></tr>
+      <tr><td>Structural</td><td>Class/method exists, extends correctly</td><td>Reflection, <code>class_exists()</code></td></tr>
+      <tr><td>XML Parsing</td><td>Transfer/schema definitions correct</td><td>SimpleXML + XPath</td></tr>
+      <tr><td>Unit (mocked)</td><td>Business logic with mocked dependencies</td><td><code>createMock()</code></td></tr>
+      <tr><td>SOLID</td><td>Writer does NOT have delete()</td><td><code>assertFalse(method_exists(...))</code></td></tr>
+    </table>
+    <pre><code class="language-php">// Example: Mock-based stub test
+$zedRequestMock = $this->createMock(ZedRequestClientInterface::class);
+$zedRequestMock->expects($this->once())
+    ->method('call')
+    ->with('/hello-world/gateway/delete-message', $criteria)
+    ->willReturn($expectedResponse);
+
+$stub = new HelloWorldStub($zedRequestMock);
+$result = $stub->deleteMessage($criteria);
+$this->assertTrue($result->getIsSuccessful());</code></pre>
+  </section>
+  <section>
+    <h3>Running Tests</h3>
+    <pre><code class="language-bash"># Single exercise
+docker/sdk cli vendor/bin/codecept run \
+    -c tests/SprykerAcademyTest/Zed/HelloWorld/ Exercise7
+
+# All exercises
+docker/sdk cli vendor/bin/codecept run \
+    -c tests/SprykerAcademyTest/Zed/HelloWorld/</code></pre>
+    <p>Framework: <strong>Codeception + PHPUnit</strong> (<code>Codeception\Test\Unit</code>)</p>
+    <p>No Spryker kernel bootstrap — tests are fast and isolated.</p>
+  </section>
+</section>
+
+<!-- ============================================================ -->
+<!-- SUMMARY -->
+<!-- ============================================================ -->
+<section>
+  <h2>Key Takeaways</h2>
+  <ul>
+    <li><span class="accent">Layered Architecture</span> — Communication → Business → Persistence</li>
+    <li><span class="accent">Facade Pattern</span> — Module's public API, single entry point</li>
+    <li><span class="accent">Factory Pattern</span> — All instantiation goes through factories</li>
+    <li><span class="accent">DependencyProvider</span> — External dependencies injected via container</li>
+    <li><span class="accent">Transfer Objects</span> — Generated DTOs for type-safe data passing</li>
+    <li><span class="accent">Client/Stub</span> — Yves talks to Zed through BackendGateway</li>
+    <li><span class="accent">SOLID</span> — Reader/Writer/Deleter separation, single responsibility</li>
+    <li><span class="accent">Module Extension</span> — Extend core classes at project level, call <code>parent::</code></li>
+    <li><span class="accent">Forms</span> — Data-mapped to transfers, form factory chain, CSRF built-in</li>
+    <li><span class="accent">AJAX</span> — Component trio: Provider + FormSubmitter + Renderer</li>
+  </ul>
+</section>
+
+<!-- ============================================================ -->
+<!-- END -->
+<!-- ============================================================ -->
+<section class="center">
+  <h1>Questions?</h1>
+  <p class="dim">Spryker Academy | ILT Exercises</p>
+</section>
+
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/highlight.js"></script>
+<script>
+Reveal.initialize({
+  hash: true,
+  slideNumber: 'c/t',
+  width: 1280,
+  height: 720,
+  margin: 0.05,
+  plugins: [RevealHighlight],
+  highlight: { highlightOnLoad: true },
+});
+</script>
+</body>
+</html>
