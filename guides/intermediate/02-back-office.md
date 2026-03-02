@@ -87,7 +87,20 @@ In `configure()`:
 2. Set sortable columns using `$config->setSortable()` — pass an array of column constants
 3. Set searchable columns using `$config->setSearchable()` — same pattern, but only text columns that make sense to search
 
-> **Hint:** The class already has constants like `COL_ID_SUPPLIER`, `COL_NAME`, etc. Use these as array keys. Look at `$config->setRawColumns()` to understand how the Actions column renders HTML buttons without escaping.
+> **Hint:** The class already has constants like `COL_ID_SUPPLIER`, `COL_NAME`, etc. Use these as array keys.
+
+> **Adding action buttons per row:** If you want Edit/Delete buttons in each table row, add an "Actions" column to the header and mark it as a raw column using `$config->setRawColumns()`. Then in `mapReturns()`, build HTML buttons for each row:
+> ```php
+> // In mapReturns(), for each entity:
+> $editUrl = Url::generate('/supplier-gui/edit', [
+>     EditController::REQUEST_PARAM_ID_SUPPLIER => $entity->getIdSupplier(),
+> ]);
+> $returns[] = [
+>     // ... data columns ...
+>     'actions' => '<a class="btn btn-sm btn-outline btn-primary" href="' . $editUrl . '">Edit</a>',
+> ];
+> ```
+> Raw columns are not HTML-escaped, so the buttons render correctly in the table.
 
 In `prepareData()`:
 4. Fetch the supplier data using `$this->runQuery()`. This method accepts the Propel query (injected via constructor), the `$config`, and a boolean `true` to get raw results. Then map the results using the provided `mapReturns()` method.
@@ -137,8 +150,26 @@ The controller needs two actions:
 **Coding time:**
 
 Open `src/SprykerAcademy/Zed/SupplierGui/Presentation/Index/index.twig`:
-1. Add a "Create Supplier" link/button pointing to `/supplier-gui/create`
-2. Render the `supplierTable` variable using the `raw` filter so the table HTML is not escaped
+1. Add a "Create Supplier" button linking to `/supplier-gui/create`
+2. Render the `supplierTable` variable using the `raw` filter
+
+> **Buttons in Spryker Back Office Twig templates:** Use standard HTML anchor tags styled with Bootstrap classes. Common patterns:
+> ```twig
+> {# Primary action button #}
+> <a class="btn btn-primary m-b-sm" href="/supplier-gui/create">Create Supplier</a>
+>
+> {# Danger/delete button #}
+> <a class="btn btn-danger btn-sm" href="/supplier-gui/delete?id-supplier=1">Delete</a>
+>
+> {# Back/secondary button #}
+> <a class="btn btn-default" href="{{ backUrl }}">Back</a>
+> ```
+>
+> **Rendering raw HTML:** The controller passes pre-rendered HTML from `$table->render()`. Use the `raw` filter to prevent Twig from escaping it:
+> ```twig
+> {{ supplierTable | raw }}
+> ```
+> Without `| raw`, Twig would escape the HTML tags and you'd see raw `<table>` markup as text.
 
 Clear cache:
 
