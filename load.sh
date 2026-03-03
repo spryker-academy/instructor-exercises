@@ -340,6 +340,14 @@ YAMLEOF
         ' "$SM_CONFIG"
         echo -e "  ${GREEN}Registered Supplier queues in SymfonyMessengerConfig${NC}"
     fi
+
+    # Register SprykerAcademy source directory in API Platform configs
+    for API_CONFIG in "$PROJECT_DIR/config/GlueStorefront/packages/spryker_api_platform.php" "$PROJECT_DIR/config/GlueBackend/packages/spryker_api_platform.php"; do
+        if [ -f "$API_CONFIG" ] && [ "$(grep -c 'SprykerAcademy' "$API_CONFIG" || true)" = "0" ]; then
+            sed -i '' "s|'src/Pyz'|'src/Pyz',\n        'src/SprykerAcademy'|" "$API_CONFIG"
+            echo -e "  ${GREEN}Added SprykerAcademy to API Platform source directories${NC}"
+        fi
+    done
 fi
 
 # Copy exercise tests if present

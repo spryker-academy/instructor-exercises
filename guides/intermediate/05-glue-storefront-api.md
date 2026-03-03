@@ -24,6 +24,49 @@ docker/sdk console transfer:generate
 
 ---
 
+## Setup: Register Custom Namespace
+
+API Platform discovers resource YAML files by scanning **source directories** configured in `config/GlueStorefront/packages/spryker_api_platform.php`. By default, only `src/Spryker`, `src/SprykerFeature`, and `src/Pyz` are registered.
+
+Since our code lives in `src/SprykerAcademy/`, we need to add it:
+
+```php
+// config/GlueStorefront/packages/spryker_api_platform.php
+$sprykerApiPlatform->sourceDirectories([
+    'src/Spryker',
+    'src/SprykerFeature',
+    'src/Pyz',
+    'src/SprykerAcademy',  // <-- Add this
+]);
+```
+
+> **Backend API:** If you also need to expose resources via the Backend API, add `src/SprykerAcademy` to `config/GlueBackend/packages/spryker_api_platform.php` as well.
+
+After adding the source directory, generate the API resources:
+
+```bash
+docker/sdk cli glue api:generate Storefront
+```
+
+This command:
+1. Scans all source directories for `.resource.yml` files
+2. Generates PHP Resource classes (e.g., `Generated\Api\Storefront\SuppliersStorefrontResource`)
+3. Registers the resources with the API Platform router
+
+You can also generate Backend API resources:
+
+```bash
+docker/sdk cli glue api:generate Backend
+```
+
+Use `--dry-run` to preview what would be generated without writing files:
+
+```bash
+docker/sdk cli glue api:generate Storefront --dry-run
+```
+
+---
+
 ## Background: Spryker API Platform
 
 Spryker 202512.0+ uses **API Platform** for building REST APIs, replacing the legacy GlueApplication approach. The key differences:
@@ -112,11 +155,11 @@ Open `src/SprykerAcademy/Glue/SuppliersApi/Processor/Mapper/SupplierMapper.php` 
 
 ### Part 4: Test the Endpoint
 
-After completing all parts:
+After completing all parts, generate the API resources and clear cache:
 
 ```bash
+docker/sdk cli glue api:generate Storefront
 docker/sdk console cache:empty-all
-docker/sdk console transfer:generate
 ```
 
 Test single supplier:
