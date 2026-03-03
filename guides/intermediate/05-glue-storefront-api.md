@@ -71,10 +71,12 @@ This command scans all registered source directories for `.resource.yml` files a
 
 ## Background: Spryker API Platform
 
-Spryker 202512.0+ uses **API Platform** for building REST APIs, replacing the legacy GlueApplication approach. The key differences:
+Spryker 202512.0+ introduces **API Platform** as the recommended approach for building new REST APIs. The existing GlueApplication APIs remain **retrocompatible** (not deprecated) — they continue to work alongside API Platform.
 
-| Aspect | Legacy GlueApplication | API Platform (new) |
-|--------|----------------------|-------------------|
+**For all new API development, use API Platform.**
+
+| Aspect | GlueApplication (retrocompatible) | API Platform (recommended) |
+|--------|----------------------------------|---------------------------|
 | Resource definition | PHP plugin classes | YAML `.resource.yml` files |
 | Controller | Custom controller extending `AbstractRestResource` | Provider class implementing `ProviderInterface` |
 | Registration | Plugin registered in DependencyProvider | Provider referenced in YAML config |

@@ -466,15 +466,18 @@ class SupplierSearchClient extends AbstractClient
     </div>
   </section>
   <section>
-    <h3>API Platform vs Legacy Glue</h3>
+    <h3>API Platform vs GlueApplication</h3>
     <table>
-      <tr><th>Aspect</th><th>Legacy GlueApplication</th><th>API Platform (new)</th></tr>
+      <tr><th>Aspect</th><th>GlueApplication (retrocompatible)</th><th>API Platform (recommended for new dev)</th></tr>
       <tr><td>Resource definition</td><td>PHP plugin classes</td><td>YAML <code>.resource.yml</code></td></tr>
       <tr><td>Handler</td><td>Controller + Reader</td><td>Provider class</td></tr>
       <tr><td>Registration</td><td>Plugin in DependencyProvider</td><td>Referenced in YAML</td></tr>
       <tr><td>DI</td><td>Factory + DependencyProvider</td><td>Constructor injection (auto)</td></tr>
       <tr><td>Response</td><td>Manual RestResource</td><td>Generated Resource class</td></tr>
     </table>
+    <div class="box">
+      GlueApplication APIs are <strong>retrocompatible</strong> (not deprecated). Existing APIs continue to work. <strong>API Platform is recommended for all new development.</strong>
+    </div>
     <div class="box box-accent">
       <strong>Setup:</strong> Register <code>src/SprykerAcademy</code> in <code>config/GlueStorefront/packages/spryker_api_platform.php</code> source directories.
     </div>
