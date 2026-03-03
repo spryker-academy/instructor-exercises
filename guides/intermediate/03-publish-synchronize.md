@@ -23,6 +23,7 @@ You will learn how to:
 docker/sdk cli composer dump-autoload
 docker/sdk console transfer:generate
 docker/sdk console propel:install
+docker/sdk console messenger:setup-transports
 ```
 
 ---
@@ -284,15 +285,28 @@ After implementing all parts, here's what happens when a supplier is created or 
 
 ## Testing the Flow
 
-### Setup: Ensure Queues Exist
+### Setup: Ensure Queues and Exchanges Exist
 
-The supplier queues must exist in RabbitMQ before the worker can consume from them. The `load.sh` script creates them automatically via the RabbitMQ management API. If they're missing, verify they exist at http://queue.spryker.local (login: `spryker`/`secret`):
+After registering queues in the config files, you must create the AMQP infrastructure (queues, exchanges, bindings) in RabbitMQ:
+
+```bash
+docker/sdk console messenger:setup-transports
+```
+
+This reads the `SymfonyMessengerConfig::getQueueConfiguration()` and creates the corresponding AMQP exchanges and queues. **Without this step, messages are silently dropped** because the Symfony Messenger transport has no exchange to route them through.
+
+> **Three config files required:** Queues must be registered in:
+> 1. `SymfonyMessengerConfig` — Symfony Messenger transport routing
+> 2. `RabbitMqConfig` — AMQP queue declaration
+> 3. `QueueDependencyProvider` — queue message processors
+>
+> The `load.sh` script handles all three and also creates queues/exchanges via the RabbitMQ management API as a fallback.
+
+Verify the queues exist at http://queue.spryker.local (login: `spryker`/`secret`):
 - `publish.search.supplier`
 - `publish.storage.supplier`
 - `sync.search.supplier`
 - `sync.storage.supplier`
-
-> **Important:** Queues must be registered in **both** `RabbitMqConfig` (AMQP queue declaration) and `SymfonyMessengerConfig` (Symfony Messenger transport routing). The `load.sh` handles both.
 
 ### Test the Flow
 

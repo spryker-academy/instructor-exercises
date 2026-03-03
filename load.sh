@@ -257,17 +257,16 @@ YAMLEOF
         echo -e "  ${GREEN}Registered Supplier queue processors in QueueDependencyProvider${NC}"
     fi
 
-    # Create supplier queues in RabbitMQ via management API
+    # Create supplier queues and exchanges in RabbitMQ via management API
     if command -v curl > /dev/null 2>&1; then
-        RMQ_API="http://queue.spryker.local/api/queues/eu-docker"
+        RMQ_API="http://queue.spryker.local/api"
         RMQ_AUTH="spryker:secret"
         for QUEUE in publish.search.supplier publish.storage.supplier sync.search.supplier sync.storage.supplier; do
-            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -u "$RMQ_AUTH" -X PUT "$RMQ_API/$QUEUE" -H 'Content-Type: application/json' -d '{"durable":true,"auto_delete":false}' 2>/dev/null || true)
-            if [ "$HTTP_CODE" = "201" ] || [ "$HTTP_CODE" = "204" ]; then
-                true  # Queue created or already exists
-            fi
+            curl -s -o /dev/null -u "$RMQ_AUTH" -X PUT "$RMQ_API/queues/eu-docker/$QUEUE" -H 'Content-Type: application/json' -d '{"durable":true,"auto_delete":false}' 2>/dev/null || true
+            curl -s -o /dev/null -u "$RMQ_AUTH" -X PUT "$RMQ_API/exchanges/eu-docker/$QUEUE" -H 'Content-Type: application/json' -d '{"type":"direct","durable":true}' 2>/dev/null || true
+            curl -s -o /dev/null -u "$RMQ_AUTH" -X POST "$RMQ_API/bindings/eu-docker/e/$QUEUE/q/$QUEUE" -H 'Content-Type: application/json' -d '{}' 2>/dev/null || true
         done
-        echo -e "  ${GREEN}Ensured supplier queues exist in RabbitMQ${NC}"
+        echo -e "  ${GREEN}Ensured supplier queues and exchanges exist in RabbitMQ${NC}"
     fi
 
     # Register supplier queues in RabbitMqConfig (creates actual AMQP queues)
