@@ -43,7 +43,7 @@
 <section class="center">
   <h1>Spryker Academy</h1>
   <h2>Intermediate Exercises</h2>
-  <p class="dim">Supplier Module | Data Import, Back Office, P&S, Search</p>
+  <p class="dim">Supplier Module | Data Import, Back Office, P&S, Search, API, OMS</p>
   <p class="small dim">Namespace: <code>SprykerAcademy\</code> | Module: <code>Supplier</code></p>
 </section>
 
@@ -56,6 +56,8 @@
     <tr><td>9</td><td>Back Office</td><td>Tables, Forms, CRUD Controllers, Gui module</td></tr>
     <tr><td>10</td><td>Publish & Synchronize</td><td>Events, Publishers, Queues, Elasticsearch/Redis</td></tr>
     <tr><td>11</td><td>Search</td><td>Query Plugins, Result Formatters, SearchClient</td></tr>
+    <tr><td>12</td><td>Glue Storefront API</td><td>API Platform, Providers, Resource YAML</td></tr>
+    <tr><td>13</td><td>OMS</td><td>State Machine, Commands, Conditions, Events</td></tr>
   </table>
   <div class="box box-accent">
     <strong>Prerequisites:</strong> Basics exercises 1-7 completed. Understanding of Facade, Factory, DependencyProvider patterns.
@@ -453,12 +455,210 @@ class SupplierSearchClient extends AbstractClient
 </section>
 
 <!-- ============================================================ -->
+<!-- EXERCISE 12: GLUE STOREFRONT API -->
+<!-- ============================================================ -->
+<section>
+  <section>
+    <h2>Exercise 12: Glue Storefront API</h2>
+    <h3>REST API with Spryker API Platform</h3>
+    <div class="box box-accent">
+      <strong>Goal:</strong> Expose supplier data through a REST API using Spryker's API Platform
+    </div>
+  </section>
+  <section>
+    <h3>API Platform vs Legacy Glue</h3>
+    <table>
+      <tr><th>Aspect</th><th>Legacy GlueApplication</th><th>API Platform (new)</th></tr>
+      <tr><td>Resource definition</td><td>PHP plugin classes</td><td>YAML <code>.resource.yml</code></td></tr>
+      <tr><td>Handler</td><td>Controller + Reader</td><td>Provider class</td></tr>
+      <tr><td>Registration</td><td>Plugin in DependencyProvider</td><td>Referenced in YAML</td></tr>
+      <tr><td>DI</td><td>Factory + DependencyProvider</td><td>Constructor injection (auto)</td></tr>
+      <tr><td>Response</td><td>Manual RestResource</td><td>Generated Resource class</td></tr>
+    </table>
+    <div class="box box-accent">
+      <strong>Setup:</strong> Register <code>src/SprykerAcademy</code> in <code>config/GlueStorefront/packages/spryker_api_platform.php</code> source directories.
+    </div>
+  </section>
+  <section>
+    <h3>Resource YAML</h3>
+    <pre><code class="language-yaml"># resources/api/storefront/suppliers.resource.yml
+resource:
+    name: Suppliers
+    provider: SprykerAcademy\Glue\Supplier\Api\Storefront\Provider\SuppliersStorefrontProvider
+    paginationEnabled: true
+    paginationItemsPerPage: 10
+    operations:
+        - type: Get
+        - type: GetCollection
+    properties:
+        idSupplier:
+            type: int
+            identifier: true
+        name:
+            type: string
+        description:
+            type: string</code></pre>
+    <ul>
+      <li><code>provider:</code> — full class name of the PHP Provider</li>
+      <li><code>identifier: true</code> — property used in URL path (<code>/suppliers/{idSupplier}</code>)</li>
+      <li>Generates <code>SuppliersStorefrontResource</code> class automatically</li>
+    </ul>
+  </section>
+  <section>
+    <h3>Provider Pattern</h3>
+    <pre><code class="language-php">class SuppliersStorefrontProvider implements ProviderInterface
+{
+    public function __construct(
+        protected SupplierClientInterface $supplierClient, // auto-wired
+    ) {}
+
+    public function provide(
+        Operation $operation,
+        array $uriVariables = [],
+        array $context = [],
+    ): object|array|null {
+        $id = $uriVariables['idSupplier'] ?? null;
+
+        if ($id === null) {
+            return $this->provideCollection(); // → array = GetCollection
+        }
+
+        $supplier = $this->supplierClient->findSupplierById((int)$id);
+        if (!$supplier) {
+            return null;                       // → null = 404
+        }
+
+        return $this->mapToResource($supplier); // → object = Get
+    }
+}</code></pre>
+  </section>
+  <section>
+    <h3>API Platform Commands</h3>
+    <table>
+      <tr><th>Command</th><th>Purpose</th></tr>
+      <tr><td><code>glue api:generate Storefront</code></td><td>Generate Storefront API resources from YAML</td></tr>
+      <tr><td><code>glue api:generate Backend</code></td><td>Generate Backend API resources</td></tr>
+      <tr><td><code>glue api:generate --dry-run</code></td><td>Preview without writing files</td></tr>
+      <tr><td><code>glue api:generate --validate-only</code></td><td>Validate schemas only</td></tr>
+      <tr><td><code>glue api:debug --list</code></td><td>List all registered resources</td></tr>
+      <tr><td><code>glue api:debug suppliers</code></td><td>Inspect a specific resource</td></tr>
+      <tr><td><code>glue api:debug suppliers --show-merged</code></td><td>Show final merged YAML</td></tr>
+    </table>
+  </section>
+</section>
+
+<!-- ============================================================ -->
+<!-- EXERCISE 13: OMS -->
+<!-- ============================================================ -->
+<section>
+  <section>
+    <h2>Exercise 13: Order Management System</h2>
+    <h3>State Machine for Order Lifecycle</h3>
+    <div class="box box-accent">
+      <strong>Goal:</strong> Build a complete order management process with states, transitions, events, commands, and conditions
+    </div>
+  </section>
+  <section>
+    <h3>State Machine Flow</h3>
+    <div class="diagram">
+<pre>
+       [new]
+         |
+    authorize (onEnter, command=Demo/Pay)
+         |
+  condition: Demo/IsAuthorized
+     /        \
+  (true)     (false)
+    |           |
+[payment    [invalid]
+ pending]
+    |
+   pay (onEnter)
+    |
+[payment authorized]
+    |
+  (auto)
+    |
+  [paid]
+    |
+  (auto)
+    |
+ [closed]
+</pre>
+    </div>
+  </section>
+  <section>
+    <h3>State Machine XML</h3>
+    <p><strong>States</strong> — positions in the workflow:</p>
+    <pre><code class="language-xml">&lt;states&gt;
+    &lt;state name="new" reserved="true"/&gt;
+    &lt;state name="payment pending" reserved="true"/&gt;
+    &lt;state name="invalid"/&gt;
+    &lt;state name="paid" reserved="true"/&gt;
+    &lt;state name="closed"/&gt;
+&lt;/states&gt;</code></pre>
+    <p><strong>Events</strong> — triggers with commands:</p>
+    <pre><code class="language-xml">&lt;events&gt;
+    &lt;event name="authorize" onEnter="true" command="Demo/Pay"/&gt;
+    &lt;event name="pay" onEnter="true" manual="true"/&gt;
+&lt;/events&gt;</code></pre>
+    <p><strong>Transitions</strong> — with conditions and happy path:</p>
+    <pre><code class="language-xml">&lt;transition happy="true" condition="Demo/IsAuthorized"&gt;
+    &lt;source&gt;new&lt;/source&gt;
+    &lt;target&gt;payment pending&lt;/target&gt;
+    &lt;event&gt;authorize&lt;/event&gt;
+&lt;/transition&gt;</code></pre>
+  </section>
+  <section>
+    <h3>Command &amp; Condition Plugins</h3>
+    <p><strong>Command</strong> — executes business logic on event:</p>
+    <pre><code class="language-php">class PayCommandPlugin extends AbstractPlugin
+    implements CommandByOrderInterface
+{
+    public function run(
+        array $orderItems,
+        SpySalesOrder $orderEntity,
+        ReadOnlyArrayObject $data,
+    ): array {
+        // Call payment gateway, update order, etc.
+        return [];
+    }
+}</code></pre>
+    <p><strong>Condition</strong> — routes between transitions:</p>
+    <pre><code class="language-php">class IsAuthorizedConditionPlugin extends AbstractPlugin
+    implements ConditionInterface
+{
+    public function check(SpySalesOrderItem $orderItem): bool
+    {
+        // true → happy path, false → unhappy path
+        return true;
+    }
+}</code></pre>
+  </section>
+  <section>
+    <h3>Plugin Registration</h3>
+    <pre><code class="language-php">// OmsDependencyProvider — string keys must match XML exactly
+$commandCollection->add(new PayCommandPlugin(), 'Demo/Pay');
+$conditionCollection->add(new IsAuthorizedConditionPlugin(), 'Demo/IsAuthorized');</code></pre>
+    <table>
+      <tr><th>Event Type</th><th>XML Attribute</th><th>When it fires</th></tr>
+      <tr><td>Auto</td><td><code>onEnter="true"</code></td><td>Immediately on entering state</td></tr>
+      <tr><td>Manual</td><td><code>manual="true"</code></td><td>User clicks button in Back Office</td></tr>
+      <tr><td>Timeout</td><td><code>timeout="14 days"</code></td><td>After specified time</td></tr>
+    </table>
+    <div class="box box-accent">
+      <strong>Condition routing:</strong> When two transitions share the same event from the same source, the one WITH a condition is checked first. If <code>true</code>, that path is taken. If <code>false</code>, the fallback (no condition) is used.
+    </div>
+  </section>
+</section>
+
+<!-- ============================================================ -->
 <!-- TESTING -->
 <!-- ============================================================ -->
 <section>
   <section>
     <h2>Testing Strategy</h2>
-    <h3>68 Lightweight Tests, No Kernel Needed</h3>
+    <h3>78 Lightweight Tests, No Kernel Needed</h3>
   </section>
   <section>
     <h3>Test Suites</h3>
@@ -468,6 +668,7 @@ class SupplierSearchClient extends AbstractClient
       <tr><td>BackOffice</td><td>20</td><td>Table, controllers, form, factory, DP, navigation, templates</td></tr>
       <tr><td>PublishSync</td><td>15</td><td>Writers, facades, plugin events, schema behaviors</td></tr>
       <tr><td>Search</td><td>13</td><td>Query plugin, result formatter, client, ES schema</td></tr>
+      <tr><td>GlueApi</td><td>10</td><td>Provider, mapper, config, resource YAML</td></tr>
     </table>
     <pre><code class="language-bash">docker/sdk cli vendor/bin/codecept run \
     -c tests/SprykerAcademyTest/Zed/Supplier/ DataImport
@@ -476,7 +677,9 @@ docker/sdk cli vendor/bin/codecept run \
 docker/sdk cli vendor/bin/codecept run \
     -c tests/SprykerAcademyTest/Zed/Supplier/ PublishSync
 docker/sdk cli vendor/bin/codecept run \
-    -c tests/SprykerAcademyTest/Zed/Supplier/ Search</code></pre>
+    -c tests/SprykerAcademyTest/Zed/Supplier/ Search
+docker/sdk cli vendor/bin/codecept run \
+    -c tests/SprykerAcademyTest/Zed/Supplier/ GlueApi</code></pre>
   </section>
 </section>
 
@@ -488,6 +691,8 @@ docker/sdk cli vendor/bin/codecept run \
     <li><span class="accent">Back Office</span> — AbstractTable for sortable/searchable tables, Symfony forms, Gui button helpers</li>
     <li><span class="accent">Publish & Synchronize</span> — Event behavior triggers, publisher plugins route to queues, sync behavior pushes to ES/Redis</li>
     <li><span class="accent">Search</span> — Query plugins build Elastica queries, result formatters convert to transfers</li>
+    <li><span class="accent">Glue API</span> — API Platform: YAML resource definition + Provider class, no Factory/DP needed</li>
+    <li><span class="accent">OMS</span> — XML state machine: states, transitions, events, commands, conditions, happy path</li>
     <li><span class="accent">Queues</span> — 3 configs required (SymfonyMessenger + RabbitMq + QueueDP) + <code>messenger:setup-transports</code></li>
     <li><span class="accent">Naming</span> — <code>*DataImport</code>, <code>*Gui</code>, <code>*Search</code>, <code>*Storage</code> module suffixes</li>
     <li><span class="accent">Testing</span> — Structural + XML + mock tests, no kernel needed</li>
