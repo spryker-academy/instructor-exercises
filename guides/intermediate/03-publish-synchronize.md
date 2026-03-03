@@ -284,25 +284,53 @@ After implementing all parts, here's what happens when a supplier is created or 
 
 ## Testing the Flow
 
-1. Import suppliers:
+### Setup: Ensure Queues Exist
+
+The supplier queues must exist in RabbitMQ before the worker can consume from them. The `load.sh` script creates them automatically via the RabbitMQ management API. If they're missing, verify they exist at http://queue.spryker.local (login: `spryker`/`secret`):
+- `publish.search.supplier`
+- `publish.storage.supplier`
+- `sync.search.supplier`
+- `sync.storage.supplier`
+
+> **Important:** Queues must be registered in **both** `RabbitMqConfig` (AMQP queue declaration) and `SymfonyMessengerConfig` (Symfony Messenger transport routing). The `load.sh` handles both.
+
+### Test the Flow
+
+1. Add a new supplier to the CSV and import:
    ```bash
    docker/sdk console data:import supplier
    ```
 
-2. Process the queues (if scheduler isn't running):
+2. Process the event queue first (routes events to publish queues):
    ```bash
    docker/sdk console queue:worker:start --stop-when-empty
    ```
 
-3. Check the intermediate tables using any DB client (credentials in `deploy.dev.yml`)
+3. Process again (handles publish → search/storage tables → sync queues → Elasticsearch/Redis):
+   ```bash
+   docker/sdk console queue:worker:start --stop-when-empty
+   ```
+   You may need to run the worker multiple times — the first run processes publish events (writes to intermediate tables), the second processes sync events (pushes to Elasticsearch/Redis).
 
-4. Verify Elasticsearch:
+4. Check the intermediate tables using any DB client (credentials in `deploy.dev.yml`):
+   ```sql
+   SELECT count(*) FROM pyz_supplier_search;
+   SELECT count(*) FROM pyz_supplier_storage;
+   ```
+
+5. Verify Elasticsearch:
    ```bash
    curl -s 'localhost:9200/_search' -H 'Content-type: application/json' \
      -d '{"query":{"exists":{"field":"id_supplier"}}}'
    ```
 
-5. Creating a supplier via the Back Office also triggers P&S automatically (via the event behavior)
+6. Creating a supplier via the Back Office also triggers P&S automatically (via the event behavior) — no manual queue processing needed if the scheduler is running.
+
+### Troubleshooting
+
+- **No messages in queues after import:** Ensure `DataImportPublisherPlugin` is registered in `DataImportDependencyProvider::getDataImportAfterImportHookPlugins()`
+- **Queue not found error:** Run `docker/sdk boot deploy.dev.yml` to recreate infrastructure, or create queues manually via the RabbitMQ API
+- **Data in tables but not in Elasticsearch:** Process the sync queues with `queue:worker:start --stop-when-empty`
 
 ---
 
