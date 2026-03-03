@@ -190,6 +190,108 @@ YAMLEOF
         ' "$DI_PROVIDER"
         echo -e "  ${GREEN}Registered SupplierDataImportPlugin in DataImportDependencyProvider${NC}"
     fi
+
+    # Register supplier publisher plugins in PublisherDependencyProvider
+    PUB_PROVIDER="$PROJECT_DIR/src/Pyz/Zed/Publisher/PublisherDependencyProvider.php"
+    if [ -f "$PUB_PROVIDER" ] && [ "$(grep -c 'SupplierSearchWritePublisherPlugin' "$PUB_PROVIDER" || true)" = "0" ]; then
+        php -r '
+            $file = $argv[1];
+            $content = file_get_contents($file);
+
+            $useStatements = "use SprykerAcademy\Shared\SupplierSearch\SupplierSearchConfig;\nuse SprykerAcademy\Shared\SupplierStorage\SupplierStorageConfig;\nuse SprykerAcademy\Zed\SupplierSearch\Communication\Plugin\Publisher\SupplierSearchWritePublisherPlugin;\nuse SprykerAcademy\Zed\SupplierStorage\Communication\Plugin\Publisher\SupplierStorageWritePublisherPlugin;\n";
+            $content = preg_replace(
+                "/(^class\s)/m",
+                $useStatements . "\n$1",
+                $content,
+                1,
+            );
+
+            // Add supplier publisher method and call it in getPublisherPlugins
+            if (strpos($content, "getSupplierPublisherPlugins") === false) {
+                // Add method before last closing brace
+                $method = "\n    protected function getSupplierPublisherPlugins(): array\n    {\n        return [\n            SupplierSearchConfig::SUPPLIER_PUBLISH_SEARCH_QUEUE => [\n                new SupplierSearchWritePublisherPlugin(),\n            ],\n            SupplierStorageConfig::SUPPLIER_PUBLISH_STORAGE_QUEUE => [\n                new SupplierStorageWritePublisherPlugin(),\n            ],\n        ];\n    }\n";
+                $content = preg_replace("/(\n}\s*$)/", $method . "$1", $content, 1);
+
+                // Add to getPublisherPlugins return array
+                $content = preg_replace(
+                    "/(function\s+getPublisherPlugins.*?return\s+array_merge\s*\()/s",
+                    "$1\n            \$this->getSupplierPublisherPlugins(),",
+                    $content,
+                    1,
+                );
+            }
+
+            file_put_contents($file, $content);
+        ' "$PUB_PROVIDER"
+        echo -e "  ${GREEN}Registered Supplier publisher plugins in PublisherDependencyProvider${NC}"
+    fi
+
+    # Register supplier queue processors in QueueDependencyProvider
+    QUEUE_PROVIDER="$PROJECT_DIR/src/Pyz/Zed/Queue/QueueDependencyProvider.php"
+    if [ -f "$QUEUE_PROVIDER" ] && [ "$(grep -c 'SUPPLIER_PUBLISH_SEARCH_QUEUE\|SUPPLIER_SYNC_SEARCH_QUEUE' "$QUEUE_PROVIDER" || true)" = "0" ]; then
+        php -r '
+            $file = $argv[1];
+            $content = file_get_contents($file);
+
+            $useStatements = "use SprykerAcademy\Shared\SupplierSearch\SupplierSearchConfig;\nuse SprykerAcademy\Shared\SupplierStorage\SupplierStorageConfig;\n";
+            if (strpos($content, "SupplierSearchConfig") === false) {
+                $content = preg_replace(
+                    "/(^class\s)/m",
+                    $useStatements . "\n$1",
+                    $content,
+                    1,
+                );
+            }
+
+            // Add supplier queue processors to getProcessorMessagePlugins
+            $supplierQueues = "\n            SupplierSearchConfig::SUPPLIER_PUBLISH_SEARCH_QUEUE => new EventQueueMessageProcessorPlugin(),\n            SupplierStorageConfig::SUPPLIER_PUBLISH_STORAGE_QUEUE => new EventQueueMessageProcessorPlugin(),\n            SupplierSearchConfig::SUPPLIER_SYNC_SEARCH_QUEUE => new SynchronizationSearchQueueMessageProcessorPlugin(),\n            SupplierStorageConfig::SUPPLIER_SYNC_STORAGE_QUEUE => new SynchronizationStorageQueueMessageProcessorPlugin(),";
+            $content = preg_replace(
+                "/(function\s+getProcessorMessagePlugins.*?return\s*\[)/s",
+                "$1" . $supplierQueues,
+                $content,
+                1,
+            );
+
+            file_put_contents($file, $content);
+        ' "$QUEUE_PROVIDER"
+        echo -e "  ${GREEN}Registered Supplier queue processors in QueueDependencyProvider${NC}"
+    fi
+
+    # Register supplier queues in SymfonyMessengerConfig
+    SM_CONFIG="$PROJECT_DIR/src/Pyz/Client/SymfonyMessenger/SymfonyMessengerConfig.php"
+    if [ -f "$SM_CONFIG" ] && [ "$(grep -c 'SupplierSearchConfig' "$SM_CONFIG" || true)" = "0" ]; then
+        php -r '
+            $file = $argv[1];
+            $content = file_get_contents($file);
+
+            $useStatements = "use SprykerAcademy\Shared\SupplierSearch\SupplierSearchConfig;\nuse SprykerAcademy\Shared\SupplierStorage\SupplierStorageConfig;\n";
+            $content = preg_replace(
+                "/(^class\s)/m",
+                $useStatements . "\n$1",
+                $content,
+                1,
+            );
+
+            // Add to getPublishQueueConfiguration
+            $content = preg_replace(
+                "/(function\s+getPublishQueueConfiguration.*?return\s*\[)/s",
+                "$1\n            SupplierSearchConfig::SUPPLIER_PUBLISH_SEARCH_QUEUE,\n            SupplierStorageConfig::SUPPLIER_PUBLISH_STORAGE_QUEUE,",
+                $content,
+                1,
+            );
+
+            // Add to getSynchronizationQueueConfiguration
+            $content = preg_replace(
+                "/(function\s+getSynchronizationQueueConfiguration.*?return\s*\[)/s",
+                "$1\n            SupplierSearchConfig::SUPPLIER_SYNC_SEARCH_QUEUE,\n            SupplierStorageConfig::SUPPLIER_SYNC_STORAGE_QUEUE,",
+                $content,
+                1,
+            );
+
+            file_put_contents($file, $content);
+        ' "$SM_CONFIG"
+        echo -e "  ${GREEN}Registered Supplier queues in SymfonyMessengerConfig${NC}"
+    fi
 fi
 
 # Copy exercise tests if present
