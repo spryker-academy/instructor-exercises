@@ -48,22 +48,24 @@ After adding the source directory, generate the API resources:
 docker/sdk cli glue api:generate Storefront
 ```
 
-This command:
-1. Scans all source directories for `.resource.yml` files
-2. Generates PHP Resource classes (e.g., `Generated\Api\Storefront\SuppliersStorefrontResource`)
-3. Registers the resources with the API Platform router
+This command scans all registered source directories for `.resource.yml` files and generates PHP Resource classes (e.g., `Generated\Api\Storefront\SuppliersStorefrontResource`).
 
-You can also generate Backend API resources:
+### API Platform Commands Reference
 
-```bash
-docker/sdk cli glue api:generate Backend
-```
+| Command | Purpose |
+|---------|---------|
+| `glue api:generate` | Generate resources for ALL configured API types |
+| `glue api:generate Storefront` | Generate only Storefront API resources |
+| `glue api:generate Backend` | Generate only Backend API resources |
+| `glue api:generate --dry-run` | Preview what would be generated without writing |
+| `glue api:generate --validate-only` | Validate schemas without generating |
+| `glue api:generate -r suppliers` | Generate only the `suppliers` resource |
+| `glue api:debug --list` | List all registered resources across all API types |
+| `glue api:debug suppliers` | Inspect a specific resource's merged schema |
+| `glue api:debug suppliers --show-sources` | Show all source files with priority |
+| `glue api:debug suppliers --show-merged` | Display the final merged YAML schema |
 
-Use `--dry-run` to preview what would be generated without writing files:
-
-```bash
-docker/sdk cli glue api:generate Storefront --dry-run
-```
+> **Docs:** [Spryker API Platform Architecture](https://docs.spryker.com/docs/dg/dev/architecture/api-platform) | [Resource Schemas](https://docs.spryker.com/docs/dg/dev/architecture/api-platform/resource-schemas.html)
 
 ---
 
