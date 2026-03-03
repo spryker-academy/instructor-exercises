@@ -257,6 +257,55 @@ YAMLEOF
         echo -e "  ${GREEN}Registered Supplier queue processors in QueueDependencyProvider${NC}"
     fi
 
+    # Create supplier queues in RabbitMQ via management API
+    if command -v curl > /dev/null 2>&1; then
+        RMQ_API="http://queue.spryker.local/api/queues/eu-docker"
+        RMQ_AUTH="spryker:secret"
+        for QUEUE in publish.search.supplier publish.storage.supplier sync.search.supplier sync.storage.supplier; do
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -u "$RMQ_AUTH" -X PUT "$RMQ_API/$QUEUE" -H 'Content-Type: application/json' -d '{"durable":true,"auto_delete":false}' 2>/dev/null || true)
+            if [ "$HTTP_CODE" = "201" ] || [ "$HTTP_CODE" = "204" ]; then
+                true  # Queue created or already exists
+            fi
+        done
+        echo -e "  ${GREEN}Ensured supplier queues exist in RabbitMQ${NC}"
+    fi
+
+    # Register supplier queues in RabbitMqConfig (creates actual AMQP queues)
+    RMQ_CONFIG="$PROJECT_DIR/src/Pyz/Client/RabbitMq/RabbitMqConfig.php"
+    if [ -f "$RMQ_CONFIG" ] && [ "$(grep -c 'SupplierSearchConfig' "$RMQ_CONFIG" || true)" = "0" ]; then
+        php -r '
+            $file = $argv[1];
+            $content = file_get_contents($file);
+
+            $useStatements = "use SprykerAcademy\Shared\SupplierSearch\SupplierSearchConfig;\nuse SprykerAcademy\Shared\SupplierStorage\SupplierStorageConfig;\n";
+            $content = preg_replace(
+                "/(^class\s)/m",
+                $useStatements . "\n$1",
+                $content,
+                1,
+            );
+
+            // Add to getPublishQueueConfiguration
+            $content = preg_replace(
+                "/(function\s+getPublishQueueConfiguration.*?return\s*\[)/s",
+                "$1\n            SupplierSearchConfig::SUPPLIER_PUBLISH_SEARCH_QUEUE,\n            SupplierStorageConfig::SUPPLIER_PUBLISH_STORAGE_QUEUE,",
+                $content,
+                1,
+            );
+
+            // Add to getSynchronizationQueueConfiguration
+            $content = preg_replace(
+                "/(function\s+getSynchronizationQueueConfiguration.*?return\s*\[)/s",
+                "$1\n            SupplierSearchConfig::SUPPLIER_SYNC_SEARCH_QUEUE,\n            SupplierStorageConfig::SUPPLIER_SYNC_STORAGE_QUEUE,",
+                $content,
+                1,
+            );
+
+            file_put_contents($file, $content);
+        ' "$RMQ_CONFIG"
+        echo -e "  ${GREEN}Registered Supplier queues in RabbitMqConfig${NC}"
+    fi
+
     # Register supplier queues in SymfonyMessengerConfig
     SM_CONFIG="$PROJECT_DIR/src/Pyz/Client/SymfonyMessenger/SymfonyMessengerConfig.php"
     if [ -f "$SM_CONFIG" ] && [ "$(grep -c 'SupplierSearchConfig' "$SM_CONFIG" || true)" = "0" ]; then
