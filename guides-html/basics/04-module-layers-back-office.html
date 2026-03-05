@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Exercise 4: Module Layers - Back Office Step</title>
+  <style>
+    html {
+      line-height: 1.5;
+      font-family: Georgia, serif;
+      font-size: 20px;
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      word-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 1em;
+      }
+    }
+    @media print {
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, 'Lucida Console', Consolas, monospace;
+      font-size: 85%;
+      margin: 0;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Exercise 4: Module Layers - Back Office Step</h1>
+</header>
+<h1 id="exercise-4-module-layers---back-office-step">Exercise 4: Module Layers - Back Office Step</h1>
+<p>In this exercise, you will create a message through a Back Office controller and persist it in the database. You will learn how to work with the Persistence, Business, and Communication layers in Zed.</p>
+<p><strong>Part 1 of 2</strong> - This guide focuses on the Zed layer.</p>
+<h2 id="loading-the-exercise">Loading the Exercise</h2>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> hello-world basics/module-layers/skeleton</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli composer dump-autoload</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console propel:install</span></code></pre></div>
+<hr />
+<h2 id="working-on-the-exercise">Working on the Exercise</h2>
+<h3 id="create-the-persistence-layer">1. Create the Persistence Layer</h3>
+<h4 id="add-a-messagecriteriatransfer-definition">1.1 Add a MessageCriteriaTransfer Definition</h4>
+<p>It is good practice to not use simple types directly for requesting data from the Persistence Layer. Instead, create a <code>*CriteriaTransfer</code>.</p>
+<p><strong>Coding time:</strong></p>
+<p>Open <code>src/SprykerAcademy/Shared/HelloWorld/Transfer/helloworld.transfer.xml</code> and add a DTO named <strong>MessageCriteria</strong> with: - Property <code>idMessage</code> of type <code>int</code> - Property <code>message</code> of type <code>string</code></p>
+<p>Regenerate transfers:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span></code></pre></div>
+<h4 id="create-the-persistence-layer-factory">1.2 Create the Persistence Layer Factory</h4>
+<p>Query classes are auto-generated from Propel schema files. All ORM generated query classes have a static <code>create()</code> method.</p>
+<p><strong>Coding time:</strong></p>
+<p>Open <code>src/SprykerAcademy/Zed/HelloWorld/Persistence/HelloWorldPersistenceFactory.php</code>. In the <code>createMessageQuery()</code> method, return an instance of <code>PyzMessageQuery</code>.</p>
+<h4 id="create-the-repository">1.3 Create the Repository</h4>
+<p>The Repository reads data. Use <code>getFactory()</code> to access the Persistence Factory (provided by <code>AbstractRepository</code>).</p>
+<p>Key patterns: - Propel query objects provide magic <code>findOneBy&lt;ColumnName&gt;()</code> methods for exact lookups - For partial matching, use <code>filterBy&lt;ColumnName&gt;()</code> with <code>Criteria::LIKE</code> as the second parameter, then call <code>findOne()</code>. You will need to import <code>Propel\Runtime\ActiveQuery\Criteria</code> - Convert entities to DTOs using the Mapper (available via the factory)</p>
+<p><strong>Coding time:</strong></p>
+<p>Open <code>src/SprykerAcademy/Zed/HelloWorld/Persistence/HelloWorldRepository.php</code>. In the <code>findMessage()</code> method: 1. Get the message query from the factory 2. If the criteria has an <code>idMessage</code>, find by ID and return the result 3. If the criteria has a <code>message</code> string, use LIKE filtering to find a partial match and return only one result 4. Return <code>null</code> if no entity was found 5. Map the entity to a DTO using the MessageMapper and return it</p>
+<h4 id="create-the-entitymanager">1.4 Create the EntityManager</h4>
+<p>The EntityManager handles writes. Transform the DTO to an entity, save it, and transform it back.</p>
+<p><strong>Coding time:</strong></p>
+<p>Open <code>src/SprykerAcademy/Zed/HelloWorld/Persistence/HelloWorldEntityManager.php</code>. In the <code>createMessage()</code> method: 1. Map the DTO to an entity using the MessageMapper 2. Call <code>$messageEntity-&gt;save()</code> 3. Map the entity back to a DTO and return it</p>
+<hr />
+<h3 id="build-the-business-logic">2. Build the Business Logic</h3>
+<h4 id="add-messageresponsetransfer-definition">2.1 Add MessageResponseTransfer Definition</h4>
+<p>Wrap the DTO in a <code>*ResponseTransfer</code> to include success/error information.</p>
+<p><strong>Coding time:</strong></p>
+<p>Open <code>src/SprykerAcademy/Shared/HelloWorld/Transfer/helloworld.transfer.xml</code> and add a DTO named <strong>MessageResponse</strong> with: - Property <code>message</code> of type <code>Message</code> - Property <code>isSuccessful</code> of type <code>bool</code></p>
+<p>Regenerate:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span></code></pre></div>
+<h4 id="the-writer">2.2 The Writer</h4>
+<p>Separate reading from writing. The Writer uses the EntityManager.</p>
+<p><strong>Coding time:</strong></p>
+<p>Open <code>src/SprykerAcademy/Zed/HelloWorld/Business/Writer/MessageWriter.php</code>: - Inject <code>HelloWorldEntityManagerInterface</code> through the constructor - In the <code>create()</code> method, use the EntityManager to create and return the message</p>
+<h4 id="the-reader">2.3 The Reader</h4>
+<p>The Reader uses the Repository and prepares the response.</p>
+<p><strong>Coding time:</strong></p>
+<p>Open <code>src/SprykerAcademy/Zed/HelloWorld/Business/Reader/MessageReader.php</code>: - Inject <code>HelloWorldRepositoryInterface</code> through the constructor - In the <code>findMessage()</code> method, use the Repository to find a message by criteria - Create a <code>MessageResponseTransfer</code> and set <code>message</code> and <code>isSuccessful</code> based on the result - Return the response</p>
+<h4 id="instantiate-business-models">2.4 Instantiate Business Models</h4>
+<p>Each layer has its own Factory. The Business Factory can access <code>getEntityManager()</code> and <code>getRepository()</code>.</p>
+<p><strong>Coding time:</strong></p>
+<p>Open <code>src/SprykerAcademy/Zed/HelloWorld/Business/HelloWorldBusinessFactory.php</code>. Instantiate <code>MessageWriter</code> and <code>MessageReader</code> with their dependencies.</p>
+<h4 id="expose-functionality-through-the-facade">2.5 Expose Functionality through the Facade</h4>
+<p>The Facade is the module’s public API. Use <code>getFactory()</code> to access the Business Factory.</p>
+<p><strong>Coding time:</strong></p>
+<p>Open <code>src/SprykerAcademy/Zed/HelloWorld/Business/HelloWorldFacade.php</code>. Implement <code>createMessage()</code> and <code>findMessage()</code> using the factory’s writer and reader.</p>
+<hr />
+<h3 id="visual-in-the-back-office">3. Visual in the Back Office</h3>
+<h4 id="controller-for-the-back-office">3.1 Controller for the Back Office</h4>
+<p>The controller uses the <code>message</code> query parameter for simplicity. Use <code>getFacade()</code> to access the module’s Facade.</p>
+<p><strong>Coding time:</strong></p>
+<p>Open <code>src/SprykerAcademy/Zed/HelloWorld/Communication/Controller/MessageController.php</code>. Complete <code>addAction()</code>: 1. Instantiate <code>MessageCriteriaTransfer</code> and set the message name from the query parameter 2. Use the Facade to find the message 3. If no message is found, create a new <code>MessageTransfer</code> with the name and use the Facade to create it</p>
+<h4 id="template-for-the-back-office">3.2 Template for the Back Office</h4>
+<p>The controller passes <code>message</code> (a <code>MessageTransfer</code>) to the template. Access object properties with dot notation: <code>objectName.objectProperty</code>.</p>
+<p><strong>Coding time:</strong></p>
+<p>Open <code>src/SprykerAcademy/Zed/HelloWorld/Presentation/Message/add.twig</code>. Replace the placeholder <code>'show-message-name-here'</code> with the actual message name.</p>
+<p>Clear cache:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span></code></pre></div>
+<p>Visit: http://backoffice.eu.spryker.local/hello-world/message/add Use query parameter <code>?message=YourName</code> to create a message with a custom name.</p>
+<hr />
+<h2 id="verify-your-work">Verify Your Work</h2>
+<p>Run the automated tests for this exercise:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/HelloWorld/ Exercise4</span></code></pre></div>
+<p>This tests the MessageReader and MessageWriter business logic. All tests should pass if your implementation is correct.</p>
+<hr />
+<h2 id="solution">Solution</h2>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> hello-world basics/module-layers/complete</span></code></pre></div>
+</body>
+</html>

@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Exercise 5: Module Layers - Storefront Step</title>
+  <style>
+    html {
+      line-height: 1.5;
+      font-family: Georgia, serif;
+      font-size: 20px;
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      word-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 1em;
+      }
+    }
+    @media print {
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, 'Lucida Console', Consolas, monospace;
+      font-size: 85%;
+      margin: 0;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Exercise 5: Module Layers - Storefront Step</h1>
+</header>
+<h1 id="exercise-5-module-layers---storefront-step">Exercise 5: Module Layers - Storefront Step</h1>
+<p>In this exercise, you will display a persisted message in Yves (the Storefront). You will learn how to communicate between Yves and Zed using the Client layer and the BackendGateway.</p>
+<p><strong>Part 2 of 2</strong> - This guide focuses on showing the message in Yves.</p>
+<h2 id="prerequisites">Prerequisites</h2>
+<ul>
+<li>You must have completed <a href="04-module-layers-back-office.md">Exercise 4: Module Layers - Back Office Step</a></li>
+</ul>
+<p>We continue on the code from Part 1.</p>
+<hr />
+<h2 id="working-on-the-exercise">Working on the Exercise</h2>
+<h3 id="expose-message-to-storefronts">1. Expose Message to Storefronts</h3>
+<h4 id="gatewaycontroller-for-communication-with-yves">1.1 GatewayController for Communication with Yves</h4>
+<p>The <code>GatewayController</code> exposes an endpoint from Zed to Yves via the BackendGateway.</p>
+<p><strong>Coding time:</strong></p>
+<p>Open <code>src/SprykerAcademy/Zed/HelloWorld/Communication/Controller/GatewayController.php</code>. Complete <code>findMessageAction()</code> by finding a message through the Facade using the <code>MessageCriteriaTransfer</code>.</p>
+<p>Clear cache:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span></code></pre></div>
+<hr />
+<h3 id="build-the-client">2. Build the Client</h3>
+<h4 id="create-a-stub-for-calling-backendgateway">2.1 Create a Stub for Calling BackendGateway</h4>
+<p>The Stub uses <code>ZedRequestClient</code> to call Zed from the Storefront.</p>
+<p><strong>Coding time:</strong></p>
+<p>Open <code>src/SprykerAcademy/Client/HelloWorld/Stub/HelloWorldStub.php</code>. In the <code>findMessage()</code> method, fill in the correct path to the GatewayController action.</p>
+<p>The DTO is serialized on one side and deserialized on the other side of the request.</p>
+<h4 id="provide-zedrequestclient-as-a-dependency">2.2 Provide ZedRequestClient as a Dependency</h4>
+<p>Every external dependency must be provided through the DependencyProvider. The pattern:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">protected</span> <span class="kw">function</span> addStoreClient(<span class="cn">C</span>ontainer <span class="va">$container</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="va">$container</span>-&gt;set(<span class="kw">static</span>::<span class="cn">CLIENT_STORE</span><span class="ot">,</span> <span class="kw">function</span> (<span class="cn">C</span>ontainer <span class="va">$container</span>) {</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">$container</span>-&gt;getLocator()-&gt;store()-&gt;client()<span class="ot">;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    })<span class="ot">;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="va">$container</span><span class="ot">;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>The locator works as: <code>$container-&gt;getLocator()-&gt;&lt;moduleName&gt;()-&gt;&lt;what&gt;()</code>.</p>
+<p><strong>Coding time:</strong></p>
+<p>Open <code>src/SprykerAcademy/Client/HelloWorld/HelloWorldDependencyProvider.php</code>. In the <code>addZedRequestClient()</code> method, make the <code>ZedRequestClient</code> available using the locator and the constant <code>CLIENT_ZED_REQUEST</code>.</p>
+<h4 id="instantiate-the-helloworldstub">2.3 Instantiate the HelloWorldStub</h4>
+<p>Note the naming conventions: <code>create*()</code> for instantiation (using <code>new</code>), <code>get*()</code> for retrieving provided dependencies.</p>
+<p><strong>Coding time:</strong></p>
+<p>Open <code>src/SprykerAcademy/Client/HelloWorld/HelloWorldFactory.php</code>. In <code>createHelloWorldStub()</code>, instantiate and return a <code>HelloWorldStub</code> with the correct dependency injected.</p>
+<h4 id="create-the-client-internal-api">2.4 Create the Client (Internal API)</h4>
+<p>The <code>*Client</code> class is what gets provided to other clients, Yves, or Glue through their DependencyProviders.</p>
+<p><strong>Coding time:</strong></p>
+<p>Open <code>src/SprykerAcademy/Client/HelloWorld/HelloWorldClient.php</code>. Complete <code>findMessage()</code> by using the factory to create a <code>HelloWorldStub</code> and return the found message.</p>
+<p>Update IDE auto-completion:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console dev:ide-auto-completion:generate</span></code></pre></div>
+<hr />
+<h3 id="build-yves">3. Build Yves</h3>
+<h4 id="dependencyprovider-and-factory">3.1 DependencyProvider and Factory</h4>
+<p>Make the <code>HelloWorldClient</code> available in the Yves application layer.</p>
+<p><strong>Coding time:</strong></p>
+<p>Open <code>src/SprykerAcademy/Yves/HelloWorldPage/HelloWorldPageDependencyProvider.php</code>. In the <code>addHelloWorldClient()</code> method, make the <code>HelloWorldClient</code> available.</p>
+<p><strong>Coding time:</strong></p>
+<p>Open <code>src/SprykerAcademy/Yves/HelloWorldPage/HelloWorldPageFactory.php</code>. Complete <code>getHelloWorldClient()</code> by returning the provided dependency using <code>HelloWorldPageDependencyProvider::CLIENT_HELLOWORLD</code>.</p>
+<h4 id="controller">3.2 Controller</h4>
+<p>The template is already provided at <code>src/SprykerAcademy/Yves/HelloWorldPage/Theme/default/views/message/get.twig</code> and expects a variable named <code>message</code>.</p>
+<p><strong>Coding time:</strong></p>
+<p>Open <code>src/SprykerAcademy/Yves/HelloWorldPage/Controller/MessageController.php</code>. Complete <code>getAction()</code>: 1. Instantiate a <code>MessageCriteriaTransfer</code> and set the message ID from the route parameter 2. Use <code>getFactory()</code> to access the <code>HelloWorldClient</code> 3. Find a message by the criteria and assign the result to <code>$messageResponseTransfer</code></p>
+<h4 id="routing">3.3 Routing</h4>
+<p>Unlike the Back Office, Yves requires explicit route definitions via a <code>*RouteProviderPlugin</code>.</p>
+<p><strong>Coding time:</strong></p>
+<p>Open <code>src/SprykerAcademy/Yves/HelloWorldPage/Plugin/Router/HelloWorldPageRouteProviderPlugin.php</code>. In <code>addHelloWorldMessageGetRoute()</code>, fill in the correct <strong>module name</strong> and <strong>controller name</strong> for the placeholders.</p>
+<p><strong>Coding time:</strong></p>
+<p>Open <code>src/SprykerAcademy/Yves/Router/RouterDependencyProvider.php</code>. Add an instance of <code>HelloWorldPageRouteProviderPlugin</code> at the end of the router plugins in <code>getRouteProvider()</code>.</p>
+<hr />
+<h2 id="testing">Testing</h2>
+<ol type="1">
+<li>Create a message via Back Office: http://backoffice.eu.spryker.local/hello-world/message/add</li>
+<li>View the message in Yves using its ID: http://yves.eu.spryker.local/hello-world/message/1</li>
+</ol>
+<hr />
+<h2 id="verify-your-work">Verify Your Work</h2>
+<p>Run the automated tests for this exercise:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/HelloWorld/ Exercise5</span></code></pre></div>
+<p>Or run all exercise tests at once:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/HelloWorld/</span></code></pre></div>
+<p>All tests should pass if your implementation is correct.</p>
+<hr />
+<h2 id="solution">Solution</h2>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> hello-world basics/module-layers/complete</span></code></pre></div>
+</body>
+</html>

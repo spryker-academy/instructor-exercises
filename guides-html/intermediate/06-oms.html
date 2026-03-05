@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Exercise 13: Order Management System (OMS)</title>
+  <style>
+    html {
+      line-height: 1.5;
+      font-family: Georgia, serif;
+      font-size: 20px;
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      word-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 1em;
+      }
+    }
+    @media print {
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, 'Lucida Console', Consolas, monospace;
+      font-size: 85%;
+      margin: 0;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Exercise 13: Order Management System (OMS)</h1>
+</header>
+<h1 id="exercise-13-order-management-system-oms">Exercise 13: Order Management System (OMS)</h1>
+<p>In this exercise, you will build a complete order management process using Spryker’s OMS State Machine. You will define states, transitions, events, commands, and conditions in XML, then implement the command and condition plugins in PHP.</p>
+<p>You will learn how to: - Define states with reserved and display properties - Create transitions between states with events and conditions - Add commands (business logic) and conditions (routing logic) to the state machine - Implement <code>CommandByOrderInterface</code> and <code>ConditionInterface</code> plugins - Register OMS plugins in the DependencyProvider - Visualize and test the state machine in the Back Office - Mark the “happy path” for visual representation</p>
+<h2 id="prerequisites">Prerequisites</h2>
+<ul>
+<li>A running Spryker demo shop with products available for checkout</li>
+<li>Understanding of the Facade and DependencyProvider patterns</li>
+</ul>
+<h2 id="loading-the-exercise">Loading the Exercise</h2>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> supplier intermediate/oms/skeleton</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli composer dump-autoload</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span></code></pre></div>
+<hr />
+<h2 id="background-oms-architecture">Background: OMS Architecture</h2>
+<p>Spryker’s Order Management System uses an XML-based state machine to define the lifecycle of an order. Each order item moves through states based on events, commands, and conditions.</p>
+<pre><code>State Machine XML (config/Zed/oms/Demo01.xml)
+    ├── States      — positions in the workflow (new, paid, shipped, closed)
+    ├── Transitions — connections between states (source → target)
+    ├── Events      — triggers for transitions (manual, onEnter, timeout)
+    ├── Commands    — PHP plugins that execute business logic
+    └── Conditions  — PHP plugins that decide which transition to take</code></pre>
+<p><strong>Key concepts:</strong></p>
+<table>
+<colgroup>
+<col style="width: 19%" />
+<col style="width: 28%" />
+<col style="width: 32%" />
+<col style="width: 19%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Concept</th>
+<th>XML Element</th>
+<th>PHP Interface</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>State</td>
+<td><code>&lt;state name="new"/&gt;</code></td>
+<td>—</td>
+<td>Order’s current position</td>
+</tr>
+<tr class="even">
+<td>Transition</td>
+<td><code>&lt;transition&gt;</code></td>
+<td>—</td>
+<td>Connects two states</td>
+</tr>
+<tr class="odd">
+<td>Event</td>
+<td><code>&lt;event name="pay"/&gt;</code></td>
+<td>—</td>
+<td>Triggers a transition</td>
+</tr>
+<tr class="even">
+<td>Command</td>
+<td><code>command="Oms/Pay"</code></td>
+<td><code>CommandByOrderInterface</code></td>
+<td>Executes logic on event</td>
+</tr>
+<tr class="odd">
+<td>Condition</td>
+<td><code>condition="Oms/IsAuthorized"</code></td>
+<td><code>ConditionInterface</code></td>
+<td>Routes to different states</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="working-on-the-exercise">Working on the Exercise</h2>
+<h3 id="part-1-enable-the-state-machine">Part 1: Enable the State Machine</h3>
+<p>The OMS process must be registered as an active process and mapped to a payment method.</p>
+<p><strong>Coding time:</strong></p>
+<p>Open <code>config/Shared/common/config_oms-development.php</code>:</p>
+<ol type="1">
+<li>Add the state machine name to the list of active processes. The name must match the XML filename without the <code>.xml</code> extension (e.g., <code>'Demo01'</code>).</li>
+<li>Map the state machine to the invoice payment method by replacing the current process name with your new one.</li>
+</ol>
+<blockquote>
+<p><strong>Verify:</strong> Visit http://backoffice.eu.spryker.local/oms — the Demo01 process should be listed. Clicking it shows a blank page (the state machine is still empty).</p>
+</blockquote>
+<hr />
+<h3 id="part-2-define-states">Part 2: Define States</h3>
+<p>States represent the positions an order item can be in during its lifecycle.</p>
+<p><strong>Coding time:</strong></p>
+<p>Open <code>config/Zed/oms/Demo01.xml</code>. Inside the <code>&lt;states&gt;</code> element, add the following states: - <code>new</code> (reserved) - <code>payment pending</code> (reserved) - <code>invalid</code> - <code>payment authorized</code> (reserved) - <code>paid</code> (reserved) - <code>closed</code></p>
+<blockquote>
+<p><strong><code>reserved="true"</code>:</strong> Reserved states indicate that the order item is still “active” — the associated stock is reserved. Non-reserved states (like <code>closed</code> or <code>invalid</code>) release the stock reservation.</p>
+<p><strong><code>display</code> attribute:</strong> Optional — provides a translation key for the Back Office UI (e.g., <code>display="oms.state.new"</code>).</p>
+</blockquote>
+<p>After adding states, refresh the OMS visualization in the Back Office — you should see all states displayed.</p>
+<hr />
+<h3 id="part-3-define-transitions">Part 3: Define Transitions</h3>
+<p>Transitions connect states. They define how an order item moves from one state to another.</p>
+<p><strong>Coding time:</strong></p>
+<p>In the same file, inside the <code>&lt;transitions&gt;</code> element, add transitions:</p>
+<ul>
+<li><code>new</code> → <code>payment pending</code></li>
+<li><code>new</code> → <code>invalid</code></li>
+<li><code>payment pending</code> → <code>payment authorized</code></li>
+<li><code>payment authorized</code> → <code>paid</code> (auto-transition, no event)</li>
+<li><code>paid</code> → <code>closed</code> (auto-transition, no event)</li>
+</ul>
+<blockquote>
+<p><strong>Auto-transitions:</strong> Transitions without an event happen automatically when the order enters the source state. Use them for states that should flow through immediately.</p>
+</blockquote>
+<hr />
+<h3 id="part-4-define-events">Part 4: Define Events</h3>
+<p>Events are the triggers that cause transitions to happen. They can be: - <strong><code>onEnter="true"</code></strong> — triggered automatically when entering the target state - <strong><code>manual="true"</code></strong> — triggered by a user clicking a button in the Back Office - <strong><code>timeout="N days"</code></strong> — triggered after a time delay - <strong><code>command="Module/Name"</code></strong> — executes a PHP plugin when the event fires</p>
+<p><strong>Coding time:</strong></p>
+<p>In the <code>&lt;events&gt;</code> element, add: - <code>authorize</code> — with <code>onEnter="true"</code> and <code>manual="true"</code> - <code>pay</code> — with <code>onEnter="true"</code> and <code>manual="true"</code></p>
+<hr />
+<h3 id="part-5-assign-events-to-transitions">Part 5: Assign Events to Transitions</h3>
+<p>Connect events to transitions so the state machine knows which event triggers which transition.</p>
+<p><strong>Coding time:</strong></p>
+<p>Update the transitions to include <code>&lt;event&gt;</code> elements: - <code>new</code> → <code>payment pending</code> with the <code>authorize</code> event - <code>new</code> → <code>invalid</code> with the <code>authorize</code> event - <code>payment pending</code> → <code>payment authorized</code> with the <code>pay</code> event</p>
+<blockquote>
+<p><strong>Two transitions with the same event:</strong> When <code>authorize</code> fires from the <code>new</code> state, the system needs a <strong>condition</strong> to decide which transition to take (→ <code>payment pending</code> or → <code>invalid</code>). We’ll add that next.</p>
+</blockquote>
+<hr />
+<h3 id="part-6-add-command-and-condition">Part 6: Add Command and Condition</h3>
+<h4 id="add-command-to-state-machine-xml">6.1 Add Command to State Machine XML</h4>
+<p>A command executes PHP logic when an event triggers. Add the <code>command</code> attribute to the <code>authorize</code> event:</p>
+<pre><code>command=&quot;Demo/Pay&quot;</code></pre>
+<p>The string <code>Demo/Pay</code> is a key that maps to a PHP plugin registered in the DependencyProvider.</p>
+<h4 id="add-condition-to-state-machine-xml">6.2 Add Condition to State Machine XML</h4>
+<p>A condition decides which transition to take when multiple transitions share the same event from the same source state. Add the <code>condition</code> attribute to the transition from <code>new</code> → <code>payment pending</code>:</p>
+<pre><code>condition=&quot;Demo/IsAuthorized&quot;</code></pre>
+<p>When the condition returns <code>true</code>, the order goes to <code>payment pending</code> (happy path). When <code>false</code>, it goes to <code>invalid</code>.</p>
+<hr />
+<h3 id="part-7-implement-the-command-plugin">Part 7: Implement the Command Plugin</h3>
+<p><strong>Coding time:</strong></p>
+<p>Open <code>src/SprykerAcademy/Zed/Oms/Communication/Plugin/Oms/Command/PayCommandPlugin.php</code>. Implement the <code>run()</code> method from <code>CommandByOrderInterface</code>.</p>
+<p>The method receives the order items, the order entity, and a data object. For this exercise, return an empty array.</p>
+<blockquote>
+<p><strong>In production:</strong> The command would call a payment gateway, update order data, send notifications, etc. The empty implementation is just for the exercise.</p>
+<p><strong>Method signature:</strong> Check <code>vendor/spryker/oms/src/Spryker/Zed/Oms/Dependency/Plugin/Command/CommandByOrderInterface.php</code> for the exact parameters.</p>
+</blockquote>
+<hr />
+<h3 id="part-8-implement-the-condition-plugin">Part 8: Implement the Condition Plugin</h3>
+<p><strong>Coding time:</strong></p>
+<p>Open <code>src/SprykerAcademy/Zed/Oms/Communication/Plugin/Oms/Condition/IsAuthorizedConditionPlugin.php</code>. Implement the <code>check()</code> method from <code>ConditionInterface</code>.</p>
+<p>Return <code>true</code> to always authorize (happy path). In production, this would check payment authorization status.</p>
+<blockquote>
+<p><strong>Method signature:</strong> Check <code>vendor/spryker/oms/src/Spryker/Zed/Oms/Dependency/Plugin/Condition/ConditionInterface.php</code>.</p>
+</blockquote>
+<hr />
+<h3 id="part-9-register-plugins-in-dependencyprovider">Part 9: Register Plugins in DependencyProvider</h3>
+<p><strong>Coding time:</strong></p>
+<p>Open <code>src/SprykerAcademy/Zed/Oms/OmsDependencyProvider.php</code>:</p>
+<ol type="1">
+<li>Add the <code>PayCommandPlugin</code> to the command collection with the key <code>'Demo/Pay'</code></li>
+<li>Add the <code>IsAuthorizedConditionPlugin</code> to the condition collection with the key <code>'Demo/IsAuthorized'</code></li>
+</ol>
+<blockquote>
+<p><strong>String matching:</strong> The plugin key strings must match EXACTLY what you defined in the XML (<code>command="Demo/Pay"</code> and <code>condition="Demo/IsAuthorized"</code>). Including the slash.</p>
+</blockquote>
+<p>After registering, refresh the OMS visualization — the red warnings about missing command/condition implementations should disappear.</p>
+<hr />
+<h3 id="part-10-mark-the-happy-path">Part 10: Mark the Happy Path</h3>
+<p>The happy path is the expected/successful flow through the state machine. Marking it with <code>happy="true"</code> on transitions renders them in green in the Back Office visualization.</p>
+<p><strong>Coding time:</strong></p>
+<p>Add <code>happy="true"</code> to the transitions that form the successful flow: <code>new</code> → <code>payment pending</code> → <code>payment authorized</code> → <code>paid</code> → <code>closed</code></p>
+<hr />
+<h2 id="test-the-state-machine">Test the State Machine</h2>
+<ol type="1">
+<li>Visit http://backoffice.eu.spryker.local/oms and verify the Demo01 process visualization</li>
+<li>Go to http://yves.eu.spryker.local/ and place an order using the Invoice payment method</li>
+<li>Open the order in http://backoffice.eu.spryker.local/sales/</li>
+<li>The order should flow through the states: <code>new</code> → <code>payment pending</code> → <code>payment authorized</code> → <code>paid</code> → <code>closed</code></li>
+<li>Manual events (like <code>pay</code>) show as buttons next to the order item — click them to advance the state</li>
+</ol>
+<hr />
+<h2 id="key-concepts-summary">Key Concepts Summary</h2>
+<h3 id="event-types">Event Types</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Type</th>
+<th>Attribute</th>
+<th>When it fires</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Auto</td>
+<td><code>onEnter="true"</code></td>
+<td>Immediately when entering the source state</td>
+</tr>
+<tr class="even">
+<td>Manual</td>
+<td><code>manual="true"</code></td>
+<td>When a user clicks the button in Back Office</td>
+</tr>
+<tr class="odd">
+<td>Timeout</td>
+<td><code>timeout="14 days"</code></td>
+<td>After the specified time has elapsed</td>
+</tr>
+</tbody>
+</table>
+<h3 id="condition-routing">Condition Routing</h3>
+<p>When two transitions share the same event from the same source state: - The transition <strong>with a condition</strong> is checked first - If the condition returns <code>true</code>, that transition is taken - If <code>false</code>, the transition <strong>without a condition</strong> is taken (fallback)</p>
+<h3 id="plugin-registration-pattern">Plugin Registration Pattern</h3>
+<pre><code>XML: command=&quot;Demo/Pay&quot; → PHP: $commandCollection-&gt;add(new PayCommandPlugin(), &#39;Demo/Pay&#39;)
+XML: condition=&quot;Demo/IsAuthorized&quot; → PHP: $conditionCollection-&gt;add(new IsAuthorizedConditionPlugin(), &#39;Demo/IsAuthorized&#39;)</code></pre>
+<hr />
+<h2 id="solution">Solution</h2>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> supplier intermediate/oms/complete</span></code></pre></div>
+</body>
+</html>

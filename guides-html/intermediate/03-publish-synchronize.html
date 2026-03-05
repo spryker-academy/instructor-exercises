@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Exercise 10: Publish &amp; Synchronize - Supplier</title>
+  <style>
+    html {
+      line-height: 1.5;
+      font-family: Georgia, serif;
+      font-size: 20px;
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      word-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 1em;
+      }
+    }
+    @media print {
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, 'Lucida Console', Consolas, monospace;
+      font-size: 85%;
+      margin: 0;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Exercise 10: Publish &amp; Synchronize - Supplier</h1>
+</header>
+<h1 id="exercise-10-publish-synchronize---supplier">Exercise 10: Publish &amp; Synchronize - Supplier</h1>
+<p>In this exercise, you will make supplier data available in Elasticsearch (search) and Redis (storage) using Spryker’s Publish &amp; Synchronize (P&amp;S) pattern. This is a two-step process: first you <strong>publish</strong> data from the main database into intermediate tables, then the <strong>synchronization</strong> behavior automatically pushes that data to the storefront storages.</p>
+<p>You will learn how to: - Configure publish and synchronize queues in RabbitMQ - Set up queue message processors to handle events - Add Propel behaviors (event + synchronization) to trigger and sync data - Register publisher plugins that react to entity events - Implement publisher plugins that delegate to business logic - Build writers that process events in bulk - Trigger publish events manually from data import</p>
+<h2 id="prerequisites">Prerequisites</h2>
+<ul>
+<li>Completed Exercise 8 (Data Import) — suppliers must be in the database</li>
+<li>Understanding of the Facade, DependencyProvider, and Factory patterns</li>
+</ul>
+<h2 id="loading-the-exercise">Loading the Exercise</h2>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> supplier intermediate/publish-synchronize/skeleton</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli composer dump-autoload</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console propel:install</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console messenger:setup-transports</span></code></pre></div>
+<hr />
+<h2 id="background-publish-synchronize-architecture">Background: Publish &amp; Synchronize Architecture</h2>
+<p>Spryker uses a two-step process to move data from the Zed database to the storefront storages (Elasticsearch, Redis):</p>
+<pre><code>Step 1: PUBLISH                          Step 2: SYNCHRONIZE
+─────────────────                        ────────────────────
+Entity change                            Synchronization behavior
+    ↓                                        ↓
+Event (entity.create/update)             Auto-triggers on table write
+    ↓                                        ↓
+Publish queue                            Sync queue
+    ↓                                        ↓
+Queue processor → Publisher Plugin       Queue processor → Sync plugin
+    ↓                                        ↓
+Writer (business logic)                  Elasticsearch / Redis
+    ↓
+Insert/Update pyz_*_search/storage</code></pre>
+<p><strong>Why two modules?</strong> Spryker separates the logic by target storage: - <code>SupplierSearch</code> — publishes to Elasticsearch (for full-text search) - <code>SupplierStorage</code> — publishes to Redis (for key-value lookups)</p>
+<p>Both follow the same pattern but write to different intermediate tables.</p>
+<hr />
+<h2 id="working-on-the-exercise">Working on the Exercise</h2>
+<h3 id="part-1-understand-the-constants">Part 1: Understand the Constants</h3>
+<p>Open <code>src/SprykerAcademy/Shared/SupplierSearch/SupplierSearchConfig.php</code> and review the constants:</p>
+<table>
+<colgroup>
+<col style="width: 52%" />
+<col style="width: 47%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Constant</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>SUPPLIER_PUBLISH_SEARCH_QUEUE</code></td>
+<td>Queue name for publish events (step 1)</td>
+</tr>
+<tr class="even">
+<td><code>SUPPLIER_SYNC_SEARCH_QUEUE</code></td>
+<td>Queue name for sync events (step 2)</td>
+</tr>
+<tr class="odd">
+<td><code>ENTITY_PYZ_SUPPLIER_CREATE/UPDATE/DELETE</code></td>
+<td>Events fired by Propel’s event behavior</td>
+</tr>
+<tr class="even">
+<td><code>SUPPLIER_PUBLISH</code></td>
+<td>Manual publish event (fired from code)</td>
+</tr>
+</tbody>
+</table>
+<p>Similar constants exist in <code>SupplierStorageConfig</code> for the Redis pipeline. You’ll use these constants throughout the exercise — never use plain strings for queue names or event names.</p>
+<hr />
+<h3 id="part-2-set-up-the-queues">Part 2: Set Up the Queues</h3>
+<p>P&amp;S uses four queues — two per pipeline (Search + Storage):</p>
+<table>
+<thead>
+<tr class="header">
+<th>Queue</th>
+<th>Purpose</th>
+<th>Step</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>publish.search.supplier</code></td>
+<td>Carries publish events for search</td>
+<td>Publish</td>
+</tr>
+<tr class="even">
+<td><code>sync.search.supplier</code></td>
+<td>Carries sync messages to Elasticsearch</td>
+<td>Synchronize</td>
+</tr>
+<tr class="odd">
+<td><code>publish.storage.supplier</code></td>
+<td>Carries publish events for storage</td>
+<td>Publish</td>
+</tr>
+<tr class="even">
+<td><code>sync.storage.supplier</code></td>
+<td>Carries sync messages to Redis</td>
+<td>Synchronize</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Coding time:</strong></p>
+<p>Open <code>src/Pyz/Client/SymfonyMessenger/SymfonyMessengerConfig.php</code>:</p>
+<ol type="1">
+<li>In <code>getPublishQueueConfiguration()</code>, add both publish queue constants (<code>SupplierSearchConfig::SUPPLIER_PUBLISH</code> and <code>SupplierStorageConfig::SUPPLIER_PUBLISH</code>)</li>
+<li>In <code>getSynchronizationQueueConfiguration()</code>, add both sync queue constants (<code>SupplierSearchConfig::SUPPLIER_SYNC_SEARCH_QUEUE</code> and <code>SupplierStorageConfig::SUPPLIER_SYNC_STORAGE_QUEUE</code>)</li>
+</ol>
+<blockquote>
+<p><strong>Symfony Messenger:</strong> Spryker 202512.0+ uses Symfony Messenger as the queue transport instead of direct RabbitMQ. Queues are configured in <code>SymfonyMessengerConfig</code> and the transport handles queue creation automatically. The queue worker processes messages through the same <code>queue:worker:start</code> command.</p>
+</blockquote>
+<hr />
+<h3 id="part-3-set-up-queue-processors">Part 3: Set Up Queue Processors</h3>
+<p>Each queue needs a processor to handle its messages. Spryker provides out-of-the-box processor plugins.</p>
+<p><strong>Coding time:</strong></p>
+<p>Open <code>src/Pyz/Zed/Queue/QueueDependencyProvider.php</code>. For each queue, assign the appropriate processor:</p>
+<table>
+<thead>
+<tr class="header">
+<th>Queue</th>
+<th>Processor Plugin</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Publish queues (both)</td>
+<td><code>EventQueueMessageProcessorPlugin</code></td>
+</tr>
+<tr class="even">
+<td>Search sync queue</td>
+<td><code>SynchronizationSearchQueueMessageProcessorPlugin</code></td>
+</tr>
+<tr class="odd">
+<td>Storage sync queue</td>
+<td><code>SynchronizationStorageQueueMessageProcessorPlugin</code></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>How it works:</strong> The queue worker reads messages from a queue and passes them to the assigned processor. Publish queues contain “event” messages (processed by <code>EventQueueMessageProcessorPlugin</code>), while sync queues contain serialized data (processed by <code>Synchronization*</code> plugins that push to Elasticsearch/Redis).</p>
+</blockquote>
+<hr />
+<h3 id="part-4-add-propel-behaviors">Part 4: Add Propel Behaviors</h3>
+<h4 id="event-behavior-fire-events-on-entity-changes">4.1 Event Behavior — Fire Events on Entity Changes</h4>
+<p>The <code>event</code> behavior makes Propel fire events whenever an entity is created, updated, or deleted. These events are the starting point of the P&amp;S flow.</p>
+<p><strong>Coding time:</strong></p>
+<p>Open <code>src/SprykerAcademy/Zed/Supplier/Persistence/Propel/Schema/pyz_supplier.schema.xml</code>. Add the <code>event</code> behavior to the <code>pyz_supplier</code> table to detect changes on all columns.</p>
+<blockquote>
+<p><strong>Event behavior format:</strong> The parameter name is arbitrary (conventionally <code>tablename_all</code>), and <code>column="*"</code> watches all columns. This triggers events like <code>Entity.pyz_supplier.create</code>, <code>Entity.pyz_supplier.update</code>, and <code>Entity.pyz_supplier.delete</code>.</p>
+</blockquote>
+<h4 id="synchronization-behavior-auto-sync-to-storefront">4.2 Synchronization Behavior — Auto-Sync to Storefront</h4>
+<p>The <code>synchronization</code> behavior on the intermediate tables (<code>pyz_supplier_search</code>, <code>pyz_supplier_storage</code>) automatically pushes data to the sync queue whenever a record is written.</p>
+<p><strong>Coding time:</strong></p>
+<p>Open <code>src/SprykerAcademy/Zed/SupplierSearch/Persistence/Propel/Schema/pyz_supplier_search.schema.xml</code>. Add the <code>synchronization</code> behavior with these parameters: - <code>resource</code> — the resource name (e.g., <code>"supplier"</code>) — used to build the Elasticsearch/Redis key - <code>key_suffix_column</code> — the column holding the entity ID (use the <code>fk_supplier</code> column) - <code>queue_group</code> — which sync queue to write messages to (use the sync queue constant value)</p>
+<p>Do the same for <code>pyz_supplier_storage.schema.xml</code>.</p>
+<p>After adding both behaviors:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console propel:install</span></code></pre></div>
+<blockquote>
+<p><strong>What the synchronization behavior does:</strong> It auto-adds <code>key</code>, <code>data</code>, <code>created_at</code>, and <code>updated_at</code> columns to the table. When you save an entity to this table, the behavior automatically generates a key (e.g., <code>supplier:1</code>), serializes the data as JSON, and emits a message to the sync queue.</p>
+</blockquote>
+<hr />
+<h3 id="part-5-register-publisher-plugins">Part 5: Register Publisher Plugins</h3>
+<p>Publisher plugins react to entity events and delegate to the business logic. You need to register them so the system knows which plugins handle which events.</p>
+<p><strong>Coding time:</strong></p>
+<p>Open <code>src/Pyz/Zed/Publisher/PublisherDependencyProvider.php</code>. The format maps a queue name to an array of publisher plugins:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="cf">return</span> [</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="cn">Q</span>ueueName::<span class="fu">CONSTANT</span> =&gt; [</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>        <span class="kw">new</span> <span class="cn">M</span>yWritePublisherPlugin()<span class="ot">,</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    ]<span class="ot">,</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>]<span class="ot">;</span></span></code></pre></div>
+<ol type="1">
+<li>Create a method that returns the Search publisher plugin mapped to the search publish queue</li>
+<li>Create a method that returns the Storage publisher plugin mapped to the storage publish queue</li>
+<li>Add both to <code>getPublisherPlugins()</code></li>
+</ol>
+<blockquote>
+<p><strong>Queue routing:</strong> By specifying the queue as the array key, you tell the system: “put events for these plugins on this queue.” If no key is specified, events go to the default publish queue.</p>
+</blockquote>
+<hr />
+<h3 id="part-6-implement-publisher-plugins">Part 6: Implement Publisher Plugins</h3>
+<p>The publisher plugin is the entry point for handling events. It receives a batch of event transfers and delegates to the Facade.</p>
+<p><strong>Coding time:</strong></p>
+<p>Open <code>src/SprykerAcademy/Zed/SupplierSearch/Communication/Plugin/Publisher/SupplierSearchWritePublisherPlugin.php</code>:</p>
+<ol type="1">
+<li><code>getSubscribedEvents()</code> — return an array of event names this plugin reacts to. Use constants from <code>SupplierSearchConfig</code>: the manual publish event, plus entity create and update events</li>
+<li><code>handleBulk()</code> — use <code>$this-&gt;getFacade()</code> to call the write method, passing the event transfers</li>
+</ol>
+<blockquote>
+<p><strong>Why subscribe to both manual and entity events?</strong> Entity events (<code>Entity.pyz_supplier.create</code>) are triggered automatically by the event behavior on <code>pyz_supplier</code>. The manual event (<code>SupplierSearch.supplier.publish</code>) is triggered explicitly from code (e.g., data import). The plugin handles both the same way.</p>
+</blockquote>
+<p>Do the same for <code>SupplierStorageWritePublisherPlugin</code> using <code>SupplierStorageConfig</code> constants.</p>
+<hr />
+<h3 id="part-7-build-the-business-logic-chain">Part 7: Build the Business Logic Chain</h3>
+<p>Now implement the chain that the publisher plugin calls: Facade → Factory → Writer.</p>
+<h4 id="implement-the-writer">7.1 Implement the Writer</h4>
+<p>The writer is the core business logic. It processes a batch of events in bulk.</p>
+<p><strong>Coding time:</strong></p>
+<p>Open <code>src/SprykerAcademy/Zed/SupplierSearch/Business/Writer/SupplierSearchWriter.php</code>. The skeleton has the iteration logic. You need to fill in the data-loading methods:</p>
+<ol type="1">
+<li>Create a <code>SupplierCriteriaTransfer</code>, populate it with the supplier IDs, and use the <code>SupplierFacade</code> to load supplier entities</li>
+<li>Create a <code>SupplierSearchCriteriaTransfer</code>, populate it with the same IDs, and use the Repository to load existing search records</li>
+<li>The rest of the loop (create/update per supplier) is provided</li>
+</ol>
+<blockquote>
+<p><strong>Bulk processing:</strong> Loading all suppliers in one query is critical. The writer receives an array of events (potentially hundreds) — doing one query per event would be extremely slow.</p>
+</blockquote>
+<p>Apply the same pattern to <code>SupplierStorageWriter</code>.</p>
+<h4 id="provide-module-dependencies">7.2 Provide Module Dependencies</h4>
+<p><strong>Coding time:</strong></p>
+<p>Open <code>src/SprykerAcademy/Zed/SupplierSearch/SupplierSearchDependencyProvider.php</code>:</p>
+<ol type="1">
+<li>Implement <code>addEventBehaviorFacade()</code> — the <code>EventBehaviorFacade</code> provides helpers to extract entity IDs from event transfers. Access via <code>$container-&gt;getLocator()-&gt;eventBehavior()-&gt;facade()</code></li>
+<li>Implement <code>addSupplierFacade()</code> — the core <code>SupplierFacade</code> for reading supplier data</li>
+<li>Call both in <code>provideBusinessLayerDependencies()</code></li>
+</ol>
+<p>Do the same for <code>SupplierStorageDependencyProvider</code>.</p>
+<h4 id="implement-the-businessfactory">7.3 Implement the BusinessFactory</h4>
+<p><strong>Coding time:</strong></p>
+<p>Open <code>src/SprykerAcademy/Zed/SupplierSearch/Business/SupplierSearchBusinessFactory.php</code>:</p>
+<ol type="1">
+<li>Implement <code>getEventBehaviorFacade()</code> and <code>getSupplierFacade()</code> using <code>getProvidedDependency()</code></li>
+<li>Wire all four dependencies into the Writer constructor: the two facades, plus <code>getRepository()</code> and <code>getEntityManager()</code> (available from the parent class)</li>
+</ol>
+<p>Do the same for <code>SupplierStorageBusinessFactory</code>.</p>
+<h4 id="implement-the-facade">7.4 Implement the Facade</h4>
+<p><strong>Coding time:</strong></p>
+<p>Open <code>src/SprykerAcademy/Zed/SupplierSearch/Business/SupplierSearchFacade.php</code>. Delegate <code>writeCollectionBySupplierEvents()</code> to the writer via the factory.</p>
+<p>Do the same for <code>SupplierStorageFacade</code>.</p>
+<hr />
+<h3 id="part-8-trigger-publish-from-data-import">Part 8: Trigger Publish from Data Import</h3>
+<p>The Propel event behavior is <strong>disabled during data import</strong> for performance (to avoid millions of events during bulk imports). You need to manually trigger publish events.</p>
+<p><strong>Coding time:</strong></p>
+<p>Open <code>src/SprykerAcademy/Zed/SupplierDataImport/Business/DataImportStep/SupplierWriterStep.php</code>. The step extends <code>PublishAwareStep</code> which provides <code>addPublishEvents()</code>. After saving a supplier entity (inside the <code>isNew() || isModified()</code> condition), call it twice: - Once for search (using <code>SupplierSearchConfig::SUPPLIER_PUBLISH</code>) - Once for storage (using <code>SupplierStorageConfig::SUPPLIER_PUBLISH</code>)</p>
+<p>Pass the supplier ID as the second parameter.</p>
+<hr />
+<h2 id="the-complete-flow">The Complete Flow</h2>
+<p>After implementing all parts, here’s what happens when a supplier is created or imported:</p>
+<pre><code>1. Supplier entity saved
+   → Event behavior fires Entity.pyz_supplier.create
+   → (or DataImport fires SupplierSearch.supplier.publish manually)
+
+2. Event goes to publish.search.supplier queue
+   → EventQueueMessageProcessorPlugin processes it
+   → SupplierSearchWritePublisherPlugin.handleBulk() called
+
+3. Plugin calls Facade → Factory → Writer
+   → Writer loads supplier data from DB
+   → Writer inserts/updates pyz_supplier_search row
+
+4. Synchronization behavior on pyz_supplier_search triggers
+   → Message goes to sync.search.supplier queue
+   → SynchronizationSearchQueueMessageProcessorPlugin processes it
+   → Data pushed to Elasticsearch
+
+(Same flow in parallel for Storage → Redis)</code></pre>
+<hr />
+<h2 id="testing-the-flow">Testing the Flow</h2>
+<h3 id="setup-ensure-queues-and-exchanges-exist">Setup: Ensure Queues and Exchanges Exist</h3>
+<p>After registering queues in the config files, you must create the AMQP infrastructure (queues, exchanges, bindings) in RabbitMQ:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console messenger:setup-transports</span></code></pre></div>
+<p>This reads the <code>SymfonyMessengerConfig::getQueueConfiguration()</code> and creates the corresponding AMQP exchanges and queues. <strong>Without this step, messages are silently dropped</strong> because the Symfony Messenger transport has no exchange to route them through.</p>
+<blockquote>
+<p><strong>Three config files required:</strong> Queues must be registered in: 1. <code>SymfonyMessengerConfig</code> — Symfony Messenger transport routing 2. <code>RabbitMqConfig</code> — AMQP queue declaration 3. <code>QueueDependencyProvider</code> — queue message processors</p>
+<p>The <code>load.sh</code> script handles all three and also creates queues/exchanges via the RabbitMQ management API as a fallback.</p>
+</blockquote>
+<p>Verify the queues exist at http://queue.spryker.local (login: <code>spryker</code>/<code>secret</code>): - <code>publish.search.supplier</code> - <code>publish.storage.supplier</code> - <code>sync.search.supplier</code> - <code>sync.storage.supplier</code></p>
+<h3 id="test-the-flow">Test the Flow</h3>
+<ol type="1">
+<li><p>Add a new supplier to the CSV and import:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console data:import supplier</span></code></pre></div></li>
+<li><p>Process the event queue first (routes events to publish queues):</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console queue:worker:start <span class="at">--stop-when-empty</span></span></code></pre></div></li>
+<li><p>Process again (handles publish → search/storage tables → sync queues → Elasticsearch/Redis):</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console queue:worker:start <span class="at">--stop-when-empty</span></span></code></pre></div>
+<p>You may need to run the worker multiple times — the first run processes publish events (writes to intermediate tables), the second processes sync events (pushes to Elasticsearch/Redis).</p></li>
+<li><p>Check the intermediate tables using any DB client (credentials in <code>deploy.dev.yml</code>):</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="fu">count</span>(<span class="op">*</span>) <span class="kw">FROM</span> pyz_supplier_search;</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="fu">count</span>(<span class="op">*</span>) <span class="kw">FROM</span> pyz_supplier_storage;</span></code></pre></div></li>
+<li><p>Verify Elasticsearch:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-s</span> <span class="st">&#39;localhost:9200/_search&#39;</span> <span class="at">-H</span> <span class="st">&#39;Content-type: application/json&#39;</span> <span class="dt">\</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-d</span> <span class="st">&#39;{&quot;query&quot;:{&quot;exists&quot;:{&quot;field&quot;:&quot;id_supplier&quot;}}}&#39;</span></span></code></pre></div></li>
+<li><p>Creating a supplier via the Back Office also triggers P&amp;S automatically (via the event behavior) — no manual queue processing needed if the scheduler is running.</p></li>
+</ol>
+<h3 id="troubleshooting">Troubleshooting</h3>
+<ul>
+<li><strong>No messages in queues after import:</strong> Ensure <code>DataImportPublisherPlugin</code> is registered in <code>DataImportDependencyProvider::getDataImportAfterImportHookPlugins()</code></li>
+<li><strong>Queue not found error:</strong> Run <code>docker/sdk boot deploy.dev.yml</code> to recreate infrastructure, or create queues manually via the RabbitMQ API</li>
+<li><strong>Data in tables but not in Elasticsearch:</strong> Process the sync queues with <code>queue:worker:start --stop-when-empty</code></li>
+</ul>
+<hr />
+<h2 id="run-automated-tests">Run Automated Tests</h2>
+<div class="sourceCode" id="cb12"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/Supplier/ PublishSync</span></code></pre></div>
+<hr />
+<h2 id="solution">Solution</h2>
+<div class="sourceCode" id="cb13"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> supplier intermediate/publish-synchronize/complete</span></code></pre></div>
+</body>
+</html>

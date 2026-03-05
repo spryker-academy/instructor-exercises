@@ -83,13 +83,22 @@ The table displays suppliers in the Back Office with sorting, searching, and act
 Open `src/SprykerAcademy/Zed/SupplierGui/Communication/Table/SupplierTable.php`. The class extends `AbstractTable` and has two methods to implement:
 
 In `configure()`:
-1. Set the table headers using `$config->setHeader()` — pass an associative array mapping column constants to display labels
-2. Set sortable columns using `$config->setSortable()` — pass an array of column constants
-3. Set searchable columns using `$config->setSearchable()` — same pattern, but only text columns that make sense to search
+1. **TODO-1:** Set the table headers using `$config->setHeader()` — pass an associative array mapping column constants to display labels. Include `COL_ACTIONS => 'Actions'` for the action buttons column.
+2. **TODO-2:** Set sortable columns using `$config->setSortable()` — pass an array of column constants (all data columns except Actions)
+3. **TODO-3:** Set searchable columns using `$config->setSearchable()` — same pattern, but only text columns that make sense to search (name, description, email, phone)
+4. **TODO-4:** Mark the Actions column as a raw column using `$config->setRawColumns()` — this allows HTML content (buttons) to render instead of being escaped
 
-> **Hint:** The class already has constants like `COL_ID_SUPPLIER`, `COL_NAME`, etc. Use these as array keys.
+> **Hint:** The class already has constants like `COL_ID_SUPPLIER`, `COL_NAME`, `COL_ACTIONS`, etc. Use these as array keys.
 
-> **Adding action buttons per row:** Spryker's `AbstractTable` provides built-in helper methods for generating table row buttons. Add an "Actions" column to the header and mark it as a raw column with `$config->setRawColumns()`, then in `mapReturns()` use the helpers:
+In `prepareData()`:
+5. **TODO-5:** Fetch the supplier data using `$this->runQuery()`. This method accepts the Propel query (injected via constructor), the `$config`, and a boolean `true` to get raw results. Then map the results using the provided `mapReturns()` method.
+
+In `mapReturns()`:
+6. **TODO-6:** Add an actions column entry to each row's array that calls `$this->buildActionButtons()` with the supplier ID. Use `static::COL_ACTIONS` as the key.
+
+In `buildActionButtons()`:
+7. **TODO-7:** Build the Edit and Delete action buttons. Spryker's `AbstractTable` provides built-in helper methods for generating table row buttons:
+
 > ```php
 > // Available in any class extending AbstractTable:
 > $this->generateEditButton($url, 'Edit')
@@ -103,10 +112,7 @@ In `configure()`:
 >     EditController::REQUEST_PARAM_ID_SUPPLIER => $idSupplier,
 > ]);
 > ```
-> Combine multiple buttons with `implode(' ', [...])` and assign to the Actions column.
-
-In `prepareData()`:
-4. Fetch the supplier data using `$this->runQuery()`. This method accepts the Propel query (injected via constructor), the `$config`, and a boolean `true` to get raw results. Then map the results using the provided `mapReturns()` method.
+> Combine multiple buttons with `implode(' ', [...])` and assign to the Actions column. The skeleton already provides the constants `URL_SUPPLIER_EDIT` and `URL_SUPPLIER_DELETE` as well as imports for `EditController` and `DeleteController`.
 
 > **About Propel in the Communication layer:** Tables are an exception to the "no Propel outside Persistence" rule. The `AbstractTable` class handles pagination, sorting, and filtering internally through the Propel query.
 

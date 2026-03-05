@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Exercise 8: Data Import - Supplier</title>
+  <style>
+    html {
+      line-height: 1.5;
+      font-family: Georgia, serif;
+      font-size: 20px;
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      word-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 1em;
+      }
+    }
+    @media print {
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, 'Lucida Console', Consolas, monospace;
+      font-size: 85%;
+      margin: 0;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Exercise 8: Data Import - Supplier</h1>
+</header>
+<h1 id="exercise-8-data-import---supplier">Exercise 8: Data Import - Supplier</h1>
+<p>In this exercise, you will create a data import pipeline to populate the database with suppliers from a CSV file. You will learn how Spryker’s <code>DataImport</code> module works: reading CSV files, processing data through steps, and persisting entities.</p>
+<p>You will learn how to: - Create and configure CSV data sources - Map import types to YAML configuration - Implement <code>DataImportStepInterface</code> for data processing and writing - Chain steps through the <code>DataSetStepBroker</code> - Expose the import through a Facade and Plugin - Register the plugin in Spryker’s data import stack - Handle entity relationships (many-to-many) during import</p>
+<h2 id="prerequisites">Prerequisites</h2>
+<ul>
+<li>Completed the basics exercises (1-7)</li>
+<li>The Supplier module schema is provided (tables <code>pyz_supplier</code>, <code>pyz_supplier_location</code>, <code>pyz_merchant_to_supplier</code>)</li>
+</ul>
+<h2 id="loading-the-exercise">Loading the Exercise</h2>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> supplier intermediate/data-import/skeleton</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli composer dump-autoload</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console propel:install</span></code></pre></div>
+<hr />
+<h2 id="background-spryker-data-import-architecture">Background: Spryker Data Import Architecture</h2>
+<p>Spryker’s data import system processes external data (typically CSV files) through a pipeline of steps:</p>
+<pre><code>CSV File → DataImporter → DataSetStepBroker → [Step1] → [Step2] → [WriterStep] → Database</code></pre>
+<p><strong>Key components:</strong></p>
+<table>
+<thead>
+<tr class="header">
+<th>Component</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>DataImporterConfigurationTransfer</code></td>
+<td>Holds the CSV file path and import type</td>
+</tr>
+<tr class="even">
+<td><code>DataImporter</code></td>
+<td>Reads CSV rows into <code>DataSet</code> objects</td>
+</tr>
+<tr class="odd">
+<td><code>DataSetStepBroker</code></td>
+<td>Orchestrates the execution of steps in order</td>
+</tr>
+<tr class="even">
+<td><code>DataImportStepInterface</code></td>
+<td>Each step processes or writes one <code>DataSet</code> row</td>
+</tr>
+<tr class="odd">
+<td><code>DataImportPluginInterface</code></td>
+<td>Registers the import in Spryker’s plugin stack</td>
+</tr>
+</tbody>
+</table>
+<p>The <code>DataSet</code> is an <code>ArrayAccess</code> object where keys match the CSV column headers. For example, if your CSV has columns <code>name,description,status</code>, then inside a step you access them as <code>$dataSet['name']</code>, <code>$dataSet['description']</code>, etc. — but you should use constants instead of literal strings.</p>
+<hr />
+<h2 id="working-on-the-exercise">Working on the Exercise</h2>
+<h3 id="part-1-database-structure">Part 1: Database Structure</h3>
+<p>The exercise skeleton provides the Supplier module with the schema files: - <code>src/SprykerAcademy/Zed/Supplier/Persistence/Propel/Schema/pyz_supplier.schema.xml</code> - <code>src/SprykerAcademy/Zed/SupplierLocation/Persistence/Propel/Schema/pyz_supplier_location.schema.xml</code></p>
+<p>These define the tables <code>pyz_supplier</code> (with columns: id_supplier, name, description, status, email, phone) and <code>pyz_supplier_location</code> (with a FK to supplier).</p>
+<p>Run propel to create the tables:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console propel:install</span></code></pre></div>
+<hr />
+<h3 id="part-2-data-source">Part 2: Data Source</h3>
+<h4 id="review-the-csv-file">2.1 Review the CSV File</h4>
+<p>The exercise skeleton provides <code>data/import/supplier.csv</code> with 4 supplier rows. Open it and examine the column headers — these will become the keys in the <code>DataSet</code> object during import.</p>
+<p>A <code>data/import/supplier_location.csv</code> is also provided for the location import.</p>
+<h4 id="configure-the-import-yaml">2.2 Configure the Import YAML</h4>
+<p>The import YAML tells Spryker which CSV file to use for each import type. You need to register the supplier imports.</p>
+<p><strong>Coding time:</strong></p>
+<p>Open <code>data/import/local/full_EU.yml</code> and add two new entries at the bottom of the <code>actions:</code> list:</p>
+<ul>
+<li>One for suppliers: <code>data_entity</code> must match the value of <code>SupplierDataImportConfig::IMPORT_TYPE_SUPPLIER</code>, and <code>source</code> must point to the supplier CSV file path (relative to project root)</li>
+<li>One for supplier locations: <code>data_entity</code> must match <code>SupplierDataImportConfig::IMPORT_TYPE_SUPPLIER_LOCATION</code>, pointing to the location CSV</li>
+</ul>
+<p>Look at how the other entities are configured in the same file for the correct format. Be careful with YAML indentation (spaces, not tabs).</p>
+<blockquote>
+<p><strong>How it works:</strong> When you run <code>docker/sdk console data:import supplier</code>, Spryker looks up the <code>data_entity: supplier</code> entry in this YAML to find the CSV path, then passes it to the matching <code>DataImportPlugin</code> via the <code>DataImporterConfigurationTransfer</code>.</p>
+</blockquote>
+<hr />
+<h3 id="part-3-the-supplierdataimport-module">Part 3: The SupplierDataImport Module</h3>
+<p>The module <code>SprykerAcademy\Zed\SupplierDataImport</code> follows Spryker’s naming convention: <code>&lt;ModuleName&gt;DataImport</code>.</p>
+<h4 id="constants-for-column-mapping">3.1 Constants for Column Mapping</h4>
+<p>Review the provided file <code>src/SprykerAcademy/Zed/SupplierDataImport/Business/DataSet/SupplierDataSetInterface.php</code>. It defines constants that map to the CSV column names.</p>
+<p><strong>Verify</strong> that the constant <code>COLUMN_NAME</code> matches the actual CSV column header. The skeleton may have a mismatch — compare the constant value with the first row of <code>supplier.csv</code> and fix it if needed.</p>
+<blockquote>
+<p><strong>Best practice:</strong> Always use constants for column names. Never use literal strings like <code>$dataSet['name']</code> directly — use <code>$dataSet[SupplierDataSetInterface::COLUMN_NAME]</code> instead.</p>
+</blockquote>
+<h4 id="implement-the-supplierwriterstep">3.2 Implement the SupplierWriterStep</h4>
+<p>The <code>SupplierWriterStep</code> is where each CSV row gets persisted to the database. It receives a <code>DataSet</code> for each row.</p>
+<p><strong>Coding time:</strong></p>
+<p>Open <code>src/SprykerAcademy/Zed/SupplierDataImport/Business/DataImportStep/SupplierWriterStep.php</code> and implement the <code>execute()</code> method following the TODO steps:</p>
+<ol type="1">
+<li><p><strong>Find or create</strong> the supplier entity. Propel query classes have a static <code>create()</code> method that returns a query builder. You can chain <code>filterBy&lt;ColumnName&gt;()</code> to build your query, then call <code>findOneOrCreate()</code> to either fetch an existing record or create a fresh (unsaved) entity.</p></li>
+<li><p><strong>Assign fields</strong> from the dataset to the entity. Use the entity’s setter methods (<code>setDescription()</code>, <code>setStatus()</code>, etc.) and read values from <code>$dataSet</code> using the constants from <code>SupplierDataSetInterface</code>.</p></li>
+<li><p><strong>Save conditionally.</strong> Only persist the entity if it’s actually new or has been modified. Propel entities provide <code>isNew()</code> and <code>isModified()</code> methods for this check.</p></li>
+<li><p><strong>Handle merchant relations</strong> (bonus). The CSV may contain a <code>merchant_ids</code> column with comma-separated IDs. Think about how to:</p>
+<ul>
+<li>Parse the comma-separated string into an array of IDs</li>
+<li>Query existing relations to avoid duplicates</li>
+<li>Create only the missing relation records</li>
+</ul></li>
+</ol>
+<blockquote>
+<p><strong>Why Propel in the Business Layer?</strong> Data importers are one exception to the “no Propel in Business Layer” rule. Imports often process thousands of rows, so direct ORM access avoids the overhead of going through Repository/EntityManager for each row.</p>
+</blockquote>
+<blockquote>
+<p><strong>Hint:</strong> Look at the generated class <code>src/Orm/Zed/Supplier/Persistence/Base/PyzSupplierQuery.php</code> to see all available filter and finder methods.</p>
+</blockquote>
+<h4 id="implement-the-descriptiontolowercasestep">3.3 Implement the DescriptionToLowercaseStep</h4>
+<p>Before writing data to the database, we often need to normalize or transform it. The <code>DescriptionToLowercaseStep</code> is a <strong>data processor step</strong> — it transforms data without writing to the database.</p>
+<p><strong>Coding time:</strong></p>
+<p>Open <code>src/SprykerAcademy/Zed/SupplierDataImport/Business/DataImportStep/DescriptionToLowercaseStep.php</code>. The class implements <code>DataImportStepInterface</code> and its <code>execute()</code> method receives a <code>DataSet</code> for each CSV row. Your task:</p>
+<ul>
+<li>Read the description value from the dataset using the appropriate constant</li>
+<li>Transform it to lowercase</li>
+<li>Write the result back to the same dataset key</li>
+</ul>
+<p>This is a one-liner, but it demonstrates the processor step pattern: modify the <code>DataSet</code> in-place so the next step receives the transformed data.</p>
+<blockquote>
+<p>This step runs <strong>before</strong> the WriterStep. Steps are executed in the order they’re added to the broker.</p>
+</blockquote>
+<h4 id="wire-steps-in-the-businessfactory">3.4 Wire Steps in the BusinessFactory</h4>
+<p>The <code>SupplierDataImportBusinessFactory</code> creates the <code>DataImporter</code> and wires all steps together.</p>
+<p><strong>Coding time:</strong></p>
+<p>Open <code>src/SprykerAcademy/Zed/SupplierDataImport/Business/SupplierDataImportBusinessFactory.php</code>. In the <code>getSupplierDataImport()</code> method, you need to:</p>
+<ol type="1">
+<li>Add the processor step to the <code>$dataSetStepBroker</code></li>
+<li>Add the writer step to the <code>$dataSetStepBroker</code></li>
+<li>Add the step broker to the <code>$dataImporter</code></li>
+</ol>
+<p>The broker has an <code>addStep()</code> method. The importer has an <code>addDataSetStepBroker()</code> method. The factory already has <code>create*Step()</code> methods you can call.</p>
+<blockquote>
+<p><strong>Step ordering matters:</strong> Processor steps (lowercase, validation, enrichment) must be added first. The WriterStep must be last — it persists the final, transformed data.</p>
+</blockquote>
+<h4 id="implement-the-facade">3.5 Implement the Facade</h4>
+<p>The Facade exposes the import functionality to other modules and plugins.</p>
+<p><strong>Coding time:</strong></p>
+<p>Open <code>src/SprykerAcademy/Zed/SupplierDataImport/Business/SupplierDataImportFacade.php</code>. In <code>importSupplier()</code>:</p>
+<ul>
+<li>Use <code>$this-&gt;getFactory()</code> to access the Business Factory</li>
+<li>The factory has a method that returns a configured DataImporter for suppliers</li>
+<li>The DataImporter has an <code>import()</code> method that accepts the configuration transfer and returns a report</li>
+</ul>
+<p>Remember to pass the <code>$dataImporterConfigurationTransfer</code> parameter through the chain.</p>
+<hr />
+<h3 id="part-4-pluginization">Part 4: Pluginization</h3>
+<p>The plugin makes the import available through Spryker’s standard <code>data:import</code> console command.</p>
+<h4 id="implement-the-dataimportplugin">4.1 Implement the DataImportPlugin</h4>
+<p><strong>Coding time:</strong></p>
+<p>Open <code>src/SprykerAcademy/Zed/SupplierDataImport/Communication/Plugin/DataImport/SupplierDataImportPlugin.php</code>. This class implements <code>DataImportPluginInterface</code> which requires two methods:</p>
+<ul>
+<li><code>import()</code> — should delegate to the module’s Facade. The plugin extends <code>AbstractPlugin</code> which provides <code>getFacade()</code> to access <code>SupplierDataImportFacade</code>.</li>
+<li><code>getImportType()</code> — should return the import type string. Look at <code>SupplierDataImportConfig</code> for the right constant.</li>
+</ul>
+<blockquote>
+<p><strong>Plugin pattern:</strong> Plugins are the “glue” between modules. They live in the Communication layer and bridge the module’s Facade to another module’s plugin stack. They should contain no business logic — only delegation.</p>
+</blockquote>
+<h4 id="register-the-plugin">4.2 Register the Plugin</h4>
+<p><strong>Coding time:</strong></p>
+<p>Open <code>src/Pyz/Zed/DataImport/DataImportDependencyProvider.php</code> in the project. Find the <code>getDataImporterPlugins()</code> method and add instances of both <code>SupplierDataImportPlugin</code> and <code>SupplierLocationDataImportPlugin</code> to the returned array.</p>
+<hr />
+<h3 id="part-5-run-the-import">Part 5: Run the Import</h3>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console data:import supplier</span></code></pre></div>
+<p>This will: 1. Read <code>supplier.csv</code> 2. For each row: run <code>DescriptionToLowercaseStep</code> (lowercase description) then <code>SupplierWriterStep</code> (persist to DB) 3. Output a report with the number of imported rows</p>
+<p>You can also import supplier locations:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console data:import supplier-location</span></code></pre></div>
+<hr />
+<h2 id="key-concepts-summary">Key Concepts Summary</h2>
+<h3 id="step-pipeline">Step Pipeline</h3>
+<pre><code>CSV Row → DescriptionToLowercaseStep → SupplierWriterStep → Database
+            (processor: transforms)      (writer: persists)</code></pre>
+<ul>
+<li><strong>Processor steps</strong> modify the <code>DataSet</code> in-place (lowercase, trim, validate, enrich)</li>
+<li><strong>Writer steps</strong> persist the <code>DataSet</code> to the database (Propel entities)</li>
+<li>Steps are chained via <code>DataSetStepBroker::addStep()</code> in the Factory</li>
+</ul>
+<h3 id="publishawarestep-preview-of-publish-synchronize">PublishAwareStep (Preview of Publish &amp; Synchronize)</h3>
+<p>In the complete solution, <code>SupplierWriterStep</code> extends <code>PublishAwareStep</code> instead of implementing <code>DataImportStepInterface</code> directly. This enables triggering publish events after saving, which feeds the <strong>Publish &amp; Synchronize</strong> pipeline (next exercise). This is how imported data flows through the entire Spryker architecture:</p>
+<pre><code>CSV → DataImport → Database → Event → Publisher → Search/Storage Table → Queue → Elasticsearch/Redis</code></pre>
+<p>We will explore this in detail in the Publish &amp; Synchronize exercise.</p>
+<h3 id="dependencyprovider-inheritance">DependencyProvider Inheritance</h3>
+<p>The <code>SupplierDataImportDependencyProvider</code> extends <code>DataImportDependencyProvider</code> to inherit all dependencies the DataImport module needs (data reader, data set step broker, etc.). This is a common pattern when creating a module that extends a core module’s functionality.</p>
+<hr />
+<h2 id="verify-your-work">Verify Your Work</h2>
+<p>After importing, check: 1. <code>pyz_supplier</code> table has 4 rows 2. Descriptions are lowercase (the <code>DescriptionToLowercaseStep</code> transformed them) 3. Run <code>data:import supplier</code> again — it should NOT create duplicates (idempotent import)</p>
+<p>Use any database client (DBeaver, TablePlus, CLI) to connect and verify. Connection credentials are in <code>deploy.dev.yml</code> (typically host: <code>localhost</code>, port: <code>3306</code> or <code>5432</code>, user: <code>spryker</code>, password: <code>secret</code>).</p>
+<hr />
+<h2 id="solution">Solution</h2>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> supplier intermediate/data-import/complete</span></code></pre></div>
+</body>
+</html>

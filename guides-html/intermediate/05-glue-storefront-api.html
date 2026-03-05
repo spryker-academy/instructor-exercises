@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Exercise 12: Glue Storefront API - Supplier</title>
+  <style>
+    html {
+      line-height: 1.5;
+      font-family: Georgia, serif;
+      font-size: 20px;
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      word-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 1em;
+      }
+    }
+    @media print {
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, 'Lucida Console', Consolas, monospace;
+      font-size: 85%;
+      margin: 0;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Exercise 12: Glue Storefront API - Supplier</h1>
+</header>
+<h1 id="exercise-12-glue-storefront-api---supplier">Exercise 12: Glue Storefront API - Supplier</h1>
+<p>In this exercise, you will expose supplier data through a REST API endpoint using Spryker’s API Platform. You will create a Glue Storefront API resource that provides both single-item and collection endpoints for suppliers.</p>
+<p>You will learn how to: - Define an API resource using YAML configuration (<code>.resource.yml</code>) - Implement a Provider class that fetches and maps data - Map internal Transfer objects to generated API Resource objects - Work with Spryker’s API Platform (not the legacy GlueApplication approach) - Handle both Get (single) and GetCollection (list) operations</p>
+<h2 id="prerequisites">Prerequisites</h2>
+<ul>
+<li>Completed Exercises 8-11 (Data Import, Back Office, P&amp;S, Search)</li>
+<li>Suppliers should exist in the database</li>
+</ul>
+<h2 id="loading-the-exercise">Loading the Exercise</h2>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> supplier intermediate/glue-storefront/skeleton</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli composer dump-autoload</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span></code></pre></div>
+<hr />
+<h2 id="setup-register-custom-namespace">Setup: Register Custom Namespace</h2>
+<p>API Platform discovers resource YAML files by scanning <strong>source directories</strong> configured in <code>config/GlueStorefront/packages/spryker_api_platform.php</code>. By default, only <code>src/Spryker</code>, <code>src/SprykerFeature</code>, and <code>src/Pyz</code> are registered.</p>
+<p>Since our code lives in <code>src/SprykerAcademy/</code>, we need to add it:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// config/GlueStorefront/packages/spryker_api_platform.php</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="va">$sprykerApiPlatform</span>-&gt;sourceDirectories([</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;src/Spryker&#39;</span><span class="ot">,</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;src/SprykerFeature&#39;</span><span class="ot">,</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;src/Pyz&#39;</span><span class="ot">,</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;src/SprykerAcademy&#39;</span><span class="ot">,</span>  <span class="co">// &lt;-- Add this</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>])<span class="ot">;</span></span></code></pre></div>
+<blockquote>
+<p><strong>Backend API:</strong> If you also need to expose resources via the Backend API, add <code>src/SprykerAcademy</code> to <code>config/GlueBackend/packages/spryker_api_platform.php</code> as well.</p>
+</blockquote>
+<p>After adding the source directory, generate the API resources:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli glue api:generate Storefront</span></code></pre></div>
+<p>This command scans all registered source directories for <code>.resource.yml</code> files and generates PHP Resource classes (e.g., <code>Generated\Api\Storefront\SuppliersStorefrontResource</code>).</p>
+<h3 id="api-platform-commands-reference">API Platform Commands Reference</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Command</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>glue api:generate</code></td>
+<td>Generate resources for ALL configured API types</td>
+</tr>
+<tr class="even">
+<td><code>glue api:generate Storefront</code></td>
+<td>Generate only Storefront API resources</td>
+</tr>
+<tr class="odd">
+<td><code>glue api:generate Backend</code></td>
+<td>Generate only Backend API resources</td>
+</tr>
+<tr class="even">
+<td><code>glue api:generate --dry-run</code></td>
+<td>Preview what would be generated without writing</td>
+</tr>
+<tr class="odd">
+<td><code>glue api:generate --validate-only</code></td>
+<td>Validate schemas without generating</td>
+</tr>
+<tr class="even">
+<td><code>glue api:generate -r suppliers</code></td>
+<td>Generate only the <code>suppliers</code> resource</td>
+</tr>
+<tr class="odd">
+<td><code>glue api:debug --list</code></td>
+<td>List all registered resources across all API types</td>
+</tr>
+<tr class="even">
+<td><code>glue api:debug suppliers</code></td>
+<td>Inspect a specific resource’s merged schema</td>
+</tr>
+<tr class="odd">
+<td><code>glue api:debug suppliers --show-sources</code></td>
+<td>Show all source files with priority</td>
+</tr>
+<tr class="even">
+<td><code>glue api:debug suppliers --show-merged</code></td>
+<td>Display the final merged YAML schema</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Docs:</strong> <a href="https://docs.spryker.com/docs/dg/dev/architecture/api-platform">Spryker API Platform Architecture</a> | <a href="https://docs.spryker.com/docs/dg/dev/architecture/api-platform/resource-schemas.html">Resource Schemas</a></p>
+</blockquote>
+<hr />
+<h2 id="background-spryker-api-platform">Background: Spryker API Platform</h2>
+<p>Spryker 202512.0+ introduces <strong>API Platform</strong> as the recommended approach for building new REST APIs. The existing GlueApplication APIs remain <strong>retrocompatible</strong> (not deprecated) — they continue to work alongside API Platform.</p>
+<p><strong>For all new API development, use API Platform.</strong></p>
+<table>
+<colgroup>
+<col style="width: 11%" />
+<col style="width: 49%" />
+<col style="width: 39%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Aspect</th>
+<th>GlueApplication (retrocompatible)</th>
+<th>API Platform (recommended)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Resource definition</td>
+<td>PHP plugin classes</td>
+<td>YAML <code>.resource.yml</code> files</td>
+</tr>
+<tr class="even">
+<td>Controller</td>
+<td>Custom controller extending <code>AbstractRestResource</code></td>
+<td>Provider class implementing <code>ProviderInterface</code></td>
+</tr>
+<tr class="odd">
+<td>Registration</td>
+<td>Plugin registered in DependencyProvider</td>
+<td>Provider referenced in YAML config</td>
+</tr>
+<tr class="even">
+<td>Dependency injection</td>
+<td>Factory + DependencyProvider</td>
+<td>Constructor injection (auto-wired)</td>
+</tr>
+<tr class="odd">
+<td>Response format</td>
+<td>Manual <code>RestResource</code> building</td>
+<td>Generated Resource classes</td>
+</tr>
+</tbody>
+</table>
+<p><strong>API Platform flow:</strong></p>
+<pre><code>GET /suppliers/1
+    → YAML resource definition (suppliers.resource.yml)
+    → Provider::provide($operation, $uriVariables)
+    → Load data from Client/Facade
+    → Map Transfer → Generated Resource class
+    → JSON:API response</code></pre>
+<hr />
+<h2 id="working-on-the-exercise">Working on the Exercise</h2>
+<h3 id="part-1-define-the-api-resource-yaml">Part 1: Define the API Resource (YAML)</h3>
+<p>The API resource definition tells Spryker what endpoints to expose, which Provider handles the requests, and what properties the resource has.</p>
+<p><strong>Coding time:</strong></p>
+<p>Open <code>src/SprykerAcademy/Glue/SuppliersApi/resources/api/storefront/suppliers.resource.yml</code>:</p>
+<ol type="1">
+<li>Add the <code>provider</code> field pointing to the full class name of the Provider class</li>
+<li>Add the resource properties: <code>name</code> (string), <code>description</code> (string), <code>status</code> (int), <code>email</code> (string), <code>phone</code> (string)</li>
+</ol>
+<p>The skeleton already has the resource name, operations (Get + GetCollection), pagination config, and the <code>idSupplier</code> identifier property.</p>
+<blockquote>
+<p><strong>Resource YAML structure:</strong> - <code>provider:</code> — full class name of the PHP Provider that handles requests - <code>operations:</code> — list of HTTP operations (Get, GetCollection, Post, Patch, Delete) - <code>properties:</code> — schema definition with types, descriptions, and identifier flag - <code>identifier: true</code> — marks the property used in the URL path (e.g., <code>/suppliers/{idSupplier}</code>)</p>
+</blockquote>
+<p>After modifying the YAML, regenerate:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span></code></pre></div>
+<p>This generates a <code>SuppliersStorefrontResource</code> class in <code>Generated\Api\Storefront\</code> that the Provider returns.</p>
+<hr />
+<h3 id="part-2-implement-the-provider">Part 2: Implement the Provider</h3>
+<p>The Provider is the core of the API resource. It receives the HTTP request context and returns data. It replaces the controller + reader pattern from the old approach.</p>
+<p><strong>Coding time:</strong></p>
+<p>Open <code>src/SprykerAcademy/Glue/SuppliersApi/Api/Storefront/Provider/SuppliersStorefrontProvider.php</code>. The class implements <code>ApiPlatform\State\ProviderInterface</code>. In the <code>provide()</code> method:</p>
+<ol type="1">
+<li>Read the supplier identifier from <code>$uriVariables</code> — the key name must match the <code>identifier</code> property in the YAML</li>
+<li>If the identifier is null, this is a collection request — return an array of mapped resources (load all suppliers via the Client)</li>
+<li>If the identifier is present, load the single supplier by ID via the Client</li>
+<li>If the supplier is not found, return null (API Platform handles the 404)</li>
+<li>Map the <code>SupplierTransfer</code> to a <code>SuppliersStorefrontResource</code> using the provided Mapper</li>
+</ol>
+<blockquote>
+<p><strong><code>$uriVariables</code>:</strong> For a GET request to <code>/suppliers/5</code>, this array contains <code>['idSupplier' =&gt; '5']</code>. The key name comes from the identifier property in the resource YAML.</p>
+</blockquote>
+<blockquote>
+<p><strong>Collection vs Single:</strong> The <code>provide()</code> method handles both. When <code>idSupplier</code> is null, it’s a GetCollection request; when present, it’s a Get request.</p>
+</blockquote>
+<hr />
+<h3 id="part-3-review-the-mapper">Part 3: Review the Mapper</h3>
+<p>The Mapper converts internal <code>SupplierTransfer</code> objects to generated <code>SuppliersStorefrontResource</code> objects.</p>
+<p>Open <code>src/SprykerAcademy/Glue/SuppliersApi/Processor/Mapper/SupplierMapper.php</code> and review how it maps transfers to API resources.</p>
+<blockquote>
+<p><strong>Generated Resource classes:</strong> API Platform generates PHP classes from the YAML properties. These classes have <code>fromArray()</code> and expose the properties defined in the YAML. The Mapper bridges the internal domain model (Transfer) to the API model (Resource).</p>
+</blockquote>
+<hr />
+<h3 id="part-4-test-the-endpoint">Part 4: Test the Endpoint</h3>
+<p>After completing all parts, generate the API resources and clear cache:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli glue api:generate Storefront</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span></code></pre></div>
+<p>Test single supplier:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-s</span> <span class="st">&#39;http://glue-storefront.eu.spryker.local/suppliers/1&#39;</span> <span class="dt">\</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-H</span> <span class="st">&#39;Content-Type: application/vnd.api+json&#39;</span> <span class="kw">|</span> <span class="ex">python3</span> <span class="at">-m</span> json.tool</span></code></pre></div>
+<p>Test collection:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-s</span> <span class="st">&#39;http://glue-storefront.eu.spryker.local/suppliers&#39;</span> <span class="dt">\</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-H</span> <span class="st">&#39;Content-Type: application/vnd.api+json&#39;</span> <span class="kw">|</span> <span class="ex">python3</span> <span class="at">-m</span> json.tool</span></code></pre></div>
+<p>Expected response format:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;data&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;suppliers&quot;</span><span class="fu">,</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;1&quot;</span><span class="fu">,</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;attributes&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;Acme Supplies&quot;</span><span class="fu">,</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;description&quot;</span><span class="fu">:</span> <span class="st">&quot;leading supplier of industrial equipment&quot;</span><span class="fu">,</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;status&quot;</span><span class="fu">:</span> <span class="dv">1</span><span class="fu">,</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;email&quot;</span><span class="fu">:</span> <span class="st">&quot;contact@acmesupplies.com&quot;</span><span class="fu">,</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;phone&quot;</span><span class="fu">:</span> <span class="st">&quot;+1-555-1234&quot;</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<hr />
+<h2 id="key-concepts-summary">Key Concepts Summary</h2>
+<h3 id="api-platform-vs-legacy">API Platform vs Legacy</h3>
+<p>With API Platform, there’s <strong>no need for</strong>: - DependencyProvider in the Glue layer (constructor injection is auto-wired) - Factory in the Glue layer - Controller class (the Provider IS the handler) - Plugin registration in <code>GlueStorefrontApiApplicationDependencyProvider</code></p>
+<p>Everything is defined in YAML + one Provider class.</p>
+<h3 id="provider-pattern">Provider Pattern</h3>
+<p>The Provider implements a single method:</p>
+<pre><code>provide(Operation $operation, array $uriVariables, array $context): object|array|null</code></pre>
+<ul>
+<li>Return an <strong>object</strong> → single resource response</li>
+<li>Return an <strong>array</strong> → collection response</li>
+<li>Return <strong>null</strong> → 404 response</li>
+</ul>
+<hr />
+<h2 id="run-automated-tests">Run Automated Tests</h2>
+<div class="sourceCode" id="cb11"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/Supplier/ GlueApi</span></code></pre></div>
+<hr />
+<h2 id="solution">Solution</h2>
+<div class="sourceCode" id="cb12"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> supplier intermediate/glue-storefront/complete</span></code></pre></div>
+</body>
+</html>
