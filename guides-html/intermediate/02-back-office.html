@@ -408,6 +408,9 @@
 <blockquote>
 <p><strong>Status conversion:</strong> The checkbox gives a boolean, but the database expects an integer. Convert in the controller: <code>$supplierTransfer-&gt;setStatus($isActive ? 1 : 0)</code>.</p>
 </blockquote>
+<blockquote>
+<p><strong>Exception handling:</strong> Wrap the Facade <code>createSupplier()</code> call in a <code>try/catch (Throwable)</code> block. Database operations can fail (e.g. duplicate entries, constraint violations). On failure, use <code>$this-&gt;addErrorMessage()</code> to show the error on the overview page, then redirect. The error message constants are already provided in the skeleton (<code>MESSAGE_SUPPLIER_CREATE_FAILED</code>). Spryker’s <code>AbstractController</code> flash messages (<code>addErrorMessage()</code>, <code>addSuccessMessage()</code>) persist through redirects, so errors will appear on the index page after redirect.</p>
+</blockquote>
 <h4 id="implement-the-editcontroller">3.4 Implement the EditController</h4>
 <p><strong>Coding time:</strong></p>
 <p>Open <code>src/SprykerAcademy/Zed/SupplierGui/Communication/Controller/EditController.php</code>:</p>
@@ -418,6 +421,9 @@
 <li>Create the form pre-filled with the fetched <code>SupplierTransfer</code>, passing the current status as the <code>isActive</code> option</li>
 <li>On valid submission, update via the Facade and redirect</li>
 </ol>
+<blockquote>
+<p><strong>Exception handling:</strong> Same pattern as Create — wrap <code>updateSupplier()</code> in <code>try/catch (Throwable)</code>. On failure, use <code>$this-&gt;addErrorMessage(static::MESSAGE_SUPPLIER_UPDATE_FAILED)</code> and redirect to the overview. The error will be displayed as a flash message on the index page.</p>
+</blockquote>
 <h4 id="implement-the-deletecontroller">3.5 Implement the DeleteController</h4>
 <p><strong>Coding time:</strong></p>
 <p>Open <code>src/SprykerAcademy/Zed/SupplierGui/Communication/Controller/DeleteController.php</code>:</p>
@@ -426,6 +432,9 @@
 <li>Call the Facade’s <code>deleteSupplier()</code> passing a <code>SupplierTransfer</code> with the ID set</li>
 <li>Add a success message and redirect to the overview</li>
 </ol>
+<blockquote>
+<p><strong>Exception handling:</strong> Wrap <code>deleteSupplier()</code> in <code>try/catch (Throwable)</code> — deletion can fail due to foreign key constraints (e.g. if the supplier is referenced by other tables). On failure, use <code>$this-&gt;addErrorMessage(static::MESSAGE_SUPPLIER_DELETE_FAILED)</code> and redirect to the overview.</p>
+</blockquote>
 <hr />
 <h3 id="part-4-navigation">Part 4: Navigation</h3>
 <p>The navigation XML (<code>config/Zed/navigation.xml</code>) is provided by the exercise skeleton. It registers the “Suppliers” menu item in the Back Office sidebar with sub-pages for Overview, Create, Edit, and Delete.</p>

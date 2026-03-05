@@ -236,6 +236,8 @@ Open `src/SprykerAcademy/Zed/SupplierGui/Communication/Controller/CreateControll
 
 > **Status conversion:** The checkbox gives a boolean, but the database expects an integer. Convert in the controller: `$supplierTransfer->setStatus($isActive ? 1 : 0)`.
 
+> **Exception handling:** Wrap the Facade `createSupplier()` call in a `try/catch (Throwable)` block. Database operations can fail (e.g. duplicate entries, constraint violations). On failure, use `$this->addErrorMessage()` to show the error on the overview page, then redirect. The error message constants are already provided in the skeleton (`MESSAGE_SUPPLIER_CREATE_FAILED`). Spryker's `AbstractController` flash messages (`addErrorMessage()`, `addSuccessMessage()`) persist through redirects, so errors will appear on the index page after redirect.
+
 #### 3.4 Implement the EditController
 
 **Coding time:**
@@ -248,6 +250,8 @@ Open `src/SprykerAcademy/Zed/SupplierGui/Communication/Controller/EditController
 4. Create the form pre-filled with the fetched `SupplierTransfer`, passing the current status as the `isActive` option
 5. On valid submission, update via the Facade and redirect
 
+> **Exception handling:** Same pattern as Create — wrap `updateSupplier()` in `try/catch (Throwable)`. On failure, use `$this->addErrorMessage(static::MESSAGE_SUPPLIER_UPDATE_FAILED)` and redirect to the overview. The error will be displayed as a flash message on the index page.
+
 #### 3.5 Implement the DeleteController
 
 **Coding time:**
@@ -257,6 +261,8 @@ Open `src/SprykerAcademy/Zed/SupplierGui/Communication/Controller/DeleteControll
 1. Extract and validate the supplier ID using `$this->castId()`
 2. Call the Facade's `deleteSupplier()` passing a `SupplierTransfer` with the ID set
 3. Add a success message and redirect to the overview
+
+> **Exception handling:** Wrap `deleteSupplier()` in `try/catch (Throwable)` — deletion can fail due to foreign key constraints (e.g. if the supplier is referenced by other tables). On failure, use `$this->addErrorMessage(static::MESSAGE_SUPPLIER_DELETE_FAILED)` and redirect to the overview.
 
 ---
 
