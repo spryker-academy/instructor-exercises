@@ -194,6 +194,36 @@ YAMLEOF
     # Register supplier publisher plugins in PublisherDependencyProvider
     PUB_PROVIDER="$PROJECT_DIR/src/Pyz/Zed/Publisher/PublisherDependencyProvider.php"
     if [ -f "$PUB_PROVIDER" ] && [ "$(grep -c 'SupplierSearchWritePublisherPlugin' "$PUB_PROVIDER" || true)" = "0" ]; then
+      if [ "$BRANCH" = "intermediate/publish-synchronize/skeleton" ]; then
+        php -r '
+            $file = $argv[1];
+            $content = file_get_contents($file);
+
+            $useStatements = "use SprykerAcademy\Shared\SupplierSearch\SupplierSearchConfig;\nuse SprykerAcademy\Shared\SupplierStorage\SupplierStorageConfig;\nuse SprykerAcademy\Zed\SupplierSearch\Communication\Plugin\Publisher\SupplierSearchWritePublisherPlugin;\nuse SprykerAcademy\Zed\SupplierStorage\Communication\Plugin\Publisher\SupplierStorageWritePublisherPlugin;\n";
+            $content = preg_replace(
+                "/(^class\s)/m",
+                $useStatements . "\n$1",
+                $content,
+                1,
+            );
+
+            // Add TODO method and call it in getPublisherPlugins
+            if (strpos($content, "getSupplierPublisherPlugins") === false) {
+                $method = "\n    protected function getSupplierPublisherPlugins(): array\n    {\n        // TODO: Register supplier publisher plugins\n        // Hint: Map SupplierSearchConfig::SUPPLIER_PUBLISH_SEARCH_QUEUE => [new SupplierSearchWritePublisherPlugin()]\n        // Hint: Map SupplierStorageConfig::SUPPLIER_PUBLISH_STORAGE_QUEUE => [new SupplierStorageWritePublisherPlugin()]\n        return [\n        ];\n    }\n";
+                $content = preg_replace("/(\n}\s*$)/", $method . "$1", $content, 1);
+
+                $content = preg_replace(
+                    "/(function\s+getPublisherPlugins.*?return\s+array_merge\s*\()/s",
+                    "$1\n            \$this->getSupplierPublisherPlugins(),",
+                    $content,
+                    1,
+                );
+            }
+
+            file_put_contents($file, $content);
+        ' "$PUB_PROVIDER"
+        echo -e "  ${GREEN}Added Supplier publisher plugin TODOs in PublisherDependencyProvider${NC}"
+      else
         php -r '
             $file = $argv[1];
             $content = file_get_contents($file);
@@ -224,11 +254,40 @@ YAMLEOF
             file_put_contents($file, $content);
         ' "$PUB_PROVIDER"
         echo -e "  ${GREEN}Registered Supplier publisher plugins in PublisherDependencyProvider${NC}"
+      fi
     fi
 
     # Register supplier queue processors in QueueDependencyProvider
     QUEUE_PROVIDER="$PROJECT_DIR/src/Pyz/Zed/Queue/QueueDependencyProvider.php"
     if [ -f "$QUEUE_PROVIDER" ] && [ "$(grep -c 'SUPPLIER_PUBLISH_SEARCH_QUEUE\|SUPPLIER_SYNC_SEARCH_QUEUE' "$QUEUE_PROVIDER" || true)" = "0" ]; then
+      if [ "$BRANCH" = "intermediate/publish-synchronize/skeleton" ]; then
+        php -r '
+            $file = $argv[1];
+            $content = file_get_contents($file);
+
+            $useStatements = "use SprykerAcademy\Shared\SupplierSearch\SupplierSearchConfig;\nuse SprykerAcademy\Shared\SupplierStorage\SupplierStorageConfig;\n";
+            if (strpos($content, "SupplierSearchConfig") === false) {
+                $content = preg_replace(
+                    "/(^class\s)/m",
+                    $useStatements . "\n$1",
+                    $content,
+                    1,
+                );
+            }
+
+            // Add TODO comments instead of actual registrations
+            $supplierQueues = "\n            // TODO: Register supplier queue processors\n            // Hint: Map SupplierSearchConfig::SUPPLIER_PUBLISH_SEARCH_QUEUE => new EventQueueMessageProcessorPlugin()\n            // Hint: Map SupplierStorageConfig::SUPPLIER_PUBLISH_STORAGE_QUEUE => new EventQueueMessageProcessorPlugin()\n            // Hint: Map SupplierSearchConfig::SUPPLIER_SYNC_SEARCH_QUEUE => new SynchronizationSearchQueueMessageProcessorPlugin()\n            // Hint: Map SupplierStorageConfig::SUPPLIER_SYNC_STORAGE_QUEUE => new SynchronizationStorageQueueMessageProcessorPlugin()";
+            $content = preg_replace(
+                "/(function\s+getProcessorMessagePlugins.*?return\s*\[)/s",
+                "$1" . $supplierQueues,
+                $content,
+                1,
+            );
+
+            file_put_contents($file, $content);
+        ' "$QUEUE_PROVIDER"
+        echo -e "  ${GREEN}Added Supplier queue processor TODOs in QueueDependencyProvider${NC}"
+      else
         php -r '
             $file = $argv[1];
             $content = file_get_contents($file);
@@ -255,6 +314,7 @@ YAMLEOF
             file_put_contents($file, $content);
         ' "$QUEUE_PROVIDER"
         echo -e "  ${GREEN}Registered Supplier queue processors in QueueDependencyProvider${NC}"
+      fi
     fi
 
     # Create supplier queues and exchanges in RabbitMQ via management API
@@ -272,6 +332,39 @@ YAMLEOF
     # Register supplier queues in RabbitMqConfig (creates actual AMQP queues)
     RMQ_CONFIG="$PROJECT_DIR/src/Pyz/Client/RabbitMq/RabbitMqConfig.php"
     if [ -f "$RMQ_CONFIG" ] && [ "$(grep -c 'SupplierSearchConfig' "$RMQ_CONFIG" || true)" = "0" ]; then
+      if [ "$BRANCH" = "intermediate/publish-synchronize/skeleton" ]; then
+        php -r '
+            $file = $argv[1];
+            $content = file_get_contents($file);
+
+            $useStatements = "use SprykerAcademy\Shared\SupplierSearch\SupplierSearchConfig;\nuse SprykerAcademy\Shared\SupplierStorage\SupplierStorageConfig;\n";
+            $content = preg_replace(
+                "/(^class\s)/m",
+                $useStatements . "\n$1",
+                $content,
+                1,
+            );
+
+            // Add TODO to getPublishQueueConfiguration
+            $content = preg_replace(
+                "/(function\s+getPublishQueueConfiguration.*?return\s*\[)/s",
+                "$1\n            // TODO: Register supplier publish queues\n            // Hint: Add SupplierSearchConfig::SUPPLIER_PUBLISH_SEARCH_QUEUE\n            // Hint: Add SupplierStorageConfig::SUPPLIER_PUBLISH_STORAGE_QUEUE",
+                $content,
+                1,
+            );
+
+            // Add TODO to getSynchronizationQueueConfiguration
+            $content = preg_replace(
+                "/(function\s+getSynchronizationQueueConfiguration.*?return\s*\[)/s",
+                "$1\n            // TODO: Register supplier sync queues\n            // Hint: Add SupplierSearchConfig::SUPPLIER_SYNC_SEARCH_QUEUE\n            // Hint: Add SupplierStorageConfig::SUPPLIER_SYNC_STORAGE_QUEUE",
+                $content,
+                1,
+            );
+
+            file_put_contents($file, $content);
+        ' "$RMQ_CONFIG"
+        echo -e "  ${GREEN}Added Supplier queue TODOs in RabbitMqConfig${NC}"
+      else
         php -r '
             $file = $argv[1];
             $content = file_get_contents($file);
@@ -303,11 +396,45 @@ YAMLEOF
             file_put_contents($file, $content);
         ' "$RMQ_CONFIG"
         echo -e "  ${GREEN}Registered Supplier queues in RabbitMqConfig${NC}"
+      fi
     fi
 
     # Register supplier queues in SymfonyMessengerConfig
     SM_CONFIG="$PROJECT_DIR/src/Pyz/Client/SymfonyMessenger/SymfonyMessengerConfig.php"
     if [ -f "$SM_CONFIG" ] && [ "$(grep -c 'SupplierSearchConfig' "$SM_CONFIG" || true)" = "0" ]; then
+      if [ "$BRANCH" = "intermediate/publish-synchronize/skeleton" ]; then
+        php -r '
+            $file = $argv[1];
+            $content = file_get_contents($file);
+
+            $useStatements = "use SprykerAcademy\Shared\SupplierSearch\SupplierSearchConfig;\nuse SprykerAcademy\Shared\SupplierStorage\SupplierStorageConfig;\n";
+            $content = preg_replace(
+                "/(^class\s)/m",
+                $useStatements . "\n$1",
+                $content,
+                1,
+            );
+
+            // Add TODO to getPublishQueueConfiguration
+            $content = preg_replace(
+                "/(function\s+getPublishQueueConfiguration.*?return\s*\[)/s",
+                "$1\n            // TODO: Register supplier publish queues\n            // Hint: Add SupplierSearchConfig::SUPPLIER_PUBLISH_SEARCH_QUEUE\n            // Hint: Add SupplierStorageConfig::SUPPLIER_PUBLISH_STORAGE_QUEUE",
+                $content,
+                1,
+            );
+
+            // Add TODO to getSynchronizationQueueConfiguration
+            $content = preg_replace(
+                "/(function\s+getSynchronizationQueueConfiguration.*?return\s*\[)/s",
+                "$1\n            // TODO: Register supplier sync queues\n            // Hint: Add SupplierSearchConfig::SUPPLIER_SYNC_SEARCH_QUEUE\n            // Hint: Add SupplierStorageConfig::SUPPLIER_SYNC_STORAGE_QUEUE",
+                $content,
+                1,
+            );
+
+            file_put_contents($file, $content);
+        ' "$SM_CONFIG"
+        echo -e "  ${GREEN}Added Supplier queue TODOs in SymfonyMessengerConfig${NC}"
+      else
         php -r '
             $file = $argv[1];
             $content = file_get_contents($file);
@@ -339,6 +466,7 @@ YAMLEOF
             file_put_contents($file, $content);
         ' "$SM_CONFIG"
         echo -e "  ${GREEN}Registered Supplier queues in SymfonyMessengerConfig${NC}"
+      fi
     fi
 
     # Register SprykerAcademy source directory in API Platform configs
