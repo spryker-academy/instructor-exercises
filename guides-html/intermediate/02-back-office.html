@@ -365,19 +365,41 @@
 <h3 id="part-3-create-the-supplier-form">Part 3: Create the Supplier Form</h3>
 <h4 id="build-the-form-class">3.1 Build the Form Class</h4>
 <p><strong>Coding time:</strong></p>
-<p>Open <code>src/SprykerAcademy/Zed/SupplierGui/Communication/Form/SupplierCreateForm.php</code>. The class extends <code>AbstractType</code>. In the <code>buildForm()</code> method, add fields for:</p>
+<p>Open <code>src/SprykerAcademy/Zed/SupplierGui/Communication/Form/SupplierCreateForm.php</code>. The class extends <code>AbstractType</code>. In the <code>buildForm()</code> method, add fields using the Symfony form builder.</p>
+<p><strong>TODO-1:</strong> Add fields using <code>$builder-&gt;add()</code>. Each call takes a field name, a field type class, and an options array. You can chain multiple <code>-&gt;add()</code> calls:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="va">$builder</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    -&gt;add(<span class="kw">static</span>::<span class="cn">FIELD_NAME</span><span class="ot">,</span> <span class="cn">T</span>extType::<span class="kw">class</span><span class="ot">,</span> [</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;label&#39;</span> =&gt; <span class="st">&#39;Name&#39;</span><span class="ot">,</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;constraints&#39;</span> =&gt; [</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>            <span class="va">$this</span>-&gt;createNotBlankConstraint()<span class="ot">,</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>        ]<span class="ot">,</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>    ])</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    -&gt;add(<span class="kw">static</span>::<span class="cn">FIELD_DESCRIPTION</span><span class="ot">,</span> <span class="cn">T</span>extType::<span class="kw">class</span><span class="ot">,</span> [</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;label&#39;</span> =&gt; <span class="st">&#39;Description&#39;</span><span class="ot">,</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;constraints&#39;</span> =&gt; [...]<span class="ot">,</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>    ])<span class="ot">;</span></span></code></pre></div>
+<p>Fields to add:</p>
 <ul>
-<li><code>name</code> — <code>TextType</code> with a <code>NotBlank</code> constraint</li>
-<li><code>description</code> — <code>TextType</code> with a <code>NotBlank</code> constraint</li>
-<li><code>isActive</code> — <code>CheckboxType</code>, unmapped (<code>'mapped' =&gt; false</code>), not required, with default value from form options</li>
-<li><code>email</code> — <code>TextType</code> with a <code>NotBlank</code> constraint</li>
-<li><code>phone</code> — <code>TextType</code> (optional)</li>
+<li><code>FIELD_NAME</code> — <code>TextType</code> with a <code>NotBlank</code> constraint</li>
+<li><code>FIELD_DESCRIPTION</code> — <code>TextType</code> with a <code>NotBlank</code> constraint</li>
+<li><code>FIELD_IS_ACTIVE</code> — <code>CheckboxType</code>, unmapped (<code>'mapped' =&gt; false</code>), not required, with default value from form options (<code>'data' =&gt; (bool)$options[static::FIELD_IS_ACTIVE]</code>)</li>
+<li><code>FIELD_EMAIL</code> — <code>TextType</code> with a <code>NotBlank</code> constraint</li>
+<li><code>FIELD_PHONE</code> — <code>TextType</code> with a <code>NotBlank</code> constraint</li>
 </ul>
 <blockquote>
 <p><strong>Unmapped fields:</strong> The <code>isActive</code> checkbox doesn’t map directly to the <code>SupplierTransfer</code> (which has a numeric <code>status</code> field). Use <code>'mapped' =&gt; false</code> to exclude it from automatic data binding. The controller will manually convert the boolean to a status integer.</p>
 </blockquote>
+<p><strong>TODO-2:</strong> Override <code>configureOptions()</code> to set <code>data_class</code> and define defaults for custom options:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span> <span class="kw">function</span> configureOptions(<span class="cn">O</span>ptionsResolver <span class="va">$resolver</span>)<span class="ot">:</span> <span class="dt">void</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    <span class="va">$resolver</span>-&gt;setDefaults([</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;data_class&#39;</span> =&gt; <span class="st">&#39;Generated\Shared\Transfer\SupplierTransfer&#39;</span><span class="ot">,</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>        <span class="kw">static</span>::<span class="cn">FIELD_IS_ACTIVE</span> =&gt; <span class="kw">true</span><span class="ot">,</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    ])<span class="ot">;</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>    <span class="va">$resolver</span>-&gt;setAllowedTypes(<span class="kw">static</span>::<span class="cn">FIELD_IS_ACTIVE</span><span class="ot">,</span> <span class="st">&#39;bool&#39;</span>)<span class="ot">;</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 <blockquote>
-<p><strong>Form options:</strong> Override <code>configureOptions()</code> to set <code>data_class</code> to the <code>SupplierTransfer</code> class and define defaults for custom options like <code>isActive</code>.</p>
+<p><strong>Form options:</strong> The <code>data_class</code> tells Symfony which object to hydrate with form data. Custom options like <code>isActive</code> let the controller pass dynamic defaults (e.g. the current status when editing).</p>
 </blockquote>
 <h4 id="provide-the-supplier-facade">3.2 Provide the Supplier Facade</h4>
 <p><strong>Coding time:</strong></p>
@@ -439,7 +461,7 @@
 <h3 id="part-4-navigation">Part 4: Navigation</h3>
 <p>The navigation XML (<code>config/Zed/navigation.xml</code>) is provided by the exercise skeleton. It registers the “Suppliers” menu item in the Back Office sidebar with sub-pages for Overview, Create, Edit, and Delete.</p>
 <p>After loading the exercise, clear cache to see the navigation:</p>
-<div class="sourceCode" id="cb10"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span></code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span></code></pre></div>
 <hr />
 <h2 id="key-concepts-summary">Key Concepts Summary</h2>
 <h3 id="back-office-table-pattern">Back Office Table Pattern</h3>
@@ -462,9 +484,9 @@ Controller: getFactory()-&gt;createSupplierTable()
 <h2 id="testing">Testing</h2>
 <p>Visit the Back Office: 1. http://backoffice.eu.spryker.local/supplier-gui — Table with suppliers 2. Click “Create Supplier” — Fill the form and submit 3. Click “Edit” on a row — Modify and save 4. Click “Delete” on a row — Confirm removal</p>
 <p>Run the automated tests:</p>
-<div class="sourceCode" id="cb14"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/Supplier/ BackOffice</span></code></pre></div>
+<div class="sourceCode" id="cb16"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/Supplier/ BackOffice</span></code></pre></div>
 <hr />
 <h2 id="solution">Solution</h2>
-<div class="sourceCode" id="cb15"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> supplier intermediate/back-office/complete</span></code></pre></div>
+<div class="sourceCode" id="cb17"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> supplier intermediate/back-office/complete</span></code></pre></div>
 </body>
 </html>

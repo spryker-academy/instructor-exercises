@@ -194,17 +194,48 @@ Visit http://backoffice.eu.spryker.local/supplier-gui to see the table.
 
 **Coding time:**
 
-Open `src/SprykerAcademy/Zed/SupplierGui/Communication/Form/SupplierCreateForm.php`. The class extends `AbstractType`. In the `buildForm()` method, add fields for:
+Open `src/SprykerAcademy/Zed/SupplierGui/Communication/Form/SupplierCreateForm.php`. The class extends `AbstractType`. In the `buildForm()` method, add fields using the Symfony form builder.
 
-- `name` — `TextType` with a `NotBlank` constraint
-- `description` — `TextType` with a `NotBlank` constraint
-- `isActive` — `CheckboxType`, unmapped (`'mapped' => false`), not required, with default value from form options
-- `email` — `TextType` with a `NotBlank` constraint
-- `phone` — `TextType` (optional)
+**TODO-1:** Add fields using `$builder->add()`. Each call takes a field name, a field type class, and an options array. You can chain multiple `->add()` calls:
+
+```php
+$builder
+    ->add(static::FIELD_NAME, TextType::class, [
+        'label' => 'Name',
+        'constraints' => [
+            $this->createNotBlankConstraint(),
+        ],
+    ])
+    ->add(static::FIELD_DESCRIPTION, TextType::class, [
+        'label' => 'Description',
+        'constraints' => [...],
+    ]);
+```
+
+Fields to add:
+
+- `FIELD_NAME` — `TextType` with a `NotBlank` constraint
+- `FIELD_DESCRIPTION` — `TextType` with a `NotBlank` constraint
+- `FIELD_IS_ACTIVE` — `CheckboxType`, unmapped (`'mapped' => false`), not required, with default value from form options (`'data' => (bool)$options[static::FIELD_IS_ACTIVE]`)
+- `FIELD_EMAIL` — `TextType` with a `NotBlank` constraint
+- `FIELD_PHONE` — `TextType` with a `NotBlank` constraint
 
 > **Unmapped fields:** The `isActive` checkbox doesn't map directly to the `SupplierTransfer` (which has a numeric `status` field). Use `'mapped' => false` to exclude it from automatic data binding. The controller will manually convert the boolean to a status integer.
 
-> **Form options:** Override `configureOptions()` to set `data_class` to the `SupplierTransfer` class and define defaults for custom options like `isActive`.
+**TODO-2:** Override `configureOptions()` to set `data_class` and define defaults for custom options:
+
+```php
+public function configureOptions(OptionsResolver $resolver): void
+{
+    $resolver->setDefaults([
+        'data_class' => 'Generated\Shared\Transfer\SupplierTransfer',
+        static::FIELD_IS_ACTIVE => true,
+    ]);
+    $resolver->setAllowedTypes(static::FIELD_IS_ACTIVE, 'bool');
+}
+```
+
+> **Form options:** The `data_class` tells Symfony which object to hydrate with form data. Custom options like `isActive` let the controller pass dynamic defaults (e.g. the current status when editing).
 
 #### 3.2 Provide the Supplier Facade
 
