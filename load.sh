@@ -156,6 +156,13 @@ if [ -d "$REPO_DIR/src/Pyz" ]; then
     cd "$PROJECT_DIR"
 fi
 
+# Copy navigation XML if present in the exercise repo
+if [ -f "$REPO_DIR/config/Zed/navigation.xml" ]; then
+    mkdir -p "$PROJECT_DIR/config/Zed"
+    cp "$REPO_DIR/config/Zed/navigation.xml" "$PROJECT_DIR/config/Zed/navigation.xml"
+    echo -e "  ${GREEN}Copied navigation.xml${NC}"
+fi
+
 # Add HelloWorld config value to config_default.php for configuration exercise
 if [ "$PACKAGE" = "hello-world" ]; then
     CONFIG_FILE="$PROJECT_DIR/config/Shared/config_default.php"
