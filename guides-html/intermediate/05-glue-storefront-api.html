@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>Exercise 12: Glue Storefront API - Supplier</title>
+  <title>Exercise 12: Glue Storefront API</title>
   <style>
     html {
       line-height: 1.5;
@@ -213,7 +213,7 @@
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">Exercise 12: Glue Storefront API - Supplier</h1>
+<h1 class="title">Exercise 12: Glue Storefront API</h1>
 </header>
 <h1 id="exercise-12-glue-storefront-api---supplier">Exercise 12: Glue Storefront API - Supplier</h1>
 <p>In this exercise, you will expose supplier data through a REST API endpoint using Spryker’s API Platform. You will create a Glue Storefront API resource that provides both single-item and collection endpoints for suppliers.</p>
@@ -242,7 +242,10 @@
 <p><strong>Backend API:</strong> If you also need to expose resources via the Backend API, add <code>src/SprykerAcademy</code> to <code>config/GlueBackend/packages/spryker_api_platform.php</code> as well.</p>
 </blockquote>
 <p>After adding the source directory, generate the API resources:</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli glue api:generate Storefront</span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli GLUE_APPLICATION=GLUE_STOREFRONT glue api:generate</span></code></pre></div>
+<blockquote>
+<p><strong>Important:</strong> You must specify the Glue application via the <code>GLUE_APPLICATION</code> environment variable. Without it, the command doesn’t know which API type to generate for and may fail or generate for the wrong application.</p>
+</blockquote>
 <p>This command scans all registered source directories for <code>.resource.yml</code> files and generates PHP Resource classes (e.g., <code>Generated\Api\Storefront\SuppliersStorefrontResource</code>).</p>
 <h3 id="api-platform-commands-reference">API Platform Commands Reference</h3>
 <table>
@@ -258,47 +261,46 @@
 </thead>
 <tbody>
 <tr class="odd">
-<td><code>glue api:generate</code></td>
-<td>Generate resources for ALL configured API types</td>
+<td><code>GLUE_APPLICATION=GLUE_STOREFRONT glue api:generate</code></td>
+<td>Generate Storefront API resources</td>
 </tr>
 <tr class="even">
-<td><code>glue api:generate Storefront</code></td>
-<td>Generate only Storefront API resources</td>
+<td><code>GLUE_APPLICATION=GLUE_BACKEND glue api:generate</code></td>
+<td>Generate Backend API resources</td>
 </tr>
 <tr class="odd">
-<td><code>glue api:generate Backend</code></td>
-<td>Generate only Backend API resources</td>
-</tr>
-<tr class="even">
-<td><code>glue api:generate --dry-run</code></td>
+<td><code>GLUE_APPLICATION=GLUE_STOREFRONT glue api:generate --dry-run</code></td>
 <td>Preview what would be generated without writing</td>
 </tr>
-<tr class="odd">
-<td><code>glue api:generate --validate-only</code></td>
+<tr class="even">
+<td><code>GLUE_APPLICATION=GLUE_STOREFRONT glue api:generate --validate-only</code></td>
 <td>Validate schemas without generating</td>
 </tr>
-<tr class="even">
-<td><code>glue api:generate -r suppliers</code></td>
+<tr class="odd">
+<td><code>GLUE_APPLICATION=GLUE_STOREFRONT glue api:generate -r suppliers</code></td>
 <td>Generate only the <code>suppliers</code> resource</td>
 </tr>
-<tr class="odd">
-<td><code>glue api:debug --list</code></td>
-<td>List all registered resources across all API types</td>
-</tr>
 <tr class="even">
-<td><code>glue api:debug suppliers</code></td>
+<td><code>GLUE_APPLICATION=GLUE_STOREFRONT glue api:debug --list</code></td>
+<td>List all registered resources</td>
+</tr>
+<tr class="odd">
+<td><code>GLUE_APPLICATION=GLUE_STOREFRONT glue api:debug suppliers</code></td>
 <td>Inspect a specific resource’s merged schema</td>
 </tr>
-<tr class="odd">
-<td><code>glue api:debug suppliers --show-sources</code></td>
+<tr class="even">
+<td><code>GLUE_APPLICATION=GLUE_STOREFRONT glue api:debug suppliers --show-sources</code></td>
 <td>Show all source files with priority</td>
 </tr>
-<tr class="even">
-<td><code>glue api:debug suppliers --show-merged</code></td>
+<tr class="odd">
+<td><code>GLUE_APPLICATION=GLUE_STOREFRONT glue api:debug suppliers --show-merged</code></td>
 <td>Display the final merged YAML schema</td>
 </tr>
 </tbody>
 </table>
+<blockquote>
+<p><strong>Tip:</strong> All <code>glue</code> CLI commands require the <code>GLUE_APPLICATION</code> env var. Prefix every command with <code>GLUE_APPLICATION=GLUE_STOREFRONT</code> or <code>GLUE_APPLICATION=GLUE_BACKEND</code> as needed.</p>
+</blockquote>
 <blockquote>
 <p><strong>Docs:</strong> <a href="https://docs.spryker.com/docs/dg/dev/architecture/api-platform">Spryker API Platform Architecture</a> | <a href="https://docs.spryker.com/docs/dg/dev/architecture/api-platform/resource-schemas.html">Resource Schemas</a></p>
 </blockquote>
@@ -399,7 +401,7 @@
 <hr />
 <h3 id="part-4-test-the-endpoint">Part 4: Test the Endpoint</h3>
 <p>After completing all parts, generate the API resources and clear cache:</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli glue api:generate Storefront</span>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli GLUE_APPLICATION=GLUE_STOREFRONT glue api:generate</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span></code></pre></div>
 <p>Test single supplier:</p>
 <div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-s</span> <span class="st">&#39;http://glue-storefront.eu.spryker.local/suppliers/1&#39;</span> <span class="dt">\</span></span>

@@ -45,8 +45,10 @@ $sprykerApiPlatform->sourceDirectories([
 After adding the source directory, generate the API resources:
 
 ```bash
-docker/sdk cli glue api:generate Storefront
+docker/sdk cli GLUE_APPLICATION=GLUE_STOREFRONT glue api:generate
 ```
+
+> **Important:** You must specify the Glue application via the `GLUE_APPLICATION` environment variable. Without it, the command doesn't know which API type to generate for and may fail or generate for the wrong application.
 
 This command scans all registered source directories for `.resource.yml` files and generates PHP Resource classes (e.g., `Generated\Api\Storefront\SuppliersStorefrontResource`).
 
@@ -54,16 +56,17 @@ This command scans all registered source directories for `.resource.yml` files a
 
 | Command | Purpose |
 |---------|---------|
-| `glue api:generate` | Generate resources for ALL configured API types |
-| `glue api:generate Storefront` | Generate only Storefront API resources |
-| `glue api:generate Backend` | Generate only Backend API resources |
-| `glue api:generate --dry-run` | Preview what would be generated without writing |
-| `glue api:generate --validate-only` | Validate schemas without generating |
-| `glue api:generate -r suppliers` | Generate only the `suppliers` resource |
-| `glue api:debug --list` | List all registered resources across all API types |
-| `glue api:debug suppliers` | Inspect a specific resource's merged schema |
-| `glue api:debug suppliers --show-sources` | Show all source files with priority |
-| `glue api:debug suppliers --show-merged` | Display the final merged YAML schema |
+| `GLUE_APPLICATION=GLUE_STOREFRONT glue api:generate` | Generate Storefront API resources |
+| `GLUE_APPLICATION=GLUE_BACKEND glue api:generate` | Generate Backend API resources |
+| `GLUE_APPLICATION=GLUE_STOREFRONT glue api:generate --dry-run` | Preview what would be generated without writing |
+| `GLUE_APPLICATION=GLUE_STOREFRONT glue api:generate --validate-only` | Validate schemas without generating |
+| `GLUE_APPLICATION=GLUE_STOREFRONT glue api:generate -r suppliers` | Generate only the `suppliers` resource |
+| `GLUE_APPLICATION=GLUE_STOREFRONT glue api:debug --list` | List all registered resources |
+| `GLUE_APPLICATION=GLUE_STOREFRONT glue api:debug suppliers` | Inspect a specific resource's merged schema |
+| `GLUE_APPLICATION=GLUE_STOREFRONT glue api:debug suppliers --show-sources` | Show all source files with priority |
+| `GLUE_APPLICATION=GLUE_STOREFRONT glue api:debug suppliers --show-merged` | Display the final merged YAML schema |
+
+> **Tip:** All `glue` CLI commands require the `GLUE_APPLICATION` env var. Prefix every command with `GLUE_APPLICATION=GLUE_STOREFRONT` or `GLUE_APPLICATION=GLUE_BACKEND` as needed.
 
 > **Docs:** [Spryker API Platform Architecture](https://docs.spryker.com/docs/dg/dev/architecture/api-platform) | [Resource Schemas](https://docs.spryker.com/docs/dg/dev/architecture/api-platform/resource-schemas.html)
 
@@ -162,7 +165,7 @@ Open `src/SprykerAcademy/Glue/SuppliersApi/Processor/Mapper/SupplierMapper.php` 
 After completing all parts, generate the API resources and clear cache:
 
 ```bash
-docker/sdk cli glue api:generate Storefront
+docker/sdk cli GLUE_APPLICATION=GLUE_STOREFRONT glue api:generate
 docker/sdk console cache:empty-all
 ```
 
