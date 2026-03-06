@@ -127,6 +127,24 @@ if [ -d "$REPO_DIR/src/SprykerAcademy" ]; then
         ' "$PROJECT_DIR"
         echo -e "  ${GREEN}Added SprykerAcademy\\ to composer.json autoload${NC}"
     fi
+
+    # Add SprykerAcademy to Spryker kernel PROJECT_NAMESPACES if not already present
+    CONFIG_DEFAULT="$PROJECT_DIR/config/Shared/config_default.php"
+    if [ -f "$CONFIG_DEFAULT" ] && ! grep -q "'SprykerAcademy'" "$CONFIG_DEFAULT"; then
+        php -r '
+            $file = $argv[1];
+            $content = file_get_contents($file);
+            // Add SprykerAcademy to PROJECT_NAMESPACES array
+            $content = preg_replace(
+                "/(KernelConstants::PROJECT_NAMESPACES\s*\]\s*=\s*\[\s*\n\s*'\''Pyz'\'')/",
+                "$1,\n    '\''SprykerAcademy'\''",
+                $content,
+                1,
+            );
+            file_put_contents($file, $content);
+        ' "$CONFIG_DEFAULT"
+        echo -e "  ${GREEN}Added SprykerAcademy to PROJECT_NAMESPACES in config_default.php${NC}"
+    fi
 fi
 
 # Copy Pyz overrides if present
