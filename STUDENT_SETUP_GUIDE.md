@@ -26,7 +26,39 @@ git clone --single-branch https://github.com/spryker/docker-sdk docker
 git clone https://github.com/spryker-academy/instructor-exercises exercises
 ```
 
-## Step 4: Boot the Docker Environment
+## Step 4: Register the SprykerAcademy Namespace
+
+Before running any exercises, register the `SprykerAcademy` namespace so Spryker can find the exercise classes.
+
+**4a. Add to composer.json autoload:**
+
+Open `composer.json` and add `SprykerAcademy` to the `autoload.psr-4` section:
+
+```json
+"autoload": {
+    "psr-4": {
+        "Pyz\\": "src/Pyz/",
+        "SprykerAcademy\\": "src/SprykerAcademy/"
+    }
+}
+```
+
+**4b. Add to Spryker kernel namespaces:**
+
+Open `config/Shared/config_default.php` and add `'SprykerAcademy'` to the `PROJECT_NAMESPACES` array:
+
+```php
+$config[KernelConstants::PROJECT_NAMESPACES] = [
+    'Pyz',
+    'SprykerAcademy',
+];
+```
+
+> **Why both?** The `composer.json` entry tells PHP where to autoload the classes. The `PROJECT_NAMESPACES` entry tells Spryker's kernel class resolver to look in `SprykerAcademy` when resolving Facades, Factories, and other module classes. Without this, you'll get "class not found" or "FacadeNotFoundException" errors.
+
+> **Note:** The `load.sh` script also does this automatically, but it's good to do it once manually so the project is ready from the start.
+
+## Step 5: Boot the Docker Environment
 
 ```bash
 docker/sdk boot deploy.dev.yml
