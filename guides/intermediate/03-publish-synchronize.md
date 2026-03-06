@@ -115,15 +115,40 @@ Open `src/Pyz/Zed/Queue/QueueDependencyProvider.php`. For each queue, assign the
 
 ### Part 4: Add Propel Behaviors
 
+Propel behaviors are declared inside a `<table>` tag in schema XML files. Each behavior has a `name` attribute and contains `<parameter>` child tags that configure it. The general structure is:
+
+```xml
+<table name="my_table">
+    <column .../>
+
+    <behavior name="behavior_name">
+        <parameter name="param_name" value="param_value"/>
+        <parameter name="another_param" value="another_value"/>
+    </behavior>
+</table>
+```
+
+Each `<parameter>` has a `name` attribute (what to configure) and a `value` attribute (the setting). Some parameters also support `column` instead of `value` — this is specific to the event behavior.
+
 #### 4.1 Event Behavior — Fire Events on Entity Changes
 
 The `event` behavior makes Propel fire events whenever an entity is created, updated, or deleted. These events are the starting point of the P&S flow.
 
 **Coding time:**
 
-Open `src/SprykerAcademy/Zed/Supplier/Persistence/Propel/Schema/pyz_supplier.schema.xml`. Add the `event` behavior to the `pyz_supplier` table to detect changes on all columns.
+Open `src/SprykerAcademy/Zed/Supplier/Persistence/Propel/Schema/pyz_supplier.schema.xml`. Add the `event` behavior to the `pyz_supplier` table.
 
-> **Event behavior format:** The parameter name is arbitrary (conventionally `tablename_all`), and `column="*"` watches all columns. This triggers events like `Entity.pyz_supplier.create`, `Entity.pyz_supplier.update`, and `Entity.pyz_supplier.delete`.
+The event behavior uses `<parameter>` tags where:
+- `name` — an arbitrary label, conventionally `tablename_all` (e.g., `pyz_supplier_all`)
+- `column` — which columns to watch for changes. Use `"*"` to watch all columns
+
+```xml
+<behavior name="event">
+    <parameter name="..." column="..."/>
+</behavior>
+```
+
+> **What this triggers:** Once added, Propel automatically fires events like `Entity.pyz_supplier.create`, `Entity.pyz_supplier.update`, and `Entity.pyz_supplier.delete` whenever the table is modified.
 
 #### 4.2 Synchronization Behavior — Auto-Sync to Storefront
 
@@ -131,14 +156,28 @@ The `synchronization` behavior on the intermediate tables (`pyz_supplier_search`
 
 **Coding time:**
 
-Open `src/SprykerAcademy/Zed/SupplierSearch/Persistence/Propel/Schema/pyz_supplier_search.schema.xml`. Add the `synchronization` behavior with these parameters:
-- `resource` — the resource name (e.g., `"supplier"`) — used to build the Elasticsearch/Redis key
-- `key_suffix_column` — the column holding the entity ID (use the `fk_supplier` column)
-- `queue_group` — which sync queue to write messages to (use the sync queue constant value)
+Open `src/SprykerAcademy/Zed/SupplierSearch/Persistence/Propel/Schema/pyz_supplier_search.schema.xml`. Add the `synchronization` behavior using `<parameter>` child tags.
 
-Do the same for `pyz_supplier_storage.schema.xml`.
+Available parameters for the synchronization behavior:
 
-After adding both behaviors:
+| Parameter | Value | Purpose |
+|-----------|-------|---------|
+| `resource` | A resource name string (e.g., `"supplier"`) | Used to build the storage key (e.g., `supplier:1`) |
+| `key_suffix_column` | A column name from the table (e.g., `"fk_supplier"`) | The column whose value becomes the key suffix |
+| `queue_group` | A sync queue name (e.g., `"sync.search.supplier"`) | Which queue receives the sync messages |
+| `params` | JSON string (e.g., `'{"type":"page"}'`) | Extra parameters — for search, set `type` to `"page"` |
+
+For the **search** table, you need all four parameters (including `params` with `type: page` for Elasticsearch indexing). For the **storage** table (`pyz_supplier_storage.schema.xml`), it is already provided.
+
+```xml
+<behavior name="synchronization">
+    <parameter name="..." value="..."/>
+    <parameter name="..." value="..."/>
+    <!-- ... -->
+</behavior>
+```
+
+After adding the behaviors:
 
 ```bash
 docker/sdk console propel:install

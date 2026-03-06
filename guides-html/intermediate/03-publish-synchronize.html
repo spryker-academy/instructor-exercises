@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>Exercise 10: Publish &amp; Synchronize - Supplier</title>
+  <title>Exercise 10: Publish &amp; Synchronize</title>
   <style>
     html {
       line-height: 1.5;
@@ -213,7 +213,7 @@
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">Exercise 10: Publish &amp; Synchronize - Supplier</h1>
+<h1 class="title">Exercise 10: Publish &amp; Synchronize</h1>
 </header>
 <h1 id="exercise-10-publish-synchronize---supplier">Exercise 10: Publish &amp; Synchronize - Supplier</h1>
 <p>In this exercise, you will make supplier data available in Elasticsearch (search) and Redis (storage) using Spryker’s Publish &amp; Synchronize (P&amp;S) pattern. This is a two-step process: first you <strong>publish</strong> data from the main database into intermediate tables, then the <strong>synchronization</strong> behavior automatically pushes that data to the storefront storages.</p>
@@ -357,20 +357,76 @@ Insert/Update pyz_*_search/storage</code></pre>
 </blockquote>
 <hr />
 <h3 id="part-4-add-propel-behaviors">Part 4: Add Propel Behaviors</h3>
+<p>Propel behaviors are declared inside a <code>&lt;table&gt;</code> tag in schema XML files. Each behavior has a <code>name</code> attribute and contains <code>&lt;parameter&gt;</code> child tags that configure it. The general structure is:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode xml"><code class="sourceCode xml"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;table</span><span class="ot"> name=</span><span class="st">&quot;my_table&quot;</span><span class="kw">&gt;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">&lt;column</span> <span class="er">...</span><span class="kw">/&gt;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">&lt;behavior</span><span class="ot"> name=</span><span class="st">&quot;behavior_name&quot;</span><span class="kw">&gt;</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>        <span class="kw">&lt;parameter</span><span class="ot"> name=</span><span class="st">&quot;param_name&quot;</span><span class="ot"> value=</span><span class="st">&quot;param_value&quot;</span><span class="kw">/&gt;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>        <span class="kw">&lt;parameter</span><span class="ot"> name=</span><span class="st">&quot;another_param&quot;</span><span class="ot"> value=</span><span class="st">&quot;another_value&quot;</span><span class="kw">/&gt;</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">&lt;/behavior&gt;</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;/table&gt;</span></span></code></pre></div>
+<p>Each <code>&lt;parameter&gt;</code> has a <code>name</code> attribute (what to configure) and a <code>value</code> attribute (the setting). Some parameters also support <code>column</code> instead of <code>value</code> — this is specific to the event behavior.</p>
 <h4 id="event-behavior-fire-events-on-entity-changes">4.1 Event Behavior — Fire Events on Entity Changes</h4>
 <p>The <code>event</code> behavior makes Propel fire events whenever an entity is created, updated, or deleted. These events are the starting point of the P&amp;S flow.</p>
 <p><strong>Coding time:</strong></p>
-<p>Open <code>src/SprykerAcademy/Zed/Supplier/Persistence/Propel/Schema/pyz_supplier.schema.xml</code>. Add the <code>event</code> behavior to the <code>pyz_supplier</code> table to detect changes on all columns.</p>
+<p>Open <code>src/SprykerAcademy/Zed/Supplier/Persistence/Propel/Schema/pyz_supplier.schema.xml</code>. Add the <code>event</code> behavior to the <code>pyz_supplier</code> table.</p>
+<p>The event behavior uses <code>&lt;parameter&gt;</code> tags where: - <code>name</code> — an arbitrary label, conventionally <code>tablename_all</code> (e.g., <code>pyz_supplier_all</code>) - <code>column</code> — which columns to watch for changes. Use <code>"*"</code> to watch all columns</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode xml"><code class="sourceCode xml"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;behavior</span><span class="ot"> name=</span><span class="st">&quot;event&quot;</span><span class="kw">&gt;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">&lt;parameter</span><span class="ot"> name=</span><span class="st">&quot;...&quot;</span><span class="ot"> column=</span><span class="st">&quot;...&quot;</span><span class="kw">/&gt;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;/behavior&gt;</span></span></code></pre></div>
 <blockquote>
-<p><strong>Event behavior format:</strong> The parameter name is arbitrary (conventionally <code>tablename_all</code>), and <code>column="*"</code> watches all columns. This triggers events like <code>Entity.pyz_supplier.create</code>, <code>Entity.pyz_supplier.update</code>, and <code>Entity.pyz_supplier.delete</code>.</p>
+<p><strong>What this triggers:</strong> Once added, Propel automatically fires events like <code>Entity.pyz_supplier.create</code>, <code>Entity.pyz_supplier.update</code>, and <code>Entity.pyz_supplier.delete</code> whenever the table is modified.</p>
 </blockquote>
 <h4 id="synchronization-behavior-auto-sync-to-storefront">4.2 Synchronization Behavior — Auto-Sync to Storefront</h4>
 <p>The <code>synchronization</code> behavior on the intermediate tables (<code>pyz_supplier_search</code>, <code>pyz_supplier_storage</code>) automatically pushes data to the sync queue whenever a record is written.</p>
 <p><strong>Coding time:</strong></p>
-<p>Open <code>src/SprykerAcademy/Zed/SupplierSearch/Persistence/Propel/Schema/pyz_supplier_search.schema.xml</code>. Add the <code>synchronization</code> behavior with these parameters: - <code>resource</code> — the resource name (e.g., <code>"supplier"</code>) — used to build the Elasticsearch/Redis key - <code>key_suffix_column</code> — the column holding the entity ID (use the <code>fk_supplier</code> column) - <code>queue_group</code> — which sync queue to write messages to (use the sync queue constant value)</p>
-<p>Do the same for <code>pyz_supplier_storage.schema.xml</code>.</p>
-<p>After adding both behaviors:</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console propel:install</span></code></pre></div>
+<p>Open <code>src/SprykerAcademy/Zed/SupplierSearch/Persistence/Propel/Schema/pyz_supplier_search.schema.xml</code>. Add the <code>synchronization</code> behavior using <code>&lt;parameter&gt;</code> child tags.</p>
+<p>Available parameters for the synchronization behavior:</p>
+<table>
+<colgroup>
+<col style="width: 40%" />
+<col style="width: 25%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th>Value</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>resource</code></td>
+<td>A resource name string (e.g., <code>"supplier"</code>)</td>
+<td>Used to build the storage key (e.g., <code>supplier:1</code>)</td>
+</tr>
+<tr class="even">
+<td><code>key_suffix_column</code></td>
+<td>A column name from the table (e.g., <code>"fk_supplier"</code>)</td>
+<td>The column whose value becomes the key suffix</td>
+</tr>
+<tr class="odd">
+<td><code>queue_group</code></td>
+<td>A sync queue name (e.g., <code>"sync.search.supplier"</code>)</td>
+<td>Which queue receives the sync messages</td>
+</tr>
+<tr class="even">
+<td><code>params</code></td>
+<td>JSON string (e.g., <code>'{"type":"page"}'</code>)</td>
+<td>Extra parameters — for search, set <code>type</code> to <code>"page"</code></td>
+</tr>
+</tbody>
+</table>
+<p>For the <strong>search</strong> table, you need all four parameters (including <code>params</code> with <code>type: page</code> for Elasticsearch indexing). For the <strong>storage</strong> table (<code>pyz_supplier_storage.schema.xml</code>), it is already provided.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode xml"><code class="sourceCode xml"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;behavior</span><span class="ot"> name=</span><span class="st">&quot;synchronization&quot;</span><span class="kw">&gt;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">&lt;parameter</span><span class="ot"> name=</span><span class="st">&quot;...&quot;</span><span class="ot"> value=</span><span class="st">&quot;...&quot;</span><span class="kw">/&gt;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">&lt;parameter</span><span class="ot"> name=</span><span class="st">&quot;...&quot;</span><span class="ot"> value=</span><span class="st">&quot;...&quot;</span><span class="kw">/&gt;</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">&lt;!-- ... --&gt;</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;/behavior&gt;</span></span></code></pre></div>
+<p>After adding the behaviors:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console propel:install</span></code></pre></div>
 <blockquote>
 <p><strong>What the synchronization behavior does:</strong> It auto-adds <code>key</code>, <code>data</code>, <code>created_at</code>, and <code>updated_at</code> columns to the table. When you save an entity to this table, the behavior automatically generates a key (e.g., <code>supplier:1</code>), serializes the data as JSON, and emits a message to the sync queue.</p>
 </blockquote>
@@ -379,11 +435,11 @@ Insert/Update pyz_*_search/storage</code></pre>
 <p>Publisher plugins react to entity events and delegate to the business logic. You need to register them so the system knows which plugins handle which events.</p>
 <p><strong>Coding time:</strong></p>
 <p>Open <code>src/Pyz/Zed/Publisher/PublisherDependencyProvider.php</code>. The format maps a queue name to an array of publisher plugins:</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="cf">return</span> [</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="cn">Q</span>ueueName::<span class="fu">CONSTANT</span> =&gt; [</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>        <span class="kw">new</span> <span class="cn">M</span>yWritePublisherPlugin()<span class="ot">,</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    ]<span class="ot">,</span></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>]<span class="ot">;</span></span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="cf">return</span> [</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="cn">Q</span>ueueName::<span class="fu">CONSTANT</span> =&gt; [</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>        <span class="kw">new</span> <span class="cn">M</span>yWritePublisherPlugin()<span class="ot">,</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    ]<span class="ot">,</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>]<span class="ot">;</span></span></code></pre></div>
 <ol type="1">
 <li>Create a method that returns the Search publisher plugin mapped to the search publish queue</li>
 <li>Create a method that returns the Storage publisher plugin mapped to the storage publish queue</li>
@@ -473,7 +529,7 @@ Insert/Update pyz_*_search/storage</code></pre>
 <h2 id="testing-the-flow">Testing the Flow</h2>
 <h3 id="setup-ensure-queues-and-exchanges-exist">Setup: Ensure Queues and Exchanges Exist</h3>
 <p>After registering queues in the config files, you must create the AMQP infrastructure (queues, exchanges, bindings) in RabbitMQ:</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console messenger:setup-transports</span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console messenger:setup-transports</span></code></pre></div>
 <p>This reads the <code>SymfonyMessengerConfig::getQueueConfiguration()</code> and creates the corresponding AMQP exchanges and queues. <strong>Without this step, messages are silently dropped</strong> because the Symfony Messenger transport has no exchange to route them through.</p>
 <blockquote>
 <p><strong>Three config files required:</strong> Queues must be registered in: 1. <code>SymfonyMessengerConfig</code> — Symfony Messenger transport routing 2. <code>RabbitMqConfig</code> — AMQP queue declaration 3. <code>QueueDependencyProvider</code> — queue message processors</p>
@@ -483,18 +539,18 @@ Insert/Update pyz_*_search/storage</code></pre>
 <h3 id="test-the-flow">Test the Flow</h3>
 <ol type="1">
 <li><p>Add a new supplier to the CSV and import:</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console data:import supplier</span></code></pre></div></li>
+<div class="sourceCode" id="cb10"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console data:import supplier</span></code></pre></div></li>
 <li><p>Process the event queue first (routes events to publish queues):</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console queue:worker:start <span class="at">--stop-when-empty</span></span></code></pre></div></li>
+<div class="sourceCode" id="cb11"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console queue:worker:start <span class="at">--stop-when-empty</span></span></code></pre></div></li>
 <li><p>Process again (handles publish → search/storage tables → sync queues → Elasticsearch/Redis):</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console queue:worker:start <span class="at">--stop-when-empty</span></span></code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console queue:worker:start <span class="at">--stop-when-empty</span></span></code></pre></div>
 <p>You may need to run the worker multiple times — the first run processes publish events (writes to intermediate tables), the second processes sync events (pushes to Elasticsearch/Redis).</p></li>
 <li><p>Check the intermediate tables using any DB client (credentials in <code>deploy.dev.yml</code>):</p>
-<div class="sourceCode" id="cb10"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="fu">count</span>(<span class="op">*</span>) <span class="kw">FROM</span> pyz_supplier_search;</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="fu">count</span>(<span class="op">*</span>) <span class="kw">FROM</span> pyz_supplier_storage;</span></code></pre></div></li>
+<div class="sourceCode" id="cb13"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="fu">count</span>(<span class="op">*</span>) <span class="kw">FROM</span> pyz_supplier_search;</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="fu">count</span>(<span class="op">*</span>) <span class="kw">FROM</span> pyz_supplier_storage;</span></code></pre></div></li>
 <li><p>Verify Elasticsearch:</p>
-<div class="sourceCode" id="cb11"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-s</span> <span class="st">&#39;localhost:9200/_search&#39;</span> <span class="at">-H</span> <span class="st">&#39;Content-type: application/json&#39;</span> <span class="dt">\</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-d</span> <span class="st">&#39;{&quot;query&quot;:{&quot;exists&quot;:{&quot;field&quot;:&quot;id_supplier&quot;}}}&#39;</span></span></code></pre></div></li>
+<div class="sourceCode" id="cb14"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-s</span> <span class="st">&#39;localhost:9200/_search&#39;</span> <span class="at">-H</span> <span class="st">&#39;Content-type: application/json&#39;</span> <span class="dt">\</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-d</span> <span class="st">&#39;{&quot;query&quot;:{&quot;exists&quot;:{&quot;field&quot;:&quot;id_supplier&quot;}}}&#39;</span></span></code></pre></div></li>
 <li><p>Creating a supplier via the Back Office also triggers P&amp;S automatically (via the event behavior) — no manual queue processing needed if the scheduler is running.</p></li>
 </ol>
 <h3 id="troubleshooting">Troubleshooting</h3>
@@ -505,9 +561,9 @@ Insert/Update pyz_*_search/storage</code></pre>
 </ul>
 <hr />
 <h2 id="run-automated-tests">Run Automated Tests</h2>
-<div class="sourceCode" id="cb12"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/Supplier/ PublishSync</span></code></pre></div>
+<div class="sourceCode" id="cb15"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/Supplier/ PublishSync</span></code></pre></div>
 <hr />
 <h2 id="solution">Solution</h2>
-<div class="sourceCode" id="cb13"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> supplier intermediate/publish-synchronize/complete</span></code></pre></div>
+<div class="sourceCode" id="cb16"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> supplier intermediate/publish-synchronize/complete</span></code></pre></div>
 </body>
 </html>
