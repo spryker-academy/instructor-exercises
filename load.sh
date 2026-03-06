@@ -114,6 +114,19 @@ rm -rf "$PROJECT_DIR/src/SprykerAcademy"
 # Copy SprykerAcademy source files
 if [ -d "$REPO_DIR/src/SprykerAcademy" ]; then
     cp -R "$REPO_DIR/src/SprykerAcademy" "$PROJECT_DIR/src/SprykerAcademy"
+
+    # Add SprykerAcademy namespace to composer.json autoload if not already present
+    if ! grep -q '"SprykerAcademy\\\\": "src/SprykerAcademy/"' "$PROJECT_DIR/composer.json"; then
+        php -r '
+            $file = $argv[1] . "/composer.json";
+            $json = json_decode(file_get_contents($file), true);
+            if (!isset($json["autoload"]["psr-4"]["SprykerAcademy\\"])) {
+                $json["autoload"]["psr-4"]["SprykerAcademy\\"] = "src/SprykerAcademy/";
+                file_put_contents($file, json_encode($json, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n");
+            }
+        ' "$PROJECT_DIR"
+        echo -e "  ${GREEN}Added SprykerAcademy\\ to composer.json autoload${NC}"
+    fi
 fi
 
 # Copy Pyz overrides if present
