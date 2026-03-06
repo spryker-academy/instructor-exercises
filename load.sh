@@ -152,11 +152,11 @@ if [ "$PACKAGE" = "supplier" ]; then
     if [ -f "$IMPORT_YAML" ] && [ "$(grep -c 'data_entity: supplier$' "$IMPORT_YAML" || true)" = "0" ]; then
         cat >> "$IMPORT_YAML" << 'YAMLEOF'
 
-    # Supplier Academy exercises
-    -   data_entity: supplier
-        source: data/import/supplier.csv
-    -   data_entity: supplier-location
-        source: data/import/supplier_location.csv
+  # Supplier Academy exercises
+  - data_entity: supplier
+    source: data/import/supplier.csv
+  - data_entity: supplier-location
+    source: data/import/supplier_location.csv
 YAMLEOF
         echo -e "  ${GREEN}Added supplier import entries to full_EU.yml${NC}"
     fi
