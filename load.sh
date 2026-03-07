@@ -546,7 +546,7 @@ YAMLEOF
       fi
     fi
 
-    # Register SprykerAcademy source directory in API Platform configs
+    # Register SprykerAcademy source directory in API Platform configs. The following configuration is optional. By default, the source directories are set to 'src/Spryker', 'src/SprykerFeature', and 'src/Pyz', 'src/SprykerAcademy'.
     for API_CONFIG in "$PROJECT_DIR/config/GlueStorefront/packages/spryker_api_platform.php" "$PROJECT_DIR/config/GlueBackend/packages/spryker_api_platform.php"; do
         if [ -f "$API_CONFIG" ] && [ "$(grep -c 'SprykerAcademy' "$API_CONFIG" || true)" = "0" ]; then
             sed -i '' "s|'src/Pyz'|'src/Pyz',\n        'src/SprykerAcademy'|" "$API_CONFIG"
