@@ -269,9 +269,14 @@ YAMLEOF
     fi
 
     # Register supplier publisher plugins in PublisherDependencyProvider
+    # Only for publish-synchronize and later branches (not for back-office or data-import)
     PUB_PROVIDER="$PROJECT_DIR/src/Pyz/Zed/Publisher/PublisherDependencyProvider.php"
     if [ -f "$PUB_PROVIDER" ] && [ "$(grep -c 'SupplierSearchWritePublisherPlugin' "$PUB_PROVIDER" || true)" = "0" ]; then
-      if [ "$BRANCH" = "intermediate/publish-synchronize/skeleton" ]; then
+      case "$BRANCH" in
+        intermediate/back-office/*|intermediate/data-import/*)
+          # Skip - these branches don't have SupplierSearch/Storage modules
+          ;;
+        intermediate/publish-synchronize/skeleton)
         php -r '
             $file = $argv[1];
             $content = file_get_contents($file);
@@ -300,8 +305,10 @@ YAMLEOF
             file_put_contents($file, $content);
         ' "$PUB_PROVIDER"
         echo -e "  ${GREEN}Added Supplier publisher plugin TODOs in PublisherDependencyProvider${NC}"
-      else
-        php -r '
+      ;;
+        *)
+          # For publish-synchronize/complete and all later branches (search, storage-client, glue-storefront, oms)
+          php -r '
             $file = $argv[1];
             $content = file_get_contents($file);
 
@@ -331,13 +338,19 @@ YAMLEOF
             file_put_contents($file, $content);
         ' "$PUB_PROVIDER"
         echo -e "  ${GREEN}Registered Supplier publisher plugins in PublisherDependencyProvider${NC}"
-      fi
+        ;;
+      esac
     fi
 
     # Register supplier queue processors in QueueDependencyProvider
+    # Only for publish-synchronize and later branches (not for back-office or data-import)
     QUEUE_PROVIDER="$PROJECT_DIR/src/Pyz/Zed/Queue/QueueDependencyProvider.php"
     if [ -f "$QUEUE_PROVIDER" ] && [ "$(grep -c 'SUPPLIER_PUBLISH_SEARCH_QUEUE\|SUPPLIER_SYNC_SEARCH_QUEUE' "$QUEUE_PROVIDER" || true)" = "0" ]; then
-      if [ "$BRANCH" = "intermediate/publish-synchronize/skeleton" ]; then
+      case "$BRANCH" in
+        intermediate/back-office/*|intermediate/data-import/*)
+          # Skip - these branches don't have SupplierSearch/Storage modules
+          ;;
+        intermediate/publish-synchronize/skeleton)
         php -r '
             $file = $argv[1];
             $content = file_get_contents($file);
@@ -364,8 +377,10 @@ YAMLEOF
             file_put_contents($file, $content);
         ' "$QUEUE_PROVIDER"
         echo -e "  ${GREEN}Added Supplier queue processor TODOs in QueueDependencyProvider${NC}"
-      else
-        php -r '
+      ;;
+        *)
+          # For publish-synchronize/complete and all later branches (search, storage-client, glue-storefront, oms)
+          php -r '
             $file = $argv[1];
             $content = file_get_contents($file);
 
@@ -391,25 +406,39 @@ YAMLEOF
             file_put_contents($file, $content);
         ' "$QUEUE_PROVIDER"
         echo -e "  ${GREEN}Registered Supplier queue processors in QueueDependencyProvider${NC}"
-      fi
+        ;;
+      esac
     fi
 
     # Create supplier queues and exchanges in RabbitMQ via management API
-    if command -v curl > /dev/null 2>&1; then
-        RMQ_API="http://queue.spryker.local/api"
-        RMQ_AUTH="spryker:secret"
-        for QUEUE in publish.search.supplier publish.storage.supplier sync.search.supplier sync.storage.supplier; do
-            curl -s -o /dev/null -u "$RMQ_AUTH" -X PUT "$RMQ_API/queues/eu-docker/$QUEUE" -H 'Content-Type: application/json' -d '{"durable":true,"auto_delete":false}' 2>/dev/null || true
-            curl -s -o /dev/null -u "$RMQ_AUTH" -X PUT "$RMQ_API/exchanges/eu-docker/$QUEUE" -H 'Content-Type: application/json' -d '{"type":"direct","durable":true}' 2>/dev/null || true
-            curl -s -o /dev/null -u "$RMQ_AUTH" -X POST "$RMQ_API/bindings/eu-docker/e/$QUEUE/q/$QUEUE" -H 'Content-Type: application/json' -d '{}' 2>/dev/null || true
-        done
-        echo -e "  ${GREEN}Ensured supplier queues and exchanges exist in RabbitMQ${NC}"
-    fi
+    # Only for publish-synchronize and later branches (not for back-office or data-import)
+    case "$BRANCH" in
+      intermediate/back-office/*|intermediate/data-import/*)
+        # Skip - these branches don't have SupplierSearch/Storage modules
+        ;;
+      *)
+        if command -v curl > /dev/null 2>&1; then
+            RMQ_API="http://queue.spryker.local/api"
+            RMQ_AUTH="spryker:secret"
+            for QUEUE in publish.search.supplier publish.storage.supplier sync.search.supplier sync.storage.supplier; do
+                curl -s -o /dev/null -u "$RMQ_AUTH" -X PUT "$RMQ_API/queues/eu-docker/$QUEUE" -H 'Content-Type: application/json' -d '{"durable":true,"auto_delete":false}' 2>/dev/null || true
+                curl -s -o /dev/null -u "$RMQ_AUTH" -X PUT "$RMQ_API/exchanges/eu-docker/$QUEUE" -H 'Content-Type: application/json' -d '{"type":"direct","durable":true}' 2>/dev/null || true
+                curl -s -o /dev/null -u "$RMQ_AUTH" -X POST "$RMQ_API/bindings/eu-docker/e/$QUEUE/q/$QUEUE" -H 'Content-Type: application/json' -d '{}' 2>/dev/null || true
+            done
+            echo -e "  ${GREEN}Ensured supplier queues and exchanges exist in RabbitMQ${NC}"
+        fi
+        ;;
+    esac
 
     # Register supplier queues in RabbitMqConfig (creates actual AMQP queues)
+    # Only for publish-synchronize and later branches (not for back-office or data-import)
     RMQ_CONFIG="$PROJECT_DIR/src/Pyz/Client/RabbitMq/RabbitMqConfig.php"
     if [ -f "$RMQ_CONFIG" ] && [ "$(grep -c 'SupplierSearchConfig' "$RMQ_CONFIG" || true)" = "0" ]; then
-      if [ "$BRANCH" = "intermediate/publish-synchronize/skeleton" ]; then
+      case "$BRANCH" in
+        intermediate/back-office/*|intermediate/data-import/*)
+          # Skip - these branches don't have SupplierSearch/Storage modules
+          ;;
+        intermediate/publish-synchronize/skeleton)
         php -r '
             $file = $argv[1];
             $content = file_get_contents($file);
@@ -441,8 +470,10 @@ YAMLEOF
             file_put_contents($file, $content);
         ' "$RMQ_CONFIG"
         echo -e "  ${GREEN}Added Supplier queue TODOs in RabbitMqConfig${NC}"
-      else
-        php -r '
+      ;;
+        *)
+          # For publish-synchronize/complete and all later branches (search, storage-client, glue-storefront, oms)
+          php -r '
             $file = $argv[1];
             $content = file_get_contents($file);
 
@@ -473,13 +504,19 @@ YAMLEOF
             file_put_contents($file, $content);
         ' "$RMQ_CONFIG"
         echo -e "  ${GREEN}Registered Supplier queues in RabbitMqConfig${NC}"
-      fi
+        ;;
+      esac
     fi
 
     # Register supplier queues in SymfonyMessengerConfig
+    # Only for publish-synchronize and later branches (not for back-office or data-import)
     SM_CONFIG="$PROJECT_DIR/src/Pyz/Client/SymfonyMessenger/SymfonyMessengerConfig.php"
     if [ -f "$SM_CONFIG" ] && [ "$(grep -c 'SupplierSearchConfig' "$SM_CONFIG" || true)" = "0" ]; then
-      if [ "$BRANCH" = "intermediate/publish-synchronize/skeleton" ]; then
+      case "$BRANCH" in
+        intermediate/back-office/*|intermediate/data-import/*)
+          # Skip - these branches don't have SupplierSearch/Storage modules
+          ;;
+        intermediate/publish-synchronize/skeleton)
         php -r '
             $file = $argv[1];
             $content = file_get_contents($file);
@@ -511,8 +548,10 @@ YAMLEOF
             file_put_contents($file, $content);
         ' "$SM_CONFIG"
         echo -e "  ${GREEN}Added Supplier queue TODOs in SymfonyMessengerConfig${NC}"
-      else
-        php -r '
+      ;;
+        *)
+          # For publish-synchronize/complete and all later branches (search, storage-client, glue-storefront, oms)
+          php -r '
             $file = $argv[1];
             $content = file_get_contents($file);
 
@@ -543,7 +582,8 @@ YAMLEOF
             file_put_contents($file, $content);
         ' "$SM_CONFIG"
         echo -e "  ${GREEN}Registered Supplier queues in SymfonyMessengerConfig${NC}"
-      fi
+        ;;
+      esac
     fi
 
     # Register SprykerAcademy source directory in API Platform configs. The following configuration is optional. By default, the source directories are set to 'src/Spryker', 'src/SprykerFeature', and 'src/Pyz', 'src/SprykerAcademy'.
