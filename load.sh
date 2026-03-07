@@ -159,8 +159,47 @@ fi
 # Copy navigation XML if present in the exercise repo
 if [ -f "$REPO_DIR/config/Zed/navigation.xml" ]; then
     mkdir -p "$PROJECT_DIR/config/Zed"
-    cp "$REPO_DIR/config/Zed/navigation.xml" "$PROJECT_DIR/config/Zed/navigation.xml"
-    echo -e "  ${GREEN}Copied navigation.xml${NC}"
+    # Merge navigation entries instead of replacing
+    php -r '
+        $projectFile = $argv[1] . "/config/Zed/navigation.xml";
+        $exerciseFile = $argv[2] . "/config/Zed/navigation.xml";
+        
+        $projectXml = simplexml_load_file($projectFile);
+        $exerciseXml = simplexml_load_file($exerciseFile);
+        
+        // Import all children from exercise navigation into project navigation
+        foreach ($exerciseXml->children() as $child) {
+            // Check if entry already exists
+            $name = $child->getName();
+            if (isset($projectXml->$name)) {
+                continue; // Skip if already exists
+            }
+            // Import and append the node
+            $newNode = $projectXml->addChild($name);
+            // Copy all child elements recursively
+            function copyXmlChildren($source, $target) {
+                foreach ($source->children() as $key => $value) {
+                    if (count($value->children()) > 0) {
+                        $child = $target->addChild($key);
+                        copyXmlChildren($value, $child);
+                    } else {
+                        $target->addChild($key, (string)$value);
+                    }
+                }
+                // Copy attributes if any
+                foreach ($source->attributes() as $key => $value) {
+                    $target->addAttribute($key, (string)$value);
+                }
+            }
+            copyXmlChildren($child, $newNode);
+        }
+        
+        // Save with proper formatting
+        $dom = dom_import_simplexml($projectXml)->ownerDocument;
+        $dom->formatOutput = true;
+        $dom->save($projectFile);
+    ' "$PROJECT_DIR" "$REPO_DIR"
+    echo -e "  ${GREEN}Merged navigation.xml entries${NC}"
 fi
 
 # Add HelloWorld config value to config_default.php for configuration exercise
@@ -180,7 +219,7 @@ fi
 
 # Copy config and data files for supplier package
 if [ "$PACKAGE" = "supplier" ]; then
-    [ -f "$REPO_DIR/config/Zed/navigation.xml" ] && cp "$REPO_DIR/config/Zed/navigation.xml" "$PROJECT_DIR/config/Zed/navigation.xml"
+    # Navigation XML is already handled above for all packages
     [ -f "$REPO_DIR/config/Zed/oms/Demo01.xml" ] && mkdir -p "$PROJECT_DIR/config/Zed/oms" && cp "$REPO_DIR/config/Zed/oms/Demo01.xml" "$PROJECT_DIR/config/Zed/oms/Demo01.xml"
     [ -f "$REPO_DIR/data/import/supplier.csv" ] && mkdir -p "$PROJECT_DIR/data/import" && cp "$REPO_DIR/data/import/supplier.csv" "$PROJECT_DIR/data/import/supplier.csv"
     [ -f "$REPO_DIR/data/import/supplier_location.csv" ] && cp "$REPO_DIR/data/import/supplier_location.csv" "$PROJECT_DIR/data/import/supplier_location.csv"
