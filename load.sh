@@ -588,8 +588,8 @@ echo ""
 echo -e "${YELLOW}Next steps:${NC}"
 echo "  docker/sdk console c:e"
 echo "  docker/sdk cli composer dump-autoload"
-echo "  docker/sdk console transfer:generate"
 echo "  docker/sdk console propel:install"
+echo "  docker/sdk console transfer:generate"
 
 # Show test run command for hello-world package
 if [ "$PACKAGE" = "hello-world" ] && [ -d "$PROJECT_DIR/tests/SprykerAcademyTest" ]; then
