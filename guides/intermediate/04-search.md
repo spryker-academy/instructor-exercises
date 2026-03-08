@@ -65,8 +65,31 @@ SupplierSearchFactory
 
 The exercise provides an Elasticsearch mapping schema at `src/SprykerAcademy/Shared/SupplierSearch/Schema/supplier.json`. Open it and review:
 
-- The `settings` define an `edge_ngram` analyzer for partial matching (typing "Acm" matches "Acme")
-- The `mappings` define field types: `text` for searchable fields, `keyword` for exact match fields
+- The `settings` define an `edge_ngram` analyzer for partial matching (typing "Sup" matches "Supplier")
+- The `mappings` define the document structure with field types:
+  - `text` for searchable fields (`name`, `description`) - analyzed and tokenized
+  - `keyword` for exact match fields (`status`, `email`, `phone`) - not analyzed
+  - `integer` for the supplier ID
+
+**Mapping structure:**
+```json
+{
+    "mappings": {
+        "supplier": {
+            "properties": {
+                "id_supplier": { "type": "integer" },
+                "name": { "type": "text", "analyzer": "default_analyzer" },
+                "description": { "type": "text", "analyzer": "default_analyzer" },
+                "status": { "type": "keyword" },
+                "email": { "type": "keyword" },
+                "phone": { "type": "keyword" }
+            }
+        }
+    }
+}
+```
+
+The mapping type name (`supplier`) must match the `type` parameter in the synchronization behavior from `pyz_supplier_search.schema.xml`.
 
 After loading the exercise, run `docker/sdk console search:setup` to create the index in Elasticsearch.
 
@@ -82,11 +105,15 @@ The query plugin builds the Elastica query that gets sent to Elasticsearch.
 
 Open `src/SprykerAcademy/Client/SupplierSearch/Plugin/Elasticsearch/Query/SupplierSearchQueryPlugin.php`:
 
-1. Set the `SOURCE_IDENTIFIER` constant — this must match the `type` parameter from the synchronization behavior in `pyz_supplier_search.schema.xml`
+1. Set the `SOURCE_IDENTIFIER` constant to `'supplier'` — this must match:
+   - The `type` parameter in the synchronization behavior from `pyz_supplier_search.schema.xml`
+   - The mapping type name in `supplier.json`
 
 2. In `getSearchQuery()`, build a `BoolQuery` with two `addMust()` conditions:
    - An `Exists` filter ensuring the document has an `id_supplier` field (only supplier documents)
    - A `MatchQuery` on the `name` field with the search term stored in `$this->name`
+
+> **Field names:** The field names in your query must match the property names defined in the Elasticsearch mapping (`supplier.json`).
 
 > **BoolQuery:** Elasticsearch's boolean query combines multiple conditions with must/should/must_not logic. `addMust()` means ALL conditions must match (AND logic).
 
