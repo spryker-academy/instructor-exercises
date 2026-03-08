@@ -69,10 +69,25 @@ modify_php_file() {
         \$file = '$file';
         \$content = file_get_contents(\$file);
         
-        // Add use statements
-        \$useStatements = '$use_statements';
-        if (!empty(\$useStatements) && strpos(\$content, explode('\\\\', explode('use ', \$useStatements)[1])[0]) === false) {
-            \$content = preg_replace('/(^class\s)/m', \$useStatements . \"\n\$1\", \$content, 1);
+        // Add use statements - convert \\n to actual newlines
+        \$useStatements = str_replace('\\n', \"\n\", '$use_statements');
+        if (!empty(\$useStatements)) {
+            // Extract class name from first use statement for duplicate check
+            \$firstUseClass = '';
+            if (preg_match('/use\\s+([^;]+);/', \$useStatements, \$matches)) {
+                \$firstUseClass = trim(\$matches[1]);
+            }
+            // Only add if the first use class is not already present
+            if (!empty(\$firstUseClass) && strpos(\$content, \$firstUseClass) === false) {
+                // Find the last use statement and add after it, or before class declaration
+                if (preg_match('/use\\s+[^;]+;.*\n/', \$content)) {
+                    // Add after last use statement
+                    \$content = preg_replace('/(use\\s+[^;]+;.*\n)(?!.*use\\s+)/s', \"\$1\" . \$useStatements . \"\n\", \$content, 1);
+                } else {
+                    // No use statements, add before class declaration
+                    \$content = preg_replace('/(^class\s)/m', \$useStatements . \"\n\$1\", \$content, 1);
+                }
+            }
         }
         
         // Apply modifications
@@ -303,13 +318,15 @@ YAMLEOF
     DI_PROVIDER="$PROJECT_DIR/src/Pyz/Zed/DataImport/DataImportDependencyProvider.php"
     if file_needs_update "$DI_PROVIDER" 'SupplierDataImportPlugin'; then
         modify_php_file "$DI_PROVIDER" \
-            $'use SprykerAcademy\\Zed\\SupplierDataImport\\Communication\\Plugin\\DataImport\\SupplierDataImportPlugin;\nuse SprykerAcademy\\Zed\\SupplierDataImport\\Communication\\Plugin\\DataImport\\SupplierLocationDataImportPlugin;\n' \
+            'use SprykerAcademy\\Zed\\SupplierDataImport\\Communication\\Plugin\\DataImport\\SupplierDataImportPlugin;\nuse SprykerAcademy\\Zed\\SupplierDataImport\\Communication\\Plugin\\DataImport\\SupplierLocationDataImportPlugin;\n' \
             '
-                $content = preg_replace(
-                    "/(function\s+getDataImporterPlugins.*?)(\s*\];)/s",
-                    "$1\n    new SupplierDataImportPlugin(),\n    new SupplierLocationDataImportPlugin(),\n$2",
-                    $content, 1
-                );
+                if (strpos($content, "SupplierDataImportPlugin") === false) {
+                    $content = preg_replace(
+                        "/(function\s+getDataImporterPlugins.*?)(\s*\];)/s",
+                        "$1\n    new SupplierDataImportPlugin(),\n    new SupplierLocationDataImportPlugin(),\n$2",
+                        $content, 1
+                    );
+                }
             '
         log_success "Registered SupplierDataImportPlugin in DataImportDependencyProvider"
     fi
@@ -359,14 +376,18 @@ YAMLEOF
         if file_needs_update "$QUEUE_PROVIDER" 'SUPPLIER_PUBLISH_SEARCH_QUEUE\|SUPPLIER_SYNC_SEARCH_QUEUE'; then
             if [ "$BRANCH_TYPE" = "skeleton" ]; then
                 modify_php_file "$QUEUE_PROVIDER" "$USE_SEARCH_STORAGE" '
-                    $supplierQueues = "\n            // TODO: Register supplier queue processors\n            // Hint: Map SupplierSearchConfig::SUPPLIER_PUBLISH_SEARCH_QUEUE => new EventQueueMessageProcessorPlugin()\n            // Hint: Map SupplierStorageConfig::SUPPLIER_PUBLISH_STORAGE_QUEUE => new EventQueueMessageProcessorPlugin()\n            // Hint: Map SupplierSearchConfig::SUPPLIER_SYNC_SEARCH_QUEUE => new SynchronizationSearchQueueMessageProcessorPlugin()\n            // Hint: Map SupplierStorageConfig::SUPPLIER_SYNC_STORAGE_QUEUE => new SynchronizationStorageQueueMessageProcessorPlugin()";
-                    $content = preg_replace("/(function\s+getProcessorMessagePlugins.*?return\s*\[)/s", "$1" . $supplierQueues, $content, 1);
+                    if (strpos($content, "SupplierSearchConfig::SUPPLIER_PUBLISH_SEARCH_QUEUE") === false) {
+                        $supplierQueues = "\n            // TODO: Register supplier queue processors\n            // Hint: Map SupplierSearchConfig::SUPPLIER_PUBLISH_SEARCH_QUEUE => new EventQueueMessageProcessorPlugin()\n            // Hint: Map SupplierStorageConfig::SUPPLIER_PUBLISH_STORAGE_QUEUE => new EventQueueMessageProcessorPlugin()\n            // Hint: Map SupplierSearchConfig::SUPPLIER_SYNC_SEARCH_QUEUE => new SynchronizationSearchQueueMessageProcessorPlugin()\n            // Hint: Map SupplierStorageConfig::SUPPLIER_SYNC_STORAGE_QUEUE => new SynchronizationStorageQueueMessageProcessorPlugin()";
+                        $content = preg_replace("/(function\s+getProcessorMessagePlugins.*?return\s*\[)/s", "$1" . $supplierQueues, $content, 1);
+                    }
                 '
                 log_success "Added Supplier queue processor TODOs in QueueDependencyProvider"
             else
                 modify_php_file "$QUEUE_PROVIDER" "$USE_SEARCH_STORAGE" '
-                    $supplierQueues = "\n            SupplierSearchConfig::SUPPLIER_PUBLISH_SEARCH_QUEUE => new EventQueueMessageProcessorPlugin(),\n            SupplierStorageConfig::SUPPLIER_PUBLISH_STORAGE_QUEUE => new EventQueueMessageProcessorPlugin(),\n            SupplierSearchConfig::SUPPLIER_SYNC_SEARCH_QUEUE => new SynchronizationSearchQueueMessageProcessorPlugin(),\n            SupplierStorageConfig::SUPPLIER_SYNC_STORAGE_QUEUE => new SynchronizationStorageQueueMessageProcessorPlugin(),";
-                    $content = preg_replace("/(function\s+getProcessorMessagePlugins.*?return\s*\[)/s", "$1" . $supplierQueues, $content, 1);
+                    if (strpos($content, "SupplierSearchConfig::SUPPLIER_PUBLISH_SEARCH_QUEUE") === false) {
+                        $supplierQueues = "\n            SupplierSearchConfig::SUPPLIER_PUBLISH_SEARCH_QUEUE => new EventQueueMessageProcessorPlugin(),\n            SupplierStorageConfig::SUPPLIER_PUBLISH_STORAGE_QUEUE => new EventQueueMessageProcessorPlugin(),\n            SupplierSearchConfig::SUPPLIER_SYNC_SEARCH_QUEUE => new SynchronizationSearchQueueMessageProcessorPlugin(),\n            SupplierStorageConfig::SUPPLIER_SYNC_STORAGE_QUEUE => new SynchronizationStorageQueueMessageProcessorPlugin(),";
+                        $content = preg_replace("/(function\s+getProcessorMessagePlugins.*?return\s*\[)/s", "$1" . $supplierQueues, $content, 1);
+                    }
                 '
                 log_success "Registered Supplier queue processors in QueueDependencyProvider"
             fi
@@ -390,30 +411,38 @@ YAMLEOF
             if [ -f "$CONFIG_FILE" ] && file_needs_update "$CONFIG_FILE" 'SUPPLIER_PUBLISH_SEARCH_QUEUE'; then
                 if [ "$BRANCH_TYPE" = "skeleton" ]; then
                     modify_php_file "$CONFIG_FILE" "$USE_SEARCH_STORAGE" '
-                        $content = preg_replace(
-                            "/(function\s+getPublishQueueConfiguration.*?return\s*\[)/s",
-                            "$1\n            // TODO: Register supplier publish queues\n            // Hint: Add SupplierSearchConfig::SUPPLIER_PUBLISH_SEARCH_QUEUE\n            // Hint: Add SupplierStorageConfig::SUPPLIER_PUBLISH_STORAGE_QUEUE",
-                            $content, 1
-                        );
-                        $content = preg_replace(
-                            "/(function\s+getSynchronizationQueueConfiguration.*?return\s*\[)/s",
-                            "$1\n            // TODO: Register supplier sync queues\n            // Hint: Add SupplierSearchConfig::SUPPLIER_SYNC_SEARCH_QUEUE\n            // Hint: Add SupplierStorageConfig::SUPPLIER_SYNC_STORAGE_QUEUE",
-                            $content, 1
-                        );
+                        if (strpos($content, "SupplierSearchConfig::SUPPLIER_PUBLISH_SEARCH_QUEUE") === false) {
+                            $content = preg_replace(
+                                "/(function\s+getPublishQueueConfiguration.*?return\s*\[)/s",
+                                "$1\n            // TODO: Register supplier publish queues\n            // Hint: Add SupplierSearchConfig::SUPPLIER_PUBLISH_SEARCH_QUEUE\n            // Hint: Add SupplierStorageConfig::SUPPLIER_PUBLISH_STORAGE_QUEUE",
+                                $content, 1
+                            );
+                        }
+                        if (strpos($content, "SupplierSearchConfig::SUPPLIER_SYNC_SEARCH_QUEUE") === false) {
+                            $content = preg_replace(
+                                "/(function\s+getSynchronizationQueueConfiguration.*?return\s*\[)/s",
+                                "$1\n            // TODO: Register supplier sync queues\n            // Hint: Add SupplierSearchConfig::SUPPLIER_SYNC_SEARCH_QUEUE\n            // Hint: Add SupplierStorageConfig::SUPPLIER_SYNC_STORAGE_QUEUE",
+                                $content, 1
+                            );
+                        }
                     '
                     log_success "Added Supplier queue TODOs in $CLASS_NAME"
                 else
                     modify_php_file "$CONFIG_FILE" "$USE_SEARCH_STORAGE" '
-                        $content = preg_replace(
-                            "/(function\s+getPublishQueueConfiguration.*?return\s*\[)/s",
-                            "$1\n            SupplierSearchConfig::SUPPLIER_PUBLISH_SEARCH_QUEUE,\n            SupplierStorageConfig::SUPPLIER_PUBLISH_STORAGE_QUEUE,",
-                            $content, 1
-                        );
-                        $content = preg_replace(
-                            "/(function\s+getSynchronizationQueueConfiguration.*?return\s*\[)/s",
-                            "$1\n            SupplierSearchConfig::SUPPLIER_SYNC_SEARCH_QUEUE,\n            SupplierStorageConfig::SUPPLIER_SYNC_STORAGE_QUEUE,",
-                            $content, 1
-                        );
+                        if (strpos($content, "SupplierSearchConfig::SUPPLIER_PUBLISH_SEARCH_QUEUE") === false) {
+                            $content = preg_replace(
+                                "/(function\s+getPublishQueueConfiguration.*?return\s*\[)/s",
+                                "$1\n            SupplierSearchConfig::SUPPLIER_PUBLISH_SEARCH_QUEUE,\n            SupplierStorageConfig::SUPPLIER_PUBLISH_STORAGE_QUEUE,",
+                                $content, 1
+                            );
+                        }
+                        if (strpos($content, "SupplierSearchConfig::SUPPLIER_SYNC_SEARCH_QUEUE") === false) {
+                            $content = preg_replace(
+                                "/(function\s+getSynchronizationQueueConfiguration.*?return\s*\[)/s",
+                                "$1\n            SupplierSearchConfig::SUPPLIER_SYNC_SEARCH_QUEUE,\n            SupplierStorageConfig::SUPPLIER_SYNC_STORAGE_QUEUE,",
+                                $content, 1
+                            );
+                        }
                     '
                     log_success "Registered Supplier queues in $CLASS_NAME"
                 fi
