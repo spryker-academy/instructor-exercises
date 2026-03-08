@@ -177,8 +177,8 @@ if [ -d "$REPO_DIR/src/SprykerAcademy" ]; then
         php -r '
             $file = $argv[1] . "/composer.json";
             $json = json_decode(file_get_contents($file), true);
-            if (!isset($json["autoload"]["psr-4"]["SprykerAcademy\"])) {
-                $json["autoload"]["psr-4"]["SprykerAcademy\"] = "src/SprykerAcademy/";
+            if (!isset($json["autoload"]["psr-4"]["SprykerAcademy\\"])) {
+                $json["autoload"]["psr-4"]["SprykerAcademy\\"] = "src/SprykerAcademy/";
                 file_put_contents($file, json_encode($json, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n");
             }
         ' "$PROJECT_DIR"
