@@ -319,8 +319,8 @@ YAMLEOF
     
     if [ "$BRANCH_TYPE" != "skip" ]; then
         # Common use statements for SupplierSearch/Storage
-        USE_SEARCH_STORAGE=$'use SprykerAcademy\\Shared\\SupplierSearch\\SupplierSearchConfig;\nuse SprykerAcademy\\Shared\\SupplierStorage\\SupplierStorageConfig;'
-        USE_PUBLISHER_PLUGINS="${USE_SEARCH_STORAGE}"$'\nuse SprykerAcademy\\Zed\\SupplierSearch\\Communication\\Plugin\\Publisher\\SupplierSearchWritePublisherPlugin;\nuse SprykerAcademy\\Zed\\SupplierStorage\\Communication\\Plugin\\Publisher\\SupplierStorageWritePublisherPlugin;\n'
+        USE_SEARCH_STORAGE=$'use SprykerAcademy\\Shared\\SupplierSearch\\SupplierSearchConfig;\\nuse SprykerAcademy\\Shared\\SupplierStorage\\SupplierStorageConfig;'
+        USE_PUBLISHER_PLUGINS="${USE_SEARCH_STORAGE}"$'\\nuse SprykerAcademy\\Zed\\SupplierSearch\\Communication\\Plugin\\Publisher\\SupplierSearchWritePublisherPlugin;\\nuse SprykerAcademy\\Zed\\SupplierStorage\\Communication\\Plugin\\Publisher\\SupplierStorageWritePublisherPlugin;\\n'
         
         # Register supplier publisher plugins in PublisherDependencyProvider
         PUB_PROVIDER="$PROJECT_DIR/src/Pyz/Zed/Publisher/PublisherDependencyProvider.php"
