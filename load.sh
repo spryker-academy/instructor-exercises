@@ -229,34 +229,38 @@ fi
 
 # Copy navigation XML if present in the exercise repo
 if [ -f "$REPO_DIR/config/Zed/navigation.xml" ]; then
-    mkdir -p "$PROJECT_DIR/config/Zed"
-    php -r '
-        $projectFile = $argv[1] . "/config/Zed/navigation.xml";
-        $exerciseFile = $argv[2] . "/config/Zed/navigation.xml";
-        
-        $projectDom = new DOMDocument();
-        $projectDom->preserveWhiteSpace = false;
-        $projectDom->formatOutput = true;
-        $projectDom->load($projectFile);
-        
-        $exerciseDom = new DOMDocument();
-        $exerciseDom->preserveWhiteSpace = false;
-        $exerciseDom->formatOutput = true;
-        $exerciseDom->load($exerciseFile);
-        
-        $projectConfig = $projectDom->getElementsByTagName("config")->item(0);
-        
-        foreach ($exerciseDom->documentElement->childNodes as $child) {
-            if ($child->nodeType !== XML_ELEMENT_NODE) continue;
-            $name = $child->nodeName;
-            if ($projectConfig->getElementsByTagName($name)->item(0)) continue;
-            $importedNode = $projectDom->importNode($child, true);
-            $projectConfig->appendChild($importedNode);
-        }
-        
-        $projectDom->save($projectFile);
-    ' "$PROJECT_DIR" "$REPO_DIR"
-    log_success "Merged navigation.xml entries"
+    # Extract first menu key from exercise navigation.xml for duplicate check
+    NAV_KEY=$(grep -oP '(?<=<)[a-z-]+(?=>)' "$REPO_DIR/config/Zed/navigation.xml" | head -1)
+    if [ -n "$NAV_KEY" ] && file_needs_update "$PROJECT_DIR/config/Zed/navigation.xml" "<$NAV_KEY>"; then
+        mkdir -p "$PROJECT_DIR/config/Zed"
+        php -r '
+            $projectFile = $argv[1] . "/config/Zed/navigation.xml";
+            $exerciseFile = $argv[2] . "/config/Zed/navigation.xml";
+            
+            $projectDom = new DOMDocument();
+            $projectDom->preserveWhiteSpace = false;
+            $projectDom->formatOutput = true;
+            $projectDom->load($projectFile);
+            
+            $exerciseDom = new DOMDocument();
+            $exerciseDom->preserveWhiteSpace = false;
+            $exerciseDom->formatOutput = true;
+            $exerciseDom->load($exerciseFile);
+            
+            $projectConfig = $projectDom->getElementsByTagName("config")->item(0);
+            
+            foreach ($exerciseDom->documentElement->childNodes as $child) {
+                if ($child->nodeType !== XML_ELEMENT_NODE) continue;
+                $name = $child->nodeName;
+                if ($projectConfig->getElementsByTagName($name)->item(0)) continue;
+                $importedNode = $projectDom->importNode($child, true);
+                $projectConfig->appendChild($importedNode);
+            }
+            
+            $projectDom->save($projectFile);
+        ' "$PROJECT_DIR" "$REPO_DIR"
+        log_success "Merged navigation.xml entries"
+    fi
 fi
 
 # Register supplier in SearchElasticsearchConfig for search exercise
