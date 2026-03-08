@@ -230,7 +230,7 @@ fi
 # Copy navigation XML if present in the exercise repo
 if [ -f "$REPO_DIR/config/Zed/navigation.xml" ]; then
     # Extract first menu key from exercise navigation.xml for duplicate check
-    NAV_KEY=$(grep -oP '(?<=<)[a-z-]+(?=>)' "$REPO_DIR/config/Zed/navigation.xml" | head -1)
+    NAV_KEY=$(grep -oE '<[a-z-]+>' "$REPO_DIR/config/Zed/navigation.xml" | grep -v "<config>" | head -1 | sed 's/[<>]//g')
     if [ -n "$NAV_KEY" ] && file_needs_update "$PROJECT_DIR/config/Zed/navigation.xml" "<$NAV_KEY>"; then
         mkdir -p "$PROJECT_DIR/config/Zed"
         php -r '
@@ -457,7 +457,12 @@ YAMLEOF
     # Register SprykerAcademy source directory in API Platform configs
     for API_CONFIG in "$PROJECT_DIR/config/GlueStorefront/packages/spryker_api_platform.php" "$PROJECT_DIR/config/GlueBackend/packages/spryker_api_platform.php"; do
         if [ -f "$API_CONFIG" ] && file_needs_update "$API_CONFIG" "'SprykerAcademy'"; then
-            sed -i '' "s|'src/Pyz'|'src/Pyz',\n        'src/SprykerAcademy'|" "$API_CONFIG"
+            php -r '
+                $file = $argv[1];
+                $content = file_get_contents($file);
+                $content = str_replace("\x27src/Pyz\x27", "\x27src/Pyz\x27,\n        \x27src/SprykerAcademy\x27", $content);
+                file_put_contents($file, $content);
+            ' "$API_CONFIG"
             log_success "Added SprykerAcademy to API Platform source directories"
         fi
     done
