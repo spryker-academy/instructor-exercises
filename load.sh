@@ -44,7 +44,7 @@ file_needs_update() {
 get_branch_type() {
     local branch="$1"
     case "$branch" in
-        intermediate/back-office/*|intermediate/data-import/*)
+        intermediate/back-office/*|intermediate/data-import/*|intermediate/yves-storefront/*)
             echo "skip"
             ;;
         intermediate/publish-synchronize/skeleton)
@@ -110,6 +110,8 @@ usage() {
     echo "  intermediate/search/complete"
     echo "  intermediate/storage-client/skeleton"
     echo "  intermediate/storage-client/complete"
+    echo "  intermediate/yves-storefront/skeleton"
+    echo "  intermediate/yves-storefront/complete"
     echo "  intermediate/glue-storefront/skeleton"
     echo "  intermediate/glue-storefront/complete"
     echo "  intermediate/oms/skeleton"

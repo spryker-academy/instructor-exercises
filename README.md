@@ -53,6 +53,8 @@ The `load.sh` script automates the process of loading exercise code into a Spryk
 - `intermediate/glue-storefront/complete`
 - `intermediate/oms/skeleton`
 - `intermediate/oms/complete`
+- `intermediate/yves-storefront/skeleton`
+- `intermediate/yves-storefront/complete`
 
 ## Examples
 
