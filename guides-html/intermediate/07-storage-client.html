@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>07-storage-client</title>
+  <style>
+    html {
+      line-height: 1.5;
+      font-family: Georgia, serif;
+      font-size: 20px;
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      word-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 1em;
+      }
+    }
+    @media print {
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, 'Lucida Console', Consolas, monospace;
+      font-size: 85%;
+      margin: 0;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="exercise-13-storage-client---redis-supplier-lookup">Exercise 13: Storage Client - Redis Supplier Lookup</h1>
+<p>In this exercise, you will build a Client module that reads supplier data from Redis (the key-value storage). While the Search module uses Elasticsearch for full-text search, the Storage module uses Redis for fast key-value lookups by ID.</p>
+<p>You will learn how to: - Read data from Redis using the <code>StorageClient</code> - Generate storage keys using the <code>SynchronizationService</code> - Build a Storage Reader pattern for key-value access - Wire dependencies through the Client layer’s <code>DependencyProvider</code> and <code>Factory</code> - Distinguish between Search (Elasticsearch) and Storage (Redis) use cases</p>
+<h2 id="prerequisites">Prerequisites</h2>
+<ul>
+<li>Completed Exercise 10 (Publish &amp; Synchronize) — suppliers must be synchronized to Redis</li>
+<li>Understanding of the Client layer and DependencyProvider pattern</li>
+</ul>
+<h2 id="loading-the-exercise">Loading the Exercise</h2>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> supplier intermediate/storage-client/skeleton</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli composer dump-autoload</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span></code></pre></div>
+<hr />
+<h2 id="background-search-vs-storage-architecture">Background: Search vs Storage Architecture</h2>
+<p>Spryker uses two different storage systems for different access patterns:</p>
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 48%" />
+<col style="width: 34%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Feature</th>
+<th>Search (Elasticsearch)</th>
+<th>Storage (Redis)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Use case</strong></td>
+<td>Full-text search, filtering, aggregation</td>
+<td>Fast key-value lookup by ID</td>
+</tr>
+<tr class="even">
+<td><strong>Query type</strong></td>
+<td>Complex queries (BoolQuery, Match, etc.)</td>
+<td>Simple key lookup</td>
+</tr>
+<tr class="odd">
+<td><strong>Data structure</strong></td>
+<td>Indexed documents with analyzers</td>
+<td>Serialized JSON by key</td>
+</tr>
+<tr class="even">
+<td><strong>Key format</strong></td>
+<td>Index + type + ID</td>
+<td>Resource name + ID</td>
+</tr>
+<tr class="odd">
+<td><strong>Spryker module</strong></td>
+<td><code>SupplierSearch</code> (Client)</td>
+<td><code>SupplierStorage</code> (Client)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Storage Key Format:</strong></p>
+<pre><code>resource_name:id
+
+Example:
+supplier:1
+supplier:2</code></pre>
+<p><strong>Flow for Storage Read:</strong></p>
+<pre><code>Yves/Client
+    ↓
+SupplierStorageClient::findSupplierById()
+    ↓
+SupplierStorageReader::findSupplierStorageData()
+    ↓
+SynchronizationService::getStorageKeyBuilder(&#39;supplier&#39;)-&gt;buildKey(1)
+    ↓
+StorageClient::get(&#39;supplier:1&#39;)
+    ↓
+Redis</code></pre>
+<hr />
+<h2 id="working-on-the-exercise">Working on the Exercise</h2>
+<h3 id="part-1-understand-the-storage-key-generation">Part 1: Understand the Storage Key Generation</h3>
+<p>When data is synchronized to Redis (via the Publish &amp; Synchronize flow), the <code>synchronization</code> behavior on <code>pyz_supplier_storage</code> automatically:</p>
+<ol type="1">
+<li>Generates a storage key using the <code>resource</code> parameter (e.g., <code>"supplier"</code>)</li>
+<li>Serializes the supplier data as JSON</li>
+<li>Stores it in Redis with the key <code>supplier:{fk_supplier}</code></li>
+</ol>
+<p>The <code>SynchronizationService</code> provides a key builder to generate these keys consistently:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="va">$key</span> <span class="op">=</span> <span class="va">$this</span>-&gt;synchronizationService</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    -&gt;getStorageKeyBuilder(<span class="st">&#39;supplier&#39;</span>)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    -&gt;buildKey(<span class="dt">(string)</span><span class="va">$idSupplier</span>)<span class="ot">;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Result: &quot;supplier:1&quot;</span></span></code></pre></div>
+<blockquote>
+<p><strong>Resource name:</strong> This must match the <code>resource</code> parameter in the synchronization behavior from <code>pyz_supplier_storage.schema.xml</code> (not to be confused with <code>pyz_supplier_search</code> which goes to Elasticsearch).</p>
+</blockquote>
+<hr />
+<h3 id="part-2-implement-the-storage-reader">Part 2: Implement the Storage Reader</h3>
+<p>The <code>SupplierStorageReader</code> is the core class that fetches data from Redis.</p>
+<p><strong>Coding time:</strong></p>
+<p>Open <code>src/SprykerAcademy/Client/SupplierStorage/Storage/SupplierStorageReader.php</code>:</p>
+<h4 id="add-the-resource-name-constant">2.1 Add the Resource Name Constant</h4>
+<p>Add a class constant for the resource name to avoid hardcoding strings:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">protected</span> <span class="kw">const</span> <span class="cn">RESOURCE_NAME</span> <span class="op">=</span> <span class="st">&#39;supplier&#39;</span><span class="ot">;</span></span></code></pre></div>
+<blockquote>
+<p><strong>Best practice:</strong> Use constants for resource identifiers. This prevents typos and makes refactoring easier.</p>
+</blockquote>
+<h4 id="add-static-cache-for-key-builder">2.2 Add Static Cache for Key Builder</h4>
+<p>Add a static property to cache the key builder instance (avoid repeated service lookups):</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">protected</span> <span class="kw">static</span> <span class="ot">?</span><span class="cn">S</span>ynchronizationKeyGeneratorPluginInterface <span class="va">$storageKeyBuilder</span> <span class="op">=</span> <span class="kw">null</span><span class="ot">;</span></span></code></pre></div>
+<h4 id="implement-findsupplierstoragedata">2.3 Implement <code>findSupplierStorageData()</code></h4>
+<p>This method fetches a single supplier by ID from Redis:</p>
+<ol type="1">
+<li>Generate the storage key using <code>generateStorageKey()</code></li>
+<li>Call <code>$this-&gt;storageClient-&gt;get($key)</code> to fetch from Redis</li>
+<li>Return the data array or null if not found</li>
+</ol>
+<blockquote>
+<p><strong>Note:</strong> The <code>StorageClient-&gt;get()</code> method already performs <code>json_decode</code> automatically. The returned data is already a PHP array.</p>
+</blockquote>
+<h4 id="implement-getallsuppliers">2.4 Implement <code>getAllSuppliers()</code></h4>
+<p>This method returns all suppliers from Redis (useful for dropdowns):</p>
+<ol type="1">
+<li>Generate a pattern using <code>generateStorageKeyPattern()</code> (use <code>*</code> as wildcard)</li>
+<li>Get all matching keys using <code>$this-&gt;storageClient-&gt;getKeys($pattern)</code></li>
+<li>Fetch data for each key and filter out nulls</li>
+</ol>
+<blockquote>
+<p><strong>Redis Pattern:</strong> The <code>buildKey('*')</code> generates a pattern like <code>supplier:*</code> which matches all supplier keys.</p>
+</blockquote>
+<h4 id="add-helper-methods">2.5 Add Helper Methods</h4>
+<p>Implement the helper methods for clean code:</p>
+<ul>
+<li><code>generateStorageKey(int $idSupplier): string</code> — Uses <code>SynchronizationDataTransfer</code> to generate a single key</li>
+<li><code>generateStorageKeyPattern(): string</code> — Uses <code>SynchronizationDataTransfer</code> with wildcard reference</li>
+<li><code>getStorageKeyBuilder(): SynchronizationKeyGeneratorPluginInterface</code> — Returns cached key builder (creates if null)</li>
+<li><code>getDataByKey(string $key): ?array</code> — Fetches and returns data for a single key</li>
+</ul>
+<blockquote>
+<p><strong>SynchronizationDataTransfer:</strong> This transfer object is used by the key builder. Set the reference (ID) and optionally parameters:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="va">$synchronizationDataTransfer</span> <span class="op">=</span> (<span class="kw">new</span> <span class="cn">S</span>ynchronizationDataTransfer())</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    -&gt;setReference(<span class="dt">(string)</span><span class="va">$idSupplier</span>)<span class="ot">;</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="va">$key</span> <span class="op">=</span> <span class="va">$this</span>-&gt;getStorageKeyBuilder()-&gt;generateKey(<span class="va">$synchronizationDataTransfer</span>)<span class="ot">;</span></span></code></pre></div>
+</blockquote>
+<hr />
+<h3 id="part-3-wire-the-dependencies">Part 3: Wire the Dependencies</h3>
+<h4 id="dependencyprovider">3.1 DependencyProvider</h4>
+<p>Open <code>src/SprykerAcademy/Client/SupplierStorage/SupplierStorageDependencyProvider.php</code>:</p>
+<p>Implement the two provider methods:</p>
+<ol type="1">
+<li><code>addStorageClient()</code> — Uses <code>$container-&gt;set()</code> with <code>CLIENT_STORAGE</code> constant and locator: <code>$container-&gt;getLocator()-&gt;storage()-&gt;client()</code></li>
+<li><code>addSynchronizationService()</code> — Uses <code>$container-&gt;set()</code> with <code>SERVICE_SYNCHRONIZATION</code> constant and locator: <code>$container-&gt;getLocator()-&gt;synchronization()-&gt;service()</code></li>
+</ol>
+<p>Call both methods in <code>provideServiceLayerDependencies()</code>.</p>
+<blockquote>
+<p><strong>Client layer difference:</strong> The method is <code>provideServiceLayerDependencies()</code> (not Business like in Zed).</p>
+</blockquote>
+<h4 id="factory">3.2 Factory</h4>
+<p>Open <code>src/SprykerAcademy/Client/SupplierStorage/SupplierStorageFactory.php</code>:</p>
+<ol type="1">
+<li>Implement <code>getStorageClient()</code> — Returns the StorageClient using <code>getProvidedDependency()</code></li>
+<li>Implement <code>getSynchronizationService()</code> — Returns the SynchronizationService using <code>getProvidedDependency()</code></li>
+<li>Implement <code>createSupplierStorageReader()</code> — Instantiates <code>SupplierStorageReader</code> passing both dependencies</li>
+</ol>
+<blockquote>
+<p><strong>Naming convention:</strong> <code>get*()</code> for dependencies, <code>create*()</code> for new object instantiation.</p>
+</blockquote>
+<hr />
+<h3 id="part-4-implement-the-client">Part 4: Implement the Client</h3>
+<p>The Client is the public API that other modules use.</p>
+<p><strong>Coding time:</strong></p>
+<p>Open <code>src/SprykerAcademy/Client/SupplierStorage/SupplierStorageClient.php</code>:</p>
+<p>Implement the two methods:</p>
+<ol type="1">
+<li><code>findSupplierById(int $idSupplier): ?SupplierTransfer</code>
+<ul>
+<li>Get the reader from the factory</li>
+<li>Call <code>findSupplierStorageData()</code></li>
+<li>If data exists, create a <code>SupplierTransfer</code> and call <code>fromArray()</code></li>
+<li>Return the transfer or null</li>
+</ul></li>
+<li><code>getAllSuppliers(): SupplierCollectionTransfer</code>
+<ul>
+<li>Get the reader from the factory</li>
+<li>Call <code>getAllSuppliers()</code> to get array of arrays</li>
+<li>Map each array to a <code>SupplierTransfer</code> using <code>fromArray()</code></li>
+<li>Create a <code>SupplierCollectionTransfer</code>, set the suppliers using <code>setSuppliers()</code></li>
+<li>Return the collection</li>
+</ul></li>
+</ol>
+<blockquote>
+<p><strong>Transfer hydration:</strong> The <code>fromArray()</code> method automatically maps array keys to transfer properties. Ensure the array keys match the transfer property names.</p>
+</blockquote>
+<hr />
+<h2 id="testing-the-storage-client">Testing the Storage Client</h2>
+<h3 id="verify-data-exists-in-redis">Verify Data Exists in Redis</h3>
+<p>First, ensure suppliers are synchronized to Redis (from the P&amp;S exercise):</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Check if data exists in the storage table</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli mysql <span class="at">-e</span> <span class="st">&quot;SELECT COUNT(*) FROM pyz_supplier_storage;&quot;</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="co"># If empty, run data import and trigger P&amp;S</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console data:import supplier</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console queue:worker:start <span class="at">--stop-when-empty</span></span></code></pre></div>
+<h3 id="test-via-debug-console">Test via Debug Console</h3>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Open CLI</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co"># PHP one-liner to test</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="ex">php</span> <span class="at">-r</span> <span class="st">&quot;</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="st">require &#39;vendor/autoload.php&#39;;</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="dt">\$</span><span class="st">client = \Spryker\Client\Kernel\Locator::getInstance()-&gt;supplierStorage()-&gt;client();</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="dt">\$</span><span class="st">supplier = </span><span class="dt">\$</span><span class="st">client-&gt;findSupplierById(1);</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="st">var_dump(</span><span class="dt">\$</span><span class="st">supplier);</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;</span></span></code></pre></div>
+<h3 id="expected-data-format-in-redis">Expected Data Format in Redis</h3>
+<div class="sourceCode" id="cb10"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Connect to Redis</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli redis-cli <span class="at">-h</span> key_value_store</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Get a supplier</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="ex">GET</span> <span class="st">&quot;supplier:1&quot;</span></span></code></pre></div>
+<p>Expected response (JSON):</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;id_supplier&quot;</span><span class="fu">:</span> <span class="dv">1</span><span class="fu">,</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;Acme Supplies&quot;</span><span class="fu">,</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;description&quot;</span><span class="fu">:</span> <span class="st">&quot;Leading supplier of industrial equipment&quot;</span><span class="fu">,</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;status&quot;</span><span class="fu">:</span> <span class="dv">1</span><span class="fu">,</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;email&quot;</span><span class="fu">:</span> <span class="st">&quot;contact@acmesupplies.com&quot;</span><span class="fu">,</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;phone&quot;</span><span class="fu">:</span> <span class="st">&quot;+1-555-1234&quot;</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<hr />
+<h2 id="key-concepts-summary">Key Concepts Summary</h2>
+<h3 id="storage-vs-search-client-pattern">Storage vs Search Client Pattern</h3>
+<table>
+<colgroup>
+<col style="width: 11%" />
+<col style="width: 42%" />
+<col style="width: 45%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Aspect</th>
+<th>Search (SupplierSearchClient)</th>
+<th>Storage (SupplierStorageClient)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Query</strong></td>
+<td>Complex (Elastica Query)</td>
+<td>Simple key lookup</td>
+</tr>
+<tr class="even">
+<td><strong>Key generation</strong></td>
+<td>Source identifier in query plugin</td>
+<td>SynchronizationService key builder</td>
+</tr>
+<tr class="odd">
+<td><strong>Dependencies</strong></td>
+<td>SearchClient, Query plugins</td>
+<td>StorageClient, SynchronizationService</td>
+</tr>
+<tr class="even">
+<td><strong>Use case</strong></td>
+<td>Search by name, filter, aggregate</td>
+<td>Lookup by ID, get all for dropdown</td>
+</tr>
+</tbody>
+</table>
+<h3 id="storage-key-generation-pattern">Storage Key Generation Pattern</h3>
+<div class="sourceCode" id="cb12"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co">// 1. Create transfer with reference (ID)</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="va">$synchronizationDataTransfer</span> <span class="op">=</span> (<span class="kw">new</span> <span class="cn">S</span>ynchronizationDataTransfer())</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    -&gt;setReference(<span class="dt">(string)</span><span class="va">$idSupplier</span>)<span class="ot">;</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="co">// 2. Get key builder for resource</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="va">$keyBuilder</span> <span class="op">=</span> <span class="va">$this</span>-&gt;synchronizationService</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>    -&gt;getStorageKeyBuilder(<span class="kw">static</span>::<span class="cn">RESOURCE_NAME</span>)<span class="ot">;</span> <span class="co">// &#39;supplier&#39;</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a><span class="co">// 3. Generate key</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a><span class="va">$key</span> <span class="op">=</span> <span class="va">$keyBuilder</span>-&gt;generateKey(<span class="va">$synchronizationDataTransfer</span>)<span class="ot">;</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a><span class="co">// Result: &quot;supplier:1&quot;</span></span></code></pre></div>
+<h3 id="static-caching-pattern">Static Caching Pattern</h3>
+<div class="sourceCode" id="cb13"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">protected</span> <span class="kw">static</span> <span class="ot">?</span><span class="cn">S</span>ynchronizationKeyGeneratorPluginInterface <span class="va">$storageKeyBuilder</span> <span class="op">=</span> <span class="kw">null</span><span class="ot">;</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="kw">protected</span> <span class="kw">function</span> getStorageKeyBuilder()<span class="ot">:</span> <span class="cn">S</span>ynchronizationKeyGeneratorPluginInterface</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="kw">static</span>::<span class="va">$storageKeyBuilder</span> <span class="op">===</span> <span class="kw">null</span>) {</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>        <span class="kw">static</span>::<span class="va">$storageKeyBuilder</span> <span class="op">=</span> <span class="va">$this</span>-&gt;synchronizationService</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>            -&gt;getStorageKeyBuilder(<span class="kw">static</span>::<span class="cn">RESOURCE_NAME</span>)<span class="ot">;</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">static</span>::<span class="va">$storageKeyBuilder</span><span class="ot">;</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<blockquote>
+<p><strong>Why static?</strong> The key builder is stateless. Caching it avoids repeated service locator calls.</p>
+</blockquote>
+<hr />
+<h2 id="run-automated-tests">Run Automated Tests</h2>
+<div class="sourceCode" id="cb14"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/Supplier/ StorageClient</span></code></pre></div>
+<hr />
+<h2 id="solution">Solution</h2>
+<div class="sourceCode" id="cb15"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> supplier intermediate/storage-client/complete</span></code></pre></div>
+</body>
+</html>

@@ -165,9 +165,14 @@ Available parameters for the synchronization behavior:
 | `resource` | A resource name string (e.g., `"supplier"`) | Used to build the storage key (e.g., `supplier:1`) |
 | `key_suffix_column` | A column name from the table (e.g., `"fk_supplier"`) | The column whose value becomes the key suffix |
 | `queue_group` | A sync queue name (e.g., `"sync.search.supplier"`) | Which queue receives the sync messages |
-| `params` | JSON string (e.g., `'{"type":"page"}'`) | Extra parameters — for search, set `type` to `"page"` |
+| `params` | JSON string (e.g., `'{"type":"supplier"}'`) | Extra parameters — for search, set `type` to `"supplier"` (must match the mapping type in `supplier.json` and the source identifier) |
 
-For the **search** table, you need all four parameters (including `params` with `type: page` for Elasticsearch indexing). For the **storage** table (`pyz_supplier_storage.schema.xml`), it is already provided.
+For the **search** table, you need all four parameters (including `params` with `type: "supplier"` for Elasticsearch indexing). This `type` value must match:
+- The mapping type name in `supplier.json` (the key inside `mappings`)
+- The `SOURCE_IDENTIFIER` constant in your query plugin
+- The index name in `SearchElasticsearchConfig::SUPPORTED_SOURCE_IDENTIFIERS`
+
+For the **storage** table (`pyz_supplier_storage.schema.xml`), it is already provided.
 
 ```xml
 <behavior name="synchronization">

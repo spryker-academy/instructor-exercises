@@ -58,6 +58,7 @@
     <tr><td>11</td><td>Search</td><td>Query Plugins, Result Formatters, SearchClient</td></tr>
     <tr><td>12</td><td>Glue Storefront API</td><td>API Platform, Providers, Resource YAML</td></tr>
     <tr><td>13</td><td>OMS</td><td>State Machine, Commands, Conditions, Events</td></tr>
+    <tr><td>14</td><td>Storage Client</td><td>Redis, StorageClient, Key Generation, SynchronizationService</td></tr>
   </table>
   <div class="box box-accent">
     <strong>Prerequisites:</strong> Basics exercises 1-7 completed. Understanding of Facade, Factory, DependencyProvider patterns.
@@ -672,6 +673,7 @@ $conditionCollection->add(new IsAuthorizedConditionPlugin(), 'Demo/IsAuthorized'
       <tr><td>PublishSync</td><td>15</td><td>Writers, facades, plugin events, schema behaviors</td></tr>
       <tr><td>Search</td><td>13</td><td>Query plugin, result formatter, client, ES schema</td></tr>
       <tr><td>GlueApi</td><td>10</td><td>Provider, mapper, config, resource YAML</td></tr>
+      <tr><td>StorageClient</td><td>10</td><td>Storage reader, key generation, client, factory, DP</td></tr>
     </table>
     <pre><code class="language-bash">docker/sdk cli vendor/bin/codecept run \
     -c tests/SprykerAcademyTest/Zed/Supplier/ DataImport
@@ -682,8 +684,74 @@ docker/sdk cli vendor/bin/codecept run \
 docker/sdk cli vendor/bin/codecept run \
     -c tests/SprykerAcademyTest/Zed/Supplier/ Search
 docker/sdk cli vendor/bin/codecept run \
-    -c tests/SprykerAcademyTest/Zed/Supplier/ GlueApi</code></pre>
+    -c tests/SprykerAcademyTest/Zed/Supplier/ GlueApi
+docker/sdk cli vendor/bin/codecept run \
+    -c tests/SprykerAcademyTest/Zed/Supplier/ StorageClient</code></pre>
   </section>
+</section>
+
+<!-- Exercise 14: Storage Client -->
+<section>
+  <h2>Exercise 14: Storage Client</h2>
+  <p class="dim">Redis Key-Value Lookup for Fast ID-Based Access</p>
+</section>
+
+<section>
+  <h3>Search vs Storage</h3>
+  <table>
+    <tr><th>Feature</th><th>Search (Elasticsearch)</th><th>Storage (Redis)</th></tr>
+    <tr><td>Use case</td><td>Full-text search, filtering</td><td>Fast key-value lookup by ID</td></tr>
+    <tr><td>Query type</td><td>Complex (BoolQuery, Match)</td><td>Simple key lookup</td></tr>
+    <tr><td>Key format</td><td>Index + type + ID</td><td>resource_name:id</td></tr>
+    <tr><td>Spryker module</td><td>SupplierSearch (Client)</td><td>SupplierStorage (Client)</td></tr>
+  </table>
+</section>
+
+<section>
+  <h3>Storage Key Generation</h3>
+  <pre><code class="language-php">// Generate storage key using SynchronizationService
+$synchronizationDataTransfer = (new SynchronizationDataTransfer())
+    ->setReference((string)$idSupplier);
+
+$key = $this->synchronizationService
+    ->getStorageKeyBuilder('supplier')
+    ->generateKey($synchronizationDataTransfer);
+
+// Result: "supplier:1"</code></pre>
+  <p>The <code>resource</code> parameter in sync behavior must match: <code>'supplier'</code></p>
+</section>
+
+<section>
+  <h3>Storage Reader Pattern</h3>
+  <pre><code class="language-php">class SupplierStorageReader
+{
+    public function findSupplierStorageData(int $idSupplier): ?array
+    {
+        $key = $this->generateStorageKey($idSupplier);
+        $data = $this->storageClient->get($key);
+        // StorageClient->get() already json_decodes
+        return $data;
+    }
+
+    public function getAllSuppliers(): array
+    {
+        $pattern = $this->generateStorageKeyPattern(); // "supplier:*"
+        $keys = $this->storageClient->getKeys($pattern);
+        // ...fetch each key
+    }
+}</code></pre>
+</section>
+
+<section>
+  <h3>Dependencies</h3>
+  <table>
+    <tr><th>DependencyProvider</th><th>Factory</th><th>Client</th></tr>
+    <tr>
+      <td><code>addStorageClient()</code><br><code>addSynchronizationService()</code></td>
+      <td><code>createSupplierStorageReader()</code><br>injects both dependencies</td>
+      <td><code>findSupplierById()</code><br><code>getAllSuppliers()</code></td>
+    </tr>
+  </table>
 </section>
 
 <!-- SUMMARY -->
@@ -694,6 +762,7 @@ docker/sdk cli vendor/bin/codecept run \
     <li><span class="accent">Back Office</span> — AbstractTable for sortable/searchable tables, Symfony forms, Gui button helpers</li>
     <li><span class="accent">Publish & Synchronize</span> — Event behavior triggers, publisher plugins route to queues, sync behavior pushes to ES/Redis</li>
     <li><span class="accent">Search</span> — Query plugins build Elastica queries, result formatters convert to transfers</li>
+    <li><span class="accent">Storage</span> — Redis key-value lookup using StorageClient + SynchronizationService key builder</li>
     <li><span class="accent">Glue API</span> — API Platform: YAML resource definition + Provider class, no Factory/DP needed</li>
     <li><span class="accent">OMS</span> — XML state machine: states, transitions, events, commands, conditions, happy path</li>
     <li><span class="accent">Queues</span> — 3 configs required (SymfonyMessenger + RabbitMq + QueueDP) + <code>messenger:setup-transports</code></li>
