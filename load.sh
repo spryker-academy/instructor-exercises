@@ -239,6 +239,25 @@ if [ -f "$REPO_DIR/config/Zed/navigation.xml" ]; then
     log_success "Merged navigation.xml entries"
 fi
 
+# Register supplier in SearchElasticsearchConfig for search exercise
+if [ "$PACKAGE" = "supplier" ]; then
+    SEARCH_ES_CONFIG="$PROJECT_DIR/src/Pyz/Shared/SearchElasticsearch/SearchElasticsearchConfig.php"
+    if [ -f "$SEARCH_ES_CONFIG" ] && ! grep -q "'supplier'" "$SEARCH_ES_CONFIG"; then
+        php -r '
+            $file = $argv[1];
+            $content = file_get_contents($file);
+            // Add supplier to SUPPORTED_SOURCE_IDENTIFIERS array
+            $content = preg_replace(
+                "/(protected const SUPPORTED_SOURCE_IDENTIFIERS = \[)([^\]]*)(\])/s",
+                "$1$2        'supplier',\n$3",
+                $content
+            );
+            file_put_contents($file, $content);
+        ' "$SEARCH_ES_CONFIG"
+        log_success "Added 'supplier' to SearchElasticsearchConfig SUPPORTED_SOURCE_IDENTIFIERS"
+    fi
+fi
+
 # Add HelloWorld config value to config_default.php for configuration exercise
 if [ "$PACKAGE" = "hello-world" ]; then
     CONFIG_FILE="$PROJECT_DIR/config/Shared/config_default.php"
