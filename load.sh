@@ -27,6 +27,58 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
 
+# Helper functions
+log_info() { echo -e "${YELLOW}$1${NC}"; }
+log_success() { echo -e "  ${GREEN}$1${NC}"; }
+log_error() { echo -e "${RED}$1${NC}"; }
+
+# Check if file exists and doesn't contain pattern
+file_needs_update() {
+    local file="$1"
+    local pattern="$2"
+    [ -f "$file" ] && [ "$(grep -c "$pattern" "$file" 2>/dev/null || echo 0)" = "0" ]
+}
+
+# Determine branch type for conditional configuration
+# Returns: skip, skeleton, or complete
+get_branch_type() {
+    local branch="$1"
+    case "$branch" in
+        intermediate/back-office/*|intermediate/data-import/*)
+            echo "skip"
+            ;;
+        intermediate/publish-synchronize/skeleton)
+            echo "skeleton"
+            ;;
+        *)
+            echo "complete"
+            ;;
+    esac
+}
+
+# Generic PHP file modifier - adds use statements and modifies content
+modify_php_file() {
+    local file="$1"
+    local use_statements="$2"
+    local modification_code="$3"
+    
+    php -r "
+        \$file = '$file';
+        \$content = file_get_contents(\$file);
+        
+        // Add use statements
+        \$useStatements = '$use_statements';
+        if (!empty(\$useStatements) && strpos(\$content, explode('\\\\', explode('use ', \$useStatements)[1])[0]) === false) {
+            \$content = preg_replace('/(^class\s)/m', \$useStatements . \"\n\$1\", \$content, 1);
+        }
+        
+        // Apply modifications
+        $modification_code
+        
+        file_put_contents(\$file, \$content);
+    "
+}
+
 usage() {
     echo "Usage: ./exercises/load.sh <package> <branch>"
     echo ""
@@ -74,7 +126,7 @@ PACKAGE="$1"
 BRANCH="$2"
 
 if [ "$PACKAGE" != "hello-world" ] && [ "$PACKAGE" != "supplier" ]; then
-    echo -e "${RED}Error: Package must be 'hello-world' or 'supplier'${NC}"
+    log_error "Error: Package must be 'hello-world' or 'supplier'"
     usage
 fi
 
@@ -89,13 +141,13 @@ REPO_DIR="$REPOS_DIR/$PACKAGE"
 
 # Clone repo if not present
 if [ ! -d "$REPO_DIR" ]; then
-    echo -e "${YELLOW}Cloning $PACKAGE repository...${NC}"
+    log_info "Cloning $PACKAGE repository..."
     mkdir -p "$REPOS_DIR"
     git clone "$REPO_URL" "$REPO_DIR"
 fi
 
 # Fetch latest and checkout branch
-echo -e "${YELLOW}Switching to branch: $BRANCH${NC}"
+log_info "Switching to branch: $BRANCH"
 cd "$REPO_DIR"
 git fetch origin
 git checkout "$BRANCH" 2>/dev/null || git checkout -b "$BRANCH" "origin/$BRANCH"
@@ -104,11 +156,11 @@ cd "$PROJECT_DIR"
 
 # Verify the branch has src/SprykerAcademy
 if [ ! -d "$REPO_DIR/src/SprykerAcademy" ] && [ ! -d "$REPO_DIR/src/Pyz" ]; then
-    echo -e "${YELLOW}Note: This branch has no src/ files (empty skeleton).${NC}"
+    log_info "Note: This branch has no src/ files (empty skeleton)."
 fi
 
 # Clean previous exercise files
-echo -e "${YELLOW}Cleaning previous exercise files...${NC}"
+log_info "Cleaning previous exercise files..."
 rm -rf "$PROJECT_DIR/src/SprykerAcademy"
 
 # Copy SprykerAcademy source files
@@ -116,25 +168,24 @@ if [ -d "$REPO_DIR/src/SprykerAcademy" ]; then
     cp -R "$REPO_DIR/src/SprykerAcademy" "$PROJECT_DIR/src/SprykerAcademy"
 
     # Add SprykerAcademy namespace to composer.json autoload if not already present
-    if ! grep -q '"SprykerAcademy\\\\": "src/SprykerAcademy/"' "$PROJECT_DIR/composer.json"; then
+    if file_needs_update "$PROJECT_DIR/composer.json" '"SprykerAcademy\\\\": "src/SprykerAcademy/"'; then
         php -r '
             $file = $argv[1] . "/composer.json";
             $json = json_decode(file_get_contents($file), true);
-            if (!isset($json["autoload"]["psr-4"]["SprykerAcademy\\"])) {
-                $json["autoload"]["psr-4"]["SprykerAcademy\\"] = "src/SprykerAcademy/";
+            if (!isset($json["autoload"]["psr-4"]["SprykerAcademy\"])) {
+                $json["autoload"]["psr-4"]["SprykerAcademy\"] = "src/SprykerAcademy/";
                 file_put_contents($file, json_encode($json, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n");
             }
         ' "$PROJECT_DIR"
-        echo -e "  ${GREEN}Added SprykerAcademy\\ to composer.json autoload${NC}"
+        log_success "Added SprykerAcademy\\ to composer.json autoload"
     fi
 
     # Add SprykerAcademy to Spryker kernel PROJECT_NAMESPACES if not already present
     CONFIG_DEFAULT="$PROJECT_DIR/config/Shared/config_default.php"
-    if [ -f "$CONFIG_DEFAULT" ] && ! grep -q "'SprykerAcademy'" "$CONFIG_DEFAULT"; then
+    if file_needs_update "$CONFIG_DEFAULT" "'SprykerAcademy'"; then
         php -r '
             $file = $argv[1];
             $content = file_get_contents($file);
-            // Add SprykerAcademy to PROJECT_NAMESPACES array
             $content = preg_replace(
                 "/(KernelConstants::PROJECT_NAMESPACES\s*\]\s*=\s*\[\s*\n\s*'\''Pyz'\'')/",
                 "$1,\n    '\''SprykerAcademy'\''",
@@ -143,7 +194,7 @@ if [ -d "$REPO_DIR/src/SprykerAcademy" ]; then
             );
             file_put_contents($file, $content);
         ' "$CONFIG_DEFAULT"
-        echo -e "  ${GREEN}Added SprykerAcademy to PROJECT_NAMESPACES in config_default.php${NC}"
+        log_success "Added SprykerAcademy to PROJECT_NAMESPACES in config_default.php"
     fi
 fi
 
@@ -159,12 +210,10 @@ fi
 # Copy navigation XML if present in the exercise repo
 if [ -f "$REPO_DIR/config/Zed/navigation.xml" ]; then
     mkdir -p "$PROJECT_DIR/config/Zed"
-    # Merge navigation entries instead of replacing
     php -r '
         $projectFile = $argv[1] . "/config/Zed/navigation.xml";
         $exerciseFile = $argv[2] . "/config/Zed/navigation.xml";
         
-        // Load both XML files using DOMDocument to preserve formatting
         $projectDom = new DOMDocument();
         $projectDom->preserveWhiteSpace = false;
         $projectDom->formatOutput = true;
@@ -175,37 +224,25 @@ if [ -f "$REPO_DIR/config/Zed/navigation.xml" ]; then
         $exerciseDom->formatOutput = true;
         $exerciseDom->load($exerciseFile);
         
-        // Get the root config element from project
         $projectConfig = $projectDom->getElementsByTagName("config")->item(0);
         
-        // Import all children from exercise navigation into project navigation
         foreach ($exerciseDom->documentElement->childNodes as $child) {
-            if ($child->nodeType !== XML_ELEMENT_NODE) {
-                continue;
-            }
+            if ($child->nodeType !== XML_ELEMENT_NODE) continue;
             $name = $child->nodeName;
-            
-            // Check if entry already exists in project
-            $existing = $projectConfig->getElementsByTagName($name)->item(0);
-            if ($existing) {
-                continue; // Skip if already exists
-            }
-            
-            // Import and append the node
+            if ($projectConfig->getElementsByTagName($name)->item(0)) continue;
             $importedNode = $projectDom->importNode($child, true);
             $projectConfig->appendChild($importedNode);
         }
         
-        // Save the merged XML
         $projectDom->save($projectFile);
     ' "$PROJECT_DIR" "$REPO_DIR"
-    echo -e "  ${GREEN}Merged navigation.xml entries${NC}"
+    log_success "Merged navigation.xml entries"
 fi
 
 # Add HelloWorld config value to config_default.php for configuration exercise
 if [ "$PACKAGE" = "hello-world" ]; then
     CONFIG_FILE="$PROJECT_DIR/config/Shared/config_default.php"
-    if [ -f "$REPO_DIR/src/SprykerAcademy/Shared/HelloWorld/HelloWorldConstants.php" ] && ! grep -q 'HelloWorldConstants' "$CONFIG_FILE"; then
+    if file_needs_update "$CONFIG_FILE" 'HelloWorldConstants'; then
         cat >> "$CONFIG_FILE" << 'PHPEOF'
 
 // HelloWorld exercise config value
@@ -213,20 +250,20 @@ use SprykerAcademy\Shared\HelloWorld\HelloWorldConstants;
 
 $config[HelloWorldConstants::MY_CONFIG_VALUE] = 'Hello from config!';
 PHPEOF
-        echo -e "  ${GREEN}Added HelloWorld config value to config_default.php${NC}"
+        log_success "Added HelloWorld config value to config_default.php"
     fi
 fi
 
 # Copy config and data files for supplier package
 if [ "$PACKAGE" = "supplier" ]; then
-    # Navigation XML is already handled above for all packages
+    # Copy various config files
     [ -f "$REPO_DIR/config/Zed/oms/Demo01.xml" ] && mkdir -p "$PROJECT_DIR/config/Zed/oms" && cp "$REPO_DIR/config/Zed/oms/Demo01.xml" "$PROJECT_DIR/config/Zed/oms/Demo01.xml"
     [ -f "$REPO_DIR/data/import/supplier.csv" ] && mkdir -p "$PROJECT_DIR/data/import" && cp "$REPO_DIR/data/import/supplier.csv" "$PROJECT_DIR/data/import/supplier.csv"
     [ -f "$REPO_DIR/data/import/supplier_location.csv" ] && cp "$REPO_DIR/data/import/supplier_location.csv" "$PROJECT_DIR/data/import/supplier_location.csv"
 
     # Add supplier data import entries to full_EU.yml if not present
     IMPORT_YAML="$PROJECT_DIR/data/import/local/full_EU.yml"
-    if [ -f "$IMPORT_YAML" ] && [ "$(grep -c 'data_entity: supplier$' "$IMPORT_YAML" || true)" = "0" ]; then
+    if file_needs_update "$IMPORT_YAML" 'data_entity: supplier$'; then
         cat >> "$IMPORT_YAML" << 'YAMLEOF'
 
   # Supplier Academy exercises
@@ -235,188 +272,83 @@ if [ "$PACKAGE" = "supplier" ]; then
   - data_entity: supplier-location
     source: data/import/supplier_location.csv
 YAMLEOF
-        echo -e "  ${GREEN}Added supplier import entries to full_EU.yml${NC}"
+        log_success "Added supplier import entries to full_EU.yml"
     fi
 
     # Register supplier data import plugins in DataImportDependencyProvider
     DI_PROVIDER="$PROJECT_DIR/src/Pyz/Zed/DataImport/DataImportDependencyProvider.php"
-    if [ -f "$DI_PROVIDER" ] && [ "$(grep -c 'SupplierDataImportPlugin' "$DI_PROVIDER" || true)" = "0" ]; then
-        # Use php to safely inject the use statements and plugin registrations
-        php -r '
-            $file = $argv[1];
-            $content = file_get_contents($file);
-
-            // Add use statements before class declaration
-            $useStatements = "use SprykerAcademy\Zed\SupplierDataImport\Communication\Plugin\DataImport\SupplierDataImportPlugin;\nuse SprykerAcademy\Zed\SupplierDataImport\Communication\Plugin\DataImport\SupplierLocationDataImportPlugin;\n";
-            $content = preg_replace(
-                "/(^class\s)/m",
-                $useStatements . "\n$1",
-                $content,
-                1,
-            );
-
-            // Add plugins before the last ]; in getDataImporterPlugins
-            $content = preg_replace(
-                "/(function\s+getDataImporterPlugins.*?)((\s*)\];)/s",
-                "$1$3    new SupplierDataImportPlugin(),\n$3    new SupplierLocationDataImportPlugin(),\n$2",
-                $content,
-                1,
-            );
-
-            file_put_contents($file, $content);
-        ' "$DI_PROVIDER"
-        echo -e "  ${GREEN}Registered SupplierDataImportPlugin in DataImportDependencyProvider${NC}"
+    if file_needs_update "$DI_PROVIDER" 'SupplierDataImportPlugin'; then
+        modify_php_file "$DI_PROVIDER" \
+            "use SprykerAcademy\\Zed\\SupplierDataImport\\Communication\\Plugin\\DataImport\\SupplierDataImportPlugin;\nuse SprykerAcademy\\Zed\\SupplierDataImport\\Communication\\Plugin\\DataImport\\SupplierLocationDataImportPlugin;\n" \
+            '
+                $content = preg_replace(
+                    "/(function\s+getDataImporterPlugins.*?)(\s*\];)/s",
+                    "$1\n    new SupplierDataImportPlugin(),\n    new SupplierLocationDataImportPlugin(),\n$2",
+                    $content, 1
+                );
+            '
+        log_success "Registered SupplierDataImportPlugin in DataImportDependencyProvider"
     fi
 
-    # Register supplier publisher plugins in PublisherDependencyProvider
-    # Only for publish-synchronize and later branches (not for back-office or data-import)
-    PUB_PROVIDER="$PROJECT_DIR/src/Pyz/Zed/Publisher/PublisherDependencyProvider.php"
-    if [ -f "$PUB_PROVIDER" ] && [ "$(grep -c 'SupplierSearchWritePublisherPlugin' "$PUB_PROVIDER" || true)" = "0" ]; then
-      case "$BRANCH" in
-        intermediate/back-office/*|intermediate/data-import/*)
-          # Skip - these branches don't have SupplierSearch/Storage modules
-          ;;
-        intermediate/publish-synchronize/skeleton)
-        php -r '
-            $file = $argv[1];
-            $content = file_get_contents($file);
+    # Get branch type for conditional SupplierSearch/Storage configuration
+    BRANCH_TYPE=$(get_branch_type "$BRANCH")
+    
+    if [ "$BRANCH_TYPE" != "skip" ]; then
+        # Common use statements for SupplierSearch/Storage
+        USE_SEARCH_STORAGE="use SprykerAcademy\\Shared\\SupplierSearch\\SupplierSearchConfig;\nuse SprykerAcademy\\Shared\\SupplierStorage\\SupplierStorageConfig;"
+        USE_PUBLISHER_PLUGINS="${USE_SEARCH_STORAGE}\nuse SprykerAcademy\\Zed\\SupplierSearch\\Communication\\Plugin\\Publisher\\SupplierSearchWritePublisherPlugin;\nuse SprykerAcademy\\Zed\\SupplierStorage\\Communication\\Plugin\\Publisher\\SupplierStorageWritePublisherPlugin;\n"
+        
+        # Register supplier publisher plugins in PublisherDependencyProvider
+        PUB_PROVIDER="$PROJECT_DIR/src/Pyz/Zed/Publisher/PublisherDependencyProvider.php"
+        if file_needs_update "$PUB_PROVIDER" 'SupplierSearchWritePublisherPlugin'; then
+            if [ "$BRANCH_TYPE" = "skeleton" ]; then
+                modify_php_file "$PUB_PROVIDER" "$USE_PUBLISHER_PLUGINS" '
+                    if (strpos($content, "getSupplierPublisherPlugins") === false) {
+                        $method = "\n    protected function getSupplierPublisherPlugins(): array\n    {\n        // TODO: Register supplier publisher plugins\n        // Hint: Map SupplierSearchConfig::SUPPLIER_PUBLISH_SEARCH_QUEUE => [new SupplierSearchWritePublisherPlugin()]\n        // Hint: Map SupplierStorageConfig::SUPPLIER_PUBLISH_STORAGE_QUEUE => [new SupplierStorageWritePublisherPlugin()]\n        return [\n        ];\n    }\n";
+                        $content = preg_replace("/(\n}\s*$)/", $method . "$1", $content, 1);
+                        $content = preg_replace(
+                            "/(function\s+getPublisherPlugins.*?return\s+array_merge\s*\()/s",
+                            "$1\n            \$this->getSupplierPublisherPlugins(),",
+                            $content, 1
+                        );
+                    }
+                '
+                log_success "Added Supplier publisher plugin TODOs in PublisherDependencyProvider"
+            else
+                modify_php_file "$PUB_PROVIDER" "$USE_PUBLISHER_PLUGINS" '
+                    if (strpos($content, "getSupplierPublisherPlugins") === false) {
+                        $method = "\n    protected function getSupplierPublisherPlugins(): array\n    {\n        return [\n            SupplierSearchConfig::SUPPLIER_PUBLISH_SEARCH_QUEUE => [\n                new SupplierSearchWritePublisherPlugin(),\n            ],\n            SupplierStorageConfig::SUPPLIER_PUBLISH_STORAGE_QUEUE => [\n                new SupplierStorageWritePublisherPlugin(),\n            ],\n        ];\n    }\n";
+                        $content = preg_replace("/(\n}\s*$)/", $method . "$1", $content, 1);
+                        $content = preg_replace(
+                            "/(function\s+getPublisherPlugins.*?return\s+array_merge\s*\()/s",
+                            "$1\n            \$this->getSupplierPublisherPlugins(),",
+                            $content, 1
+                        );
+                    }
+                '
+                log_success "Registered Supplier publisher plugins in PublisherDependencyProvider"
+            fi
+        fi
 
-            $useStatements = "use SprykerAcademy\Shared\SupplierSearch\SupplierSearchConfig;\nuse SprykerAcademy\Shared\SupplierStorage\SupplierStorageConfig;\nuse SprykerAcademy\Zed\SupplierSearch\Communication\Plugin\Publisher\SupplierSearchWritePublisherPlugin;\nuse SprykerAcademy\Zed\SupplierStorage\Communication\Plugin\Publisher\SupplierStorageWritePublisherPlugin;\n";
-            $content = preg_replace(
-                "/(^class\s)/m",
-                $useStatements . "\n$1",
-                $content,
-                1,
-            );
+        # Register supplier queue processors in QueueDependencyProvider
+        QUEUE_PROVIDER="$PROJECT_DIR/src/Pyz/Zed/Queue/QueueDependencyProvider.php"
+        if file_needs_update "$QUEUE_PROVIDER" 'SUPPLIER_PUBLISH_SEARCH_QUEUE\|SUPPLIER_SYNC_SEARCH_QUEUE'; then
+            if [ "$BRANCH_TYPE" = "skeleton" ]; then
+                modify_php_file "$QUEUE_PROVIDER" "$USE_SEARCH_STORAGE" '
+                    $supplierQueues = "\n            // TODO: Register supplier queue processors\n            // Hint: Map SupplierSearchConfig::SUPPLIER_PUBLISH_SEARCH_QUEUE => new EventQueueMessageProcessorPlugin()\n            // Hint: Map SupplierStorageConfig::SUPPLIER_PUBLISH_STORAGE_QUEUE => new EventQueueMessageProcessorPlugin()\n            // Hint: Map SupplierSearchConfig::SUPPLIER_SYNC_SEARCH_QUEUE => new SynchronizationSearchQueueMessageProcessorPlugin()\n            // Hint: Map SupplierStorageConfig::SUPPLIER_SYNC_STORAGE_QUEUE => new SynchronizationStorageQueueMessageProcessorPlugin()";
+                    $content = preg_replace("/(function\s+getProcessorMessagePlugins.*?return\s*\[)/s", "$1" . $supplierQueues, $content, 1);
+                '
+                log_success "Added Supplier queue processor TODOs in QueueDependencyProvider"
+            else
+                modify_php_file "$QUEUE_PROVIDER" "$USE_SEARCH_STORAGE" '
+                    $supplierQueues = "\n            SupplierSearchConfig::SUPPLIER_PUBLISH_SEARCH_QUEUE => new EventQueueMessageProcessorPlugin(),\n            SupplierStorageConfig::SUPPLIER_PUBLISH_STORAGE_QUEUE => new EventQueueMessageProcessorPlugin(),\n            SupplierSearchConfig::SUPPLIER_SYNC_SEARCH_QUEUE => new SynchronizationSearchQueueMessageProcessorPlugin(),\n            SupplierStorageConfig::SUPPLIER_SYNC_STORAGE_QUEUE => new SynchronizationStorageQueueMessageProcessorPlugin(),";
+                    $content = preg_replace("/(function\s+getProcessorMessagePlugins.*?return\s*\[)/s", "$1" . $supplierQueues, $content, 1);
+                '
+                log_success "Registered Supplier queue processors in QueueDependencyProvider"
+            fi
+        fi
 
-            // Add TODO method and call it in getPublisherPlugins
-            if (strpos($content, "getSupplierPublisherPlugins") === false) {
-                $method = "\n    protected function getSupplierPublisherPlugins(): array\n    {\n        // TODO: Register supplier publisher plugins\n        // Hint: Map SupplierSearchConfig::SUPPLIER_PUBLISH_SEARCH_QUEUE => [new SupplierSearchWritePublisherPlugin()]\n        // Hint: Map SupplierStorageConfig::SUPPLIER_PUBLISH_STORAGE_QUEUE => [new SupplierStorageWritePublisherPlugin()]\n        return [\n        ];\n    }\n";
-                $content = preg_replace("/(\n}\s*$)/", $method . "$1", $content, 1);
-
-                $content = preg_replace(
-                    "/(function\s+getPublisherPlugins.*?return\s+array_merge\s*\()/s",
-                    "$1\n            \$this->getSupplierPublisherPlugins(),",
-                    $content,
-                    1,
-                );
-            }
-
-            file_put_contents($file, $content);
-        ' "$PUB_PROVIDER"
-        echo -e "  ${GREEN}Added Supplier publisher plugin TODOs in PublisherDependencyProvider${NC}"
-      ;;
-        *)
-          # For publish-synchronize/complete and all later branches (search, storage-client, glue-storefront, oms)
-          php -r '
-            $file = $argv[1];
-            $content = file_get_contents($file);
-
-            $useStatements = "use SprykerAcademy\Shared\SupplierSearch\SupplierSearchConfig;\nuse SprykerAcademy\Shared\SupplierStorage\SupplierStorageConfig;\nuse SprykerAcademy\Zed\SupplierSearch\Communication\Plugin\Publisher\SupplierSearchWritePublisherPlugin;\nuse SprykerAcademy\Zed\SupplierStorage\Communication\Plugin\Publisher\SupplierStorageWritePublisherPlugin;\n";
-            $content = preg_replace(
-                "/(^class\s)/m",
-                $useStatements . "\n$1",
-                $content,
-                1,
-            );
-
-            // Add supplier publisher method and call it in getPublisherPlugins
-            if (strpos($content, "getSupplierPublisherPlugins") === false) {
-                // Add method before last closing brace
-                $method = "\n    protected function getSupplierPublisherPlugins(): array\n    {\n        return [\n            SupplierSearchConfig::SUPPLIER_PUBLISH_SEARCH_QUEUE => [\n                new SupplierSearchWritePublisherPlugin(),\n            ],\n            SupplierStorageConfig::SUPPLIER_PUBLISH_STORAGE_QUEUE => [\n                new SupplierStorageWritePublisherPlugin(),\n            ],\n        ];\n    }\n";
-                $content = preg_replace("/(\n}\s*$)/", $method . "$1", $content, 1);
-
-                // Add to getPublisherPlugins return array
-                $content = preg_replace(
-                    "/(function\s+getPublisherPlugins.*?return\s+array_merge\s*\()/s",
-                    "$1\n            \$this->getSupplierPublisherPlugins(),",
-                    $content,
-                    1,
-                );
-            }
-
-            file_put_contents($file, $content);
-        ' "$PUB_PROVIDER"
-        echo -e "  ${GREEN}Registered Supplier publisher plugins in PublisherDependencyProvider${NC}"
-        ;;
-      esac
-    fi
-
-    # Register supplier queue processors in QueueDependencyProvider
-    # Only for publish-synchronize and later branches (not for back-office or data-import)
-    QUEUE_PROVIDER="$PROJECT_DIR/src/Pyz/Zed/Queue/QueueDependencyProvider.php"
-    if [ -f "$QUEUE_PROVIDER" ] && [ "$(grep -c 'SUPPLIER_PUBLISH_SEARCH_QUEUE\|SUPPLIER_SYNC_SEARCH_QUEUE' "$QUEUE_PROVIDER" || true)" = "0" ]; then
-      case "$BRANCH" in
-        intermediate/back-office/*|intermediate/data-import/*)
-          # Skip - these branches don't have SupplierSearch/Storage modules
-          ;;
-        intermediate/publish-synchronize/skeleton)
-        php -r '
-            $file = $argv[1];
-            $content = file_get_contents($file);
-
-            $useStatements = "use SprykerAcademy\Shared\SupplierSearch\SupplierSearchConfig;\nuse SprykerAcademy\Shared\SupplierStorage\SupplierStorageConfig;\n";
-            if (strpos($content, "SupplierSearchConfig") === false) {
-                $content = preg_replace(
-                    "/(^class\s)/m",
-                    $useStatements . "\n$1",
-                    $content,
-                    1,
-                );
-            }
-
-            // Add TODO comments instead of actual registrations
-            $supplierQueues = "\n            // TODO: Register supplier queue processors\n            // Hint: Map SupplierSearchConfig::SUPPLIER_PUBLISH_SEARCH_QUEUE => new EventQueueMessageProcessorPlugin()\n            // Hint: Map SupplierStorageConfig::SUPPLIER_PUBLISH_STORAGE_QUEUE => new EventQueueMessageProcessorPlugin()\n            // Hint: Map SupplierSearchConfig::SUPPLIER_SYNC_SEARCH_QUEUE => new SynchronizationSearchQueueMessageProcessorPlugin()\n            // Hint: Map SupplierStorageConfig::SUPPLIER_SYNC_STORAGE_QUEUE => new SynchronizationStorageQueueMessageProcessorPlugin()";
-            $content = preg_replace(
-                "/(function\s+getProcessorMessagePlugins.*?return\s*\[)/s",
-                "$1" . $supplierQueues,
-                $content,
-                1,
-            );
-
-            file_put_contents($file, $content);
-        ' "$QUEUE_PROVIDER"
-        echo -e "  ${GREEN}Added Supplier queue processor TODOs in QueueDependencyProvider${NC}"
-      ;;
-        *)
-          # For publish-synchronize/complete and all later branches (search, storage-client, glue-storefront, oms)
-          php -r '
-            $file = $argv[1];
-            $content = file_get_contents($file);
-
-            $useStatements = "use SprykerAcademy\Shared\SupplierSearch\SupplierSearchConfig;\nuse SprykerAcademy\Shared\SupplierStorage\SupplierStorageConfig;\n";
-            if (strpos($content, "SupplierSearchConfig") === false) {
-                $content = preg_replace(
-                    "/(^class\s)/m",
-                    $useStatements . "\n$1",
-                    $content,
-                    1,
-                );
-            }
-
-            // Add supplier queue processors to getProcessorMessagePlugins
-            $supplierQueues = "\n            SupplierSearchConfig::SUPPLIER_PUBLISH_SEARCH_QUEUE => new EventQueueMessageProcessorPlugin(),\n            SupplierStorageConfig::SUPPLIER_PUBLISH_STORAGE_QUEUE => new EventQueueMessageProcessorPlugin(),\n            SupplierSearchConfig::SUPPLIER_SYNC_SEARCH_QUEUE => new SynchronizationSearchQueueMessageProcessorPlugin(),\n            SupplierStorageConfig::SUPPLIER_SYNC_STORAGE_QUEUE => new SynchronizationStorageQueueMessageProcessorPlugin(),";
-            $content = preg_replace(
-                "/(function\s+getProcessorMessagePlugins.*?return\s*\[)/s",
-                "$1" . $supplierQueues,
-                $content,
-                1,
-            );
-
-            file_put_contents($file, $content);
-        ' "$QUEUE_PROVIDER"
-        echo -e "  ${GREEN}Registered Supplier queue processors in QueueDependencyProvider${NC}"
-        ;;
-      esac
-    fi
-
-    # Create supplier queues and exchanges in RabbitMQ via management API
-    # Only for publish-synchronize and later branches (not for back-office or data-import)
-    case "$BRANCH" in
-      intermediate/back-office/*|intermediate/data-import/*)
-        # Skip - these branches don't have SupplierSearch/Storage modules
-        ;;
-      *)
+        # Create supplier queues in RabbitMQ via management API
         if command -v curl > /dev/null 2>&1; then
             RMQ_API="http://queue.spryker.local/api"
             RMQ_AUTH="spryker:secret"
@@ -425,194 +357,71 @@ YAMLEOF
                 curl -s -o /dev/null -u "$RMQ_AUTH" -X PUT "$RMQ_API/exchanges/eu-docker/$QUEUE" -H 'Content-Type: application/json' -d '{"type":"direct","durable":true}' 2>/dev/null || true
                 curl -s -o /dev/null -u "$RMQ_AUTH" -X POST "$RMQ_API/bindings/eu-docker/e/$QUEUE/q/$QUEUE" -H 'Content-Type: application/json' -d '{}' 2>/dev/null || true
             done
-            echo -e "  ${GREEN}Ensured supplier queues and exchanges exist in RabbitMQ${NC}"
+            log_success "Ensured supplier queues and exchanges exist in RabbitMQ"
         fi
-        ;;
-    esac
 
-    # Register supplier queues in RabbitMqConfig (creates actual AMQP queues)
-    # Only for publish-synchronize and later branches (not for back-office or data-import)
-    RMQ_CONFIG="$PROJECT_DIR/src/Pyz/Client/RabbitMq/RabbitMqConfig.php"
-    if [ -f "$RMQ_CONFIG" ] && [ "$(grep -c 'SupplierSearchConfig' "$RMQ_CONFIG" || true)" = "0" ]; then
-      case "$BRANCH" in
-        intermediate/back-office/*|intermediate/data-import/*)
-          # Skip - these branches don't have SupplierSearch/Storage modules
-          ;;
-        intermediate/publish-synchronize/skeleton)
-        php -r '
-            $file = $argv[1];
-            $content = file_get_contents($file);
-
-            $useStatements = "use SprykerAcademy\Shared\SupplierSearch\SupplierSearchConfig;\nuse SprykerAcademy\Shared\SupplierStorage\SupplierStorageConfig;\n";
-            $content = preg_replace(
-                "/(^class\s)/m",
-                $useStatements . "\n$1",
-                $content,
-                1,
-            );
-
-            // Add TODO to getPublishQueueConfiguration
-            $content = preg_replace(
-                "/(function\s+getPublishQueueConfiguration.*?return\s*\[)/s",
-                "$1\n            // TODO: Register supplier publish queues\n            // Hint: Add SupplierSearchConfig::SUPPLIER_PUBLISH_SEARCH_QUEUE\n            // Hint: Add SupplierStorageConfig::SUPPLIER_PUBLISH_STORAGE_QUEUE",
-                $content,
-                1,
-            );
-
-            // Add TODO to getSynchronizationQueueConfiguration
-            $content = preg_replace(
-                "/(function\s+getSynchronizationQueueConfiguration.*?return\s*\[)/s",
-                "$1\n            // TODO: Register supplier sync queues\n            // Hint: Add SupplierSearchConfig::SUPPLIER_SYNC_SEARCH_QUEUE\n            // Hint: Add SupplierStorageConfig::SUPPLIER_SYNC_STORAGE_QUEUE",
-                $content,
-                1,
-            );
-
-            file_put_contents($file, $content);
-        ' "$RMQ_CONFIG"
-        echo -e "  ${GREEN}Added Supplier queue TODOs in RabbitMqConfig${NC}"
-      ;;
-        *)
-          # For publish-synchronize/complete and all later branches (search, storage-client, glue-storefront, oms)
-          php -r '
-            $file = $argv[1];
-            $content = file_get_contents($file);
-
-            $useStatements = "use SprykerAcademy\Shared\SupplierSearch\SupplierSearchConfig;\nuse SprykerAcademy\Shared\SupplierStorage\SupplierStorageConfig;\n";
-            $content = preg_replace(
-                "/(^class\s)/m",
-                $useStatements . "\n$1",
-                $content,
-                1,
-            );
-
-            // Add to getPublishQueueConfiguration
-            $content = preg_replace(
-                "/(function\s+getPublishQueueConfiguration.*?return\s*\[)/s",
-                "$1\n            SupplierSearchConfig::SUPPLIER_PUBLISH_SEARCH_QUEUE,\n            SupplierStorageConfig::SUPPLIER_PUBLISH_STORAGE_QUEUE,",
-                $content,
-                1,
-            );
-
-            // Add to getSynchronizationQueueConfiguration
-            $content = preg_replace(
-                "/(function\s+getSynchronizationQueueConfiguration.*?return\s*\[)/s",
-                "$1\n            SupplierSearchConfig::SUPPLIER_SYNC_SEARCH_QUEUE,\n            SupplierStorageConfig::SUPPLIER_SYNC_STORAGE_QUEUE,",
-                $content,
-                1,
-            );
-
-            file_put_contents($file, $content);
-        ' "$RMQ_CONFIG"
-        echo -e "  ${GREEN}Registered Supplier queues in RabbitMqConfig${NC}"
-        ;;
-      esac
+        # Register supplier queues in RabbitMqConfig and SymfonyMessengerConfig
+        for CONFIG_CLASS in "RabbitMqConfig:$PROJECT_DIR/src/Pyz/Client/RabbitMq/RabbitMqConfig.php" "SymfonyMessengerConfig:$PROJECT_DIR/src/Pyz/Client/SymfonyMessenger/SymfonyMessengerConfig.php"; do
+            IFS=':' read -r CLASS_NAME CONFIG_FILE <<< "$CONFIG_CLASS"
+            if [ -f "$CONFIG_FILE" ] && file_needs_update "$CONFIG_FILE" 'SupplierSearchConfig'; then
+                if [ "$BRANCH_TYPE" = "skeleton" ]; then
+                    modify_php_file "$CONFIG_FILE" "$USE_SEARCH_STORAGE" '
+                        $content = preg_replace(
+                            "/(function\s+getPublishQueueConfiguration.*?return\s*\[)/s",
+                            "$1\n            // TODO: Register supplier publish queues\n            // Hint: Add SupplierSearchConfig::SUPPLIER_PUBLISH_SEARCH_QUEUE\n            // Hint: Add SupplierStorageConfig::SUPPLIER_PUBLISH_STORAGE_QUEUE",
+                            $content, 1
+                        );
+                        $content = preg_replace(
+                            "/(function\s+getSynchronizationQueueConfiguration.*?return\s*\[)/s",
+                            "$1\n            // TODO: Register supplier sync queues\n            // Hint: Add SupplierSearchConfig::SUPPLIER_SYNC_SEARCH_QUEUE\n            // Hint: Add SupplierStorageConfig::SUPPLIER_SYNC_STORAGE_QUEUE",
+                            $content, 1
+                        );
+                    '
+                    log_success "Added Supplier queue TODOs in $CLASS_NAME"
+                else
+                    modify_php_file "$CONFIG_FILE" "$USE_SEARCH_STORAGE" '
+                        $content = preg_replace(
+                            "/(function\s+getPublishQueueConfiguration.*?return\s*\[)/s",
+                            "$1\n            SupplierSearchConfig::SUPPLIER_PUBLISH_SEARCH_QUEUE,\n            SupplierStorageConfig::SUPPLIER_PUBLISH_STORAGE_QUEUE,",
+                            $content, 1
+                        );
+                        $content = preg_replace(
+                            "/(function\s+getSynchronizationQueueConfiguration.*?return\s*\[)/s",
+                            "$1\n            SupplierSearchConfig::SUPPLIER_SYNC_SEARCH_QUEUE,\n            SupplierStorageConfig::SUPPLIER_SYNC_STORAGE_QUEUE,",
+                            $content, 1
+                        );
+                    '
+                    log_success "Registered Supplier queues in $CLASS_NAME"
+                fi
+            fi
+        done
     fi
 
-    # Register supplier queues in SymfonyMessengerConfig
-    # Only for publish-synchronize and later branches (not for back-office or data-import)
-    SM_CONFIG="$PROJECT_DIR/src/Pyz/Client/SymfonyMessenger/SymfonyMessengerConfig.php"
-    if [ -f "$SM_CONFIG" ] && [ "$(grep -c 'SupplierSearchConfig' "$SM_CONFIG" || true)" = "0" ]; then
-      case "$BRANCH" in
-        intermediate/back-office/*|intermediate/data-import/*)
-          # Skip - these branches don't have SupplierSearch/Storage modules
-          ;;
-        intermediate/publish-synchronize/skeleton)
-        php -r '
-            $file = $argv[1];
-            $content = file_get_contents($file);
-
-            $useStatements = "use SprykerAcademy\Shared\SupplierSearch\SupplierSearchConfig;\nuse SprykerAcademy\Shared\SupplierStorage\SupplierStorageConfig;\n";
-            $content = preg_replace(
-                "/(^class\s)/m",
-                $useStatements . "\n$1",
-                $content,
-                1,
-            );
-
-            // Add TODO to getPublishQueueConfiguration
-            $content = preg_replace(
-                "/(function\s+getPublishQueueConfiguration.*?return\s*\[)/s",
-                "$1\n            // TODO: Register supplier publish queues\n            // Hint: Add SupplierSearchConfig::SUPPLIER_PUBLISH_SEARCH_QUEUE\n            // Hint: Add SupplierStorageConfig::SUPPLIER_PUBLISH_STORAGE_QUEUE",
-                $content,
-                1,
-            );
-
-            // Add TODO to getSynchronizationQueueConfiguration
-            $content = preg_replace(
-                "/(function\s+getSynchronizationQueueConfiguration.*?return\s*\[)/s",
-                "$1\n            // TODO: Register supplier sync queues\n            // Hint: Add SupplierSearchConfig::SUPPLIER_SYNC_SEARCH_QUEUE\n            // Hint: Add SupplierStorageConfig::SUPPLIER_SYNC_STORAGE_QUEUE",
-                $content,
-                1,
-            );
-
-            file_put_contents($file, $content);
-        ' "$SM_CONFIG"
-        echo -e "  ${GREEN}Added Supplier queue TODOs in SymfonyMessengerConfig${NC}"
-      ;;
-        *)
-          # For publish-synchronize/complete and all later branches (search, storage-client, glue-storefront, oms)
-          php -r '
-            $file = $argv[1];
-            $content = file_get_contents($file);
-
-            $useStatements = "use SprykerAcademy\Shared\SupplierSearch\SupplierSearchConfig;\nuse SprykerAcademy\Shared\SupplierStorage\SupplierStorageConfig;\n";
-            $content = preg_replace(
-                "/(^class\s)/m",
-                $useStatements . "\n$1",
-                $content,
-                1,
-            );
-
-            // Add to getPublishQueueConfiguration
-            $content = preg_replace(
-                "/(function\s+getPublishQueueConfiguration.*?return\s*\[)/s",
-                "$1\n            SupplierSearchConfig::SUPPLIER_PUBLISH_SEARCH_QUEUE,\n            SupplierStorageConfig::SUPPLIER_PUBLISH_STORAGE_QUEUE,",
-                $content,
-                1,
-            );
-
-            // Add to getSynchronizationQueueConfiguration
-            $content = preg_replace(
-                "/(function\s+getSynchronizationQueueConfiguration.*?return\s*\[)/s",
-                "$1\n            SupplierSearchConfig::SUPPLIER_SYNC_SEARCH_QUEUE,\n            SupplierStorageConfig::SUPPLIER_SYNC_STORAGE_QUEUE,",
-                $content,
-                1,
-            );
-
-            file_put_contents($file, $content);
-        ' "$SM_CONFIG"
-        echo -e "  ${GREEN}Registered Supplier queues in SymfonyMessengerConfig${NC}"
-        ;;
-      esac
-    fi
-
-    # Register SprykerAcademy source directory in API Platform configs. The following configuration is optional. By default, the source directories are set to 'src/Spryker', 'src/SprykerFeature', and 'src/Pyz', 'src/SprykerAcademy'.
+    # Register SprykerAcademy source directory in API Platform configs
     for API_CONFIG in "$PROJECT_DIR/config/GlueStorefront/packages/spryker_api_platform.php" "$PROJECT_DIR/config/GlueBackend/packages/spryker_api_platform.php"; do
-        if [ -f "$API_CONFIG" ] && [ "$(grep -c 'SprykerAcademy' "$API_CONFIG" || true)" = "0" ]; then
+        if [ -f "$API_CONFIG" ] && file_needs_update "$API_CONFIG" "'SprykerAcademy'"; then
             sed -i '' "s|'src/Pyz'|'src/Pyz',\n        'src/SprykerAcademy'|" "$API_CONFIG"
-            echo -e "  ${GREEN}Added SprykerAcademy to API Platform source directories${NC}"
+            log_success "Added SprykerAcademy to API Platform source directories"
         fi
     done
 fi
 
 # Copy exercise tests if present
 if [ -d "$REPO_DIR/tests/SprykerAcademyTest" ]; then
-    echo -e "${YELLOW}Installing exercise tests...${NC}"
+    log_info "Installing exercise tests..."
     rm -rf "$PROJECT_DIR/tests/SprykerAcademyTest"
     cp -R "$REPO_DIR/tests/SprykerAcademyTest" "$PROJECT_DIR/tests/SprykerAcademyTest"
 
-    # Add SprykerAcademyTest namespace to composer.json autoload-dev if not already present
-    if ! grep -q '"SprykerAcademyTest\\\\' "$PROJECT_DIR/composer.json"; then
-        # Use php to safely modify composer.json
+    if file_needs_update "$PROJECT_DIR/composer.json" '"SprykerAcademyTest\\\\'; then
         php -r '
             $file = $argv[1] . "/composer.json";
             $json = json_decode(file_get_contents($file), true);
-            if (!isset($json["autoload-dev"]["psr-4"]["SprykerAcademyTest\\\\"])) {
-                $json["autoload-dev"]["psr-4"]["SprykerAcademyTest\\\\"] = "tests/SprykerAcademyTest/";
+            if (!isset($json["autoload-dev"]["psr-4"]["SprykerAcademyTest\\"])) {
+                $json["autoload-dev"]["psr-4"]["SprykerAcademyTest\\"] = "tests/SprykerAcademyTest/";
                 file_put_contents($file, json_encode($json, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n");
             }
         ' "$PROJECT_DIR"
-        echo -e "  ${GREEN}Added SprykerAcademyTest\\ to composer.json autoload-dev${NC}"
+        log_success "Added SprykerAcademyTest\\ to composer.json autoload-dev"
     fi
 fi
 
@@ -636,7 +445,6 @@ if [ "$PACKAGE" = "hello-world" ] && [ -d "$PROJECT_DIR/tests/SprykerAcademyTest
     echo ""
     echo -e "${YELLOW}Verify your work:${NC}"
 
-    # Determine which exercises are available based on the branch
     case "$BRANCH" in
         basics/hello-world-back-office/*)
             echo "  docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/HelloWorld/ Exercise1"
@@ -646,7 +454,7 @@ if [ "$PACKAGE" = "hello-world" ] && [ -d "$PROJECT_DIR/tests/SprykerAcademyTest
             echo "  docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/HelloWorld/ Exercise2"
             ;;
         basics/message-table-schema/*)
-            echo "  docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/HelloWorld/ Exercise1"
+            echo "  docker/sdk cli vendor/bin/codecept run -c tests/SpkerAcademyTest/Zed/HelloWorld/ Exercise1"
             echo "  docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/HelloWorld/ Exercise2"
             echo "  docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/HelloWorld/ Exercise3"
             ;;
