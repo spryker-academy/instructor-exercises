@@ -36,7 +36,10 @@ log_error() { echo -e "${RED}$1${NC}"; }
 file_needs_update() {
     local file="$1"
     local pattern="$2"
-    [ -f "$file" ] && [ "$(grep -c "$pattern" "$file" 2>/dev/null || echo 0)" = "0" ]
+    [ -f "$file" ] || return 1
+    local count
+    count=$(grep -c "$pattern" "$file" 2>/dev/null) || count=0
+    [ "$count" = "0" ]
 }
 
 # Determine branch type for conditional configuration
