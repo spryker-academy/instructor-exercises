@@ -164,40 +164,40 @@ if [ -f "$REPO_DIR/config/Zed/navigation.xml" ]; then
         $projectFile = $argv[1] . "/config/Zed/navigation.xml";
         $exerciseFile = $argv[2] . "/config/Zed/navigation.xml";
         
-        $projectXml = simplexml_load_file($projectFile);
-        $exerciseXml = simplexml_load_file($exerciseFile);
+        // Load both XML files using DOMDocument to preserve formatting
+        $projectDom = new DOMDocument();
+        $projectDom->preserveWhiteSpace = false;
+        $projectDom->formatOutput = true;
+        $projectDom->load($projectFile);
+        
+        $exerciseDom = new DOMDocument();
+        $exerciseDom->preserveWhiteSpace = false;
+        $exerciseDom->formatOutput = true;
+        $exerciseDom->load($exerciseFile);
+        
+        // Get the root config element from project
+        $projectConfig = $projectDom->getElementsByTagName("config")->item(0);
         
         // Import all children from exercise navigation into project navigation
-        foreach ($exerciseXml->children() as $child) {
-            // Check if entry already exists
-            $name = $child->getName();
-            if (isset($projectXml->$name)) {
+        foreach ($exerciseDom->documentElement->childNodes as $child) {
+            if ($child->nodeType !== XML_ELEMENT_NODE) {
+                continue;
+            }
+            $name = $child->nodeName;
+            
+            // Check if entry already exists in project
+            $existing = $projectConfig->getElementsByTagName($name)->item(0);
+            if ($existing) {
                 continue; // Skip if already exists
             }
+            
             // Import and append the node
-            $newNode = $projectXml->addChild($name);
-            // Copy all child elements recursively
-            function copyXmlChildren($source, $target) {
-                foreach ($source->children() as $key => $value) {
-                    if (count($value->children()) > 0) {
-                        $child = $target->addChild($key);
-                        copyXmlChildren($value, $child);
-                    } else {
-                        $target->addChild($key, (string)$value);
-                    }
-                }
-                // Copy attributes if any
-                foreach ($source->attributes() as $key => $value) {
-                    $target->addAttribute($key, (string)$value);
-                }
-            }
-            copyXmlChildren($child, $newNode);
+            $importedNode = $projectDom->importNode($child, true);
+            $projectConfig->appendChild($importedNode);
         }
         
-        // Save with proper formatting
-        $dom = dom_import_simplexml($projectXml)->ownerDocument;
-        $dom->formatOutput = true;
-        $dom->save($projectFile);
+        // Save the merged XML
+        $projectDom->save($projectFile);
     ' "$PROJECT_DIR" "$REPO_DIR"
     echo -e "  ${GREEN}Merged navigation.xml entries${NC}"
 fi
