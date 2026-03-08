@@ -382,7 +382,7 @@ YAMLEOF
         # Register supplier queues in RabbitMqConfig and SymfonyMessengerConfig
         for CONFIG_CLASS in "RabbitMqConfig:$PROJECT_DIR/src/Pyz/Client/RabbitMq/RabbitMqConfig.php" "SymfonyMessengerConfig:$PROJECT_DIR/src/Pyz/Client/SymfonyMessenger/SymfonyMessengerConfig.php"; do
             IFS=':' read -r CLASS_NAME CONFIG_FILE <<< "$CONFIG_CLASS"
-            if [ -f "$CONFIG_FILE" ] && file_needs_update "$CONFIG_FILE" 'SupplierSearchConfig'; then
+            if [ -f "$CONFIG_FILE" ] && file_needs_update "$CONFIG_FILE" 'SUPPLIER_PUBLISH_SEARCH_QUEUE'; then
                 if [ "$BRANCH_TYPE" = "skeleton" ]; then
                     modify_php_file "$CONFIG_FILE" "$USE_SEARCH_STORAGE" '
                         $content = preg_replace(
