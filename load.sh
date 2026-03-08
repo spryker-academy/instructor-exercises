@@ -254,7 +254,7 @@ if [ "$PACKAGE" = "supplier" ]; then
             // Add supplier to SUPPORTED_SOURCE_IDENTIFIERS array
             $content = preg_replace(
                 "/(protected const SUPPORTED_SOURCE_IDENTIFIERS = \[)([^\]]*)(\])/s",
-                "$1$2        'supplier',\n$3",
+                "$1$2        \x27supplier\x27,\n$3",
                 $content
             );
             file_put_contents($file, $content);
