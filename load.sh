@@ -456,14 +456,26 @@ YAMLEOF
 
     # Register SprykerAcademy source directory in API Platform configs
     for API_CONFIG in "$PROJECT_DIR/config/GlueStorefront/packages/spryker_api_platform.php" "$PROJECT_DIR/config/GlueBackend/packages/spryker_api_platform.php"; do
-        if [ -f "$API_CONFIG" ] && file_needs_update "$API_CONFIG" "'SprykerAcademy'"; then
+        if [ -f "$API_CONFIG" ]; then
             php -r '
                 $file = $argv[1];
                 $content = file_get_contents($file);
-                $content = str_replace("\x27src/Pyz\x27", "\x27src/Pyz\x27,\n        \x27src/SprykerAcademy\x27", $content);
-                file_put_contents($file, $content);
-            ' "$API_CONFIG"
-            log_success "Added SprykerAcademy to API Platform source directories"
+                
+                // If already present, do nothing
+                if (strpos($content, "\x27src/SprykerAcademy\x27") !== false || strpos($content, "\"src/SprykerAcademy\"") !== false) {
+                    exit(0);
+                }
+
+                if (strpos($content, "\x27src/Pyz\x27") !== false) {
+                    $content = str_replace("\x27src/Pyz\x27", "\x27src/Pyz\x27,\n        \x27src/SprykerAcademy\x27", $content);
+                    file_put_contents($file, $content);
+                    echo "updated";
+                } elseif (strpos($content, "\"src/Pyz\"") !== false) {
+                    $content = str_replace("\"src/Pyz\"", "\"src/Pyz\",\n        \"src/SprykerAcademy\"", $content);
+                    file_put_contents($file, $content);
+                    echo "updated";
+                }
+            ' "$API_CONFIG" | grep -q "updated" && log_success "Added SprykerAcademy to API Platform source directories in $(basename "$API_CONFIG")"
         fi
     done
 fi
