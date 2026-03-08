@@ -68,7 +68,8 @@ The exercise provides an Elasticsearch mapping schema at `src/SprykerAcademy/Sha
 - The `settings` define an `edge_ngram` analyzer for partial matching (typing "Sup" matches "Supplier")
 - The `mappings` define the document structure with field types:
   - `text` for searchable fields (`name`, `description`) - analyzed and tokenized
-  - `keyword` for exact match fields (`status`, `email`, `phone`) - not analyzed
+  - `integer` for the status field (matches the Propel schema INTEGER type)
+  - `keyword` for exact match fields (`email`, `phone`) - not analyzed
   - `integer` for the supplier ID
 
 **Mapping structure:**
@@ -80,7 +81,7 @@ The exercise provides an Elasticsearch mapping schema at `src/SprykerAcademy/Sha
                 "id_supplier": { "type": "integer" },
                 "name": { "type": "text", "analyzer": "default_analyzer" },
                 "description": { "type": "text", "analyzer": "default_analyzer" },
-                "status": { "type": "keyword" },
+                "status": { "type": "integer" },
                 "email": { "type": "keyword" },
                 "phone": { "type": "keyword" }
             }
