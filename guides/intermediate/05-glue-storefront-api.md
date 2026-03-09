@@ -169,34 +169,53 @@ docker/sdk cli GLUE_APPLICATION=GLUE_STOREFRONT glue api:generate
 docker/sdk console cache:empty-all
 ```
 
+Test collection (JSON-LD format):
+```bash
+curl -s 'http://glue.eu.spryker.local/suppliers' \
+  -H 'Accept: application/ld+json' | python3 -m json.tool
+```
+
 Test single supplier:
 ```bash
 curl -s 'http://glue.eu.spryker.local/suppliers/1' \
-  -H 'Content-Type: application/vnd.api+json' | python3 -m json.tool
+  -H 'Accept: application/ld+json' | python3 -m json.tool
 ```
 
-Test collection:
-```bash
-curl -s 'http://glue.eu.spryker.local/suppliers' \
-  -H 'Content-Type: application/vnd.api+json' | python3 -m json.tool
-```
-
-Expected response format:
+Expected collection response:
 ```json
 {
-  "data": {
-    "type": "suppliers",
-    "id": "1",
-    "attributes": {
+  "@context": "/contexts/Supplier",
+  "@id": "/suppliers",
+  "@type": "Collection",
+  "totalItems": 4,
+  "member": [
+    {
+      "@id": "/suppliers/1",
+      "@type": "Supplier",
+      "idSupplier": 1,
       "name": "Acme Supplies",
       "description": "leading supplier of industrial equipment",
       "status": 1,
       "email": "contact@acmesupplies.com",
       "phone": "+1-555-1234"
     }
+  ],
+  "view": {
+    "@id": "/suppliers",
+    "@type": "PartialCollectionView"
   }
 }
 ```
+
+> **Response formats:** API Platform supports multiple formats via the `Accept` header:
+>
+> | Accept Header | Format | Description |
+> |---------------|--------|-------------|
+> | `application/ld+json` | JSON-LD | Default. Linked Data with `@context`, `@id`, `@type` metadata |
+> | `application/json` | Plain JSON | Raw JSON without metadata |
+> | `application/vnd.api+json` | JSON:API | JSON:API specification format |
+>
+> JSON-LD is the default and recommended format for API Platform.
 
 ---
 
