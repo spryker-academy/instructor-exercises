@@ -98,27 +98,39 @@ After loading the exercise, run `docker/sdk console search:setup` to create the 
 
 ---
 
-### Part 2: Build the Search Query Plugin
+### Part 2: Build the Search Query Plugins
 
-The query plugin builds the Elastica query that gets sent to Elasticsearch.
+The query plugins build the Elastica queries that get sent to Elasticsearch. There are two plugins:
+
+| Plugin | Purpose | Elastica Query |
+|--------|---------|----------------|
+| `SupplierSearchQueryPlugin` | Returns all suppliers | `Exists('id_supplier')` |
+| `SupplierByIdSearchQueryPlugin` | Finds one supplier by ID | `Term(['id_supplier' => $id])` |
+
+Both plugins implement `SearchContextAwareQueryInterface` with `sourceIdentifier = 'supplier'`. This tells Spryker which Elasticsearch index to query — since every document in the supplier index is already a supplier, we don't need a `type` filter.
 
 **Coding time:**
 
 Open `src/SprykerAcademy/Client/SupplierSearch/Plugin/Elasticsearch/Query/SupplierSearchQueryPlugin.php`:
 
-1. Set the `SOURCE_IDENTIFIER` constant to `'supplier'` — this must match:
-   - The `type` parameter in the synchronization behavior from `pyz_supplier_search.schema.xml`
-   - The mapping type name in `supplier.json`
+1. In `createSearchQuery()`, build a query using `Elastica\Query\Exists` on the `id_supplier` field. This returns all documents that have a supplier ID (i.e., all suppliers in the index).
 
-2. In `getSearchQuery()`, build a `BoolQuery` with two `addMust()` conditions:
-   - An `Exists` filter ensuring the document has an `id_supplier` field (only supplier documents)
-   - A `MatchQuery` on the `name` field with the search term stored in `$this->name`
+2. Implement `getSearchContext()` to return a `SearchContextTransfer` with the source identifier set to `'supplier'`.
 
-> **Field names:** The field names in your query must match the property names defined in the Elasticsearch mapping (`supplier.json`).
+Open `src/SprykerAcademy/Client/SupplierSearch/Plugin/Elasticsearch/Query/SupplierByIdSearchQueryPlugin.php`:
 
-> **BoolQuery:** Elasticsearch's boolean query combines multiple conditions with must/should/must_not logic. `addMust()` means ALL conditions must match (AND logic).
+1. In `createSearchQuery()`, build a query using `Elastica\Query\Term` on the `id_supplier` field with the value from `$this->idSupplier`. The `Term` query performs an **exact match** — no analysis or tokenization, just a direct value comparison. Set the query size to 1 since we expect a single result.
 
-> **SearchContextAwareQueryInterface:** The plugin implements this to tell Spryker which Elasticsearch index to query. The `SOURCE_IDENTIFIER` gets resolved to the actual index name by the search infrastructure.
+2. Implement `setIdSupplier()` as a setter that stores the ID and resets the cached query (so it rebuilds with the new ID).
+
+> **Exists vs Term vs MatchQuery:**
+> - `Exists('field')` — returns documents where the field is present (any value). Used for "give me all suppliers".
+> - `Term(['field' => value])` — exact match on a keyword/integer field. Used for "find supplier with ID 5". No analysis applied.
+> - `MatchQuery('field', 'text')` — full-text search with analysis and tokenization. Used for searching text fields like name or description. **Not suitable** for filtering by type or ID.
+>
+> Since the `sourceIdentifier` already targets the supplier-specific Elasticsearch index, we don't need a type filter — every document in that index is a supplier.
+
+> **SearchContextAwareQueryInterface:** The plugin implements this to tell Spryker which Elasticsearch index to query. The source identifier `'supplier'` gets resolved to the actual index name (e.g., `eu_search_supplier`) by the search infrastructure.
 
 ---
 
