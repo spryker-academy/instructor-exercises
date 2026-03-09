@@ -171,13 +171,13 @@ docker/sdk console cache:empty-all
 
 Test single supplier:
 ```bash
-curl -s 'http://glue-storefront.eu.spryker.local/suppliers/1' \
+curl -s 'http://glue.eu.spryker.local/suppliers/1' \
   -H 'Content-Type: application/vnd.api+json' | python3 -m json.tool
 ```
 
 Test collection:
 ```bash
-curl -s 'http://glue-storefront.eu.spryker.local/suppliers' \
+curl -s 'http://glue.eu.spryker.local/suppliers' \
   -H 'Content-Type: application/vnd.api+json' | python3 -m json.tool
 ```
 
