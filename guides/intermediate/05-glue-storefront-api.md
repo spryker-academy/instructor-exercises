@@ -200,17 +200,49 @@ Expected response format:
 
 ---
 
+## Registering Services in the Symfony Container
+
+API Platform providers use **Symfony's dependency injection** — not Spryker's Factory/DependencyProvider pattern. When a provider declares a constructor dependency like `SupplierFacadeInterface` or `SupplierClientInterface`, Symfony must know how to resolve it.
+
+Spryker core modules have pre-compiled service containers, but project-level modules (like `SprykerAcademy`) do not. You need to register them explicitly in `ApplicationServices.php`.
+
+**GlueBackend** — register Zed layer services (facades) that backend providers need:
+
+```php
+// config/GlueBackend/ApplicationServices.php
+$services->load('SprykerAcademy\\Zed\\', '../../src/SprykerAcademy/Zed/');
+```
+
+**GlueStorefront** — register Client layer services that storefront providers need:
+
+```php
+// config/GlueStorefront/ApplicationServices.php
+$services->load('SprykerAcademy\\Client\\', '../../src/SprykerAcademy/Client/');
+```
+
+> **`$services->load()`** tells Symfony to scan a directory and auto-register all classes under that namespace as services. Combined with `->defaults()->autowire()` (already set), Symfony can then resolve interfaces to their implementations.
+
+> **Alternative:** You can also register individual services explicitly:
+> ```php
+> $services->set(SupplierFacadeInterface::class, SupplierFacade::class);
+> ```
+> This is more precise but requires updating whenever you add new dependencies.
+
+> **Note:** The exercise loader (`load.sh`) handles this registration automatically. You don't need to modify `ApplicationServices.php` manually.
+
+---
+
 ## Key Concepts Summary
 
 ### API Platform vs Legacy
 
 With API Platform, there's **no need for**:
-- DependencyProvider in the Glue layer (constructor injection is auto-wired)
+- DependencyProvider in the Glue layer (constructor injection is auto-wired by Symfony)
 - Factory in the Glue layer
 - Controller class (the Provider IS the handler)
 - Plugin registration in `GlueStorefrontApiApplicationDependencyProvider`
 
-Everything is defined in YAML + one Provider class.
+Everything is defined in YAML + one Provider class + service registration in `ApplicationServices.php`.
 
 ### Provider Pattern
 
