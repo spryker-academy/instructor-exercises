@@ -182,12 +182,20 @@ Open `src/SprykerAcademy/Client/SupplierSearch/SupplierSearchClient.php`. In `ge
 
 ### Part 6: Display in Yves
 
-The exercise provides a `SupplierPage` Yves module with a route `/supplier/{name}`. Review these files:
-- `SupplierPageRouteProviderPlugin` — registers the route
+The exercise provides a `SupplierPage` Yves module with two routes:
+
+| Route | Action | Description |
+|-------|--------|-------------|
+| `/suppliers` | `listAction` | Shows all suppliers in a table |
+| `/supplier/{idSupplier}` | `detailAction` | Shows a single supplier by ID |
+
+Review these files:
+- `SupplierPageRouteProviderPlugin` — registers both routes
 - `SupplierPageDependencyProvider` — provides the `SupplierSearchClient`
 - `SupplierPageFactory` — accesses the client
+- `IndexController` — `listAction()` calls `searchSuppliers()`, `detailAction()` calls `findSupplierById()`
 
-The controller uses the `SupplierSearchClient` to find a supplier by name and passes it to the Twig template.
+**Router registration:** The route provider is registered via `SprykerAcademy\Yves\Router\RouterDependencyProvider`, which extends the Pyz Router and adds the `SupplierPageRouteProviderPlugin`. This is done automatically by the exercise — no project modification needed.
 
 After completing all parts:
 
@@ -195,7 +203,8 @@ After completing all parts:
 docker/sdk console cache:empty-all
 ```
 
-Visit http://yves.eu.spryker.local/supplier/Acme%20Supplies to see the result.
+- Visit http://yves.eu.spryker.local/suppliers to see the supplier list
+- Click a supplier to see its detail page at `/supplier/{id}`
 
 ---
 
@@ -207,7 +216,8 @@ Visit http://yves.eu.spryker.local/supplier/Acme%20Supplies to see the result.
      -d '{"query":{"exists":{"field":"id_supplier"}}}'
    ```
 
-2. Visit the Yves page with a known supplier name
+2. Visit the Yves supplier list page and verify the table renders
+3. Click a supplier and verify the detail page loads
 
 ---
 
