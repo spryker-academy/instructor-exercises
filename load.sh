@@ -265,18 +265,30 @@ YAMLEOF
             php -r '
                 $file = $argv[1];
                 $content = file_get_contents($file);
-                
+
                 // If already present, do nothing
                 if (strpos($content, "\x27src/SprykerAcademy\x27") !== false || strpos($content, "\"src/SprykerAcademy\"") !== false) {
                     exit(0);
                 }
 
-                if (strpos($content, "\x27src/Pyz\x27") !== false) {
-                    $content = str_replace("\x27src/Pyz\x27", "\x27src/Pyz\x27,\n        \x27src/SprykerAcademy\x27", $content);
-                    file_put_contents($file, $content);
-                    echo "updated";
-                } elseif (strpos($content, "\"src/Pyz\"") !== false) {
-                    $content = str_replace("\"src/Pyz\"", "\"src/Pyz\",\n        \"src/SprykerAcademy\"", $content);
+                // Match src/Pyz only inside sourceDirectories array (followed by quote+comma or quote+newline), not in comments
+                $content = preg_replace(
+                    "/(\x27src\/Pyz\x27)(,?\s*\n(\s*)\])/",
+                    "$1,\n$3\x27src/SprykerAcademy\x27$2",
+                    $content,
+                    1,
+                    $count,
+                );
+                if (!$count) {
+                    $content = preg_replace(
+                        "/(\"src\/Pyz\")(,?\s*\n(\s*)\])/",
+                        "$1,\n$3\"src/SprykerAcademy\"$2",
+                        $content,
+                        1,
+                        $count,
+                    );
+                }
+                if ($count) {
                     file_put_contents($file, $content);
                     echo "updated";
                 }
