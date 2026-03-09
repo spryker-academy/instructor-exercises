@@ -194,12 +194,13 @@ if [ -f "$REPO_DIR/config/Zed/navigation.xml" ]; then
             
             $projectConfig = $projectDom->getElementsByTagName("config")->item(0);
             
+            $firstChild = $projectConfig->firstChild;
             foreach ($exerciseDom->documentElement->childNodes as $child) {
                 if ($child->nodeType !== XML_ELEMENT_NODE) continue;
                 $name = $child->nodeName;
                 if ($projectConfig->getElementsByTagName($name)->item(0)) continue;
                 $importedNode = $projectDom->importNode($child, true);
-                $projectConfig->appendChild($importedNode);
+                $projectConfig->insertBefore($importedNode, $firstChild);
             }
             
             $projectDom->save($projectFile);
