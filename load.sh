@@ -296,36 +296,37 @@ YAMLEOF
         fi
     done
 
-    # Register SprykerAcademy Glue services in ApplicationServices.php
-    # The ContainerDelegator can resolve facades/clients at runtime, but Symfony needs them registered at compile time
+    # Register SprykerAcademy services in Glue ApplicationServices.php
     if [ -d "$REPO_DIR/src/SprykerAcademy/Glue" ]; then
-        for APP_SERVICES in "$PROJECT_DIR/config/GlueBackend/ApplicationServices.php" "$PROJECT_DIR/config/GlueStorefront/ApplicationServices.php"; do
-            if [ -f "$APP_SERVICES" ] && file_needs_update "$APP_SERVICES" 'SprykerAcademy'; then
-                php -r '
-                    $file = $argv[1];
-                    $content = file_get_contents($file);
+        # GlueBackend: register SupplierFacadeInterface => SupplierFacade
+        BACKEND_SERVICES="$PROJECT_DIR/config/GlueBackend/ApplicationServices.php"
+        if [ -f "$BACKEND_SERVICES" ] && file_needs_update "$BACKEND_SERVICES" 'SupplierFacade'; then
+            php -r '
+                $file = $argv[1];
+                $content = file_get_contents($file);
+                $use = "\nuse SprykerAcademy\\Zed\\Supplier\\Business\\SupplierFacade;\nuse SprykerAcademy\\Zed\\Supplier\\Business\\SupplierFacadeInterface;\n";
+                $service = "\n    \$services->set(SupplierFacadeInterface::class, SupplierFacade::class);\n";
+                $content = preg_replace("/(use Symfony\\\\Component\\\\DependencyInjection[^;]+;)/", "$1" . $use, $content, 1);
+                $content = preg_replace("/(};)\s*$/", $service . "$1", $content);
+                file_put_contents($file, $content);
+            ' "$BACKEND_SERVICES"
+            log_success "Registered SupplierFacade in GlueBackend/ApplicationServices.php"
+        fi
 
-                    // Add use statement for ContainerDelegator if not present
-                    if (strpos($content, "ContainerDelegator") !== false) {
-                        // Already has ContainerDelegator use, just add service registrations before closing
-                        $registration = "\n    // SprykerAcademy Supplier services\n    \$services->set(\\SprykerAcademy\\Zed\\Supplier\\Business\\SupplierFacadeInterface::class)\n        ->factory([service(\\Spryker\\Service\\Container\\ContainerDelegator::class), \x27get\x27])\n        ->args([\\SprykerAcademy\\Zed\\Supplier\\Business\\SupplierFacadeInterface::class]);\n";
-                        $content = preg_replace("/(};)\s*$/", $registration . "$1", $content);
-                    } else {
-                        // Add use and service registration
-                        $content = preg_replace(
-                            "/(use Symfony\\\\Component\\\\DependencyInjection\\\\Loader\\\\Configurator\\\\ContainerConfigurator;)/",
-                            "$1\nuse Spryker\\Service\\Container\\ContainerDelegator;",
-                            $content
-                        );
-                        $registration = "\n    // SprykerAcademy Supplier services - resolved via Spryker Locator at runtime\n    \$services->set(\\SprykerAcademy\\Zed\\Supplier\\Business\\SupplierFacadeInterface::class)\n        ->factory([service(ContainerDelegator::class), \x27get\x27])\n        ->args([\\SprykerAcademy\\Zed\\Supplier\\Business\\SupplierFacadeInterface::class]);\n";
-                        $content = preg_replace("/(};)\s*$/", $registration . "$1", $content);
-                    }
-
-                    file_put_contents($file, $content);
-                ' "$APP_SERVICES"
-                log_success "Registered SprykerAcademy Glue services in $(basename "$(dirname "$APP_SERVICES")")/ApplicationServices.php"
-            fi
-        done
+        # GlueStorefront: register SupplierClientInterface => SupplierClient
+        STOREFRONT_SERVICES="$PROJECT_DIR/config/GlueStorefront/ApplicationServices.php"
+        if [ -f "$STOREFRONT_SERVICES" ] && file_needs_update "$STOREFRONT_SERVICES" 'SupplierClient'; then
+            php -r '
+                $file = $argv[1];
+                $content = file_get_contents($file);
+                $use = "\nuse SprykerAcademy\\Client\\Supplier\\SupplierClient;\nuse SprykerAcademy\\Client\\Supplier\\SupplierClientInterface;\n";
+                $service = "\n    \$services->set(SupplierClientInterface::class, SupplierClient::class);\n";
+                $content = preg_replace("/(use Symfony\\\\Component\\\\DependencyInjection[^;]+;)/", "$1" . $use, $content, 1);
+                $content = preg_replace("/(};)\s*$/", $service . "$1", $content);
+                file_put_contents($file, $content);
+            ' "$STOREFRONT_SERVICES"
+            log_success "Registered SupplierClient in GlueStorefront/ApplicationServices.php"
+        fi
     fi
 fi
 
