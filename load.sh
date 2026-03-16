@@ -79,6 +79,12 @@ usage() {
     echo "  intermediate/glue-storefront/complete"
     echo "  intermediate/oms/skeleton"
     echo "  intermediate/oms/complete"
+    echo "  intermediate/merchant-portal-table/skeleton"
+    echo "  intermediate/merchant-portal-table/complete"
+    echo "  intermediate/merchant-portal-form/skeleton"
+    echo "  intermediate/merchant-portal-form/complete"
+    echo "  intermediate/merchant-portal-locations/skeleton"
+    echo "  intermediate/merchant-portal-locations/complete"
     exit 1
 }
 
@@ -206,6 +212,40 @@ if [ -f "$REPO_DIR/config/Zed/navigation.xml" ]; then
             $projectDom->save($projectFile);
         ' "$PROJECT_DIR" "$REPO_DIR"
         log_success "Merged navigation.xml entries"
+    fi
+fi
+
+# Copy merchant portal navigation XML if present in the exercise repo
+if [ -f "$REPO_DIR/config/Zed/navigation-main-merchant-portal.xml" ]; then
+    NAV_KEY=$(grep -oE '<[a-z-]+>' "$REPO_DIR/config/Zed/navigation-main-merchant-portal.xml" | grep -v "<config>" | head -1 | sed 's/[<>]//g')
+    if [ -n "$NAV_KEY" ] && [ -f "$PROJECT_DIR/config/Zed/navigation-main-merchant-portal.xml" ] && file_needs_update "$PROJECT_DIR/config/Zed/navigation-main-merchant-portal.xml" "<$NAV_KEY>"; then
+        php -r '
+            $projectFile = $argv[1] . "/config/Zed/navigation-main-merchant-portal.xml";
+            $exerciseFile = $argv[2] . "/config/Zed/navigation-main-merchant-portal.xml";
+
+            $projectDom = new DOMDocument();
+            $projectDom->preserveWhiteSpace = false;
+            $projectDom->formatOutput = true;
+            $projectDom->load($projectFile);
+
+            $exerciseDom = new DOMDocument();
+            $exerciseDom->preserveWhiteSpace = false;
+            $exerciseDom->formatOutput = true;
+            $exerciseDom->load($exerciseFile);
+
+            $projectConfig = $projectDom->getElementsByTagName("config")->item(0);
+
+            foreach ($exerciseDom->documentElement->childNodes as $child) {
+                if ($child->nodeType !== XML_ELEMENT_NODE) continue;
+                $name = $child->nodeName;
+                if ($projectConfig->getElementsByTagName($name)->item(0)) continue;
+                $importedNode = $projectDom->importNode($child, true);
+                $projectConfig->appendChild($importedNode);
+            }
+
+            $projectDom->save($projectFile);
+        ' "$PROJECT_DIR" "$REPO_DIR"
+        log_success "Merged merchant portal navigation entries"
     fi
 fi
 
