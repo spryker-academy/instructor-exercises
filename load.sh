@@ -6,7 +6,7 @@
 #   ./exercises/load.sh <package> <branch>
 #
 # Examples:
-#   ./exercises/load.sh hello-world basics/hello-world-back-office/skeleton
+#   ./exercises/load.sh contact-request basics/contact-request-back-office/skeleton
 #   ./exercises/load.sh supplier intermediate/back-office/skeleton
 #
 # First run will clone the repos and configure the project automatically.
@@ -18,7 +18,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 REPOS_DIR="$SCRIPT_DIR/repos"
 
-HELLO_WORLD_REPO="https://github.com/spryker-academy/hello-world.git"
+CONTACT_REQUEST_REPO="https://github.com/spryker-academy/hello-world.git"
 SUPPLIER_REPO="https://github.com/spryker-academy/supplier.git"
 
 # Colors
@@ -45,15 +45,15 @@ file_needs_update() {
 usage() {
     echo "Usage: ./exercises/load.sh <package> <branch>"
     echo ""
-    echo "Packages: hello-world, supplier"
+    echo "Packages: contact-request, supplier"
     echo ""
-    echo "Hello World branches:"
-    echo "  basics/hello-world-back-office/skeleton"
-    echo "  basics/hello-world-back-office/complete"
+    echo "Contact Request branches:"
+    echo "  basics/contact-request-back-office/skeleton"
+    echo "  basics/contact-request-back-office/complete"
     echo "  basics/data-transfer-object/skeleton"
     echo "  basics/data-transfer-object/complete"
-    echo "  basics/message-table-schema/skeleton"
-    echo "  basics/message-table-schema/complete"
+    echo "  basics/contact-request-table-schema/skeleton"
+    echo "  basics/contact-request-table-schema/complete"
     echo "  basics/module-layers/skeleton"
     echo "  basics/module-layers/complete"
     echo "  basics/extending-core-modules/skeleton"
@@ -90,14 +90,14 @@ fi
 PACKAGE="$1"
 BRANCH="$2"
 
-if [ "$PACKAGE" != "hello-world" ] && [ "$PACKAGE" != "supplier" ]; then
-    log_error "Error: Package must be 'hello-world' or 'supplier'"
+if [ "$PACKAGE" != "contact-request" ] && [ "$PACKAGE" != "supplier" ]; then
+    log_error "Error: Package must be 'contact-request' or 'supplier'"
     usage
 fi
 
 # Determine repo URL
-if [ "$PACKAGE" = "hello-world" ]; then
-    REPO_URL="$HELLO_WORLD_REPO"
+if [ "$PACKAGE" = "contact-request" ]; then
+    REPO_URL="$CONTACT_REQUEST_REPO"
 else
     REPO_URL="$SUPPLIER_REPO"
 fi
@@ -209,18 +209,18 @@ if [ -f "$REPO_DIR/config/Zed/navigation.xml" ]; then
     fi
 fi
 
-# Add HelloWorld config value to config_default.php for configuration exercise
-if [ "$PACKAGE" = "hello-world" ]; then
+# Add ContactRequest config value to config_default.php for configuration exercise
+if [ "$PACKAGE" = "contact-request" ]; then
     CONFIG_FILE="$PROJECT_DIR/config/Shared/config_default.php"
-    if file_needs_update "$CONFIG_FILE" 'HelloWorldConstants'; then
+    if file_needs_update "$CONFIG_FILE" 'ContactRequestConstants'; then
         cat >> "$CONFIG_FILE" << 'PHPEOF'
 
-// HelloWorld exercise config value
-use SprykerAcademy\Shared\HelloWorld\HelloWorldConstants;
+// ContactRequest exercise config value
+use SprykerAcademy\Shared\ContactRequest\ContactRequestConstants;
 
-$config[HelloWorldConstants::MY_CONFIG_VALUE] = 'Hello from config!';
+$config[ContactRequestConstants::MY_CONFIG_VALUE] = 'Hello from config!';
 PHPEOF
-        log_success "Added HelloWorld config value to config_default.php"
+        log_success "Added ContactRequest config value to config_default.php"
     fi
 fi
 
@@ -298,34 +298,30 @@ YAMLEOF
 
     # Register SprykerAcademy services in Glue ApplicationServices.php
     if [ -d "$REPO_DIR/src/SprykerAcademy/Glue" ]; then
-        # GlueBackend: register SupplierFacadeInterface => SupplierFacade
+        # GlueBackend: load SprykerAcademy Zed services (facades)
         BACKEND_SERVICES="$PROJECT_DIR/config/GlueBackend/ApplicationServices.php"
-        if [ -f "$BACKEND_SERVICES" ] && file_needs_update "$BACKEND_SERVICES" 'SupplierFacade'; then
+        if [ -f "$BACKEND_SERVICES" ] && file_needs_update "$BACKEND_SERVICES" 'SprykerAcademy'; then
             php -r '
                 $file = $argv[1];
                 $content = file_get_contents($file);
-                $use = "\nuse SprykerAcademy\\Zed\\Supplier\\Business\\SupplierFacade;\nuse SprykerAcademy\\Zed\\Supplier\\Business\\SupplierFacadeInterface;\n";
-                $service = "\n    \$services->set(SupplierFacadeInterface::class, SupplierFacade::class);\n";
-                $content = preg_replace("/(use Symfony\\\\Component\\\\DependencyInjection[^;]+;)/", "$1" . $use, $content, 1);
-                $content = preg_replace("/(};)\s*$/", $service . "$1", $content);
+                $load = "\n    \$services->load(\x27SprykerAcademy\\\\Zed\\\\\x27, \x27../../src/SprykerAcademy/Zed/\x27);\n";
+                $content = preg_replace("/(};)\s*$/", $load . "$1", $content);
                 file_put_contents($file, $content);
             ' "$BACKEND_SERVICES"
-            log_success "Registered SupplierFacade in GlueBackend/ApplicationServices.php"
+            log_success "Loaded SprykerAcademy\\Zed services in GlueBackend/ApplicationServices.php"
         fi
 
-        # GlueStorefront: register SupplierClientInterface => SupplierClient
+        # GlueStorefront: load SprykerAcademy Client services
         STOREFRONT_SERVICES="$PROJECT_DIR/config/GlueStorefront/ApplicationServices.php"
-        if [ -f "$STOREFRONT_SERVICES" ] && file_needs_update "$STOREFRONT_SERVICES" 'SupplierClient'; then
+        if [ -f "$STOREFRONT_SERVICES" ] && file_needs_update "$STOREFRONT_SERVICES" 'SprykerAcademy'; then
             php -r '
                 $file = $argv[1];
                 $content = file_get_contents($file);
-                $use = "\nuse SprykerAcademy\\Client\\Supplier\\SupplierClient;\nuse SprykerAcademy\\Client\\Supplier\\SupplierClientInterface;\n";
-                $service = "\n    \$services->set(SupplierClientInterface::class, SupplierClient::class);\n";
-                $content = preg_replace("/(use Symfony\\\\Component\\\\DependencyInjection[^;]+;)/", "$1" . $use, $content, 1);
-                $content = preg_replace("/(};)\s*$/", $service . "$1", $content);
+                $load = "\n    \$services->load(\x27SprykerAcademy\\\\Client\\\\\x27, \x27../../src/SprykerAcademy/Client/\x27);\n";
+                $content = preg_replace("/(};)\s*$/", $load . "$1", $content);
                 file_put_contents($file, $content);
             ' "$STOREFRONT_SERVICES"
-            log_success "Registered SupplierClient in GlueStorefront/ApplicationServices.php"
+            log_success "Loaded SprykerAcademy\\Client services in GlueStorefront/ApplicationServices.php"
         fi
     fi
 fi
@@ -364,29 +360,29 @@ echo "  docker/sdk cli composer dump-autoload"
 echo "  docker/sdk console propel:install"
 echo "  docker/sdk console transfer:generate"
 
-# Show test run command for hello-world package
-if [ "$PACKAGE" = "hello-world" ] && [ -d "$PROJECT_DIR/tests/SprykerAcademyTest" ]; then
+# Show test run command for contact-request package
+if [ "$PACKAGE" = "contact-request" ] && [ -d "$PROJECT_DIR/tests/SprykerAcademyTest" ]; then
     echo ""
     echo -e "${YELLOW}Verify your work:${NC}"
 
     case "$BRANCH" in
-        basics/hello-world-back-office/*)
-            echo "  docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/HelloWorld/ Exercise1"
+        basics/contact-request-back-office/*)
+            echo "  docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/ContactRequest/ Exercise1"
             ;;
         basics/data-transfer-object/*)
-            echo "  docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/HelloWorld/ Exercise1"
-            echo "  docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/HelloWorld/ Exercise2"
+            echo "  docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/ContactRequest/ Exercise1"
+            echo "  docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/ContactRequest/ Exercise2"
             ;;
-        basics/message-table-schema/*)
-            echo "  docker/sdk cli vendor/bin/codecept run -c tests/SpkerAcademyTest/Zed/HelloWorld/ Exercise1"
-            echo "  docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/HelloWorld/ Exercise2"
-            echo "  docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/HelloWorld/ Exercise3"
+        basics/contact-request-table-schema/*)
+            echo "  docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/ContactRequest/ Exercise1"
+            echo "  docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/ContactRequest/ Exercise2"
+            echo "  docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/ContactRequest/ Exercise3"
             ;;
         basics/module-layers/*|basics/extending-core-modules/*|basics/configuration/*)
-            echo "  docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/HelloWorld/"
+            echo "  docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/ContactRequest/"
             ;;
         *)
-            echo "  docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/HelloWorld/"
+            echo "  docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/ContactRequest/"
             ;;
     esac
 fi
