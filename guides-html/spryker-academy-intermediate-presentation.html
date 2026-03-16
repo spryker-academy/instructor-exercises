@@ -59,6 +59,9 @@
     <tr><td>12</td><td>Glue Storefront API</td><td>API Platform, Providers, Resource YAML</td></tr>
     <tr><td>13</td><td>OMS</td><td>State Machine, Commands, Conditions, Events</td></tr>
     <tr><td>14</td><td>Storage Client</td><td>Redis, StorageClient, Key Generation, SynchronizationService</td></tr>
+    <tr><td>15</td><td>Merchant Portal — Table</td><td>GuiTable, DataProvider, Angular Web Components, ACL</td></tr>
+    <tr><td>16</td><td>Merchant Portal — Form</td><td>Drawer Forms, ZedUI Actions, Symfony Forms</td></tr>
+    <tr><td>17</td><td>Merchant Portal — Locations</td><td>Editable GuiTable, Nested Tables, DataTransformer</td></tr>
   </table>
   <div class="box box-accent">
     <strong>Prerequisites:</strong> Basics exercises 1-7 completed. Understanding of Facade, Factory, DependencyProvider patterns.
@@ -878,6 +881,152 @@ $key = $this->synchronizationService
   </table>
 </section>
 
+<!-- ============================================================ -->
+<!-- EXERCISES 15-17: MERCHANT PORTAL -->
+<!-- ============================================================ -->
+<section>
+  <section class="center">
+    <h2>Merchant Portal</h2>
+    <h3>Exercises 15-17</h3>
+    <p class="dim">GuiTable, Angular Web Components, Drawer Forms</p>
+  </section>
+  <section>
+    <h3>Merchant Portal vs Back Office</h3>
+    <table>
+      <tr><th>Aspect</th><th>Back Office</th><th>Merchant Portal</th></tr>
+      <tr><td>Frontend</td><td>Twig + jQuery</td><td>Angular Web Components</td></tr>
+      <tr><td>Tables</td><td><code>AbstractTable</code> (server HTML)</td><td>GuiTable (JSON config + Angular)</td></tr>
+      <tr><td>Forms</td><td>Full page reload</td><td>Drawer overlay + JSON response</td></tr>
+      <tr><td>Layout</td><td><code>@Gui/Layout/layout.twig</code></td><td><code>@ZedUi/Layout/merchant-layout-main.twig</code></td></tr>
+      <tr><td>Navigation</td><td><code>navigation.xml</code></td><td><code>navigation-main-merchant-portal.xml</code></td></tr>
+      <tr><td>Access</td><td>Back Office ACL</td><td>Merchant ACL plugins</td></tr>
+    </table>
+  </section>
+  <section>
+    <h3>GuiTable Architecture</h3>
+    <div class="diagram">
+<pre>
+  Page Load: GET /supplier-merchant-portal-gui/supplier
+  ├── Controller::indexAction()
+  │   └── Returns GuiTable configuration (JSON)
+  └── Twig renders &lt;web-mp-supplier-list config='...'&gt;
+      └── Angular renders table shell
+
+  AJAX: GET /...supplier/table-data?page=1&pageSize=25
+  ├── Controller::tableDataAction()
+  ├── GuiTableHttpDataRequestExecutor
+  ├── DataProvider::createCriteria() → merchant-scoped
+  ├── Repository → Propel query with JOIN
+  └── Returns JSON rows → Angular updates table
+</pre>
+    </div>
+  </section>
+  <section>
+    <h3>Exercise 15: Supplier Table</h3>
+    <div class="box box-accent">
+      <strong>Goal:</strong> Display merchant's suppliers using GuiTable framework
+    </div>
+    <ul>
+      <li><strong>ConfigurationProvider</strong> — columns, filters, row actions, data source URL</li>
+      <li><strong>DataProvider</strong> — creates merchant-scoped criteria, delegates to repository</li>
+      <li><strong>Repository</strong> — Propel query joining <code>pyz_supplier</code> ↔ <code>pyz_merchant_to_supplier</code></li>
+      <li><strong>Controller</strong> — <code>indexAction()</code> + <code>tableDataAction()</code></li>
+      <li><strong>Angular wiring</strong> — register component in <code>components.module.ts</code></li>
+    </ul>
+  </section>
+  <section>
+    <h3>Drawer Form Lifecycle</h3>
+    <div class="diagram">
+<pre>
+  Table row → "Edit" action
+       │
+  AJAX GET /update-supplier?id-supplier=5
+       │
+  ┌────▼────────────────┐
+  │ Controller renders   │
+  │ form HTML            │
+  │ → JsonResponse       │
+  └────┬────────────────┘
+       │
+  Angular opens drawer with HTML
+       │
+  User submits form (AJAX POST)
+       │
+  ┌────▼────────────────┐
+  │ Controller validates │
+  │ → saves via facade   │
+  │ → ZedUI response:    │
+  │   closeDrawer()      │
+  │   refreshTable()     │
+  │   successNotify()    │
+  └────┬────────────────┘
+       │
+  Angular closes drawer, refreshes table, shows toast
+</pre>
+    </div>
+  </section>
+  <section>
+    <h3>Exercise 16: Create/Edit Form</h3>
+    <div class="box box-accent">
+      <strong>Goal:</strong> Add create and edit functionality via drawer forms
+    </div>
+    <ul>
+      <li><strong>SupplierForm</strong> — Symfony form type with <code>SupplierTransfer</code> data class</li>
+      <li><strong>CreateSupplierController</strong> — creates supplier + links to merchant</li>
+      <li><strong>UpdateSupplierController</strong> — loads and updates existing supplier</li>
+      <li><strong>ZedUiFormResponseBuilder</strong> — drawer actions (close, refresh, notify)</li>
+      <li><strong>Angular wiring</strong> — register edit component, use <code>&lt;web-spy-card&gt;</code></li>
+    </ul>
+  </section>
+  <section>
+    <h3>Editable GuiTable Pattern</h3>
+    <pre><code class="language-php">// Configuration: enable inline editing + adding rows
+$builder->addEditableColumnInput('city', 'City', 'text');
+$builder->addEditableColumnInput('country', 'Country', 'text');
+
+$builder->enableAddingNewRows(
+    'supplierForm[locations]',  // form input name
+    $initialData,
+    ['title' => 'Add Location'],
+    ['title' => 'Cancel'],
+);</code></pre>
+    <p>Data is submitted as nested form fields → <code>DataTransformerInterface</code> converts to transfers.</p>
+  </section>
+  <section>
+    <h3>Exercise 17: Nested Locations Table</h3>
+    <div class="box box-accent">
+      <strong>Goal:</strong> Editable locations table inside the supplier edit drawer
+    </div>
+    <ul>
+      <li><strong>LocationGuiTableConfigurationProvider</strong> — editable columns + <code>enableAddingNewRows()</code></li>
+      <li><strong>LocationGuiTableDataProvider</strong> — fetches locations for a supplier</li>
+      <li><strong>SupplierLocationTransformer</strong> — <code>transform()</code> / <code>reverseTransform()</code></li>
+      <li><strong>Angular wiring</strong> — register locations table component</li>
+      <li>Embedded in edit drawer: <code>&lt;web-mp-supplier-locations-table&gt;</code></li>
+    </ul>
+  </section>
+  <section>
+    <h3>ACL Configuration</h3>
+    <pre><code class="language-php">// Plugin: allow all routes in the module
+class SupplierMerchantPortalGuiMerchantAclRuleExpanderPlugin
+    implements MerchantAclRuleExpanderPluginInterface
+{
+    public function expand(array $ruleTransfers): array
+    {
+        $ruleTransfers[] = (new RuleTransfer())
+            ->setBundle('supplier-merchant-portal-gui')
+            ->setController('*')
+            ->setAction('*')
+            ->setType('allow');
+        return $ruleTransfers;
+    }
+}</code></pre>
+    <div class="box">
+      Without ACL rules, merchant users get <strong>403 Forbidden</strong> for all module routes.
+    </div>
+  </section>
+</section>
+
 <!-- SUMMARY -->
 <section>
   <h2>Key Takeaways</h2>
@@ -890,7 +1039,8 @@ $key = $this->synchronizationService
     <li><span class="accent">Glue API</span> — API Platform: YAML resource definition + Provider class, no Factory/DP needed</li>
     <li><span class="accent">OMS</span> — XML state machine: states, transitions, events, commands, conditions, happy path</li>
     <li><span class="accent">Queues</span> — 3 configs required (SymfonyMessenger + RabbitMq + QueueDP) + <code>messenger:setup-transports</code></li>
-    <li><span class="accent">Naming</span> — <code>*DataImport</code>, <code>*Gui</code>, <code>*Search</code>, <code>*Storage</code> module suffixes</li>
+    <li><span class="accent">Merchant Portal</span> — GuiTable (JSON config + Angular), drawer forms with ZedUI actions, ACL plugins for access</li>
+    <li><span class="accent">Naming</span> — <code>*DataImport</code>, <code>*Gui</code>, <code>*Search</code>, <code>*Storage</code>, <code>*MerchantPortalGui</code> module suffixes</li>
     <li><span class="accent">Testing</span> — Structural + XML + mock tests, no kernel needed</li>
   </ul>
 </section>
