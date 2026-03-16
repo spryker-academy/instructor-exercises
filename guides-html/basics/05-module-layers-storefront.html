@@ -220,7 +220,7 @@
 <p><strong>Part 2 of 2</strong> - This guide focuses on showing the message in Yves.</p>
 <h2 id="prerequisites">Prerequisites</h2>
 <ul>
-<li>You must have completed <a href="04-module-layers-back-office.md">Exercise 4: Module Layers - Back Office Step</a></li>
+<li>You must have completed <a href="04-module-layers-back-office.html">Exercise 4: Module Layers - Back Office Step</a></li>
 </ul>
 <p>We continue on the code from Part 1.</p>
 <hr />
@@ -229,7 +229,7 @@
 <h4 id="gatewaycontroller-for-communication-with-yves">1.1 GatewayController for Communication with Yves</h4>
 <p>The <code>GatewayController</code> exposes an endpoint from Zed to Yves via the BackendGateway.</p>
 <p><strong>Coding time:</strong></p>
-<p>Open <code>src/SprykerAcademy/Zed/HelloWorld/Communication/Controller/GatewayController.php</code>. Complete <code>findMessageAction()</code> by finding a message through the Facade using the <code>MessageCriteriaTransfer</code>.</p>
+<p>Open <code>src/SprykerAcademy/Zed/ContactRequest/Communication/Controller/GatewayController.php</code>. Complete <code>findContactRequestAction()</code> by finding a message through the Facade using the <code>ContactRequestCriteriaTransfer</code>.</p>
 <p>Clear cache:</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span></code></pre></div>
 <hr />
@@ -237,7 +237,7 @@
 <h4 id="create-a-stub-for-calling-backendgateway">2.1 Create a Stub for Calling BackendGateway</h4>
 <p>The Stub uses <code>ZedRequestClient</code> to call Zed from the Storefront.</p>
 <p><strong>Coding time:</strong></p>
-<p>Open <code>src/SprykerAcademy/Client/HelloWorld/Stub/HelloWorldStub.php</code>. In the <code>findMessage()</code> method, fill in the correct path to the GatewayController action.</p>
+<p>Open <code>src/SprykerAcademy/Client/ContactRequest/Stub/ContactRequestStub.php</code>. In the <code>findContactRequest()</code> method, fill in the correct path to the GatewayController action.</p>
 <p>The DTO is serialized on one side and deserialized on the other side of the request.</p>
 <h4 id="provide-zedrequestclient-as-a-dependency">2.2 Provide ZedRequestClient as a Dependency</h4>
 <p>Every external dependency must be provided through the DependencyProvider. The pattern:</p>
@@ -251,50 +251,50 @@
 <span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 <p>The locator works as: <code>$container-&gt;getLocator()-&gt;&lt;moduleName&gt;()-&gt;&lt;what&gt;()</code>.</p>
 <p><strong>Coding time:</strong></p>
-<p>Open <code>src/SprykerAcademy/Client/HelloWorld/HelloWorldDependencyProvider.php</code>. In the <code>addZedRequestClient()</code> method, make the <code>ZedRequestClient</code> available using the locator and the constant <code>CLIENT_ZED_REQUEST</code>.</p>
-<h4 id="instantiate-the-helloworldstub">2.3 Instantiate the HelloWorldStub</h4>
+<p>Open <code>src/SprykerAcademy/Client/ContactRequest/ContactRequestDependencyProvider.php</code>. In the <code>addZedRequestClient()</code> method, make the <code>ZedRequestClient</code> available using the locator and the constant <code>CLIENT_ZED_REQUEST</code>.</p>
+<h4 id="instantiate-the-contact_requeststub">2.3 Instantiate the ContactRequestStub</h4>
 <p>Note the naming conventions: <code>create*()</code> for instantiation (using <code>new</code>), <code>get*()</code> for retrieving provided dependencies.</p>
 <p><strong>Coding time:</strong></p>
-<p>Open <code>src/SprykerAcademy/Client/HelloWorld/HelloWorldFactory.php</code>. In <code>createHelloWorldStub()</code>, instantiate and return a <code>HelloWorldStub</code> with the correct dependency injected.</p>
+<p>Open <code>src/SprykerAcademy/Client/ContactRequest/ContactRequestFactory.php</code>. In <code>createContactRequestStub()</code>, instantiate and return a <code>ContactRequestStub</code> with the correct dependency injected.</p>
 <h4 id="create-the-client-internal-api">2.4 Create the Client (Internal API)</h4>
 <p>The <code>*Client</code> class is what gets provided to other clients, Yves, or Glue through their DependencyProviders.</p>
 <p><strong>Coding time:</strong></p>
-<p>Open <code>src/SprykerAcademy/Client/HelloWorld/HelloWorldClient.php</code>. Complete <code>findMessage()</code> by using the factory to create a <code>HelloWorldStub</code> and return the found message.</p>
+<p>Open <code>src/SprykerAcademy/Client/ContactRequest/ContactRequestClient.php</code>. Complete <code>findContactRequest()</code> by using the factory to create a <code>ContactRequestStub</code> and return the found message.</p>
 <p>Update IDE auto-completion:</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console dev:ide-auto-completion:generate</span></code></pre></div>
 <hr />
 <h3 id="build-yves">3. Build Yves</h3>
 <h4 id="dependencyprovider-and-factory">3.1 DependencyProvider and Factory</h4>
-<p>Make the <code>HelloWorldClient</code> available in the Yves application layer.</p>
+<p>Make the <code>ContactRequestClient</code> available in the Yves application layer.</p>
 <p><strong>Coding time:</strong></p>
-<p>Open <code>src/SprykerAcademy/Yves/HelloWorldPage/HelloWorldPageDependencyProvider.php</code>. In the <code>addHelloWorldClient()</code> method, make the <code>HelloWorldClient</code> available.</p>
+<p>Open <code>src/SprykerAcademy/Yves/ContactRequestPage/ContactRequestPageDependencyProvider.php</code>. In the <code>addContactRequestClient()</code> method, make the <code>ContactRequestClient</code> available.</p>
 <p><strong>Coding time:</strong></p>
-<p>Open <code>src/SprykerAcademy/Yves/HelloWorldPage/HelloWorldPageFactory.php</code>. Complete <code>getHelloWorldClient()</code> by returning the provided dependency using <code>HelloWorldPageDependencyProvider::CLIENT_HELLOWORLD</code>.</p>
+<p>Open <code>src/SprykerAcademy/Yves/ContactRequestPage/ContactRequestPageFactory.php</code>. Complete <code>getContactRequestClient()</code> by returning the provided dependency using <code>ContactRequestPageDependencyProvider::CLIENT_HELLOWORLD</code>.</p>
 <h4 id="controller">3.2 Controller</h4>
-<p>The template is already provided at <code>src/SprykerAcademy/Yves/HelloWorldPage/Theme/default/views/message/get.twig</code> and expects a variable named <code>message</code>.</p>
+<p>The template is already provided at <code>src/SprykerAcademy/Yves/ContactRequestPage/Theme/default/views/message/get.twig</code> and expects a variable named <code>message</code>.</p>
 <p><strong>Coding time:</strong></p>
-<p>Open <code>src/SprykerAcademy/Yves/HelloWorldPage/Controller/MessageController.php</code>. Complete <code>getAction()</code>: 1. Instantiate a <code>MessageCriteriaTransfer</code> and set the message ID from the route parameter 2. Use <code>getFactory()</code> to access the <code>HelloWorldClient</code> 3. Find a message by the criteria and assign the result to <code>$messageResponseTransfer</code></p>
+<p>Open <code>src/SprykerAcademy/Yves/ContactRequestPage/Controller/ContactRequestController.php</code>. Complete <code>getAction()</code>: 1. Instantiate a <code>ContactRequestCriteriaTransfer</code> and set the message ID from the route parameter 2. Use <code>getFactory()</code> to access the <code>ContactRequestClient</code> 3. Find a message by the criteria and assign the result to <code>$contactRequestResponseTransfer</code></p>
 <h4 id="routing">3.3 Routing</h4>
 <p>Unlike the Back Office, Yves requires explicit route definitions via a <code>*RouteProviderPlugin</code>.</p>
 <p><strong>Coding time:</strong></p>
-<p>Open <code>src/SprykerAcademy/Yves/HelloWorldPage/Plugin/Router/HelloWorldPageRouteProviderPlugin.php</code>. In <code>addHelloWorldMessageGetRoute()</code>, fill in the correct <strong>module name</strong> and <strong>controller name</strong> for the placeholders.</p>
+<p>Open <code>src/SprykerAcademy/Yves/ContactRequestPage/Plugin/Router/ContactRequestPageRouteProviderPlugin.php</code>. In <code>addContactRequestMessageGetRoute()</code>, fill in the correct <strong>module name</strong> and <strong>controller name</strong> for the placeholders.</p>
 <p><strong>Coding time:</strong></p>
-<p>Open <code>src/SprykerAcademy/Yves/Router/RouterDependencyProvider.php</code>. Add an instance of <code>HelloWorldPageRouteProviderPlugin</code> at the end of the router plugins in <code>getRouteProvider()</code>.</p>
+<p>Open <code>src/SprykerAcademy/Yves/Router/RouterDependencyProvider.php</code>. Add an instance of <code>ContactRequestPageRouteProviderPlugin</code> at the end of the router plugins in <code>getRouteProvider()</code>.</p>
 <hr />
 <h2 id="testing">Testing</h2>
 <ol type="1">
-<li>Create a message via Back Office: http://backoffice.eu.spryker.local/hello-world/message/add</li>
-<li>View the message in Yves using its ID: http://yves.eu.spryker.local/hello-world/message/1</li>
+<li>Create a message via Back Office: http://backoffice.eu.spryker.local/contact-request/message/add</li>
+<li>View the message in Yves using its ID: http://yves.eu.spryker.local/contact-request/message/1</li>
 </ol>
 <hr />
 <h2 id="verify-your-work">Verify Your Work</h2>
 <p>Run the automated tests for this exercise:</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/HelloWorld/ Exercise5</span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/ContactRequest/ Exercise5</span></code></pre></div>
 <p>Or run all exercise tests at once:</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/HelloWorld/</span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/ContactRequest/</span></code></pre></div>
 <p>All tests should pass if your implementation is correct.</p>
 <hr />
 <h2 id="solution">Solution</h2>
-<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> hello-world basics/module-layers/complete</span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/module-layers/complete</span></code></pre></div>
 </body>
 </html>

@@ -90,22 +90,22 @@ docker/sdk console propel:install
 
 ## Exercise Progression
 
-### Part 1: Basics (Hello World)
+### Part 1: Basics (Contact Request)
 
-#### Module 1: Hello World Back Office
+#### Module 1: Contact Request Back Office
 
 ```bash
-./exercises/load.sh hello-world basics/hello-world-back-office/skeleton
+./exercises/load.sh contact-request basics/contact-request-back-office/skeleton
 ```
 
-Your task: Implement a Zed controller and Twig template to display a "Hello World" page in the Back Office.
+Your task: Implement a Zed controller and Twig template to display a "Contact Request" page in the Back Office.
 
-Files to work on: `src/SprykerAcademy/Zed/HelloWorld/`
+Files to work on: `src/SprykerAcademy/Zed/ContactRequest/`
 
 Check the solution:
 
 ```bash
-./exercises/load.sh hello-world basics/hello-world-back-office/complete
+./exercises/load.sh contact-request basics/contact-request-back-office/complete
 ```
 
 ---
@@ -113,10 +113,10 @@ Check the solution:
 #### Module 2: Data Transfer Objects
 
 ```bash
-./exercises/load.sh hello-world basics/data-transfer-object/skeleton
+./exercises/load.sh contact-request basics/data-transfer-object/skeleton
 ```
 
-Your task: Define transfer objects for the HelloWorld module.
+Your task: Define transfer objects for the ContactRequest module.
 
 After modifying transfer XML files, run:
 
@@ -127,7 +127,7 @@ docker/sdk console transfer:generate
 Check the solution:
 
 ```bash
-./exercises/load.sh hello-world basics/data-transfer-object/complete
+./exercises/load.sh contact-request basics/data-transfer-object/complete
 ```
 
 ---
@@ -135,7 +135,7 @@ Check the solution:
 #### Module 3: Message Table Schema
 
 ```bash
-./exercises/load.sh hello-world basics/message-table-schema/skeleton
+./exercises/load.sh contact-request basics/contact-request-table-schema/skeleton
 ```
 
 Your task: Define the Propel database schema for the message table.
@@ -150,7 +150,7 @@ docker/sdk console transfer:generate
 Check the solution:
 
 ```bash
-./exercises/load.sh hello-world basics/message-table-schema/complete
+./exercises/load.sh contact-request basics/contact-request-table-schema/complete
 ```
 
 ---
@@ -158,7 +158,7 @@ Check the solution:
 #### Module 4: Module Layers
 
 ```bash
-./exercises/load.sh hello-world basics/module-layers/skeleton
+./exercises/load.sh contact-request basics/module-layers/skeleton
 ```
 
 Your task: Implement the full module layer architecture (Business, Persistence, Communication, Client, Yves).
@@ -166,7 +166,7 @@ Your task: Implement the full module layer architecture (Business, Persistence, 
 Check the solution:
 
 ```bash
-./exercises/load.sh hello-world basics/module-layers/complete
+./exercises/load.sh contact-request basics/module-layers/complete
 ```
 
 ---

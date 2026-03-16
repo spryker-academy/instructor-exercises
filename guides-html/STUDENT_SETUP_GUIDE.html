@@ -266,36 +266,36 @@
 <span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console propel:install</span></code></pre></div>
 <hr />
 <h2 id="exercise-progression">Exercise Progression</h2>
-<h3 id="part-1-basics-hello-world">Part 1: Basics (Hello World)</h3>
-<h4 id="module-1-hello-world-back-office">Module 1: Hello World Back Office</h4>
-<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> hello-world basics/hello-world-back-office/skeleton</span></code></pre></div>
-<p>Your task: Implement a Zed controller and Twig template to display a “Hello World” page in the Back Office.</p>
-<p>Files to work on: <code>src/SprykerAcademy/Zed/HelloWorld/</code></p>
+<h3 id="part-1-basics-contact-request">Part 1: Basics (Contact Request)</h3>
+<h4 id="module-1-contact-request-back-office">Module 1: Contact Request Back Office</h4>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/contact-request-back-office/skeleton</span></code></pre></div>
+<p>Your task: Implement a Zed controller and Twig template to display a “Contact Request” page in the Back Office.</p>
+<p>Files to work on: <code>src/SprykerAcademy/Zed/ContactRequest/</code></p>
 <p>Check the solution:</p>
-<div class="sourceCode" id="cb10"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> hello-world basics/hello-world-back-office/complete</span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/contact-request-back-office/complete</span></code></pre></div>
 <hr />
 <h4 id="module-2-data-transfer-objects">Module 2: Data Transfer Objects</h4>
-<div class="sourceCode" id="cb11"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> hello-world basics/data-transfer-object/skeleton</span></code></pre></div>
-<p>Your task: Define transfer objects for the HelloWorld module.</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/data-transfer-object/skeleton</span></code></pre></div>
+<p>Your task: Define transfer objects for the ContactRequest module.</p>
 <p>After modifying transfer XML files, run:</p>
 <div class="sourceCode" id="cb12"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span></code></pre></div>
 <p>Check the solution:</p>
-<div class="sourceCode" id="cb13"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> hello-world basics/data-transfer-object/complete</span></code></pre></div>
+<div class="sourceCode" id="cb13"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/data-transfer-object/complete</span></code></pre></div>
 <hr />
 <h4 id="module-3-message-table-schema">Module 3: Message Table Schema</h4>
-<div class="sourceCode" id="cb14"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> hello-world basics/message-table-schema/skeleton</span></code></pre></div>
+<div class="sourceCode" id="cb14"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/contact-request-table-schema/skeleton</span></code></pre></div>
 <p>Your task: Define the Propel database schema for the message table.</p>
 <p>After modifying schema XML files, run:</p>
 <div class="sourceCode" id="cb15"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console propel:install</span>
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span></code></pre></div>
 <p>Check the solution:</p>
-<div class="sourceCode" id="cb16"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> hello-world basics/message-table-schema/complete</span></code></pre></div>
+<div class="sourceCode" id="cb16"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/contact-request-table-schema/complete</span></code></pre></div>
 <hr />
 <h4 id="module-4-module-layers">Module 4: Module Layers</h4>
-<div class="sourceCode" id="cb17"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> hello-world basics/module-layers/skeleton</span></code></pre></div>
+<div class="sourceCode" id="cb17"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/module-layers/skeleton</span></code></pre></div>
 <p>Your task: Implement the full module layer architecture (Business, Persistence, Communication, Client, Yves).</p>
 <p>Check the solution:</p>
-<div class="sourceCode" id="cb18"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> hello-world basics/module-layers/complete</span></code></pre></div>
+<div class="sourceCode" id="cb18"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/module-layers/complete</span></code></pre></div>
 <hr />
 <h3 id="part-2-basics-supplier---table-schema">Part 2: Basics (Supplier - Table Schema)</h3>
 <h4 id="module-4b-supplier-table-schema">Module 4b: Supplier Table Schema</h4>

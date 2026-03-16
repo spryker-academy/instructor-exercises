@@ -1,4 +1,4 @@
-# Exercise 1: Hello World Page in Back Office
+# Exercise 1: Contact Request Page in Back Office
 
 In this exercise you will create a simple Spryker Back Office page and add an entry for it in the main navigation.
 
@@ -10,7 +10,7 @@ In this exercise you will create a simple Spryker Back Office page and add an en
 ## Loading the Exercise
 
 ```bash
-./exercises/load.sh hello-world basics/hello-world-back-office/skeleton
+./exercises/load.sh contact-request basics/contact-request-back-office/skeleton
 docker/sdk cli composer dump-autoload
 docker/sdk console transfer:generate
 ```
@@ -21,22 +21,22 @@ docker/sdk console transfer:generate
 
 Back Office is the product name for the administration interface. From the code perspective, we refer to the **Zed** namespace. Code related to the Back Office is placed inside `src/Pyz/Zed/*` or `src/SprykerAcademy/Zed/`.
 
-We will work in a module named **HelloWorld** located at `src/SprykerAcademy/Zed/HelloWorld/`.
+We will work in a module named **ContactRequest** located at `src/SprykerAcademy/Zed/ContactRequest/`.
 
 ### 1. The Controller
 
 The Controller class is in the **Communication** layer inside the `Controller` subdirectory:
 
-`src/SprykerAcademy/Zed/HelloWorld/Communication/Controller/HelloController.php`
+`src/SprykerAcademy/Zed/ContactRequest/Communication/Controller/IndexController.php`
 
 ```php
 <?php
 
-namespace SprykerAcademy\Zed\HelloWorld\Communication\Controller;
+namespace SprykerAcademy\Zed\ContactRequest\Communication\Controller;
 
 use Spryker\Zed\Kernel\Communication\Controller\AbstractController;
 
-class HelloController extends AbstractController
+class IndexController extends AbstractController
 {
     public function indexAction(): array
     {
@@ -49,13 +49,13 @@ We extend from Spryker's `AbstractController` which provides helper methods, and
 
 **Coding time:**
 
-Use `$this->viewResponse()` and return the result. Pass a key-value array where the key will be the variable name accessible in the template. The value should be the string `'Hello World!'`.
+Use `$this->viewResponse()` and return the result. Pass a key-value array where the key will be the variable name accessible in the template. The value should be the string `'Contact Request!'`.
 
 ### 2. The Template
 
-In the module folder `HelloWorld`, the **Presentation** layer follows the same naming as the Controller prefix. Create a folder called `Hello` and inside it a twig file named `index.twig` (matching the action name without the `Action` suffix).
+In the module folder `ContactRequest`, the **Presentation** layer follows the same naming as the Controller prefix. Create a folder called `Hello` and inside it a twig file named `index.twig` (matching the action name without the `Action` suffix).
 
-`src/SprykerAcademy/Zed/HelloWorld/Presentation/Hello/index.twig`
+`src/SprykerAcademy/Zed/ContactRequest/Presentation/Hello/index.twig`
 
 ```twig
 {% extends '@Gui/Layout/layout.twig' %}
@@ -75,10 +75,10 @@ After editing, run:
 docker/sdk console cache:empty-all
 ```
 
-Visit: http://backoffice.eu.spryker.local/hello-world/hello/index
+Visit: http://backoffice.eu.spryker.local/contact-request/hello/index
 (Credentials: `admin@spryker.com` / `change123`)
 
-Note the URL pattern: **module** / **controller** / **action** (`hello-world/hello/index`). Back Office routing is resolved automatically from these names.
+Note the URL pattern: **module** / **controller** / **action** (`contact-request/hello/index`). Back Office routing is resolved automatically from these names.
 
 ### 3. The Navigation
 
@@ -86,7 +86,7 @@ Make your new page accessible through the Back Office navigation.
 
 **Coding time:**
 
-Open `config/Zed/navigation.xml`. Copy an existing navigation entry and adjust it to point to your Hello World page. The keyword `bundle` refers to the module name.
+Open `config/Zed/navigation.xml`. Copy an existing navigation entry and adjust it to point to your Contact Request page. The keyword `bundle` refers to the module name.
 
 Rebuild the navigation cache:
 
@@ -103,7 +103,7 @@ Validate the result in the Back Office.
 Run the automated tests for this exercise:
 
 ```bash
-docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/HelloWorld/ Exercise1
+docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/ContactRequest/ Exercise1
 ```
 
 All tests should pass if your implementation is correct.
@@ -113,5 +113,5 @@ All tests should pass if your implementation is correct.
 ## Solution
 
 ```bash
-./exercises/load.sh hello-world basics/hello-world-back-office/complete
+./exercises/load.sh contact-request basics/contact-request-back-office/complete
 ```

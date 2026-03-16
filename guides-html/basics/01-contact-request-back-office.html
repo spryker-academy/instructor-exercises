@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>Exercise 3: Create a Table and Entity Representation</title>
+  <title>Exercise 1: Contact Request Page in Back Office</title>
   <style>
     html {
       line-height: 1.5;
@@ -213,53 +213,70 @@
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">Exercise 3: Create a Table and Entity Representation</h1>
+<h1 class="title">Exercise 1: Contact Request Page in Back Office</h1>
 </header>
-<h1 id="exercise-3-create-a-table-and-entity-representation">Exercise 3: Create a Table and Entity Representation</h1>
-<p>In this exercise you will create a database table to store messages and an entity representation for a message using Propel ORM.</p>
+<h1 id="exercise-1-contact-request-page-in-back-office">Exercise 1: Contact Request Page in Back Office</h1>
+<p>In this exercise you will create a simple Spryker Back Office page and add an entry for it in the main navigation.</p>
+<h2 id="prerequisites">Prerequisites</h2>
+<ul>
+<li>Demo shop started on your local machine</li>
+<li>Exercises repository cloned (see <a href="../STUDENT_SETUP_GUIDE.html">Student Setup Guide</a>)</li>
+</ul>
 <h2 id="loading-the-exercise">Loading the Exercise</h2>
-<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> hello-world basics/message-table-schema/skeleton</span>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/contact-request-back-office/skeleton</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli composer dump-autoload</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span></code></pre></div>
 <hr />
 <h2 id="working-on-the-exercise">Working on the Exercise</h2>
-<h3 id="the-propel-schema-file">1. The Propel Schema File</h3>
-<p>Here is an example Propel schema definition for a <code>pyz_human</code> table:</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode xml"><code class="sourceCode xml"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;?xml</span> version=&quot;1.0&quot;<span class="kw">?&gt;</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;database</span><span class="ot"> xmlns:xsi=</span><span class="st">&quot;http://www.w3.org/2001/XMLSchema-instance&quot;</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="ot">    name=</span><span class="st">&quot;zed&quot;</span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="ot">    xsi:noNamespaceSchemaLocation=</span><span class="st">&quot;http://static.spryker.com/schema-01.xsd&quot;</span></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="ot">    namespace=</span><span class="st">&quot;Orm\Zed\Human\Persistence&quot;</span></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="ot">    package=</span><span class="st">&quot;src.Orm.Zed.Human.Persistence&quot;</span><span class="kw">&gt;</span></span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">&lt;table</span><span class="ot"> name=</span><span class="st">&quot;pyz_human&quot;</span><span class="ot"> idMethod=</span><span class="st">&quot;native&quot;</span><span class="ot"> allowPkInsert=</span><span class="st">&quot;true&quot;</span><span class="ot"> phpName=</span><span class="st">&quot;PyzHuman&quot;</span><span class="kw">&gt;</span></span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>        <span class="kw">&lt;column</span><span class="ot"> name=</span><span class="st">&quot;id_human&quot;</span><span class="ot"> required=</span><span class="st">&quot;true&quot;</span><span class="ot"> type=</span><span class="st">&quot;INTEGER&quot;</span><span class="ot"> primaryKey=</span><span class="st">&quot;true&quot;</span><span class="ot"> autoIncrement=</span><span class="st">&quot;true&quot;</span><span class="kw">/&gt;</span></span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>        <span class="kw">&lt;column</span><span class="ot"> name=</span><span class="st">&quot;genetic_code&quot;</span><span class="ot"> required=</span><span class="st">&quot;true&quot;</span><span class="ot"> type=</span><span class="st">&quot;VARCHAR&quot;</span><span class="ot"> size=</span><span class="st">&quot;255&quot;</span><span class="kw">/&gt;</span></span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>        <span class="kw">&lt;column</span><span class="ot"> name=</span><span class="st">&quot;height&quot;</span><span class="ot"> required=</span><span class="st">&quot;true&quot;</span><span class="ot"> type=</span><span class="st">&quot;INTEGER&quot;</span><span class="kw">/&gt;</span></span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>        <span class="kw">&lt;unique</span><span class="ot"> name=</span><span class="st">&quot;pyz_human-genetic_code&quot;</span><span class="kw">&gt;</span></span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>            <span class="kw">&lt;unique-column</span><span class="ot"> name=</span><span class="st">&quot;genetic_code&quot;</span><span class="kw">/&gt;</span></span>
-<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>        <span class="kw">&lt;/unique&gt;</span></span>
-<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">&lt;/table&gt;</span></span>
-<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;/database&gt;</span></span></code></pre></div>
+<p>Back Office is the product name for the administration interface. From the code perspective, we refer to the <strong>Zed</strong> namespace. Code related to the Back Office is placed inside <code>src/Pyz/Zed/*</code> or <code>src/SprykerAcademy/Zed/</code>.</p>
+<p>We will work in a module named <strong>ContactRequest</strong> located at <code>src/SprykerAcademy/Zed/ContactRequest/</code>.</p>
+<h3 id="the-controller">1. The Controller</h3>
+<p>The Controller class is in the <strong>Communication</strong> layer inside the <code>Controller</code> subdirectory:</p>
+<p><code>src/SprykerAcademy/Zed/ContactRequest/Communication/Controller/IndexController.php</code></p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;?php</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">namespace</span> <span class="cn">S</span>prykerAcademy\<span class="cn">Z</span>ed\<span class="cn">H</span>elloWorld\<span class="cn">C</span>ommunication\<span class="cn">C</span>ontroller<span class="ot">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="cn">S</span>pryker\<span class="cn">Z</span>ed\<span class="cn">K</span>ernel\<span class="cn">C</span>ommunication\<span class="cn">C</span>ontroller\<span class="cn">A</span>bstractController<span class="ot">;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="cn">H</span>elloController <span class="kw">extends</span> <span class="cn">A</span>bstractController</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">function</span> indexAction()<span class="ot">:</span> <span class="dt">array</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    {</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>        <span class="co">// </span><span class="al">TODO</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>We extend from Spryker’s <code>AbstractController</code> which provides helper methods, and implement a basic <code>indexAction()</code> that returns an array passed to the template.</p>
 <p><strong>Coding time:</strong></p>
-<p>Open <code>src/SprykerAcademy/Zed/HelloWorld/Persistence/Propel/Schema/pyz_message.schema.xml</code> and add the definition for the <strong>PyzMessage</strong> table:</p>
-<ul>
-<li>Column <code>id_message</code>: type <code>INTEGER</code>, primary key, auto-increment, required</li>
-<li>Column <code>message</code>: type <code>VARCHAR</code>, size <code>255</code>, required, <strong>unique</strong></li>
-</ul>
-<p>Then generate the entity and run migrations:</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console propel:install</span></code></pre></div>
+<p>Use <code>$this-&gt;viewResponse()</code> and return the result. Pass a key-value array where the key will be the variable name accessible in the template. The value should be the string <code>'Contact Request!'</code>.</p>
+<h3 id="the-template">2. The Template</h3>
+<p>In the module folder <code>ContactRequest</code>, the <strong>Presentation</strong> layer follows the same naming as the Controller prefix. Create a folder called <code>Hello</code> and inside it a twig file named <code>index.twig</code> (matching the action name without the <code>Action</code> suffix).</p>
+<p><code>src/SprykerAcademy/Zed/ContactRequest/Presentation/Hello/index.twig</code></p>
+<pre class="twig"><code>{% extends &#39;@Gui/Layout/layout.twig&#39; %}
+
+{% block content %}
+    {# TODO #}
+{% endblock %}</code></pre>
 <p><strong>Coding time:</strong></p>
-<p>Verify the <code>pyz_message</code> table was created in the database (using a tool of your choice). Locate the generated entity in <code>src/Orm/Zed/Message/Persistence/</code> and its subfolders.</p>
+<p>Use the string you returned in the Controller action inside the template. The syntax is <code>{{ yourKeyFromTheArray }}</code>.</p>
+<p>After editing, run:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span></code></pre></div>
+<p>Visit: http://backoffice.eu.spryker.local/contact-request/hello/index (Credentials: <code>admin@spryker.com</code> / <code>change123</code>)</p>
+<p>Note the URL pattern: <strong>module</strong> / <strong>controller</strong> / <strong>action</strong> (<code>contact-request/hello/index</code>). Back Office routing is resolved automatically from these names.</p>
+<h3 id="the-navigation">3. The Navigation</h3>
+<p>Make your new page accessible through the Back Office navigation.</p>
+<p><strong>Coding time:</strong></p>
+<p>Open <code>config/Zed/navigation.xml</code>. Copy an existing navigation entry and adjust it to point to your Contact Request page. The keyword <code>bundle</code> refers to the module name.</p>
+<p>Rebuild the navigation cache:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console application:build-navigation-cache</span></code></pre></div>
+<p>Validate the result in the Back Office.</p>
 <hr />
 <h2 id="verify-your-work">Verify Your Work</h2>
 <p>Run the automated tests for this exercise:</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/HelloWorld/ Exercise3</span></code></pre></div>
-<p>All tests should pass if your schema definition is correct.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/ContactRequest/ Exercise1</span></code></pre></div>
+<p>All tests should pass if your implementation is correct.</p>
 <hr />
 <h2 id="solution">Solution</h2>
-<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> hello-world basics/message-table-schema/complete</span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/contact-request-back-office/complete</span></code></pre></div>
 </body>
 </html>

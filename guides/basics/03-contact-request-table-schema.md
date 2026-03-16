@@ -5,7 +5,7 @@ In this exercise you will create a database table to store messages and an entit
 ## Loading the Exercise
 
 ```bash
-./exercises/load.sh hello-world basics/message-table-schema/skeleton
+./exercises/load.sh contact-request basics/contact-request-table-schema/skeleton
 docker/sdk cli composer dump-autoload
 docker/sdk console transfer:generate
 ```
@@ -41,9 +41,9 @@ Here is an example Propel schema definition for a `pyz_human` table:
 
 **Coding time:**
 
-Open `src/SprykerAcademy/Zed/HelloWorld/Persistence/Propel/Schema/pyz_message.schema.xml` and add the definition for the **PyzMessage** table:
+Open `src/SprykerAcademy/Zed/ContactRequest/Persistence/Propel/Schema/pyz_contact_request.schema.xml` and add the definition for the **PyzContactRequest** table:
 
-- Column `id_message`: type `INTEGER`, primary key, auto-increment, required
+- Column `id_contact_request`: type `INTEGER`, primary key, auto-increment, required
 - Column `message`: type `VARCHAR`, size `255`, required, **unique**
 
 Then generate the entity and run migrations:
@@ -54,7 +54,7 @@ docker/sdk console propel:install
 
 **Coding time:**
 
-Verify the `pyz_message` table was created in the database (using a tool of your choice). Locate the generated entity in `src/Orm/Zed/Message/Persistence/` and its subfolders.
+Verify the `pyz_contact_request` table was created in the database (using a tool of your choice). Locate the generated entity in `src/Orm/Zed/Message/Persistence/` and its subfolders.
 
 ---
 
@@ -63,7 +63,7 @@ Verify the `pyz_message` table was created in the database (using a tool of your
 Run the automated tests for this exercise:
 
 ```bash
-docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/HelloWorld/ Exercise3
+docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/ContactRequest/ Exercise3
 ```
 
 All tests should pass if your schema definition is correct.
@@ -73,5 +73,5 @@ All tests should pass if your schema definition is correct.
 ## Solution
 
 ```bash
-./exercises/load.sh hello-world basics/message-table-schema/complete
+./exercises/load.sh contact-request basics/contact-request-table-schema/complete
 ```

@@ -224,16 +224,16 @@
 <li>Understanding of the Client/Stub pattern for Yves-Zed communication</li>
 </ul>
 <h2 id="loading-the-exercise">Loading the Exercise</h2>
-<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> hello-world basics/extending-core-modules/skeleton</span>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/extending-core-modules/skeleton</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli composer dump-autoload</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console propel:install</span></code></pre></div>
 <hr />
 <h2 id="working-on-the-exercise">Working on the Exercise</h2>
 <h3 id="part-1-adjust-the-database-schema">Part 1: Adjust the Database Schema</h3>
-<p>Currently the <code>pyz_message</code> table stores messages without any link to who created them. We need to add a foreign key to the <code>spy_customer</code> table so each message can belong to a customer. We also add the <code>timestampable</code> behavior so Propel automatically manages <code>created_at</code> and <code>updated_at</code> columns.</p>
+<p>Currently the <code>pyz_contact_request</code> table stores messages without any link to who created them. We need to add a foreign key to the <code>spy_customer</code> table so each message can belong to a customer. We also add the <code>timestampable</code> behavior so Propel automatically manages <code>created_at</code> and <code>updated_at</code> columns.</p>
 <p><strong>Coding time:</strong></p>
-<p>Open <code>src/SprykerAcademy/Zed/HelloWorld/Persistence/Propel/Schema/pyz_message.schema.xml</code> and: 1. Add a new column <code>fk_customer</code> of type <code>INTEGER</code> (not required, since existing messages have no customer) 2. Add a <code>&lt;foreign-key&gt;</code> element that references the <code>spy_customer</code> table, mapping <code>fk_customer</code> to <code>id_customer</code> with <code>onDelete="CASCADE"</code> 3. Add <code>&lt;behavior name="timestampable"/&gt;</code> — Propel will auto-add <code>created_at</code> and <code>updated_at</code> TIMESTAMP columns</p>
+<p>Open <code>src/SprykerAcademy/Zed/ContactRequest/Persistence/Propel/Schema/pyz_contact_request.schema.xml</code> and: 1. Add a new column <code>fk_customer</code> of type <code>INTEGER</code> (not required, since existing messages have no customer) 2. Add a <code>&lt;foreign-key&gt;</code> element that references the <code>spy_customer</code> table, mapping <code>fk_customer</code> to <code>id_customer</code> with <code>onDelete="CASCADE"</code> 3. Add <code>&lt;behavior name="timestampable"/&gt;</code> — Propel will auto-add <code>created_at</code> and <code>updated_at</code> TIMESTAMP columns</p>
 <p>After modifying the schema, run:</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console propel:install</span></code></pre></div>
 <p>This will generate a migration, update the database, and regenerate the ORM classes.</p>
@@ -241,43 +241,43 @@
 <h3 id="part-2-update-transfer-definitions">Part 2: Update Transfer Definitions</h3>
 <p>We need to make the new <code>fkCustomer</code> and <code>createdAt</code> fields available in our DTOs, and also create a new transfer for collections of messages.</p>
 <p><strong>Coding time:</strong></p>
-<p>Open <code>src/SprykerAcademy/Shared/HelloWorld/Transfer/helloworld.transfer.xml</code> and: 1. Add a <code>fkCustomer</code> property of type <code>int</code> to the <strong>Message</strong> transfer 2. Add a <code>createdAt</code> property of type <code>string</code> to the <strong>Message</strong> transfer 3. Add a <code>fkCustomer</code> property of type <code>int</code> to the <strong>MessageCriteria</strong> transfer 4. Add a new transfer named <strong>MessageCollection</strong> with a property <code>messages</code> of type <code>Message[]</code></p>
+<p>Open <code>src/SprykerAcademy/Shared/ContactRequest/Transfer/contact_request.transfer.xml</code> and: 1. Add a <code>fkCustomer</code> property of type <code>int</code> to the <strong>Message</strong> transfer 2. Add a <code>createdAt</code> property of type <code>string</code> to the <strong>Message</strong> transfer 3. Add a <code>fkCustomer</code> property of type <code>int</code> to the <strong>ContactRequestCriteria</strong> transfer 4. Add a new transfer named <strong>ContactRequestCollection</strong> with a property <code>messages</code> of type <code>Message[]</code></p>
 <p>Regenerate transfers:</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span></code></pre></div>
 <blockquote>
-<p><strong>Note:</strong> The generated <code>MessageCollectionTransfer</code> will have an <code>addMessages()</code> method (plural, matching the property name). This is a Spryker convention — the adder method name matches the property name.</p>
+<p><strong>Note:</strong> The generated <code>ContactRequestCollectionTransfer</code> will have an <code>addContactRequests()</code> method (plural, matching the property name). This is a Spryker convention — the adder method name matches the property name.</p>
 </blockquote>
 <hr />
 <h3 id="part-3-update-persistence-and-business-layers">Part 3: Update Persistence and Business Layers</h3>
 <h4 id="add-a-repository-method">3.1 Add a Repository Method</h4>
 <p>We need a way to fetch all messages belonging to a specific customer.</p>
 <p><strong>Coding time:</strong></p>
-<p>Open <code>src/SprykerAcademy/Zed/HelloWorld/Persistence/HelloWorldRepository.php</code>. Implement <code>findMessagesByCustomer()</code>: 1. Get the message query from the factory 2. Filter by <code>fk_customer</code> if the criteria has a <code>fkCustomer</code> set 3. Execute the query with <code>find()</code> to get all matching entities 4. Map each entity to a <code>MessageTransfer</code> using the MessageMapper 5. Return the array of <code>MessageTransfer</code> objects</p>
+<p>Open <code>src/SprykerAcademy/Zed/ContactRequest/Persistence/ContactRequestRepository.php</code>. Implement <code>findContactRequestsByCustomer()</code>: 1. Get the message query from the factory 2. Filter by <code>fk_customer</code> if the criteria has a <code>fkCustomer</code> set 3. Execute the query with <code>find()</code> to get all matching entities 4. Map each entity to a <code>ContactRequestTransfer</code> using the ContactRequestMapper 5. Return the array of <code>ContactRequestTransfer</code> objects</p>
 <p>Propel provides magic <code>filterBy&lt;ColumnName&gt;()</code> methods on query objects.</p>
-<h4 id="update-the-messagereader">3.2 Update the MessageReader</h4>
+<h4 id="update-the-messagereader">3.2 Update the ContactRequestReader</h4>
 <p><strong>Coding time:</strong></p>
-<p>Open <code>src/SprykerAcademy/Zed/HelloWorld/Business/Reader/MessageReader.php</code>. Implement <code>findMessagesByCustomer()</code>: - Use the repository to get the messages - Create a <code>MessageCollectionTransfer</code> and add each message to it using <code>addMessages()</code></p>
+<p>Open <code>src/SprykerAcademy/Zed/ContactRequest/Business/Reader/ContactRequestReader.php</code>. Implement <code>findContactRequestsByCustomer()</code>: - Use the repository to get the messages - Create a <code>ContactRequestCollectionTransfer</code> and add each message to it using <code>addContactRequests()</code></p>
 <h4 id="expose-through-the-facade">3.3 Expose Through the Facade</h4>
 <p><strong>Coding time:</strong></p>
-<p>Open <code>src/SprykerAcademy/Zed/HelloWorld/Business/HelloWorldFacade.php</code>. Implement <code>findMessagesByCustomer()</code> by delegating to the factory’s MessageReader.</p>
+<p>Open <code>src/SprykerAcademy/Zed/ContactRequest/Business/ContactRequestFacade.php</code>. Implement <code>findContactRequestsByCustomer()</code> by delegating to the factory’s ContactRequestReader.</p>
 <hr />
 <h3 id="part-4-expose-via-gatewaycontroller">Part 4: Expose via GatewayController</h3>
 <p>We need three new gateway actions: create, get by customer, and delete.</p>
 <p><strong>Coding time:</strong></p>
-<p>Open <code>src/SprykerAcademy/Zed/HelloWorld/Communication/Controller/GatewayController.php</code>: 1. In <code>createMessageAction()</code>, use the Facade to create and return the message 2. In <code>getMessagesByCustomerAction()</code>, use the Facade to find messages by customer and return the collection 3. In <code>deleteMessageAction()</code>, use the Facade to delete by ID and return a <code>MessageResponseTransfer</code> with the <code>isSuccessful</code> flag</p>
+<p>Open <code>src/SprykerAcademy/Zed/ContactRequest/Communication/Controller/GatewayController.php</code>: 1. In <code>createContactRequestAction()</code>, use the Facade to create and return the message 2. In <code>getContactRequestsByCustomerAction()</code>, use the Facade to find messages by customer and return the collection 3. In <code>deleteContactRequestAction()</code>, use the Facade to delete by ID and return a <code>ContactRequestResponseTransfer</code> with the <code>isSuccessful</code> flag</p>
 <p>Clear cache after adding new controller actions:</p>
 <div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span></code></pre></div>
 <hr />
 <h3 id="part-5-build-the-client">Part 5: Build the Client</h3>
 <h4 id="update-the-stub">5.1 Update the Stub</h4>
 <p><strong>Coding time:</strong></p>
-<p>Open <code>src/SprykerAcademy/Client/HelloWorld/Stub/HelloWorldStub.php</code>: 1. In <code>createMessage()</code>, use <code>$this-&gt;zedRequestClient-&gt;call()</code> with the path <code>/hello-world/gateway/create-message</code> 2. In <code>getMessagesByCustomer()</code>, use the path <code>/hello-world/gateway/get-messages-by-customer</code> 3. In <code>deleteMessage()</code>, use the path <code>/hello-world/gateway/delete-message</code></p>
+<p>Open <code>src/SprykerAcademy/Client/ContactRequest/Stub/ContactRequestStub.php</code>: 1. In <code>createContactRequest()</code>, use <code>$this-&gt;zedRequestClient-&gt;call()</code> with the path <code>/contact-request/gateway/create-message</code> 2. In <code>getContactRequestsByCustomer()</code>, use the path <code>/contact-request/gateway/get-messages-by-customer</code> 3. In <code>deleteContactRequest()</code>, use the path <code>/contact-request/gateway/delete-message</code></p>
 <blockquote>
-<p><strong>Gateway path convention:</strong> <code>/module-name/gateway/action-name</code> where the action name is the controller method without the <code>Action</code> suffix, converted to kebab-case. For example, <code>deleteMessageAction()</code> becomes <code>/hello-world/gateway/delete-message</code>.</p>
+<p><strong>Gateway path convention:</strong> <code>/module-name/gateway/action-name</code> where the action name is the controller method without the <code>Action</code> suffix, converted to kebab-case. For example, <code>deleteContactRequestAction()</code> becomes <code>/contact-request/gateway/delete-message</code>.</p>
 </blockquote>
 <h4 id="update-the-client">5.2 Update the Client</h4>
 <p><strong>Coding time:</strong></p>
-<p>Open <code>src/SprykerAcademy/Client/HelloWorld/HelloWorldClient.php</code>: 1. In <code>createMessage()</code>, delegate to the HelloWorldStub via the factory 2. In <code>getMessagesByCustomer()</code>, delegate to the HelloWorldStub via the factory 3. In <code>deleteMessage()</code>, delegate to the HelloWorldStub via the factory</p>
+<p>Open <code>src/SprykerAcademy/Client/ContactRequest/ContactRequestClient.php</code>: 1. In <code>createContactRequest()</code>, delegate to the ContactRequestStub via the factory 2. In <code>getContactRequestsByCustomer()</code>, delegate to the ContactRequestStub via the factory 3. In <code>deleteContactRequest()</code>, delegate to the ContactRequestStub via the factory</p>
 <p>Update IDE auto-completion:</p>
 <div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console dev:ide-auto-completion:generate</span></code></pre></div>
 <hr />
@@ -285,35 +285,35 @@
 <p>Now we extend Spryker’s core <code>CustomerPage</code> module to add our message functionality. This is the key part of the exercise that demonstrates how to extend core Spryker modules at project level.</p>
 <p>The pattern: extend the core class in your project namespace, and override or add the methods you need.</p>
 <h4 id="dependencyprovider">6.1 DependencyProvider</h4>
-<p>We need to inject our <code>HelloWorldClient</code> into the extended <code>CustomerPage</code> module.</p>
+<p>We need to inject our <code>ContactRequestClient</code> into the extended <code>CustomerPage</code> module.</p>
 <p><strong>Coding time:</strong></p>
-<p>Open <code>src/SprykerAcademy/Yves/CustomerPage/CustomerPageDependencyProvider.php</code>. In <code>addHelloWorldClient()</code>, use <code>$container-&gt;set()</code> with the <code>CLIENT_HELLO_WORLD</code> constant to provide the <code>HelloWorldClient</code> through the locator.</p>
-<p>The locator pattern: <code>$container-&gt;getLocator()-&gt;helloWorld()-&gt;client()</code>.</p>
+<p>Open <code>src/SprykerAcademy/Yves/CustomerPage/CustomerPageDependencyProvider.php</code>. In <code>addContactRequestClient()</code>, use <code>$container-&gt;set()</code> with the <code>CLIENT_CONTACT_REQUEST</code> constant to provide the <code>ContactRequestClient</code> through the locator.</p>
+<p>The locator pattern: <code>$container-&gt;getLocator()-&gt;contactRequest()-&gt;client()</code>.</p>
 <h4 id="factory">6.2 Factory</h4>
 <p><strong>Coding time:</strong></p>
-<p>Open <code>src/SprykerAcademy/Yves/CustomerPage/CustomerPageFactory.php</code>: 1. In <code>getHelloWorldClient()</code>, return the provided dependency using the <code>CLIENT_HELLO_WORLD</code> constant 2. In <code>createMessageForm()</code>, use the Spryker form factory chain to instantiate the form: <code>php    $this-&gt;createCustomerFormFactory()-&gt;getFormFactory()-&gt;create(MessageForm::class, $messageTransfer)</code></p>
+<p>Open <code>src/SprykerAcademy/Yves/CustomerPage/CustomerPageFactory.php</code>: 1. In <code>getContactRequestClient()</code>, return the provided dependency using the <code>CLIENT_CONTACT_REQUEST</code> constant 2. In <code>createContactRequestForm()</code>, use the Spryker form factory chain to instantiate the form: <code>php    $this-&gt;createCustomerFormFactory()-&gt;getFormFactory()-&gt;create(ContactRequestForm::class, $contactRequestTransfer)</code></p>
 <blockquote>
 <p><strong>How Spryker forms work:</strong> Spryker Yves doesn’t expose Symfony’s <code>FormFactory</code> directly on the module factory. Instead, each module that uses forms has a proxy <code>FormFactory</code> class (e.g., <code>SprykerShop\Yves\CustomerPage\Form\FormFactory</code>) that extends <code>AbstractFactory</code> and provides <code>getFormFactory()</code> through the application container. The chain is: <code>CustomerPageFactory::createCustomerFormFactory()</code> -&gt; <code>FormFactory::getFormFactory()</code> -&gt; Symfony’s <code>FormFactory::create()</code>.</p>
 </blockquote>
 <blockquote>
-<p><strong>Data-mapped forms:</strong> Notice we pass <code>$messageTransfer</code> as the second argument to <code>create()</code>. This tells Symfony to bind the form directly to the transfer object. When the form is submitted, <code>$form-&gt;getData()</code> returns the hydrated <code>MessageTransfer</code> directly — no manual field mapping needed.</p>
+<p><strong>Data-mapped forms:</strong> Notice we pass <code>$contactRequestTransfer</code> as the second argument to <code>create()</code>. This tells Symfony to bind the form directly to the transfer object. When the form is submitted, <code>$form-&gt;getData()</code> returns the hydrated <code>ContactRequestTransfer</code> directly — no manual field mapping needed.</p>
 </blockquote>
-<h4 id="messageform">6.3 MessageForm</h4>
+<h4 id="messageform">6.3 ContactRequestForm</h4>
 <p>This is a standard Symfony form with a text field for the message.</p>
 <p><strong>Coding time:</strong></p>
-<p>Open <code>src/SprykerAcademy/Yves/CustomerPage/Form/MessageForm.php</code>. In <code>addMessageField()</code>, add a <code>TextType</code> field using the <code>FIELD_MESSAGE</code> constant, with a label and a <code>NotBlank</code> constraint.</p>
+<p>Open <code>src/SprykerAcademy/Yves/CustomerPage/Form/ContactRequestForm.php</code>. In <code>addMessageField()</code>, add a <code>TextType</code> field using the <code>FIELD_MESSAGE</code> constant, with a label and a <code>NotBlank</code> constraint.</p>
 <blockquote>
 <p><strong>Symfony form + Spryker transfers:</strong> Spryker transfer objects implement <code>ArrayAccess</code>, so Symfony’s <code>PropertyAccessor</code> can read/write properties by name. When the form field name matches a transfer property (e.g., <code>message</code> maps to <code>getMessage()</code>/<code>setMessage()</code>), data binding works automatically. No need for <code>configureOptions()</code> with <code>data_class</code> — though adding it would be more explicit.</p>
 </blockquote>
 <blockquote>
 <p><strong>No SubmitType in the form class:</strong> The submit button is rendered directly in the Twig template with Spryker’s button CSS classes. This keeps the form class focused on data fields and validation, and gives the template full control over button styling.</p>
 </blockquote>
-<h4 id="messagecontroller">6.4 MessageController</h4>
+<h4 id="messagecontroller">6.4 ContactRequestController</h4>
 <p>The controller handles listing messages, creating new ones, and deleting. It extends <code>AbstractCustomerController</code> from SprykerShop which provides <code>getLoggedInCustomerTransfer()</code>.</p>
 <p><strong>Coding time:</strong></p>
-<p>Open <code>src/SprykerAcademy/Yves/CustomerPage/Controller/MessageController.php</code>:</p>
-<p>In <code>listAction()</code>: 1. Get the logged-in customer using <code>$this-&gt;getLoggedInCustomerTransfer()</code> 2. Create a <code>MessageCriteriaTransfer</code> and set the <code>fkCustomer</code> using <code>setFkCustomerOrFail()</code> for strict validation 3. Fetch messages using the <code>HelloWorldClient</code> through the factory 4. Create the message form with <code>$this-&gt;getFactory()-&gt;createMessageForm(new MessageTransfer())</code> — pass a fresh transfer as the data object 5. Handle the request with <code>$messageForm-&gt;handleRequest($request)</code> 6. If the form is submitted and valid, get the hydrated transfer with <code>$messageForm-&gt;getData()</code>, set the <code>fkCustomer</code>, and create the message 7. Return a view with the <code>messages</code> and <code>messageForm</code> variables, using the template <code>@CustomerPage/views/message/list.twig</code></p>
-<p>In <code>deleteAction()</code>: 1. Use <code>$this-&gt;castId($request-&gt;request-&gt;get('idMessage'))</code> to safely extract and validate the message ID 2. Create a <code>MessageCriteriaTransfer</code>, set the <code>idMessage</code>, and call <code>deleteMessage()</code> on the client 3. Redirect back to the messages list</p>
+<p>Open <code>src/SprykerAcademy/Yves/CustomerPage/Controller/ContactRequestController.php</code>:</p>
+<p>In <code>listAction()</code>: 1. Get the logged-in customer using <code>$this-&gt;getLoggedInCustomerTransfer()</code> 2. Create a <code>ContactRequestCriteriaTransfer</code> and set the <code>fkCustomer</code> using <code>setFkCustomerOrFail()</code> for strict validation 3. Fetch messages using the <code>ContactRequestClient</code> through the factory 4. Create the message form with <code>$this-&gt;getFactory()-&gt;createContactRequestForm(new ContactRequestTransfer())</code> — pass a fresh transfer as the data object 5. Handle the request with <code>$messageForm-&gt;handleRequest($request)</code> 6. If the form is submitted and valid, get the hydrated transfer with <code>$messageForm-&gt;getData()</code>, set the <code>fkCustomer</code>, and create the message 7. Return a view with the <code>messages</code> and <code>messageForm</code> variables, using the template <code>@CustomerPage/views/message/list.twig</code></p>
+<p>In <code>deleteAction()</code>: 1. Use <code>$this-&gt;castId($request-&gt;request-&gt;get('idContactRequest'))</code> to safely extract and validate the message ID 2. Create a <code>ContactRequestCriteriaTransfer</code>, set the <code>idContactRequest</code>, and call <code>deleteContactRequest()</code> on the client 3. Redirect back to the messages list</p>
 <blockquote>
 <p><strong><code>castId()</code> pattern:</strong> Spryker’s Zed <code>AbstractController</code> provides <code>castId()</code> which validates that an ID is numeric and non-zero, throwing an exception otherwise. Since this method isn’t available in Yves controllers, we add a <code>protected castId()</code> method following the same pattern. This prevents silently passing <code>0</code> or non-numeric values to the persistence layer.</p>
 </blockquote>
@@ -322,12 +322,12 @@
 </blockquote>
 <h4 id="route-provider-plugin">6.5 Route Provider Plugin</h4>
 <p><strong>Coding time:</strong></p>
-<p>Open <code>src/SprykerAcademy/Yves/CustomerPage/Plugin/Router/CustomerPageRouteProviderPlugin.php</code>: 1. In <code>addCustomerMessagesRoute()</code>, build a route for <code>/customer/messages</code> pointing to <code>Message</code> controller, <code>listAction</code> (GET + POST) 2. Add a <code>addCustomerMessagesDeleteRoute()</code> for <code>POST /customer/messages/delete</code> pointing to <code>Message</code> controller, <code>deleteAction</code></p>
+<p>Open <code>src/SprykerAcademy/Yves/CustomerPage/Plugin/Router/CustomerPageRouteProviderPlugin.php</code>: 1. In <code>addCustomerMessagesRoute()</code>, build a route for <code>/customer/contact-requests</code> pointing to <code>Message</code> controller, <code>listAction</code> (GET + POST) 2. Add a <code>addCustomerMessagesDeleteRoute()</code> for <code>POST /customer/contact-requests/delete</code> pointing to <code>Message</code> controller, <code>deleteAction</code></p>
 <h4 id="provided-scaffolding-no-coding-needed">6.6 Provided Scaffolding (no coding needed)</h4>
 <p>The following files are already provided by the exercise skeleton:</p>
 <ul>
 <li><strong><code>src/Pyz/Yves/Router/RouterDependencyProvider.php</code></strong> — Replaces the core <code>CustomerPageRouteProviderPlugin</code> with your extended version</li>
-<li><strong><code>src/Pyz/Yves/CustomerPage/Theme/.../navigation-sidebar/navigation-sidebar.twig</code></strong> — Adds a “My Messages” link to the customer account sidebar menu</li>
+<li><strong><code>src/Pyz/Yves/CustomerPage/Theme/.../navigation-sidebar/navigation-sidebar.twig</code></strong> — Adds a “My Contact Requests” link to the customer account sidebar menu</li>
 <li><strong><code>src/SprykerAcademy/Yves/CustomerPage/Theme/.../views/message/list.twig</code></strong> — The Twig template showing the message table with delete buttons and the add form</li>
 </ul>
 <p>Take a moment to review these files to understand: - How Spryker’s <strong>template override</strong> mechanism works (project-level Twig overrides vendor templates by matching the file path) - How the <strong>navigation sidebar</strong> uses a data-driven items array - How the <strong>form</strong> is rendered with <code>form_start</code>/<code>form_widget</code>/<code>form_end</code> (Symfony form rendering helpers) - How each table row has a <strong>mini POST form</strong> for the delete button (no link — delete is always POST)</p>
@@ -346,15 +346,15 @@
 </thead>
 <tbody>
 <tr class="odd">
-<td><code>MessageReader</code></td>
+<td><code>ContactRequestReader</code></td>
 <td>Reading/querying messages (uses Repository)</td>
 </tr>
 <tr class="even">
-<td><code>MessageWriter</code></td>
+<td><code>ContactRequestWriter</code></td>
 <td>Creating/persisting messages (uses EntityManager)</td>
 </tr>
 <tr class="odd">
-<td><code>MessageDeleter</code></td>
+<td><code>ContactRequestDeleter</code></td>
 <td>Deleting messages (uses EntityManager)</td>
 </tr>
 </tbody>
@@ -364,22 +364,22 @@
 <p>Instead of extracting form data from arrays:</p>
 <div class="sourceCode" id="cb7"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Avoid this</span></span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="va">$formData</span> <span class="op">=</span> <span class="va">$messageForm</span>-&gt;getData()<span class="ot">;</span></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="va">$messageTransfer</span> <span class="op">=</span> <span class="kw">new</span> <span class="cn">M</span>essageTransfer()<span class="ot">;</span></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="va">$messageTransfer</span>-&gt;setMessage(<span class="va">$formData</span>[<span class="st">&#39;message&#39;</span>])<span class="ot">;</span></span></code></pre></div>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="va">$contactRequestTransfer</span> <span class="op">=</span> <span class="kw">new</span> <span class="cn">M</span>essageTransfer()<span class="ot">;</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="va">$contactRequestTransfer</span>-&gt;setMessage(<span class="va">$formData</span>[<span class="st">&#39;message&#39;</span>])<span class="ot">;</span></span></code></pre></div>
 <p>Bind the form directly to a transfer:</p>
 <div class="sourceCode" id="cb8"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Preferred</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="va">$messageForm</span> <span class="op">=</span> <span class="va">$factory</span>-&gt;createMessageForm(<span class="kw">new</span> <span class="cn">M</span>essageTransfer())<span class="ot">;</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="va">$messageForm</span> <span class="op">=</span> <span class="va">$factory</span>-&gt;createContactRequestForm(<span class="kw">new</span> <span class="cn">M</span>essageTransfer())<span class="ot">;</span></span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="va">$messageForm</span>-&gt;handleRequest(<span class="va">$request</span>)<span class="ot">;</span></span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="va">$messageTransfer</span> <span class="op">=</span> <span class="va">$messageForm</span>-&gt;getData()<span class="ot">;</span> <span class="co">// Already a MessageTransfer</span></span></code></pre></div>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="va">$contactRequestTransfer</span> <span class="op">=</span> <span class="va">$messageForm</span>-&gt;getData()<span class="ot">;</span> <span class="co">// Already a ContactRequestTransfer</span></span></code></pre></div>
 <h3 id="safe-id-handling-with-castid">Safe ID Handling with castId()</h3>
 <p>Always validate IDs from user input before passing them to the persistence layer:</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="va">$idMessage</span> <span class="op">=</span> <span class="va">$this</span>-&gt;castId(<span class="va">$request</span>-&gt;request-&gt;get(<span class="st">&#39;idMessage&#39;</span>))<span class="ot">;</span></span>
+<div class="sourceCode" id="cb9"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="va">$idContactRequest</span> <span class="op">=</span> <span class="va">$this</span>-&gt;castId(<span class="va">$request</span>-&gt;request-&gt;get(<span class="st">&#39;idContactRequest&#39;</span>))<span class="ot">;</span></span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Throws InvalidArgumentException if not numeric or zero</span></span></code></pre></div>
 <hr />
 <h2 id="testing">Testing</h2>
 <ol type="1">
 <li>Log in to Yves: http://yves.eu.spryker.local/en/login (use <code>sonia@spryker.com</code> / <code>change123</code>)</li>
-<li>Visit: http://yves.eu.spryker.local/en/customer/messages</li>
+<li>Visit: http://yves.eu.spryker.local/en/customer/contact-requests</li>
 <li>You should see a message list (empty initially) and a form to add messages</li>
 <li>Add a message and verify it appears in the list with a created timestamp</li>
 <li>Click “Delete” on a message and verify it disappears</li>
@@ -387,13 +387,13 @@
 <hr />
 <h2 id="verify-your-work">Verify Your Work</h2>
 <p>Run the automated tests for this exercise:</p>
-<div class="sourceCode" id="cb10"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/HelloWorld/ Exercise7</span></code></pre></div>
-<p>The test suite covers: - <strong>Schema XML:</strong> <code>fk_customer</code> column, foreign key, timestampable behavior - <strong>Transfer XML:</strong> <code>fkCustomer</code>, <code>createdAt</code> properties, <code>MessageCollection</code> transfer - <strong>Structural:</strong> All classes and methods exist across the full stack - <strong>Mock-based:</strong> Stub calls the correct gateway paths for create, get, and delete - <strong>Unit:</strong> <code>MessageDeleter</code> delegates to <code>EntityManager</code> correctly - <strong>SOLID:</strong> <code>MessageWriter</code> does NOT have a <code>delete()</code> method</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/ContactRequest/ Exercise7</span></code></pre></div>
+<p>The test suite covers: - <strong>Schema XML:</strong> <code>fk_customer</code> column, foreign key, timestampable behavior - <strong>Transfer XML:</strong> <code>fkCustomer</code>, <code>createdAt</code> properties, <code>ContactRequestCollection</code> transfer - <strong>Structural:</strong> All classes and methods exist across the full stack - <strong>Mock-based:</strong> Stub calls the correct gateway paths for create, get, and delete - <strong>Unit:</strong> <code>ContactRequestDeleter</code> delegates to <code>EntityManager</code> correctly - <strong>SOLID:</strong> <code>ContactRequestWriter</code> does NOT have a <code>delete()</code> method</p>
 <p>Or run all exercise tests at once:</p>
-<div class="sourceCode" id="cb11"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/HelloWorld/</span></code></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/ContactRequest/</span></code></pre></div>
 <hr />
 <h2 id="solution">Solution</h2>
-<div class="sourceCode" id="cb12"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> hello-world basics/extending-core-modules/complete</span></code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/extending-core-modules/complete</span></code></pre></div>
 <hr />
 <h2 id="bonus-ajax-version">Bonus: AJAX Version</h2>
 <p>An extended solution is available that uses Spryker’s built-in AJAX component pattern to add and delete messages without a full page reload. The message table refreshes dynamically.</p>
@@ -451,15 +451,15 @@
 {% include molecule(&#39;ajax-renderer&#39;) with { attributes: { &#39;provider-class-name&#39;: ajaxProviderClass, &#39;target-class-name&#39;: ajaxContentClass, &#39;mount-after-render&#39;: true } } only %}
 {% include molecule(&#39;ajax-form-submitter&#39;) with { attributes: { &#39;trigger-attribute&#39;: &#39;data-message-ajax-submit&#39;, &#39;provider-class-name&#39;: ajaxProviderClass } } only %}</code></pre>
 <p>Form buttons use <code>data-message-ajax-submit</code> and <code>formaction</code> to point to the async endpoint:</p>
-<div class="sourceCode" id="cb15"><pre class="sourceCode html"><code class="sourceCode html"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;button</span><span class="ot"> data-message-ajax-submit formaction=</span><span class="st">&quot;/customer/messages/async/add&quot;</span><span class="kw">&gt;</span>Add Message<span class="kw">&lt;/button&gt;</span></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;button</span><span class="ot"> data-message-ajax-submit formaction=</span><span class="st">&quot;/customer/messages/async/delete&quot;</span><span class="kw">&gt;</span>Delete<span class="kw">&lt;/button&gt;</span></span></code></pre></div>
+<div class="sourceCode" id="cb15"><pre class="sourceCode html"><code class="sourceCode html"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;button</span><span class="ot"> data-message-ajax-submit formaction=</span><span class="st">&quot;/customer/contact-requests/async/add&quot;</span><span class="kw">&gt;</span>Add Message<span class="kw">&lt;/button&gt;</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;button</span><span class="ot"> data-message-ajax-submit formaction=</span><span class="st">&quot;/customer/contact-requests/async/delete&quot;</span><span class="kw">&gt;</span>Delete<span class="kw">&lt;/button&gt;</span></span></code></pre></div>
 <h3 id="key-additions-in-the-ajax-version">Key Additions in the AJAX Version</h3>
 <ul>
 <li><code>MessageAsyncController</code> — <code>addAction()</code> and <code>deleteAction()</code> return <code>JsonResponse</code> instead of redirects</li>
-<li>Async routes: <code>POST /customer/messages/async/add</code> and <code>POST /customer/messages/async/delete</code></li>
+<li>Async routes: <code>POST /customer/contact-requests/async/add</code> and <code>POST /customer/contact-requests/async/delete</code></li>
 <li><code>message-async.twig</code> — Content fragment re-rendered server-side after each operation</li>
 <li><code>list.twig</code> — Includes the AJAX component trio; uses <code>mount-after-render: true</code> so JS components in new content get re-initialized</li>
 </ul>
-<div class="sourceCode" id="cb16"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> hello-world basics/extending-core-modules/complete-ajax</span></code></pre></div>
+<div class="sourceCode" id="cb16"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/extending-core-modules/complete-ajax</span></code></pre></div>
 </body>
 </html>

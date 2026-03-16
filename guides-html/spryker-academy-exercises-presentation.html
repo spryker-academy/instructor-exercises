@@ -49,7 +49,7 @@
   <h1>Spryker Academy</h1>
   <h2>ILT Exercises - Theory & Practice</h2>
   <p class="dim">Instructor-Led Training | 7 Progressive Exercises</p>
-  <p class="small dim">Namespace: <code>SprykerAcademy\</code> | Module: <code>HelloWorld</code></p>
+  <p class="small dim">Namespace: <code>SprykerAcademy\</code> | Module: <code>ContactRequest</code></p>
 </section>
 
 <!-- ============================================================ -->
@@ -59,7 +59,7 @@
   <h2>Agenda</h2>
   <table>
     <tr><th>#</th><th>Exercise</th><th>Key Concepts</th></tr>
-    <tr><td>1</td><td>Hello World Back Office</td><td>Controllers, Twig, Navigation</td></tr>
+    <tr><td>1</td><td>Contact Request Back Office</td><td>Controllers, Twig, Navigation</td></tr>
     <tr><td>2</td><td>Data Transfer Objects</td><td>Transfer XML, Code Generation</td></tr>
     <tr><td>3</td><td>Database Schema</td><td>Propel ORM, Schema XML</td></tr>
     <tr><td>4</td><td>Module Layers - Back Office</td><td>Persistence, Business, Communication</td></tr>
@@ -125,10 +125,10 @@
 <!-- ============================================================ -->
 <section>
   <section>
-    <h2>Exercise 1: Hello World Back Office</h2>
+    <h2>Exercise 1: Contact Request Back Office</h2>
     <h3>Creating Your First Zed Controller</h3>
     <div class="box box-accent">
-      <strong>Goal:</strong> Display "Hello World!" in the Spryker Back Office
+      <strong>Goal:</strong> Display "Contact Request!" in the Spryker Back Office
     </div>
   </section>
   <section>
@@ -138,20 +138,20 @@
       <li>Route: <code>/module-name/controller-name/action-name</code></li>
       <li>Return <code>viewResponse()</code> with data for the Twig template</li>
     </ul>
-    <pre><code class="language-php">namespace SprykerAcademy\Zed\HelloWorld\Communication\Controller;
+    <pre><code class="language-php">namespace SprykerAcademy\Zed\ContactRequest\Communication\Controller;
 
 use Spryker\Zed\Kernel\Communication\Controller\AbstractController;
 
-class HelloController extends AbstractController
+class IndexController extends AbstractController
 {
     public function indexAction(): array
     {
         return $this->viewResponse([
-            'helloWorldText' => 'Hello World!',
+            'contactRequestText' => 'Contact Request!',
         ]);
     }
 }</code></pre>
-    <p class="small dim">Route: <code>/hello-world/hello/index</code></p>
+    <p class="small dim">Route: <code>/contact-request/hello/index</code></p>
   </section>
   <section>
     <h3>Twig Templates in Zed</h3>
@@ -163,7 +163,7 @@ class HelloController extends AbstractController
 {% extends '@Gui/Layout/layout.twig' %}
 
 {% block content %}
-    &lt;h1&gt;{{ helloWorldText }}&lt;/h1&gt;
+    &lt;h1&gt;{{ contactRequestText }}&lt;/h1&gt;
 {% endblock %}</code></pre>
   </section>
 </section>
@@ -176,43 +176,43 @@ class HelloController extends AbstractController
     <h2>Exercise 2: Data Transfer Objects</h2>
     <h3>Spryker's Code Generation System</h3>
     <div class="box box-accent">
-      <strong>Goal:</strong> Define a <code>MessageTransfer</code> DTO via XML and generate PHP classes
+      <strong>Goal:</strong> Define a <code>ContactRequestTransfer</code> DTO via XML and generate PHP classes
     </div>
   </section>
   <section>
     <h3>Transfer XML Definition</h3>
-    <pre><code class="language-xml">&lt;!-- src/SprykerAcademy/Shared/HelloWorld/Transfer/helloworld.transfer.xml --&gt;
+    <pre><code class="language-xml">&lt;!-- src/SprykerAcademy/Shared/ContactRequest/Transfer/contact_request.transfer.xml --&gt;
 &lt;transfers&gt;
-    &lt;transfer name="Message"&gt;
-        &lt;property name="idMessage" type="int"/&gt;
+    &lt;transfer name="ContactRequest"&gt;
+        &lt;property name="idContactRequest" type="int"/&gt;
         &lt;property name="message" type="string"/&gt;
         &lt;property name="fkCustomer" type="int"/&gt;
         &lt;property name="createdAt" type="string"/&gt;
     &lt;/transfer&gt;
 
-    &lt;transfer name="MessageCriteria"&gt;
-        &lt;property name="idMessage" type="int"/&gt;
+    &lt;transfer name="ContactRequestCriteria"&gt;
+        &lt;property name="idContactRequest" type="int"/&gt;
         &lt;property name="fkCustomer" type="int"/&gt;
     &lt;/transfer&gt;
 
-    &lt;transfer name="MessageCollection"&gt;
-        &lt;property name="messages" type="Message[]"/&gt;
+    &lt;transfer name="ContactRequestCollection"&gt;
+        &lt;property name="contactRequests" type="Message[]"/&gt;
     &lt;/transfer&gt;
 &lt;/transfers&gt;</code></pre>
   </section>
   <section>
     <h3>What Gets Generated</h3>
     <pre><code class="language-bash">docker/sdk console transfer:generate</code></pre>
-    <p>Generates <code>Generated\Shared\Transfer\MessageTransfer</code> with:</p>
+    <p>Generates <code>Generated\Shared\Transfer\ContactRequestTransfer</code> with:</p>
     <ul>
       <li>Typed getters/setters: <code>getMessage()</code>, <code>setMessage(string $message)</code></li>
       <li>Strict variants: <code>getMessageOrFail()</code>, <code>setFkCustomerOrFail()</code></li>
       <li>Array conversion: <code>toArray()</code>, <code>fromArray()</code>, <code>modifiedToArray()</code></li>
-      <li>Collection adders: <code>addMessages(MessageTransfer $message)</code></li>
+      <li>Collection adders: <code>addContactRequests(ContactRequestTransfer $message)</code></li>
       <li>Implements <code>ArrayAccess</code> — works with Symfony forms</li>
     </ul>
     <div class="box box-accent">
-      <strong>Convention:</strong> Collection property <code>messages</code> (plural) generates adder <code>addMessages()</code> matching the property name.
+      <strong>Convention:</strong> Collection property <code>messages</code> (plural) generates adder <code>addContactRequests()</code> matching the property name.
     </div>
   </section>
 </section>
@@ -225,20 +225,20 @@ class HelloController extends AbstractController
     <h2>Exercise 3: Database Schema</h2>
     <h3>Propel ORM & Schema XML</h3>
     <div class="box box-accent">
-      <strong>Goal:</strong> Define the <code>pyz_message</code> table with columns, foreign keys, and behaviors
+      <strong>Goal:</strong> Define the <code>pyz_contact_request</code> table with columns, foreign keys, and behaviors
     </div>
   </section>
   <section>
     <h3>Propel Schema XML</h3>
-    <pre><code class="language-xml">&lt;table name="pyz_message" phpName="PyzMessage"&gt;
-    &lt;column name="id_message" type="INTEGER"
+    <pre><code class="language-xml">&lt;table name="pyz_contact_request" phpName="PyzContactRequest"&gt;
+    &lt;column name="id_contact_request" type="INTEGER"
             primaryKey="true" autoIncrement="true"/&gt;
     &lt;column name="message" type="VARCHAR" size="255"
             required="true"/&gt;
     &lt;column name="fk_customer" type="INTEGER"
             required="false"/&gt;
 
-    &lt;unique name="pyz_message-message"&gt;
+    &lt;unique name="pyz_contact_request-message"&gt;
         &lt;unique-column name="message"/&gt;
         &lt;unique-column name="fk_customer"/&gt;
     &lt;/unique&gt;
@@ -257,8 +257,8 @@ class HelloController extends AbstractController
     <pre><code class="language-bash">docker/sdk console propel:install
 # = propel:schema:copy + propel:model:build + propel:diff + propel:migrate</code></pre>
     <ul>
-      <li><strong>phpName</strong> — PHP class name: <code>PyzMessage</code>, <code>PyzMessageQuery</code></li>
-      <li><strong>Magic methods</strong> — <code>findOneByIdMessage()</code>, <code>filterByFkCustomer()</code></li>
+      <li><strong>phpName</strong> — PHP class name: <code>PyzContactRequest</code>, <code>PyzContactRequestQuery</code></li>
+      <li><strong>Magic methods</strong> — <code>findOneByIdContactRequest()</code>, <code>filterByFkCustomer()</code></li>
       <li><strong>Timestampable behavior</strong> — Auto-manages <code>created_at</code> / <code>updated_at</code></li>
       <li><strong>Foreign keys</strong> — <code>onDelete="CASCADE"</code> = delete messages when customer is deleted</li>
       <li><strong>Composite unique</strong> — Same customer can't post duplicate text, different customers can</li>
@@ -279,19 +279,19 @@ class HelloController extends AbstractController
   </section>
   <section>
     <h3>Persistence Layer: Repository (Read)</h3>
-    <pre><code class="language-php">class HelloWorldRepository extends AbstractRepository
+    <pre><code class="language-php">class ContactRequestRepository extends AbstractRepository
 {
-    public function findMessage(MessageCriteriaTransfer $criteria): ?MessageTransfer
+    public function findContactRequest(ContactRequestCriteriaTransfer $criteria): ?ContactRequestTransfer
     {
-        $query = $this->getFactory()->createMessageQuery();
+        $query = $this->getFactory()->createContactRequestQuery();
 
-        if ($criteria->getIdMessage()) {
-            $entity = $query->findOneByIdMessage($criteria->getIdMessage());
+        if ($criteria->getIdContactRequest()) {
+            $entity = $query->findOneByIdContactRequest($criteria->getIdContactRequest());
         }
 
         return $entity
-            ? $this->getFactory()->createMessageMapper()
-                ->mapEntityToMessageTransfer($entity)
+            ? $this->getFactory()->createContactRequestMapper()
+                ->mapEntityToContactRequestTransfer($entity)
             : null;
     }
 }</code></pre>
@@ -301,22 +301,22 @@ class HelloController extends AbstractController
   </section>
   <section>
     <h3>Persistence Layer: EntityManager (Write)</h3>
-    <pre><code class="language-php">class HelloWorldEntityManager extends AbstractEntityManager
+    <pre><code class="language-php">class ContactRequestEntityManager extends AbstractEntityManager
 {
-    public function createMessage(MessageTransfer $transfer): MessageTransfer
+    public function createContactRequest(ContactRequestTransfer $transfer): ContactRequestTransfer
     {
-        $entity = new PyzMessage();
+        $entity = new PyzContactRequest();
         $entity->fromArray($transfer->modifiedToArray());
         $entity->save();
 
-        return $this->getFactory()->createMessageMapper()
-            ->mapEntityToMessageTransfer($entity);
+        return $this->getFactory()->createContactRequestMapper()
+            ->mapEntityToContactRequestTransfer($entity);
     }
 
-    public function deleteMessage(int $idMessage): bool
+    public function deleteContactRequest(int $idContactRequest): bool
     {
-        $entity = $this->getFactory()->createMessageQuery()
-            ->findOneByIdMessage($idMessage);
+        $entity = $this->getFactory()->createContactRequestQuery()
+            ->findOneByIdContactRequest($idContactRequest);
 
         if (!$entity) { return false; }
 
@@ -329,20 +329,20 @@ class HelloController extends AbstractController
     <h3>Business Layer: SOLID Separation</h3>
     <table>
       <tr><th>Class</th><th>Dependency</th><th>Methods</th><th>Responsibility</th></tr>
-      <tr><td><code>MessageReader</code></td><td>RepositoryInterface</td><td><code>findMessage()</code>, <code>findMessagesByCustomer()</code></td><td>Read only</td></tr>
-      <tr><td><code>MessageWriter</code></td><td>EntityManagerInterface</td><td><code>create()</code></td><td>Write only</td></tr>
-      <tr><td><code>MessageDeleter</code></td><td>EntityManagerInterface</td><td><code>delete()</code></td><td>Delete only</td></tr>
+      <tr><td><code>ContactRequestReader</code></td><td>RepositoryInterface</td><td><code>findContactRequest()</code>, <code>findContactRequestsByCustomer()</code></td><td>Read only</td></tr>
+      <tr><td><code>ContactRequestWriter</code></td><td>EntityManagerInterface</td><td><code>create()</code></td><td>Write only</td></tr>
+      <tr><td><code>ContactRequestDeleter</code></td><td>EntityManagerInterface</td><td><code>delete()</code></td><td>Delete only</td></tr>
     </table>
     <pre><code class="language-php">// Each business model has ONE constructor dependency and ONE responsibility
-class MessageDeleter
+class ContactRequestDeleter
 {
     public function __construct(
-        protected HelloWorldEntityManagerInterface $entityManager,
+        protected ContactRequestEntityManagerInterface $entityManager,
     ) {}
 
-    public function delete(int $idMessage): bool
+    public function delete(int $idContactRequest): bool
     {
-        return $this->entityManager->deleteMessage($idMessage);
+        return $this->entityManager->deleteContactRequest($idContactRequest);
     }
 }</code></pre>
     <div class="box box-accent">
@@ -352,40 +352,40 @@ class MessageDeleter
   <section>
     <h3>Business Layer: Facade & Factory</h3>
     <p><strong>Facade</strong> = Module's public API (one method per use case):</p>
-    <pre><code class="language-php">class HelloWorldFacade extends AbstractFacade
+    <pre><code class="language-php">class ContactRequestFacade extends AbstractFacade
 {
-    public function createMessage(MessageTransfer $t): MessageTransfer {
-        return $this->getFactory()->createMessageWriter()->create($t);
+    public function createContactRequest(ContactRequestTransfer $t): ContactRequestTransfer {
+        return $this->getFactory()->createContactRequestWriter()->create($t);
     }
-    public function findMessagesByCustomer(MessageCriteriaTransfer $c): MessageCollectionTransfer {
-        return $this->getFactory()->createMessageReader()->findMessagesByCustomer($c);
+    public function findContactRequestsByCustomer(ContactRequestCriteriaTransfer $c): ContactRequestCollectionTransfer {
+        return $this->getFactory()->createContactRequestReader()->findContactRequestsByCustomer($c);
     }
-    public function deleteMessage(int $id): bool {
-        return $this->getFactory()->createMessageDeleter()->delete($id);
+    public function deleteContactRequest(int $id): bool {
+        return $this->getFactory()->createContactRequestDeleter()->delete($id);
     }
 }</code></pre>
     <p><strong>Factory</strong> = Wiring (each <code>create*</code> instantiates with the right dependency):</p>
-    <pre><code class="language-php">class HelloWorldBusinessFactory extends AbstractBusinessFactory
+    <pre><code class="language-php">class ContactRequestBusinessFactory extends AbstractBusinessFactory
 {
-    public function createMessageReader(): MessageReader {
-        return new MessageReader($this->getRepository());
+    public function createContactRequestReader(): ContactRequestReader {
+        return new ContactRequestReader($this->getRepository());
     }
-    public function createMessageWriter(): MessageWriter {
-        return new MessageWriter($this->getEntityManager());
+    public function createContactRequestWriter(): ContactRequestWriter {
+        return new ContactRequestWriter($this->getEntityManager());
     }
-    public function createMessageDeleter(): MessageDeleter {
-        return new MessageDeleter($this->getEntityManager());
+    public function createContactRequestDeleter(): ContactRequestDeleter {
+        return new ContactRequestDeleter($this->getEntityManager());
     }
 }</code></pre>
   </section>
   <section>
     <h3>Mapper Pattern</h3>
-    <pre><code class="language-php">class MessageMapper
+    <pre><code class="language-php">class ContactRequestMapper
 {
-    public function mapEntityToMessageTransfer(
-        PyzMessage $entity,
-        MessageTransfer $transfer = new MessageTransfer(),
-    ): MessageTransfer {
+    public function mapEntityToContactRequestTransfer(
+        PyzContactRequest $entity,
+        ContactRequestTransfer $transfer = new ContactRequestTransfer(),
+    ): ContactRequestTransfer {
         return $transfer->fromArray($entity->toArray(), true);
     }
 }</code></pre>
@@ -428,17 +428,17 @@ class MessageDeleter
   </section>
   <section>
     <h3>The Stub: Calling Zed from Yves</h3>
-    <pre><code class="language-php">class HelloWorldStub
+    <pre><code class="language-php">class ContactRequestStub
 {
     public function __construct(
         protected ZedRequestClientInterface $zedRequestClient,
     ) {}
 
-    public function findMessage(MessageCriteriaTransfer $criteria): MessageResponseTransfer
+    public function findContactRequest(ContactRequestCriteriaTransfer $criteria): ContactRequestResponseTransfer
     {
-        /** @var MessageResponseTransfer $response */
+        /** @var ContactRequestResponseTransfer $response */
         $response = $this->zedRequestClient->call(
-            '/hello-world/gateway/find-message',
+            '/contact-request/gateway/find-message',
             $criteria,
         );
         return $response;
@@ -447,25 +447,25 @@ class MessageDeleter
     <div class="box box-accent">
       <strong>Gateway path convention:</strong><br>
       <code>/module-name/gateway/action-name</code><br>
-      <code>deleteMessageAction()</code> → <code>/hello-world/gateway/delete-message</code>
+      <code>deleteContactRequestAction()</code> → <code>/contact-request/gateway/delete-message</code>
     </div>
   </section>
   <section>
     <h3>GatewayController in Zed</h3>
     <pre><code class="language-php">class GatewayController extends AbstractGatewayController
 {
-    public function findMessageAction(
-        MessageCriteriaTransfer $criteria
-    ): MessageResponseTransfer {
-        return $this->getFacade()->findMessage($criteria);
+    public function findContactRequestAction(
+        ContactRequestCriteriaTransfer $criteria
+    ): ContactRequestResponseTransfer {
+        return $this->getFacade()->findContactRequest($criteria);
     }
 
-    public function deleteMessageAction(
-        MessageCriteriaTransfer $criteria
-    ): MessageResponseTransfer {
-        $response = new MessageResponseTransfer();
+    public function deleteContactRequestAction(
+        ContactRequestCriteriaTransfer $criteria
+    ): ContactRequestResponseTransfer {
+        $response = new ContactRequestResponseTransfer();
         $deleted = $this->getFacade()
-            ->deleteMessage($criteria->getIdMessage());
+            ->deleteContactRequest($criteria->getIdContactRequest());
         $response->setIsSuccessful($deleted);
         return $response;
     }
@@ -479,26 +479,26 @@ class MessageDeleter
   <section>
     <h3>DependencyProvider Pattern</h3>
     <p>Every external dependency goes through the <strong>DependencyProvider</strong>:</p>
-    <pre><code class="language-php">class HelloWorldPageDependencyProvider extends AbstractBundleDependencyProvider
+    <pre><code class="language-php">class ContactRequestPageDependencyProvider extends AbstractBundleDependencyProvider
 {
-    public const string CLIENT_HELLO_WORLD = 'CLIENT_HELLO_WORLD';
+    public const string CLIENT_CONTACT_REQUEST = 'CLIENT_CONTACT_REQUEST';
 
     public function provideDependencies(Container $container): Container
     {
         $container->set(
-            static::CLIENT_HELLO_WORLD,
-            fn () => $container->getLocator()->helloWorld()->client(),
+            static::CLIENT_CONTACT_REQUEST,
+            fn () => $container->getLocator()->contactRequest()->client(),
         );
         return $container;
     }
 }</code></pre>
     <p>The <strong>Factory</strong> retrieves it:</p>
-    <pre><code class="language-php">class HelloWorldPageFactory extends AbstractFactory
+    <pre><code class="language-php">class ContactRequestPageFactory extends AbstractFactory
 {
-    public function getHelloWorldClient(): HelloWorldClientInterface
+    public function getContactRequestClient(): ContactRequestClientInterface
     {
         return $this->getProvidedDependency(
-            HelloWorldPageDependencyProvider::CLIENT_HELLO_WORLD,
+            ContactRequestPageDependencyProvider::CLIENT_CONTACT_REQUEST,
         );
     }
 }</code></pre>
@@ -519,18 +519,18 @@ class MessageDeleter
   <section>
     <h3>Configuration Stack</h3>
     <p><strong>1.</strong> Constants interface (Shared layer):</p>
-    <pre><code class="language-php">interface HelloWorldConstants
+    <pre><code class="language-php">interface ContactRequestConstants
 {
-    public const MY_CONFIG_VALUE = 'HELLO_WORLD:MY_CONFIG_VALUE';
+    public const MY_CONFIG_VALUE = 'CONTACT_REQUEST:MY_CONFIG_VALUE';
 }</code></pre>
     <p><strong>2.</strong> Set the value in <code>config_default.php</code>:</p>
-    <pre><code class="language-php">$config[HelloWorldConstants::MY_CONFIG_VALUE] = 'Hello from config!';</code></pre>
+    <pre><code class="language-php">$config[ContactRequestConstants::MY_CONFIG_VALUE] = 'Hello from config!';</code></pre>
     <p><strong>3.</strong> Config class reads it (Zed module root):</p>
-    <pre><code class="language-php">class HelloWorldConfig extends AbstractBundleConfig
+    <pre><code class="language-php">class ContactRequestConfig extends AbstractBundleConfig
 {
     public function getMyConfigValue(): string
     {
-        return $this->get(HelloWorldConstants::MY_CONFIG_VALUE, 'default value');
+        return $this->get(ContactRequestConstants::MY_CONFIG_VALUE, 'default value');
     }
 }</code></pre>
   </section>
@@ -540,7 +540,7 @@ class MessageDeleter
 class ConfigController extends AbstractController
 {
     public function __construct(
-        private readonly HelloWorldConfig $config,
+        private readonly ContactRequestConfig $config,
     ) {}
 
     public function indexAction(): array
@@ -577,15 +577,15 @@ class ConfigController extends AbstractController
     public function provideDependencies(Container $container): Container
     {
         $container = parent::provideDependencies($container); // Keep core deps
-        $container = $this->addHelloWorldClient($container);  // Add ours
+        $container = $this->addContactRequestClient($container);  // Add ours
         return $container;
     }
 }</code></pre>
     <p><strong>Factory</strong> — add factory methods for your new features:</p>
     <pre><code class="language-php">class CustomerPageFactory extends SprykerCustomerPageFactory
 {
-    public function getHelloWorldClient(): HelloWorldClientInterface { ... }
-    public function createMessageForm(MessageTransfer $t): FormInterface { ... }
+    public function getContactRequestClient(): ContactRequestClientInterface { ... }
+    public function createContactRequestForm(ContactRequestTransfer $t): FormInterface { ... }
 }</code></pre>
     <p><strong>RouteProviderPlugin</strong> — add routes alongside core ones:</p>
     <pre><code class="language-php">class CustomerPageRouteProviderPlugin extends SprykerCustomerPageRouteProviderPlugin
@@ -602,7 +602,7 @@ class ConfigController extends AbstractController
   <section>
     <h3>Symfony Forms in Spryker Yves</h3>
     <pre><code class="language-php">// Form class — defines fields and validation only (no SubmitType)
-class MessageForm extends AbstractType
+class ContactRequestForm extends AbstractType
 {
     public const string FIELD_MESSAGE = 'message';
 
@@ -615,15 +615,15 @@ class MessageForm extends AbstractType
     }
 }</code></pre>
     <pre><code class="language-php">// Usage in controller — data-mapped to a Transfer object
-$form = $this->getFactory()->createMessageForm(new MessageTransfer());
+$form = $this->getFactory()->createContactRequestForm(new ContactRequestTransfer());
 $form->handleRequest($request);
 
 if ($form->isSubmitted() && $form->isValid()) {
-    $messageTransfer = $form->getData();   // Already a MessageTransfer!
-    $messageTransfer->getMessage();         // Contains the form input
+    $contactRequestTransfer = $form->getData();   // Already a ContactRequestTransfer!
+    $contactRequestTransfer->getMessage();         // Contains the form input
 }</code></pre>
     <ul>
-      <li><strong>Data binding:</strong> Pass <code>MessageTransfer</code> as form data — <code>getData()</code> returns the hydrated transfer</li>
+      <li><strong>Data binding:</strong> Pass <code>ContactRequestTransfer</code> as form data — <code>getData()</code> returns the hydrated transfer</li>
       <li><strong>ArrayAccess:</strong> Transfers implement it, so Symfony maps fields to properties automatically</li>
       <li><strong>No SubmitType:</strong> Button rendered in Twig for Spryker CSS control</li>
     </ul>
@@ -638,7 +638,7 @@ if ($form->isSubmitted() && $form->isValid()) {
       │     └─ FormFactory (extends AbstractFactory)
       │          └─ getFormFactory()
       │               └─ Symfony FormFactory
-      │                    └─ create(MessageForm::class, $transfer)
+      │                    └─ create(ContactRequestForm::class, $transfer)
       │
       └─ Returns: FormInterface (CSRF + validation + data binding)
 </pre>
@@ -673,16 +673,16 @@ if ($form->isSubmitted() && $form->isValid()) {
     <pre><code class="language-php">public function listAction(Request $request): View|RedirectResponse
 {
     $customer = $this->getLoggedInCustomerTransfer();
-    $messageCriteria = new MessageCriteriaTransfer();
-    $messageCriteria->setFkCustomerOrFail($customer?->getIdCustomer()); // Fails fast
+    $contactRequestCriteria = new ContactRequestCriteriaTransfer();
+    $contactRequestCriteria->setFkCustomerOrFail($customer?->getIdCustomer()); // Fails fast
 
-    $form = $this->getFactory()->createMessageForm(new MessageTransfer());
+    $form = $this->getFactory()->createContactRequestForm(new ContactRequestTransfer());
     $form->handleRequest($request);
 
     if ($form->isSubmitted() && $form->isValid()) {
-        $transfer = $form->getData(); // Already a MessageTransfer!
+        $transfer = $form->getData(); // Already a ContactRequestTransfer!
         $transfer->setFkCustomer($customer->getIdCustomer());
-        $this->getFactory()->getHelloWorldClient()->createMessage($transfer);
+        $this->getFactory()->getContactRequestClient()->createContactRequest($transfer);
         return $this->redirectResponseInternal(static::ROUTE_CUSTOMER_MESSAGES);
     }
     // ... return view
@@ -690,11 +690,11 @@ if ($form->isSubmitted() && $form->isValid()) {
     <p><strong>deleteAction</strong> — safe ID casting with <code>castId()</code>:</p>
     <pre><code class="language-php">public function deleteAction(Request $request): RedirectResponse
 {
-    $idMessage = $this->castId($request->request->get('idMessage'));
+    $idContactRequest = $this->castId($request->request->get('idContactRequest'));
     // Throws InvalidArgumentException if not numeric or zero
-    $messageCriteria = new MessageCriteriaTransfer();
-    $messageCriteria->setIdMessage($idMessage);
-    $this->getFactory()->getHelloWorldClient()->deleteMessage($messageCriteria);
+    $contactRequestCriteria = new ContactRequestCriteriaTransfer();
+    $contactRequestCriteria->setIdContactRequest($idContactRequest);
+    $this->getFactory()->getContactRequestClient()->deleteContactRequest($contactRequestCriteria);
     return $this->redirectResponseInternal(static::ROUTE_CUSTOMER_MESSAGES);
 }</code></pre>
   </section>
@@ -762,7 +762,7 @@ if ($form->isSubmitted() && $form->isValid()) {
       ▼
   AjaxProvider.fetch(formData)
       │ dispatches "fetching" → Loader shows spinner
-      │ POST /customer/messages/async/add
+      │ POST /customer/contact-requests/async/add
       ▼
   MessageAsyncController::addAction()
       │ Creates message, re-renders table
@@ -813,7 +813,7 @@ if ($form->isSubmitted() && $form->isValid()) {
 &lt;div class="{{ contentClass }}"&gt;
     {# table + form + loader #}
     &lt;button data-message-ajax-submit
-            formaction="{{ path('customer/messages/async/add') }}"&gt;
+            formaction="{{ path('customer/contact-requests/async/add') }}"&gt;
         Add Message
     &lt;/button&gt;
     {% include molecule('ajax-loader') with {
@@ -865,22 +865,22 @@ if ($form->isSubmitted() && $form->isValid()) {
 $zedRequestMock = $this->createMock(ZedRequestClientInterface::class);
 $zedRequestMock->expects($this->once())
     ->method('call')
-    ->with('/hello-world/gateway/delete-message', $criteria)
+    ->with('/contact-request/gateway/delete-message', $criteria)
     ->willReturn($expectedResponse);
 
-$stub = new HelloWorldStub($zedRequestMock);
-$result = $stub->deleteMessage($criteria);
+$stub = new ContactRequestStub($zedRequestMock);
+$result = $stub->deleteContactRequest($criteria);
 $this->assertTrue($result->getIsSuccessful());</code></pre>
   </section>
   <section>
     <h3>Running Tests</h3>
     <pre><code class="language-bash"># Single exercise
 docker/sdk cli vendor/bin/codecept run \
-    -c tests/SprykerAcademyTest/Zed/HelloWorld/ Exercise7
+    -c tests/SprykerAcademyTest/Zed/ContactRequest/ Exercise7
 
 # All exercises
 docker/sdk cli vendor/bin/codecept run \
-    -c tests/SprykerAcademyTest/Zed/HelloWorld/</code></pre>
+    -c tests/SprykerAcademyTest/Zed/ContactRequest/</code></pre>
     <p>Framework: <strong>Codeception + PHPUnit</strong> (<code>Codeception\Test\Unit</code>)</p>
     <p>No Spryker kernel bootstrap — tests are fast and isolated.</p>
   </section>

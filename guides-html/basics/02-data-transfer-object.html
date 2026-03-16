@@ -216,9 +216,9 @@
 <h1 class="title">Exercise 2: Create a Data Transfer Object</h1>
 </header>
 <h1 id="exercise-2-create-a-data-transfer-object">Exercise 2: Create a Data Transfer Object</h1>
-<p>In Spryker, data transfer objects (DTOs) are used to pass data across layers and services. In this exercise you will create a message DTO from scratch and use it in the Hello World page.</p>
+<p>In Spryker, data transfer objects (DTOs) are used to pass data across layers and services. In this exercise you will create a message DTO from scratch and use it in the Contact Request page.</p>
 <h2 id="loading-the-exercise">Loading the Exercise</h2>
-<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> hello-world basics/data-transfer-object/skeleton</span>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/data-transfer-object/skeleton</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli composer dump-autoload</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span></code></pre></div>
 <hr />
@@ -239,28 +239,28 @@
 <span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;/transfers&gt;</span></span></code></pre></div>
 <p>This generates a <code>HumanTransfer</code> class with a <code>height</code> property of type <code>int</code>.</p>
 <p><strong>Coding time:</strong></p>
-<p>Open <code>src/SprykerAcademy/Shared/HelloWorld/Transfer/helloworld.transfer.xml</code> and add a DTO named <strong>Message</strong> with: - Property <code>idMessage</code> of type <code>int</code> - Property <code>message</code> of type <code>string</code></p>
+<p>Open <code>src/SprykerAcademy/Shared/ContactRequest/Transfer/contact_request.transfer.xml</code> and add a DTO named <strong>Message</strong> with: - Property <code>idContactRequest</code> of type <code>int</code> - Property <code>message</code> of type <code>string</code></p>
 <p>Then generate the transfers:</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span></code></pre></div>
-<p>Check the auto-generated file at <code>src/Generated/Shared/Transfer/MessageTransfer.php</code> and review the helper methods.</p>
+<p>Check the auto-generated file at <code>src/Generated/Shared/Transfer/ContactRequestTransfer.php</code> and review the helper methods.</p>
 <h3 id="the-controller">2. The Controller</h3>
 <p>You instantiate DTOs like normal objects:</p>
 <div class="sourceCode" id="cb4"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="va">$myTransfer</span> <span class="op">=</span> <span class="kw">new</span> <span class="cn">M</span>yTransfer()<span class="ot">;</span></span></code></pre></div>
 <p><strong>Coding time:</strong></p>
-<p>Open <code>src/SprykerAcademy/Zed/HelloWorld/Communication/Controller/HelloController.php</code>. Initialize a <code>Generated\Shared\Transfer\MessageTransfer</code> object, assign a name to the message, and pass the object to the template.</p>
+<p>Open <code>src/SprykerAcademy/Zed/ContactRequest/Communication/Controller/IndexController.php</code>. Initialize a <code>Generated\Shared\Transfer\ContactRequestTransfer</code> object, assign a name to the message, and pass the object to the template.</p>
 <h3 id="the-template">3. The Template</h3>
 <p>Access object properties in Twig using dot notation:</p>
 <pre class="twig"><code>{{ myVar.property }}</code></pre>
 <p><strong>Coding time:</strong></p>
-<p>Open <code>src/SprykerAcademy/Zed/HelloWorld/Presentation/Hello/index.twig</code> and use the passed object to greet the message by its name instead of greeting the whole world.</p>
-<p>Visit: http://backoffice.eu.spryker.local/hello-world/hello/index (Credentials: <code>admin@spryker.com</code> / <code>change123</code>)</p>
+<p>Open <code>src/SprykerAcademy/Zed/ContactRequest/Presentation/Hello/index.twig</code> and use the passed object to greet the message by its name instead of greeting the whole world.</p>
+<p>Visit: http://backoffice.eu.spryker.local/contact-request/hello/index (Credentials: <code>admin@spryker.com</code> / <code>change123</code>)</p>
 <hr />
 <h2 id="verify-your-work">Verify Your Work</h2>
 <p>Run the automated tests for this exercise:</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/HelloWorld/ Exercise2</span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/ContactRequest/ Exercise2</span></code></pre></div>
 <p>All tests should pass if your transfer definition is correct.</p>
 <hr />
 <h2 id="solution">Solution</h2>
-<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> hello-world basics/data-transfer-object/complete</span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/data-transfer-object/complete</span></code></pre></div>
 </body>
 </html>

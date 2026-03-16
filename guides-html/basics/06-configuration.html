@@ -227,22 +227,22 @@
 <hr />
 <h2 id="working-on-the-exercise">Working on the Exercise</h2>
 <p>Your task is to create a Back Office page accessible at:</p>
-<p>http://backoffice.eu.spryker.local/hello-world/config/index</p>
+<p>http://backoffice.eu.spryker.local/contact-request/config/index</p>
 <p>that displays a config value defined in <code>config_default.php</code>.</p>
-<p>We continue working in the <strong>HelloWorld</strong> module at <code>src/SprykerAcademy/Zed/HelloWorld/</code>.</p>
+<p>We continue working in the <strong>ContactRequest</strong> module at <code>src/SprykerAcademy/Zed/ContactRequest/</code>.</p>
 <h3 id="create-a-constants-interface">1. Create a Constants Interface</h3>
 <p>Constants interfaces live in the <strong>Shared</strong> namespace so they can be used across all application layers (Zed, Yves, Client).</p>
 <p><strong>Coding time:</strong></p>
-<p>Create <code>src/SprykerAcademy/Shared/HelloWorld/HelloWorldConstants.php</code>:</p>
+<p>Create <code>src/SprykerAcademy/Shared/ContactRequest/ContactRequestConstants.php</code>:</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;?php</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">namespace</span> <span class="cn">S</span>prykerAcademy\<span class="cn">S</span>hared\<span class="cn">H</span>elloWorld<span class="ot">;</span></span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> <span class="cn">H</span>elloWorldConstants</span>
 <span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>{</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">const</span> <span class="cn">MY_CONFIG_VALUE</span> <span class="op">=</span> <span class="st">&#39;HELLO_WORLD:MY_CONFIG_VALUE&#39;</span><span class="ot">;</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">const</span> <span class="cn">MY_CONFIG_VALUE</span> <span class="op">=</span> <span class="st">&#39;CONTACT_REQUEST:MY_CONFIG_VALUE&#39;</span><span class="ot">;</span></span>
 <span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
-<p>The string <code>'HELLO_WORLD:MY_CONFIG_VALUE'</code> is the key used in config files. The convention is <code>MODULE_NAME:CONFIG_KEY</code>.</p>
+<p>The string <code>'CONTACT_REQUEST:MY_CONFIG_VALUE'</code> is the key used in config files. The convention is <code>MODULE_NAME:CONFIG_KEY</code>.</p>
 <h3 id="set-the-config-value">2. Set the Config Value</h3>
 <p>Open <code>config/Shared/config_default.php</code> and add your config value at the end of the file (before the closing <code>?&gt;</code> or end of file):</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="cn">S</span>prykerAcademy\<span class="cn">S</span>hared\<span class="cn">H</span>elloWorld\<span class="cn">H</span>elloWorldConstants<span class="ot">;</span></span>
@@ -253,27 +253,27 @@
 <p>Each module can have a Config class that provides typed access to global config values. The naming convention is <code>&lt;Module&gt;Config.php</code> at the module root.</p>
 <p>A Zed Config class extends <code>Spryker\Zed\Kernel\AbstractBundleConfig</code>, which provides the <code>$this-&gt;get()</code> helper method to read values from the global config.</p>
 <p><strong>Coding time:</strong></p>
-<p>Create <code>src/SprykerAcademy/Zed/HelloWorld/HelloWorldConfig.php</code>:</p>
+<p>Create <code>src/SprykerAcademy/Zed/ContactRequest/ContactRequestConfig.php</code>:</p>
 <ul>
 <li>Extend <code>Spryker\Zed\Kernel\AbstractBundleConfig</code></li>
-<li>Add a <code>getMyConfigValue(): string</code> method that uses <code>$this-&gt;get(HelloWorldConstants::MY_CONFIG_VALUE)</code> to return the config value</li>
+<li>Add a <code>getMyConfigValue(): string</code> method that uses <code>$this-&gt;get(ContactRequestConstants::MY_CONFIG_VALUE)</code> to return the config value</li>
 <li>Optionally pass a second argument to <code>$this-&gt;get()</code> as a default fallback value</li>
 </ul>
 <h3 id="create-the-communication-factory">4. Create the Communication Factory</h3>
 <p>To access the Config class from a controller, you need a CommunicationFactory. The factory extends <code>Spryker\Zed\Kernel\Communication\AbstractCommunicationFactory</code>, which provides the <code>getConfig()</code> helper method.</p>
 <p><strong>Coding time:</strong></p>
-<p>Create <code>src/SprykerAcademy/Zed/HelloWorld/Communication/HelloWorldCommunicationFactory.php</code>:</p>
+<p>Create <code>src/SprykerAcademy/Zed/ContactRequest/Communication/ContactRequestCommunicationFactory.php</code>:</p>
 <ul>
 <li>Extend <code>Spryker\Zed\Kernel\Communication\AbstractCommunicationFactory</code></li>
 <li>The class body can be empty — the <code>getConfig()</code> method is inherited</li>
 <li>Add the following annotation for IDE support:</li>
 </ul>
 <div class="sourceCode" id="cb4"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">/**</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co"> * </span><span class="an">@method</span><span class="co"> </span><span class="an">\SprykerAcademy\Zed\HelloWorld\HelloWorldConfig</span><span class="co"> getConfig()</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co"> * </span><span class="an">@method</span><span class="co"> </span><span class="an">\SprykerAcademy\Zed\ContactRequest\ContactRequestConfig</span><span class="co"> getConfig()</span></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co"> */</span></span></code></pre></div>
 <h3 id="create-the-template">5. Create the Template</h3>
 <p><strong>Coding time:</strong></p>
-<p>Create <code>src/SprykerAcademy/Zed/HelloWorld/Presentation/Config/index.twig</code>:</p>
+<p>Create <code>src/SprykerAcademy/Zed/ContactRequest/Presentation/Config/index.twig</code>:</p>
 <pre class="twig"><code>{% extends &#39;@Gui/Layout/layout.twig&#39; %}
 
 {% block content %}
@@ -282,7 +282,7 @@
 <p>The folder <code>Config</code> matches the controller name, and <code>index.twig</code> matches the action name.</p>
 <h3 id="create-the-controller">6. Create the Controller</h3>
 <p><strong>Coding time:</strong></p>
-<p>Create <code>src/SprykerAcademy/Zed/HelloWorld/Communication/Controller/ConfigController.php</code>:</p>
+<p>Create <code>src/SprykerAcademy/Zed/ContactRequest/Communication/Controller/ConfigController.php</code>:</p>
 <ul>
 <li>Extend <code>Spryker\Zed\Kernel\Communication\Controller\AbstractController</code></li>
 <li>Implement <code>indexAction()</code>:
@@ -311,7 +311,7 @@
 <span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 <p>Alternatively, you can use the traditional factory approach (which still works and is the pattern you will find in older codebases):</p>
 <div class="sourceCode" id="cb7"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">/**</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="co"> * </span><span class="an">@method</span><span class="co"> </span><span class="an">\SprykerAcademy\Zed\HelloWorld\Communication\HelloWorldCommunicationFactory</span><span class="co"> getFactory()</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="co"> * </span><span class="an">@method</span><span class="co"> </span><span class="an">\SprykerAcademy\Zed\ContactRequest\Communication\ContactRequestCommunicationFactory</span><span class="co"> getFactory()</span></span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co"> */</span></span>
 <span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="cn">C</span>onfigController <span class="kw">extends</span> <span class="cn">A</span>bstractController</span>
 <span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>{</span>
@@ -327,15 +327,15 @@
 <p>Choose either approach for your implementation.</p>
 <p>Clear the cache:</p>
 <div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span></code></pre></div>
-<p>Visit: http://backoffice.eu.spryker.local/hello-world/config/index (Credentials: <code>admin@spryker.com</code> / <code>change123</code>)</p>
+<p>Visit: http://backoffice.eu.spryker.local/contact-request/config/index (Credentials: <code>admin@spryker.com</code> / <code>change123</code>)</p>
 <p>You should see your config value displayed on the page.</p>
 <hr />
 <h2 id="verify-your-work">Verify Your Work</h2>
 <p>Run the automated tests for this exercise:</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/HelloWorld/ Exercise6</span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/ContactRequest/ Exercise6</span></code></pre></div>
 <p>All tests should pass if your implementation is correct.</p>
 <hr />
 <h2 id="solution">Solution</h2>
-<div class="sourceCode" id="cb10"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> hello-world basics/configuration/complete</span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/configuration/complete</span></code></pre></div>
 </body>
 </html>

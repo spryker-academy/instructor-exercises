@@ -20,11 +20,11 @@ docker/sdk cli composer dump-autoload
 
 Your task is to create a Back Office page accessible at:
 
-http://backoffice.eu.spryker.local/hello-world/config/index
+http://backoffice.eu.spryker.local/contact-request/config/index
 
 that displays a config value defined in `config_default.php`.
 
-We continue working in the **HelloWorld** module at `src/SprykerAcademy/Zed/HelloWorld/`.
+We continue working in the **ContactRequest** module at `src/SprykerAcademy/Zed/ContactRequest/`.
 
 ### 1. Create a Constants Interface
 
@@ -32,29 +32,29 @@ Constants interfaces live in the **Shared** namespace so they can be used across
 
 **Coding time:**
 
-Create `src/SprykerAcademy/Shared/HelloWorld/HelloWorldConstants.php`:
+Create `src/SprykerAcademy/Shared/ContactRequest/ContactRequestConstants.php`:
 
 ```php
 <?php
 
-namespace SprykerAcademy\Shared\HelloWorld;
+namespace SprykerAcademy\Shared\ContactRequest;
 
-interface HelloWorldConstants
+interface ContactRequestConstants
 {
-    public const MY_CONFIG_VALUE = 'HELLO_WORLD:MY_CONFIG_VALUE';
+    public const MY_CONFIG_VALUE = 'CONTACT_REQUEST:MY_CONFIG_VALUE';
 }
 ```
 
-The string `'HELLO_WORLD:MY_CONFIG_VALUE'` is the key used in config files. The convention is `MODULE_NAME:CONFIG_KEY`.
+The string `'CONTACT_REQUEST:MY_CONFIG_VALUE'` is the key used in config files. The convention is `MODULE_NAME:CONFIG_KEY`.
 
 ### 2. Set the Config Value
 
 Open `config/Shared/config_default.php` and add your config value at the end of the file (before the closing `?>`  or end of file):
 
 ```php
-use SprykerAcademy\Shared\HelloWorld\HelloWorldConstants;
+use SprykerAcademy\Shared\ContactRequest\ContactRequestConstants;
 
-$config[HelloWorldConstants::MY_CONFIG_VALUE] = 'Hello from config!';
+$config[ContactRequestConstants::MY_CONFIG_VALUE] = 'Hello from config!';
 ```
 
 You can use any string you like as the value.
@@ -67,10 +67,10 @@ A Zed Config class extends `Spryker\Zed\Kernel\AbstractBundleConfig`, which prov
 
 **Coding time:**
 
-Create `src/SprykerAcademy/Zed/HelloWorld/HelloWorldConfig.php`:
+Create `src/SprykerAcademy/Zed/ContactRequest/ContactRequestConfig.php`:
 
 - Extend `Spryker\Zed\Kernel\AbstractBundleConfig`
-- Add a `getMyConfigValue(): string` method that uses `$this->get(HelloWorldConstants::MY_CONFIG_VALUE)` to return the config value
+- Add a `getMyConfigValue(): string` method that uses `$this->get(ContactRequestConstants::MY_CONFIG_VALUE)` to return the config value
 - Optionally pass a second argument to `$this->get()` as a default fallback value
 
 ### 4. Create the Communication Factory
@@ -79,7 +79,7 @@ To access the Config class from a controller, you need a CommunicationFactory. T
 
 **Coding time:**
 
-Create `src/SprykerAcademy/Zed/HelloWorld/Communication/HelloWorldCommunicationFactory.php`:
+Create `src/SprykerAcademy/Zed/ContactRequest/Communication/ContactRequestCommunicationFactory.php`:
 
 - Extend `Spryker\Zed\Kernel\Communication\AbstractCommunicationFactory`
 - The class body can be empty — the `getConfig()` method is inherited
@@ -87,7 +87,7 @@ Create `src/SprykerAcademy/Zed/HelloWorld/Communication/HelloWorldCommunicationF
 
 ```php
 /**
- * @method \SprykerAcademy\Zed\HelloWorld\HelloWorldConfig getConfig()
+ * @method \SprykerAcademy\Zed\ContactRequest\ContactRequestConfig getConfig()
  */
 ```
 
@@ -95,7 +95,7 @@ Create `src/SprykerAcademy/Zed/HelloWorld/Communication/HelloWorldCommunicationF
 
 **Coding time:**
 
-Create `src/SprykerAcademy/Zed/HelloWorld/Presentation/Config/index.twig`:
+Create `src/SprykerAcademy/Zed/ContactRequest/Presentation/Config/index.twig`:
 
 ```twig
 {% extends '@Gui/Layout/layout.twig' %}
@@ -111,7 +111,7 @@ The folder `Config` matches the controller name, and `index.twig` matches the ac
 
 **Coding time:**
 
-Create `src/SprykerAcademy/Zed/HelloWorld/Communication/Controller/ConfigController.php`:
+Create `src/SprykerAcademy/Zed/ContactRequest/Communication/Controller/ConfigController.php`:
 
 - Extend `Spryker\Zed\Kernel\Communication\Controller\AbstractController`
 - Implement `indexAction()`:
@@ -121,11 +121,11 @@ Create `src/SprykerAcademy/Zed/HelloWorld/Communication/Controller/ConfigControl
 Starting with Spryker **202512.0**, Zed controllers support **constructor dependency injection**. This means you can inject the Config class directly into the controller instead of going through the factory chain:
 
 ```php
-use SprykerAcademy\Zed\HelloWorld\HelloWorldConfig;
+use SprykerAcademy\Zed\ContactRequest\ContactRequestConfig;
 
 class ConfigController extends AbstractController
 {
-    public function __construct(private readonly HelloWorldConfig $config)
+    public function __construct(private readonly ContactRequestConfig $config)
     {
     }
 
@@ -144,7 +144,7 @@ Alternatively, you can use the traditional factory approach (which still works a
 
 ```php
 /**
- * @method \SprykerAcademy\Zed\HelloWorld\Communication\HelloWorldCommunicationFactory getFactory()
+ * @method \SprykerAcademy\Zed\ContactRequest\Communication\ContactRequestCommunicationFactory getFactory()
  */
 class ConfigController extends AbstractController
 {
@@ -167,7 +167,7 @@ Clear the cache:
 docker/sdk console cache:empty-all
 ```
 
-Visit: http://backoffice.eu.spryker.local/hello-world/config/index
+Visit: http://backoffice.eu.spryker.local/contact-request/config/index
 (Credentials: `admin@spryker.com` / `change123`)
 
 You should see your config value displayed on the page.
@@ -179,7 +179,7 @@ You should see your config value displayed on the page.
 Run the automated tests for this exercise:
 
 ```bash
-docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/HelloWorld/ Exercise6
+docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/ContactRequest/ Exercise6
 ```
 
 All tests should pass if your implementation is correct.
@@ -189,5 +189,5 @@ All tests should pass if your implementation is correct.
 ## Solution
 
 ```bash
-./exercises/load.sh hello-world basics/configuration/complete
+./exercises/load.sh contact-request basics/configuration/complete
 ```

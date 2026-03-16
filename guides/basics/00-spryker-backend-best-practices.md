@@ -27,32 +27,32 @@ Spryker separates concerns across four application layers. Each module lives in 
 src/
 └── SprykerAcademy/
     ├── Zed/          # Backend: persistence, business logic, Back Office UI
-    │   └── HelloWorld/
+    │   └── ContactRequest/
     │       ├── Business/
-    │       │   ├── HelloWorldFacade.php
-    │       │   ├── HelloWorldFacadeInterface.php
-    │       │   ├── HelloWorldBusinessFactory.php
+    │       │   ├── ContactRequestFacade.php
+    │       │   ├── ContactRequestFacadeInterface.php
+    │       │   ├── ContactRequestBusinessFactory.php
     │       │   ├── Reader/
     │       │   └── Writer/
     │       ├── Communication/
     │       │   └── Controller/
     │       ├── Persistence/
-    │       │   ├── HelloWorldRepository.php
-    │       │   ├── HelloWorldEntityManager.php
-    │       │   ├── HelloWorldPersistenceFactory.php
+    │       │   ├── ContactRequestRepository.php
+    │       │   ├── ContactRequestEntityManager.php
+    │       │   ├── ContactRequestPersistenceFactory.php
     │       │   ├── Mapper/
     │       │   └── Propel/Schema/
     │       └── Presentation/
     ├── Yves/         # Storefront: rendering, routing
-    │   └── HelloWorldPage/
+    │   └── ContactRequestPage/
     │       ├── Controller/
     │       ├── Plugin/Router/
     │       └── Theme/
     ├── Client/       # Bridge between Yves and Zed
-    │   └── HelloWorld/
+    │   └── ContactRequest/
     │       └── Stub/
     └── Shared/       # Transfer definitions, constants
-        └── HelloWorld/Transfer/
+        └── ContactRequest/Transfer/
 ```
 
 ### Layer Responsibilities
@@ -70,9 +70,9 @@ Yves communicates with Zed exclusively through the Client layer:
 
 ```
 Yves Controller
-  -> Client (HelloWorldClient)
-    -> Stub (HelloWorldStub)
-      -> ZedRequestClient::call('/hello-world/gateway/find-message', $transfer)
+  -> Client (ContactRequestClient)
+    -> Stub (ContactRequestStub)
+      -> ZedRequestClient::call('/contact-request/gateway/find-message', $transfer)
         -> Zed GatewayController
           -> Facade -> Business Logic -> Repository/EntityManager
 ```
@@ -88,29 +88,29 @@ Yves Controller
 **Repository** (reads):
 
 ```php
-class HelloWorldRepository extends AbstractRepository implements HelloWorldRepositoryInterface
+class ContactRequestRepository extends AbstractRepository implements ContactRequestRepositoryInterface
 {
-    public function findMessage(MessageCriteriaTransfer $messageCriteria): ?MessageTransfer
+    public function findContactRequest(ContactRequestCriteriaTransfer $contactRequestCriteria): ?ContactRequestTransfer
     {
-        $query = $this->getFactory()->createMessageQuery();
-        $messageEntity = null;
+        $query = $this->getFactory()->createContactRequestQuery();
+        $contactRequestEntity = null;
 
-        if ($messageCriteria->getIdMessage()) {
-            $messageEntity = $query->findOneByIdMessage($messageCriteria->getIdMessage());
-        } elseif ($messageCriteria->getMessage()) {
-            $messageEntity = $query->filterByMessage(
-                sprintf('%%%s%%', $messageCriteria->getMessage()),
+        if ($contactRequestCriteria->getIdContactRequest()) {
+            $contactRequestEntity = $query->findOneByIdContactRequest($contactRequestCriteria->getIdContactRequest());
+        } elseif ($contactRequestCriteria->getMessage()) {
+            $contactRequestEntity = $query->filterByMessage(
+                sprintf('%%%s%%', $contactRequestCriteria->getMessage()),
                 Criteria::LIKE,
             )->findOne();
         }
 
-        if (!$messageEntity) {
+        if (!$contactRequestEntity) {
             return null;
         }
 
         return $this->getFactory()
-            ->createMessageMapper()
-            ->mapEntityToMessageTransfer($messageEntity, new MessageTransfer());
+            ->createContactRequestMapper()
+            ->mapEntityToContactRequestTransfer($contactRequestEntity, new ContactRequestTransfer());
     }
 }
 ```
@@ -118,19 +118,19 @@ class HelloWorldRepository extends AbstractRepository implements HelloWorldRepos
 **EntityManager** (writes):
 
 ```php
-class HelloWorldEntityManager extends AbstractEntityManager implements HelloWorldEntityManagerInterface
+class ContactRequestEntityManager extends AbstractEntityManager implements ContactRequestEntityManagerInterface
 {
-    public function createMessage(MessageTransfer $messageTransfer): MessageTransfer
+    public function createContactRequest(ContactRequestTransfer $contactRequestTransfer): ContactRequestTransfer
     {
-        $messageEntity = $this->getFactory()
-            ->createMessageMapper()
-            ->mapMessageTransferToEntity($messageTransfer);
+        $contactRequestEntity = $this->getFactory()
+            ->createContactRequestMapper()
+            ->mapContactRequestTransferToEntity($contactRequestTransfer);
 
-        $messageEntity->save();
+        $contactRequestEntity->save();
 
         return $this->getFactory()
-            ->createMessageMapper()
-            ->mapEntityToMessageTransfer($messageEntity, new MessageTransfer());
+            ->createContactRequestMapper()
+            ->mapEntityToContactRequestTransfer($contactRequestEntity, new ContactRequestTransfer());
     }
 }
 ```
@@ -140,16 +140,16 @@ class HelloWorldEntityManager extends AbstractEntityManager implements HelloWorl
 All Propel query objects and mappers are created through the PersistenceFactory. Never instantiate them directly.
 
 ```php
-class HelloWorldPersistenceFactory extends AbstractPersistenceFactory
+class ContactRequestPersistenceFactory extends AbstractPersistenceFactory
 {
-    public function createMessageQuery(): PyzMessageQuery
+    public function createContactRequestQuery(): PyzContactRequestQuery
     {
-        return PyzMessageQuery::create(); // Always use ::create(), never new
+        return PyzContactRequestQuery::create(); // Always use ::create(), never new
     }
 
-    public function createMessageMapper(): MessageMapper
+    public function createContactRequestMapper(): ContactRequestMapper
     {
-        return new MessageMapper();
+        return new ContactRequestMapper();
     }
 }
 ```
@@ -194,16 +194,16 @@ class SupplierMapper
 
 ```xml
 <database name="zed"
-          namespace="Orm\Zed\HelloWorld\Persistence"
-          package="src.Orm.Zed.HelloWorld.Persistence">
+          namespace="Orm\Zed\ContactRequest\Persistence"
+          package="src.Orm.Zed.ContactRequest.Persistence">
 
-    <table name="pyz_message" idMethod="native" allowPkInsert="true" phpName="PyzMessage">
-        <column name="id_message" required="true" type="INTEGER" primaryKey="true" autoIncrement="true"/>
+    <table name="pyz_contact_request" idMethod="native" allowPkInsert="true" phpName="PyzContactRequest">
+        <column name="id_contact_request" required="true" type="INTEGER" primaryKey="true" autoIncrement="true"/>
         <column name="message" required="true" type="VARCHAR" size="255"/>
-        <unique name="pyz_message-message">
+        <unique name="pyz_contact_request-message">
             <unique-column name="message"/>
         </unique>
-        <id-method-parameter value="pyz_message_pk_seq"/>
+        <id-method-parameter value="pyz_contact_request_pk_seq"/>
     </table>
 </database>
 ```
@@ -227,20 +227,20 @@ Transfers live in `Shared/{Module}/Transfer/*.transfer.xml` and are generated in
            xsi:schemaLocation="spryker:transfer-01 http://static.spryker.com/transfer-01.xsd">
 
     <!-- Core entity transfer -->
-    <transfer name="Message">
-        <property name="idMessage" type="int"/>
+    <transfer name="ContactRequest">
+        <property name="idContactRequest" type="int"/>
         <property name="message" type="string"/>
     </transfer>
 
     <!-- Criteria transfer: used for search/filter parameters -->
-    <transfer name="MessageCriteria">
-        <property name="idMessage" type="int"/>
+    <transfer name="ContactRequestCriteria">
+        <property name="idContactRequest" type="int"/>
         <property name="message" type="string"/>
     </transfer>
 
     <!-- Response transfer: wraps results with success flag -->
-    <transfer name="MessageResponse">
-        <property name="message" type="Message"/>
+    <transfer name="ContactRequestResponse">
+        <property name="message" type="ContactRequest"/>
         <property name="isSuccessful" type="bool"/>
     </transfer>
 </transfers>
@@ -261,8 +261,8 @@ For collections of IDs, use the `singular` attribute:
 | Purpose | Convention | Example |
 |---------|-----------|---------|
 | Core entity | `{Entity}Transfer` | `SupplierTransfer` |
-| Search/filter parameters | `{Entity}CriteriaTransfer` | `MessageCriteriaTransfer` |
-| Wrapping a result | `{Entity}ResponseTransfer` | `MessageResponseTransfer` |
+| Search/filter parameters | `{Entity}CriteriaTransfer` | `ContactRequestCriteriaTransfer` |
+| Wrapping a result | `{Entity}ResponseTransfer` | `ContactRequestResponseTransfer` |
 | Collection container | `{Entity}CollectionTransfer` | `SupplierCollectionTransfer` |
 | Primary key property | `id{Entity}` | `idSupplier` |
 | Foreign key property | `fk{Entity}` | `fkSupplier` |
@@ -385,21 +385,21 @@ readonly class SupplierWriter
 ### Step 1: Yves Controller calls the Client
 
 ```php
-class MessageController extends AbstractController
+class ContactRequestController extends AbstractController
 {
-    public function getAction(int $idMessage): View
+    public function getAction(int $idContactRequest): View
     {
-        $messageCriteriaTransfer = new MessageCriteriaTransfer();
-        $messageCriteriaTransfer->setIdMessage($idMessage);
+        $contactRequestCriteriaTransfer = new ContactRequestCriteriaTransfer();
+        $contactRequestCriteriaTransfer->setIdContactRequest($idContactRequest);
 
-        $messageResponseTransfer = $this->getFactory()
-            ->getHelloWorldClient()
-            ->findMessage($messageCriteriaTransfer);
+        $contactRequestResponseTransfer = $this->getFactory()
+            ->getContactRequestClient()
+            ->findContactRequest($contactRequestCriteriaTransfer);
 
         return $this->view(
-            ['message' => $messageResponseTransfer->getMessage()],
+            ['message' => $contactRequestResponseTransfer->getMessage()],
             [],
-            '@HelloWorldPage/views/message/get.twig',
+            '@ContactRequestPage/views/message/get.twig',
         );
     }
 }
@@ -408,11 +408,11 @@ class MessageController extends AbstractController
 ### Step 2: Client delegates to the Stub
 
 ```php
-class HelloWorldClient extends AbstractClient implements HelloWorldClientInterface
+class ContactRequestClient extends AbstractClient implements ContactRequestClientInterface
 {
-    public function findMessage(MessageCriteriaTransfer $messageCriteria): MessageResponseTransfer
+    public function findContactRequest(ContactRequestCriteriaTransfer $contactRequestCriteria): ContactRequestResponseTransfer
     {
-        return $this->getFactory()->createHelloWorldStub()->findMessage($messageCriteria);
+        return $this->getFactory()->createContactRequestStub()->findContactRequest($contactRequestCriteria);
     }
 }
 ```
@@ -420,18 +420,18 @@ class HelloWorldClient extends AbstractClient implements HelloWorldClientInterfa
 ### Step 3: Stub makes the HTTP call
 
 ```php
-class HelloWorldStub
+class ContactRequestStub
 {
     public function __construct(protected ZedRequestClientInterface $zedRequestClient)
     {
     }
 
-    public function findMessage(MessageCriteriaTransfer $messageCriteria): MessageResponseTransfer
+    public function findContactRequest(ContactRequestCriteriaTransfer $contactRequestCriteria): ContactRequestResponseTransfer
     {
         // URL convention: /{module-name}/gateway/{action-name}
         return $this->zedRequestClient->call(
-            '/hello-world/gateway/find-message',
-            $messageCriteria,
+            '/contact-request/gateway/find-message',
+            $contactRequestCriteria,
         );
     }
 }
@@ -442,14 +442,14 @@ class HelloWorldStub
 ```php
 class GatewayController extends AbstractGatewayController
 {
-    public function findMessageAction(MessageCriteriaTransfer $messageCriteria): MessageResponseTransfer
+    public function findContactRequestAction(ContactRequestCriteriaTransfer $contactRequestCriteria): ContactRequestResponseTransfer
     {
-        return $this->getFacade()->findMessage($messageCriteria);
+        return $this->getFacade()->findContactRequest($contactRequestCriteria);
     }
 }
 ```
 
-**Gateway URL convention:** `/hello-world/gateway/find-message` maps to `HelloWorld` module -> `GatewayController` -> `findMessageAction()`. Transfers are serialized/deserialized automatically.
+**Gateway URL convention:** `/contact-request/gateway/find-message` maps to `ContactRequest` module -> `GatewayController` -> `findContactRequestAction()`. Transfers are serialized/deserialized automatically.
 
 ---
 
@@ -460,7 +460,7 @@ DependencyProviders wire external dependencies (facades, clients, services) into
 ### Client Layer
 
 ```php
-class HelloWorldDependencyProvider extends AbstractDependencyProvider
+class ContactRequestDependencyProvider extends AbstractDependencyProvider
 {
     public const string CLIENT_ZED_REQUEST = 'CLIENT_ZED_REQUEST';
 
@@ -484,15 +484,15 @@ class HelloWorldDependencyProvider extends AbstractDependencyProvider
 ### Yves Layer
 
 ```php
-class HelloWorldPageDependencyProvider extends AbstractBundleDependencyProvider
+class ContactRequestPageDependencyProvider extends AbstractBundleDependencyProvider
 {
-    public const string CLIENT_HELLO_WORLD = 'CLIENT_HELLO_WORLD';
+    public const string CLIENT_CONTACT_REQUEST = 'CLIENT_CONTACT_REQUEST';
 
     public function provideDependencies(Container $container): Container
     {
         $container->set(
-            static::CLIENT_HELLO_WORLD,
-            fn () => $container->getLocator()->helloWorld()->client(),
+            static::CLIENT_CONTACT_REQUEST,
+            fn () => $container->getLocator()->contactRequest()->client(),
         );
         return $container;
     }
@@ -536,18 +536,18 @@ class SupplierSearchWritePublisherPlugin extends AbstractPlugin implements Publi
 ### Router Plugin (Yves Routing)
 
 ```php
-class HelloWorldPageRouteProviderPlugin extends AbstractRouteProviderPlugin
+class ContactRequestPageRouteProviderPlugin extends AbstractRouteProviderPlugin
 {
     public function addRoutes(RouteCollection $routeCollection): RouteCollection
     {
         $route = $this->buildRoute(
-            'hello-world/message/{idMessage}',
-            'HelloWorldPage',  // Module
+            'contact-request/message/{idContactRequest}',
+            'ContactRequestPage',  // Module
             'Message',         // Controller
             'getAction',       // Action
         );
         $route = $route->setMethods(['GET']);
-        $routeCollection->add('hello-world-message', $route);
+        $routeCollection->add('contact-request-message', $route);
 
         return $routeCollection;
     }
@@ -676,12 +676,12 @@ Instead of adding many method parameters, use a CriteriaTransfer to encapsulate 
 
 ```php
 // Repository applies conditions based on what's set in criteria
-public function findMessage(MessageCriteriaTransfer $criteria): ?MessageTransfer
+public function findContactRequest(ContactRequestCriteriaTransfer $criteria): ?ContactRequestTransfer
 {
-    $query = $this->getFactory()->createMessageQuery();
+    $query = $this->getFactory()->createContactRequestQuery();
 
-    if ($criteria->getIdMessage()) {
-        $query->findOneByIdMessage($criteria->getIdMessage());
+    if ($criteria->getIdContactRequest()) {
+        $query->findOneByIdContactRequest($criteria->getIdContactRequest());
     } elseif ($criteria->getMessage()) {
         $query->filterByMessage(
             sprintf('%%%s%%', $criteria->getMessage()),
@@ -816,23 +816,23 @@ This enables running subsets of tests: `vendor/bin/codecept run --group Supplier
 
 | What | Path Pattern | Example |
 |------|-------------|---------|
-| Facade | `Zed/{Module}/Business/{Module}Facade.php` | `HelloWorldFacade.php` |
-| Facade Interface | `Zed/{Module}/Business/{Module}FacadeInterface.php` | `HelloWorldFacadeInterface.php` |
-| Business Factory | `Zed/{Module}/Business/{Module}BusinessFactory.php` | `HelloWorldBusinessFactory.php` |
-| Reader | `Zed/{Module}/Business/Reader/{Entity}Reader.php` | `MessageReader.php` |
-| Writer | `Zed/{Module}/Business/Writer/{Entity}Writer.php` | `MessageWriter.php` |
-| Repository | `Zed/{Module}/Persistence/{Module}Repository.php` | `HelloWorldRepository.php` |
-| Repository Interface | `Zed/{Module}/Persistence/{Module}RepositoryInterface.php` | `HelloWorldRepositoryInterface.php` |
-| EntityManager | `Zed/{Module}/Persistence/{Module}EntityManager.php` | `HelloWorldEntityManager.php` |
-| PersistenceFactory | `Zed/{Module}/Persistence/{Module}PersistenceFactory.php` | `HelloWorldPersistenceFactory.php` |
-| Mapper | `Zed/{Module}/Persistence/Mapper/{Entity}Mapper.php` | `MessageMapper.php` |
-| Propel Schema | `Zed/{Module}/Persistence/Propel/Schema/pyz_{table}.schema.xml` | `pyz_message.schema.xml` |
+| Facade | `Zed/{Module}/Business/{Module}Facade.php` | `ContactRequestFacade.php` |
+| Facade Interface | `Zed/{Module}/Business/{Module}FacadeInterface.php` | `ContactRequestFacadeInterface.php` |
+| Business Factory | `Zed/{Module}/Business/{Module}BusinessFactory.php` | `ContactRequestBusinessFactory.php` |
+| Reader | `Zed/{Module}/Business/Reader/{Entity}Reader.php` | `ContactRequestReader.php` |
+| Writer | `Zed/{Module}/Business/Writer/{Entity}Writer.php` | `ContactRequestWriter.php` |
+| Repository | `Zed/{Module}/Persistence/{Module}Repository.php` | `ContactRequestRepository.php` |
+| Repository Interface | `Zed/{Module}/Persistence/{Module}RepositoryInterface.php` | `ContactRequestRepositoryInterface.php` |
+| EntityManager | `Zed/{Module}/Persistence/{Module}EntityManager.php` | `ContactRequestEntityManager.php` |
+| PersistenceFactory | `Zed/{Module}/Persistence/{Module}PersistenceFactory.php` | `ContactRequestPersistenceFactory.php` |
+| Mapper | `Zed/{Module}/Persistence/Mapper/{Entity}Mapper.php` | `ContactRequestMapper.php` |
+| Propel Schema | `Zed/{Module}/Persistence/Propel/Schema/pyz_{table}.schema.xml` | `pyz_contact_request.schema.xml` |
 | GatewayController | `Zed/{Module}/Communication/Controller/GatewayController.php` | `GatewayController.php` |
-| Back Office Controller | `Zed/{Module}/Communication/Controller/{Name}Controller.php` | `MessageController.php` |
+| Back Office Controller | `Zed/{Module}/Communication/Controller/{Name}Controller.php` | `ContactRequestController.php` |
 | Twig Template | `Zed/{Module}/Presentation/{Controller}/{action}.twig` | `Message/add.twig` |
-| Client | `Client/{Module}/{Module}Client.php` | `HelloWorldClient.php` |
-| Stub | `Client/{Module}/Stub/{Module}Stub.php` | `HelloWorldStub.php` |
-| Transfer XML | `Shared/{Module}/Transfer/{module}.transfer.xml` | `helloworld.transfer.xml` |
-| DependencyProvider | `{Layer}/{Module}/{Module}DependencyProvider.php` | `HelloWorldDependencyProvider.php` |
-| Route Plugin | `Yves/{Module}/Plugin/Router/{Module}RouteProviderPlugin.php` | `HelloWorldPageRouteProviderPlugin.php` |
+| Client | `Client/{Module}/{Module}Client.php` | `ContactRequestClient.php` |
+| Stub | `Client/{Module}/Stub/{Module}Stub.php` | `ContactRequestStub.php` |
+| Transfer XML | `Shared/{Module}/Transfer/{module}.transfer.xml` | `contact_request.transfer.xml` |
+| DependencyProvider | `{Layer}/{Module}/{Module}DependencyProvider.php` | `ContactRequestDependencyProvider.php` |
+| Route Plugin | `Yves/{Module}/Plugin/Router/{Module}RouteProviderPlugin.php` | `ContactRequestPageRouteProviderPlugin.php` |
 | Unit Test | `tests/{Ns}Test/Zed/{Module}/Business/{Class}Test.php` | `SupplierReaderTest.php` |

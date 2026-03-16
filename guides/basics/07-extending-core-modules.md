@@ -19,7 +19,7 @@ You will learn how to:
 ## Loading the Exercise
 
 ```bash
-./exercises/load.sh hello-world basics/extending-core-modules/skeleton
+./exercises/load.sh contact-request basics/extending-core-modules/skeleton
 docker/sdk cli composer dump-autoload
 docker/sdk console transfer:generate
 docker/sdk console propel:install
@@ -31,11 +31,11 @@ docker/sdk console propel:install
 
 ### Part 1: Adjust the Database Schema
 
-Currently the `pyz_message` table stores messages without any link to who created them. We need to add a foreign key to the `spy_customer` table so each message can belong to a customer. We also add the `timestampable` behavior so Propel automatically manages `created_at` and `updated_at` columns.
+Currently the `pyz_contact_request` table stores messages without any link to who created them. We need to add a foreign key to the `spy_customer` table so each message can belong to a customer. We also add the `timestampable` behavior so Propel automatically manages `created_at` and `updated_at` columns.
 
 **Coding time:**
 
-Open `src/SprykerAcademy/Zed/HelloWorld/Persistence/Propel/Schema/pyz_message.schema.xml` and:
+Open `src/SprykerAcademy/Zed/ContactRequest/Persistence/Propel/Schema/pyz_contact_request.schema.xml` and:
 1. Add a new column `fk_customer` of type `INTEGER` (not required, since existing messages have no customer)
 2. Add a `<foreign-key>` element that references the `spy_customer` table, mapping `fk_customer` to `id_customer` with `onDelete="CASCADE"`
 3. Add `<behavior name="timestampable"/>` — Propel will auto-add `created_at` and `updated_at` TIMESTAMP columns
@@ -56,11 +56,11 @@ We need to make the new `fkCustomer` and `createdAt` fields available in our DTO
 
 **Coding time:**
 
-Open `src/SprykerAcademy/Shared/HelloWorld/Transfer/helloworld.transfer.xml` and:
+Open `src/SprykerAcademy/Shared/ContactRequest/Transfer/contact_request.transfer.xml` and:
 1. Add a `fkCustomer` property of type `int` to the **Message** transfer
 2. Add a `createdAt` property of type `string` to the **Message** transfer
-3. Add a `fkCustomer` property of type `int` to the **MessageCriteria** transfer
-4. Add a new transfer named **MessageCollection** with a property `messages` of type `Message[]`
+3. Add a `fkCustomer` property of type `int` to the **ContactRequestCriteria** transfer
+4. Add a new transfer named **ContactRequestCollection** with a property `messages` of type `Message[]`
 
 Regenerate transfers:
 
@@ -68,7 +68,7 @@ Regenerate transfers:
 docker/sdk console transfer:generate
 ```
 
-> **Note:** The generated `MessageCollectionTransfer` will have an `addMessages()` method (plural, matching the property name). This is a Spryker convention — the adder method name matches the property name.
+> **Note:** The generated `ContactRequestCollectionTransfer` will have an `addContactRequests()` method (plural, matching the property name). This is a Spryker convention — the adder method name matches the property name.
 
 ---
 
@@ -80,28 +80,28 @@ We need a way to fetch all messages belonging to a specific customer.
 
 **Coding time:**
 
-Open `src/SprykerAcademy/Zed/HelloWorld/Persistence/HelloWorldRepository.php`. Implement `findMessagesByCustomer()`:
+Open `src/SprykerAcademy/Zed/ContactRequest/Persistence/ContactRequestRepository.php`. Implement `findContactRequestsByCustomer()`:
 1. Get the message query from the factory
 2. Filter by `fk_customer` if the criteria has a `fkCustomer` set
 3. Execute the query with `find()` to get all matching entities
-4. Map each entity to a `MessageTransfer` using the MessageMapper
-5. Return the array of `MessageTransfer` objects
+4. Map each entity to a `ContactRequestTransfer` using the ContactRequestMapper
+5. Return the array of `ContactRequestTransfer` objects
 
 Propel provides magic `filterBy<ColumnName>()` methods on query objects.
 
-#### 3.2 Update the MessageReader
+#### 3.2 Update the ContactRequestReader
 
 **Coding time:**
 
-Open `src/SprykerAcademy/Zed/HelloWorld/Business/Reader/MessageReader.php`. Implement `findMessagesByCustomer()`:
+Open `src/SprykerAcademy/Zed/ContactRequest/Business/Reader/ContactRequestReader.php`. Implement `findContactRequestsByCustomer()`:
 - Use the repository to get the messages
-- Create a `MessageCollectionTransfer` and add each message to it using `addMessages()`
+- Create a `ContactRequestCollectionTransfer` and add each message to it using `addContactRequests()`
 
 #### 3.3 Expose Through the Facade
 
 **Coding time:**
 
-Open `src/SprykerAcademy/Zed/HelloWorld/Business/HelloWorldFacade.php`. Implement `findMessagesByCustomer()` by delegating to the factory's MessageReader.
+Open `src/SprykerAcademy/Zed/ContactRequest/Business/ContactRequestFacade.php`. Implement `findContactRequestsByCustomer()` by delegating to the factory's ContactRequestReader.
 
 ---
 
@@ -111,10 +111,10 @@ We need three new gateway actions: create, get by customer, and delete.
 
 **Coding time:**
 
-Open `src/SprykerAcademy/Zed/HelloWorld/Communication/Controller/GatewayController.php`:
-1. In `createMessageAction()`, use the Facade to create and return the message
-2. In `getMessagesByCustomerAction()`, use the Facade to find messages by customer and return the collection
-3. In `deleteMessageAction()`, use the Facade to delete by ID and return a `MessageResponseTransfer` with the `isSuccessful` flag
+Open `src/SprykerAcademy/Zed/ContactRequest/Communication/Controller/GatewayController.php`:
+1. In `createContactRequestAction()`, use the Facade to create and return the message
+2. In `getContactRequestsByCustomerAction()`, use the Facade to find messages by customer and return the collection
+3. In `deleteContactRequestAction()`, use the Facade to delete by ID and return a `ContactRequestResponseTransfer` with the `isSuccessful` flag
 
 Clear cache after adding new controller actions:
 
@@ -130,21 +130,21 @@ docker/sdk console cache:empty-all
 
 **Coding time:**
 
-Open `src/SprykerAcademy/Client/HelloWorld/Stub/HelloWorldStub.php`:
-1. In `createMessage()`, use `$this->zedRequestClient->call()` with the path `/hello-world/gateway/create-message`
-2. In `getMessagesByCustomer()`, use the path `/hello-world/gateway/get-messages-by-customer`
-3. In `deleteMessage()`, use the path `/hello-world/gateway/delete-message`
+Open `src/SprykerAcademy/Client/ContactRequest/Stub/ContactRequestStub.php`:
+1. In `createContactRequest()`, use `$this->zedRequestClient->call()` with the path `/contact-request/gateway/create-message`
+2. In `getContactRequestsByCustomer()`, use the path `/contact-request/gateway/get-messages-by-customer`
+3. In `deleteContactRequest()`, use the path `/contact-request/gateway/delete-message`
 
-> **Gateway path convention:** `/module-name/gateway/action-name` where the action name is the controller method without the `Action` suffix, converted to kebab-case. For example, `deleteMessageAction()` becomes `/hello-world/gateway/delete-message`.
+> **Gateway path convention:** `/module-name/gateway/action-name` where the action name is the controller method without the `Action` suffix, converted to kebab-case. For example, `deleteContactRequestAction()` becomes `/contact-request/gateway/delete-message`.
 
 #### 5.2 Update the Client
 
 **Coding time:**
 
-Open `src/SprykerAcademy/Client/HelloWorld/HelloWorldClient.php`:
-1. In `createMessage()`, delegate to the HelloWorldStub via the factory
-2. In `getMessagesByCustomer()`, delegate to the HelloWorldStub via the factory
-3. In `deleteMessage()`, delegate to the HelloWorldStub via the factory
+Open `src/SprykerAcademy/Client/ContactRequest/ContactRequestClient.php`:
+1. In `createContactRequest()`, delegate to the ContactRequestStub via the factory
+2. In `getContactRequestsByCustomer()`, delegate to the ContactRequestStub via the factory
+3. In `deleteContactRequest()`, delegate to the ContactRequestStub via the factory
 
 Update IDE auto-completion:
 
@@ -162,61 +162,61 @@ The pattern: extend the core class in your project namespace, and override or ad
 
 #### 6.1 DependencyProvider
 
-We need to inject our `HelloWorldClient` into the extended `CustomerPage` module.
+We need to inject our `ContactRequestClient` into the extended `CustomerPage` module.
 
 **Coding time:**
 
-Open `src/SprykerAcademy/Yves/CustomerPage/CustomerPageDependencyProvider.php`. In `addHelloWorldClient()`, use `$container->set()` with the `CLIENT_HELLO_WORLD` constant to provide the `HelloWorldClient` through the locator.
+Open `src/SprykerAcademy/Yves/CustomerPage/CustomerPageDependencyProvider.php`. In `addContactRequestClient()`, use `$container->set()` with the `CLIENT_CONTACT_REQUEST` constant to provide the `ContactRequestClient` through the locator.
 
-The locator pattern: `$container->getLocator()->helloWorld()->client()`.
+The locator pattern: `$container->getLocator()->contactRequest()->client()`.
 
 #### 6.2 Factory
 
 **Coding time:**
 
 Open `src/SprykerAcademy/Yves/CustomerPage/CustomerPageFactory.php`:
-1. In `getHelloWorldClient()`, return the provided dependency using the `CLIENT_HELLO_WORLD` constant
-2. In `createMessageForm()`, use the Spryker form factory chain to instantiate the form:
+1. In `getContactRequestClient()`, return the provided dependency using the `CLIENT_CONTACT_REQUEST` constant
+2. In `createContactRequestForm()`, use the Spryker form factory chain to instantiate the form:
    ```php
-   $this->createCustomerFormFactory()->getFormFactory()->create(MessageForm::class, $messageTransfer)
+   $this->createCustomerFormFactory()->getFormFactory()->create(ContactRequestForm::class, $contactRequestTransfer)
    ```
 
 > **How Spryker forms work:** Spryker Yves doesn't expose Symfony's `FormFactory` directly on the module factory. Instead, each module that uses forms has a proxy `FormFactory` class (e.g., `SprykerShop\Yves\CustomerPage\Form\FormFactory`) that extends `AbstractFactory` and provides `getFormFactory()` through the application container. The chain is: `CustomerPageFactory::createCustomerFormFactory()` -> `FormFactory::getFormFactory()` -> Symfony's `FormFactory::create()`.
 
-> **Data-mapped forms:** Notice we pass `$messageTransfer` as the second argument to `create()`. This tells Symfony to bind the form directly to the transfer object. When the form is submitted, `$form->getData()` returns the hydrated `MessageTransfer` directly — no manual field mapping needed.
+> **Data-mapped forms:** Notice we pass `$contactRequestTransfer` as the second argument to `create()`. This tells Symfony to bind the form directly to the transfer object. When the form is submitted, `$form->getData()` returns the hydrated `ContactRequestTransfer` directly — no manual field mapping needed.
 
-#### 6.3 MessageForm
+#### 6.3 ContactRequestForm
 
 This is a standard Symfony form with a text field for the message.
 
 **Coding time:**
 
-Open `src/SprykerAcademy/Yves/CustomerPage/Form/MessageForm.php`. In `addMessageField()`, add a `TextType` field using the `FIELD_MESSAGE` constant, with a label and a `NotBlank` constraint.
+Open `src/SprykerAcademy/Yves/CustomerPage/Form/ContactRequestForm.php`. In `addMessageField()`, add a `TextType` field using the `FIELD_MESSAGE` constant, with a label and a `NotBlank` constraint.
 
 > **Symfony form + Spryker transfers:** Spryker transfer objects implement `ArrayAccess`, so Symfony's `PropertyAccessor` can read/write properties by name. When the form field name matches a transfer property (e.g., `message` maps to `getMessage()`/`setMessage()`), data binding works automatically. No need for `configureOptions()` with `data_class` — though adding it would be more explicit.
 
 > **No SubmitType in the form class:** The submit button is rendered directly in the Twig template with Spryker's button CSS classes. This keeps the form class focused on data fields and validation, and gives the template full control over button styling.
 
-#### 6.4 MessageController
+#### 6.4 ContactRequestController
 
 The controller handles listing messages, creating new ones, and deleting. It extends `AbstractCustomerController` from SprykerShop which provides `getLoggedInCustomerTransfer()`.
 
 **Coding time:**
 
-Open `src/SprykerAcademy/Yves/CustomerPage/Controller/MessageController.php`:
+Open `src/SprykerAcademy/Yves/CustomerPage/Controller/ContactRequestController.php`:
 
 In `listAction()`:
 1. Get the logged-in customer using `$this->getLoggedInCustomerTransfer()`
-2. Create a `MessageCriteriaTransfer` and set the `fkCustomer` using `setFkCustomerOrFail()` for strict validation
-3. Fetch messages using the `HelloWorldClient` through the factory
-4. Create the message form with `$this->getFactory()->createMessageForm(new MessageTransfer())` — pass a fresh transfer as the data object
+2. Create a `ContactRequestCriteriaTransfer` and set the `fkCustomer` using `setFkCustomerOrFail()` for strict validation
+3. Fetch messages using the `ContactRequestClient` through the factory
+4. Create the message form with `$this->getFactory()->createContactRequestForm(new ContactRequestTransfer())` — pass a fresh transfer as the data object
 5. Handle the request with `$messageForm->handleRequest($request)`
 6. If the form is submitted and valid, get the hydrated transfer with `$messageForm->getData()`, set the `fkCustomer`, and create the message
 7. Return a view with the `messages` and `messageForm` variables, using the template `@CustomerPage/views/message/list.twig`
 
 In `deleteAction()`:
-1. Use `$this->castId($request->request->get('idMessage'))` to safely extract and validate the message ID
-2. Create a `MessageCriteriaTransfer`, set the `idMessage`, and call `deleteMessage()` on the client
+1. Use `$this->castId($request->request->get('idContactRequest'))` to safely extract and validate the message ID
+2. Create a `ContactRequestCriteriaTransfer`, set the `idContactRequest`, and call `deleteContactRequest()` on the client
 3. Redirect back to the messages list
 
 > **`castId()` pattern:** Spryker's Zed `AbstractController` provides `castId()` which validates that an ID is numeric and non-zero, throwing an exception otherwise. Since this method isn't available in Yves controllers, we add a `protected castId()` method following the same pattern. This prevents silently passing `0` or non-numeric values to the persistence layer.
@@ -228,15 +228,15 @@ In `deleteAction()`:
 **Coding time:**
 
 Open `src/SprykerAcademy/Yves/CustomerPage/Plugin/Router/CustomerPageRouteProviderPlugin.php`:
-1. In `addCustomerMessagesRoute()`, build a route for `/customer/messages` pointing to `Message` controller, `listAction` (GET + POST)
-2. Add a `addCustomerMessagesDeleteRoute()` for `POST /customer/messages/delete` pointing to `Message` controller, `deleteAction`
+1. In `addCustomerMessagesRoute()`, build a route for `/customer/contact-requests` pointing to `Message` controller, `listAction` (GET + POST)
+2. Add a `addCustomerMessagesDeleteRoute()` for `POST /customer/contact-requests/delete` pointing to `Message` controller, `deleteAction`
 
 #### 6.6 Provided Scaffolding (no coding needed)
 
 The following files are already provided by the exercise skeleton:
 
 - **`src/Pyz/Yves/Router/RouterDependencyProvider.php`** — Replaces the core `CustomerPageRouteProviderPlugin` with your extended version
-- **`src/Pyz/Yves/CustomerPage/Theme/.../navigation-sidebar/navigation-sidebar.twig`** — Adds a "My Messages" link to the customer account sidebar menu
+- **`src/Pyz/Yves/CustomerPage/Theme/.../navigation-sidebar/navigation-sidebar.twig`** — Adds a "My Contact Requests" link to the customer account sidebar menu
 - **`src/SprykerAcademy/Yves/CustomerPage/Theme/.../views/message/list.twig`** — The Twig template showing the message table with delete buttons and the add form
 
 Take a moment to review these files to understand:
@@ -261,9 +261,9 @@ The business layer separates concerns into dedicated classes:
 
 | Class | Responsibility |
 |-------|---------------|
-| `MessageReader` | Reading/querying messages (uses Repository) |
-| `MessageWriter` | Creating/persisting messages (uses EntityManager) |
-| `MessageDeleter` | Deleting messages (uses EntityManager) |
+| `ContactRequestReader` | Reading/querying messages (uses Repository) |
+| `ContactRequestWriter` | Creating/persisting messages (uses EntityManager) |
+| `ContactRequestDeleter` | Deleting messages (uses EntityManager) |
 
 Each class has **one reason to change**. The Writer does not know how to delete. The Deleter does not know how to create. The Facade orchestrates all three through the BusinessFactory.
 
@@ -273,23 +273,23 @@ Instead of extracting form data from arrays:
 ```php
 // Avoid this
 $formData = $messageForm->getData();
-$messageTransfer = new MessageTransfer();
-$messageTransfer->setMessage($formData['message']);
+$contactRequestTransfer = new ContactRequestTransfer();
+$contactRequestTransfer->setMessage($formData['message']);
 ```
 
 Bind the form directly to a transfer:
 ```php
 // Preferred
-$messageForm = $factory->createMessageForm(new MessageTransfer());
+$messageForm = $factory->createContactRequestForm(new ContactRequestTransfer());
 $messageForm->handleRequest($request);
-$messageTransfer = $messageForm->getData(); // Already a MessageTransfer
+$contactRequestTransfer = $messageForm->getData(); // Already a ContactRequestTransfer
 ```
 
 ### Safe ID Handling with castId()
 
 Always validate IDs from user input before passing them to the persistence layer:
 ```php
-$idMessage = $this->castId($request->request->get('idMessage'));
+$idContactRequest = $this->castId($request->request->get('idContactRequest'));
 // Throws InvalidArgumentException if not numeric or zero
 ```
 
@@ -298,7 +298,7 @@ $idMessage = $this->castId($request->request->get('idMessage'));
 ## Testing
 
 1. Log in to Yves: http://yves.eu.spryker.local/en/login (use `sonia@spryker.com` / `change123`)
-2. Visit: http://yves.eu.spryker.local/en/customer/messages
+2. Visit: http://yves.eu.spryker.local/en/customer/contact-requests
 3. You should see a message list (empty initially) and a form to add messages
 4. Add a message and verify it appears in the list with a created timestamp
 5. Click "Delete" on a message and verify it disappears
@@ -310,21 +310,21 @@ $idMessage = $this->castId($request->request->get('idMessage'));
 Run the automated tests for this exercise:
 
 ```bash
-docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/HelloWorld/ Exercise7
+docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/ContactRequest/ Exercise7
 ```
 
 The test suite covers:
 - **Schema XML:** `fk_customer` column, foreign key, timestampable behavior
-- **Transfer XML:** `fkCustomer`, `createdAt` properties, `MessageCollection` transfer
+- **Transfer XML:** `fkCustomer`, `createdAt` properties, `ContactRequestCollection` transfer
 - **Structural:** All classes and methods exist across the full stack
 - **Mock-based:** Stub calls the correct gateway paths for create, get, and delete
-- **Unit:** `MessageDeleter` delegates to `EntityManager` correctly
-- **SOLID:** `MessageWriter` does NOT have a `delete()` method
+- **Unit:** `ContactRequestDeleter` delegates to `EntityManager` correctly
+- **SOLID:** `ContactRequestWriter` does NOT have a `delete()` method
 
 Or run all exercise tests at once:
 
 ```bash
-docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/HelloWorld/
+docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/ContactRequest/
 ```
 
 ---
@@ -332,7 +332,7 @@ docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/HelloWorl
 ## Solution
 
 ```bash
-./exercises/load.sh hello-world basics/extending-core-modules/complete
+./exercises/load.sh contact-request basics/extending-core-modules/complete
 ```
 
 ---
@@ -385,17 +385,17 @@ The template includes the AJAX trio after the content wrapper:
 Form buttons use `data-message-ajax-submit` and `formaction` to point to the async endpoint:
 
 ```html
-<button data-message-ajax-submit formaction="/customer/messages/async/add">Add Message</button>
-<button data-message-ajax-submit formaction="/customer/messages/async/delete">Delete</button>
+<button data-message-ajax-submit formaction="/customer/contact-requests/async/add">Add Message</button>
+<button data-message-ajax-submit formaction="/customer/contact-requests/async/delete">Delete</button>
 ```
 
 ### Key Additions in the AJAX Version
 
 - `MessageAsyncController` — `addAction()` and `deleteAction()` return `JsonResponse` instead of redirects
-- Async routes: `POST /customer/messages/async/add` and `POST /customer/messages/async/delete`
+- Async routes: `POST /customer/contact-requests/async/add` and `POST /customer/contact-requests/async/delete`
 - `message-async.twig` — Content fragment re-rendered server-side after each operation
 - `list.twig` — Includes the AJAX component trio; uses `mount-after-render: true` so JS components in new content get re-initialized
 
 ```bash
-./exercises/load.sh hello-world basics/extending-core-modules/complete-ajax
+./exercises/load.sh contact-request basics/extending-core-modules/complete-ajax
 ```

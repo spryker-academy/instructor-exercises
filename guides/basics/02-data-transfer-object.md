@@ -1,11 +1,11 @@
 # Exercise 2: Create a Data Transfer Object
 
-In Spryker, data transfer objects (DTOs) are used to pass data across layers and services. In this exercise you will create a message DTO from scratch and use it in the Hello World page.
+In Spryker, data transfer objects (DTOs) are used to pass data across layers and services. In this exercise you will create a message DTO from scratch and use it in the Contact Request page.
 
 ## Loading the Exercise
 
 ```bash
-./exercises/load.sh hello-world basics/data-transfer-object/skeleton
+./exercises/load.sh contact-request basics/data-transfer-object/skeleton
 docker/sdk cli composer dump-autoload
 docker/sdk console transfer:generate
 ```
@@ -40,8 +40,8 @@ This generates a `HumanTransfer` class with a `height` property of type `int`.
 
 **Coding time:**
 
-Open `src/SprykerAcademy/Shared/HelloWorld/Transfer/helloworld.transfer.xml` and add a DTO named **Message** with:
-- Property `idMessage` of type `int`
+Open `src/SprykerAcademy/Shared/ContactRequest/Transfer/contact_request.transfer.xml` and add a DTO named **Message** with:
+- Property `idContactRequest` of type `int`
 - Property `message` of type `string`
 
 Then generate the transfers:
@@ -50,7 +50,7 @@ Then generate the transfers:
 docker/sdk console transfer:generate
 ```
 
-Check the auto-generated file at `src/Generated/Shared/Transfer/MessageTransfer.php` and review the helper methods.
+Check the auto-generated file at `src/Generated/Shared/Transfer/ContactRequestTransfer.php` and review the helper methods.
 
 ### 2. The Controller
 
@@ -62,7 +62,7 @@ $myTransfer = new MyTransfer();
 
 **Coding time:**
 
-Open `src/SprykerAcademy/Zed/HelloWorld/Communication/Controller/HelloController.php`. Initialize a `Generated\Shared\Transfer\MessageTransfer` object, assign a name to the message, and pass the object to the template.
+Open `src/SprykerAcademy/Zed/ContactRequest/Communication/Controller/IndexController.php`. Initialize a `Generated\Shared\Transfer\ContactRequestTransfer` object, assign a name to the message, and pass the object to the template.
 
 ### 3. The Template
 
@@ -74,9 +74,9 @@ Access object properties in Twig using dot notation:
 
 **Coding time:**
 
-Open `src/SprykerAcademy/Zed/HelloWorld/Presentation/Hello/index.twig` and use the passed object to greet the message by its name instead of greeting the whole world.
+Open `src/SprykerAcademy/Zed/ContactRequest/Presentation/Hello/index.twig` and use the passed object to greet the message by its name instead of greeting the whole world.
 
-Visit: http://backoffice.eu.spryker.local/hello-world/hello/index
+Visit: http://backoffice.eu.spryker.local/contact-request/hello/index
 (Credentials: `admin@spryker.com` / `change123`)
 
 ---
@@ -86,7 +86,7 @@ Visit: http://backoffice.eu.spryker.local/hello-world/hello/index
 Run the automated tests for this exercise:
 
 ```bash
-docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/HelloWorld/ Exercise2
+docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/ContactRequest/ Exercise2
 ```
 
 All tests should pass if your transfer definition is correct.
@@ -96,5 +96,5 @@ All tests should pass if your transfer definition is correct.
 ## Solution
 
 ```bash
-./exercises/load.sh hello-world basics/data-transfer-object/complete
+./exercises/load.sh contact-request basics/data-transfer-object/complete
 ```
