@@ -261,8 +261,11 @@
 <p>Use the string you returned in the Controller action inside the template. The syntax is <code>{{ yourKeyFromTheArray }}</code>.</p>
 <p>After editing, run:</p>
 <div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span></code></pre></div>
-<p>Visit: http://backoffice.eu.spryker.local/contact-request/hello/index (Credentials: <code>admin@spryker.com</code> / <code>change123</code>)</p>
-<p>Note the URL pattern: <strong>module</strong> / <strong>controller</strong> / <strong>action</strong> (<code>contact-request/hello/index</code>). Back Office routing is resolved automatically from these names.</p>
+<p>Visit: http://backoffice.eu.spryker.local/contact-request/index/index (Credentials: <code>admin@spryker.com</code> / <code>change123</code>)</p>
+<p>Note the URL pattern: <strong>module</strong> / <strong>controller</strong> / <strong>action</strong> (<code>contact-request/index/index</code>). Back Office routing is resolved automatically from these names.</p>
+<blockquote>
+<p><strong>Tip:</strong> When both the controller and action are named <code>index</code>, Spryker allows you to omit them from the URL. So <code>http://backoffice.eu.spryker.local/contact-request</code> resolves to the same page.</p>
+</blockquote>
 <h3 id="the-navigation">3. The Navigation</h3>
 <p>Make your new page accessible through the Back Office navigation.</p>
 <p><strong>Coding time:</strong></p>

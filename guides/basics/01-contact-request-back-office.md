@@ -80,6 +80,8 @@ Visit: http://backoffice.eu.spryker.local/contact-request/index/index
 
 Note the URL pattern: **module** / **controller** / **action** (`contact-request/index/index`). Back Office routing is resolved automatically from these names.
 
+> **Tip:** When both the controller and action are named `index`, Spryker allows you to omit them from the URL. So `http://backoffice.eu.spryker.local/contact-request` resolves to the same page.
+
 ### 3. The Navigation
 
 Make your new page accessible through the Back Office navigation.
