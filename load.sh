@@ -134,39 +134,42 @@ fi
 log_info "Cleaning previous exercise files..."
 rm -rf "$PROJECT_DIR/src/SprykerAcademy"
 
-# Copy SprykerAcademy source files
+# Always create SprykerAcademy directory so skeleton exercises have a place to write code
+mkdir -p "$PROJECT_DIR/src/SprykerAcademy"
+
+# Copy SprykerAcademy source files if present in the exercise branch
 if [ -d "$REPO_DIR/src/SprykerAcademy" ]; then
-    cp -R "$REPO_DIR/src/SprykerAcademy" "$PROJECT_DIR/src/SprykerAcademy"
+    cp -R "$REPO_DIR/src/SprykerAcademy/." "$PROJECT_DIR/src/SprykerAcademy/"
+fi
 
-    # Add SprykerAcademy namespace to composer.json autoload if not already present
-    if file_needs_update "$PROJECT_DIR/composer.json" '"SprykerAcademy\\\\": "src/SprykerAcademy/"'; then
-        php -r '
-            $file = $argv[1] . "/composer.json";
-            $json = json_decode(file_get_contents($file), true);
-            if (!isset($json["autoload"]["psr-4"]["SprykerAcademy\\"])) {
-                $json["autoload"]["psr-4"]["SprykerAcademy\\"] = "src/SprykerAcademy/";
-                file_put_contents($file, json_encode($json, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n");
-            }
-        ' "$PROJECT_DIR"
-        log_success "Added SprykerAcademy\\ to composer.json autoload"
-    fi
+# Always add SprykerAcademy namespace to composer.json autoload (skeleton exercises need it too)
+if file_needs_update "$PROJECT_DIR/composer.json" '"SprykerAcademy\\\\": "src/SprykerAcademy/"'; then
+    php -r '
+        $file = $argv[1] . "/composer.json";
+        $json = json_decode(file_get_contents($file), true);
+        if (!isset($json["autoload"]["psr-4"]["SprykerAcademy\\"])) {
+            $json["autoload"]["psr-4"]["SprykerAcademy\\"] = "src/SprykerAcademy/";
+            file_put_contents($file, json_encode($json, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n");
+        }
+    ' "$PROJECT_DIR"
+    log_success "Added SprykerAcademy\\ to composer.json autoload"
+fi
 
-    # Add SprykerAcademy to Spryker kernel PROJECT_NAMESPACES (before Pyz for class resolution)
-    CONFIG_DEFAULT="$PROJECT_DIR/config/Shared/config_default.php"
-    if file_needs_update "$CONFIG_DEFAULT" "'SprykerAcademy'"; then
-        php -r '
-            $file = $argv[1];
-            $content = file_get_contents($file);
-            $content = preg_replace(
-                "/(KernelConstants::PROJECT_NAMESPACES\s*\]\s*=\s*\[\s*\n\s*)('\''Pyz'\'')/",
-                "$1'\''SprykerAcademy'\'',\n    $2",
-                $content,
-                1,
-            );
-            file_put_contents($file, $content);
-        ' "$CONFIG_DEFAULT"
-        log_success "Added SprykerAcademy to PROJECT_NAMESPACES in config_default.php"
-    fi
+# Always add SprykerAcademy to Spryker kernel PROJECT_NAMESPACES (skeleton exercises need it too)
+CONFIG_DEFAULT="$PROJECT_DIR/config/Shared/config_default.php"
+if file_needs_update "$CONFIG_DEFAULT" "'SprykerAcademy'"; then
+    php -r '
+        $file = $argv[1];
+        $content = file_get_contents($file);
+        $content = preg_replace(
+            "/(KernelConstants::PROJECT_NAMESPACES\s*\]\s*=\s*\[\s*\n\s*)('\''Pyz'\'')/",
+            "$1'\''SprykerAcademy'\'',\n    $2",
+            $content,
+            1,
+        );
+        file_put_contents($file, $content);
+    ' "$CONFIG_DEFAULT"
+    log_success "Added SprykerAcademy to PROJECT_NAMESPACES in config_default.php"
 fi
 
 # Copy Pyz overrides if present
