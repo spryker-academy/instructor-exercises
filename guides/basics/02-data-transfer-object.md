@@ -62,7 +62,7 @@ $myTransfer = new MyTransfer();
 
 **Coding time:**
 
-Open `src/SprykerAcademy/Zed/ContactRequest/Communication/Controller/IndexController.php`. Initialize a `Generated\Shared\Transfer\ContactRequestTransfer` object, assign a name to the message, and pass the object to the template.
+Open `src/SprykerAcademy/Zed/ContactRequest/Communication/Controller/IndexController.php`. Initialize a `Generated\Shared\Transfer\ContactRequestTransfer` object, set `idContactRequest` to `1` and `message` to `'Contact Request!'`, and pass the object to the template under the key `contactRequest`.
 
 ### 3. The Template
 

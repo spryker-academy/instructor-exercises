@@ -247,7 +247,7 @@
 <p>You instantiate DTOs like normal objects:</p>
 <div class="sourceCode" id="cb4"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="va">$myTransfer</span> <span class="op">=</span> <span class="kw">new</span> <span class="cn">M</span>yTransfer()<span class="ot">;</span></span></code></pre></div>
 <p><strong>Coding time:</strong></p>
-<p>Open <code>src/SprykerAcademy/Zed/ContactRequest/Communication/Controller/IndexController.php</code>. Initialize a <code>Generated\Shared\Transfer\ContactRequestTransfer</code> object, assign a name to the message, and pass the object to the template.</p>
+<p>Open <code>src/SprykerAcademy/Zed/ContactRequest/Communication/Controller/IndexController.php</code>. Initialize a <code>Generated\Shared\Transfer\ContactRequestTransfer</code> object, set <code>idContactRequest</code> to <code>1</code> and <code>message</code> to <code>'Contact Request!'</code>, and pass the object to the template under the key <code>contactRequest</code>.</p>
 <h3 id="the-template">3. The Template</h3>
 <p>Access object properties in Twig using dot notation:</p>
 <pre class="twig"><code>{{ myVar.property }}</code></pre>
