@@ -130,8 +130,8 @@ Open `src/SprykerAcademy/Yves/Router/RouterDependencyProvider.php`. Add an insta
 
 ## Testing
 
-1. Create a message via Back Office: http://backoffice.eu.spryker.local/contact-request/message/add
-2. View the message in Yves using its ID: http://yves.eu.spryker.local/contact-request/message/1
+1. Create a message via Back Office: http://backoffice.eu.spryker.local/contact-request/index/add
+2. View the message in Yves using its ID: http://yves.eu.spryker.local/contact-request/1
 
 ---
 
