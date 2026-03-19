@@ -105,11 +105,11 @@ Open `src/SprykerAcademy/Yves/ContactRequestPage/ContactRequestPageFactory.php`.
 
 #### 3.2 Controller
 
-The template is already provided at `src/SprykerAcademy/Yves/ContactRequestPage/Theme/default/views/message/get.twig` and expects a variable named `message`.
+The template is already provided at `src/SprykerAcademy/Yves/ContactRequestPage/Theme/default/views/contact-request/get.twig` and expects a variable named `message`.
 
 **Coding time:**
 
-Open `src/SprykerAcademy/Yves/ContactRequestPage/Controller/ContactRequestController.php`. Complete `getAction()`:
+Open `src/SprykerAcademy/Yves/ContactRequestPage/Controller/IndexController.php`. Complete `getAction()`:
 1. Instantiate a `ContactRequestCriteriaTransfer` and set the message ID from the route parameter
 2. Use `getFactory()` to access the `ContactRequestClient`
 3. Find a message by the criteria and assign the result to `$contactRequestResponseTransfer`

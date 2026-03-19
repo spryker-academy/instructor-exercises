@@ -271,9 +271,9 @@
 <p><strong>Coding time:</strong></p>
 <p>Open <code>src/SprykerAcademy/Yves/ContactRequestPage/ContactRequestPageFactory.php</code>. Complete <code>getContactRequestClient()</code> by returning the provided dependency using <code>ContactRequestPageDependencyProvider::CLIENT_HELLOWORLD</code>.</p>
 <h4 id="controller">3.2 Controller</h4>
-<p>The template is already provided at <code>src/SprykerAcademy/Yves/ContactRequestPage/Theme/default/views/message/get.twig</code> and expects a variable named <code>message</code>.</p>
+<p>The template is already provided at <code>src/SprykerAcademy/Yves/ContactRequestPage/Theme/default/views/contact-request/get.twig</code> and expects a variable named <code>message</code>.</p>
 <p><strong>Coding time:</strong></p>
-<p>Open <code>src/SprykerAcademy/Yves/ContactRequestPage/Controller/ContactRequestController.php</code>. Complete <code>getAction()</code>: 1. Instantiate a <code>ContactRequestCriteriaTransfer</code> and set the message ID from the route parameter 2. Use <code>getFactory()</code> to access the <code>ContactRequestClient</code> 3. Find a message by the criteria and assign the result to <code>$contactRequestResponseTransfer</code></p>
+<p>Open <code>src/SprykerAcademy/Yves/ContactRequestPage/Controller/IndexController.php</code>. Complete <code>getAction()</code>: 1. Instantiate a <code>ContactRequestCriteriaTransfer</code> and set the message ID from the route parameter 2. Use <code>getFactory()</code> to access the <code>ContactRequestClient</code> 3. Find a message by the criteria and assign the result to <code>$contactRequestResponseTransfer</code></p>
 <h4 id="routing">3.3 Routing</h4>
 <p>Unlike the Back Office, Yves requires explicit route definitions via a <code>*RouteProviderPlugin</code>.</p>
 <p><strong>Coding time:</strong></p>
