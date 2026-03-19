@@ -140,7 +140,7 @@ The controller uses the `message` query parameter for simplicity. Use `getFacade
 
 **Coding time:**
 
-Open `src/SprykerAcademy/Zed/ContactRequest/Communication/Controller/ContactRequestController.php`. Complete `addAction()`:
+Open `src/SprykerAcademy/Zed/ContactRequest/Communication/Controller/IndexController.php`. Complete `addAction()`:
 1. Instantiate `ContactRequestCriteriaTransfer` and set the message name from the query parameter
 2. Use the Facade to find the message
 3. If no message is found, create a new `ContactRequestTransfer` with the name and use the Facade to create it
@@ -151,7 +151,7 @@ The controller passes `message` (a `ContactRequestTransfer`) to the template. Ac
 
 **Coding time:**
 
-Open `src/SprykerAcademy/Zed/ContactRequest/Presentation/Message/add.twig`. Replace the placeholder `'show-message-name-here'` with the actual message name.
+Open `src/SprykerAcademy/Zed/ContactRequest/Presentation/Index/add.twig`. Replace the placeholder `'show-message-name-here'` with the actual message value using dot notation (`message.message`).
 
 Clear cache:
 
@@ -159,8 +159,8 @@ Clear cache:
 docker/sdk console cache:empty-all
 ```
 
-Visit: http://backoffice.eu.spryker.local/contact-request/message/add
-Use query parameter `?message=YourName` to create a message with a custom name.
+Visit: http://backoffice.eu.spryker.local/contact-request/index/add
+Use query parameter `?message=YourName` to create a contact request with a custom message.
 
 ---
 

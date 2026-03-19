@@ -274,14 +274,14 @@
 <h4 id="controller-for-the-back-office">3.1 Controller for the Back Office</h4>
 <p>The controller uses the <code>message</code> query parameter for simplicity. Use <code>getFacade()</code> to access the module’s Facade.</p>
 <p><strong>Coding time:</strong></p>
-<p>Open <code>src/SprykerAcademy/Zed/ContactRequest/Communication/Controller/ContactRequestController.php</code>. Complete <code>addAction()</code>: 1. Instantiate <code>ContactRequestCriteriaTransfer</code> and set the message name from the query parameter 2. Use the Facade to find the message 3. If no message is found, create a new <code>ContactRequestTransfer</code> with the name and use the Facade to create it</p>
+<p>Open <code>src/SprykerAcademy/Zed/ContactRequest/Communication/Controller/IndexController.php</code>. Complete <code>addAction()</code>: 1. Instantiate <code>ContactRequestCriteriaTransfer</code> and set the message from the query parameter 2. Use the Facade to find the contact request 3. If no contact request is found, create a new <code>ContactRequestTransfer</code> with the message and use the Facade to create it</p>
 <h4 id="template-for-the-back-office">3.2 Template for the Back Office</h4>
 <p>The controller passes <code>message</code> (a <code>ContactRequestTransfer</code>) to the template. Access object properties with dot notation: <code>objectName.objectProperty</code>.</p>
 <p><strong>Coding time:</strong></p>
-<p>Open <code>src/SprykerAcademy/Zed/ContactRequest/Presentation/Message/add.twig</code>. Replace the placeholder <code>'show-message-name-here'</code> with the actual message name.</p>
+<p>Open <code>src/SprykerAcademy/Zed/ContactRequest/Presentation/Index/add.twig</code>. Replace the placeholder <code>'show-message-name-here'</code> with the actual message value using dot notation (<code>message.message</code>).</p>
 <p>Clear cache:</p>
 <div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span></code></pre></div>
-<p>Visit: http://backoffice.eu.spryker.local/contact-request/message/add Use query parameter <code>?message=YourName</code> to create a message with a custom name.</p>
+<p>Visit: http://backoffice.eu.spryker.local/contact-request/index/add Use query parameter <code>?message=YourName</code> to create a contact request with a custom message.</p>
 <hr />
 <h2 id="verify-your-work">Verify Your Work</h2>
 <p>Run the automated tests for this exercise:</p>
