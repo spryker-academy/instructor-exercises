@@ -18,7 +18,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 REPOS_DIR="$SCRIPT_DIR/repos"
 
-CONTACT_REQUEST_REPO="https://github.com/spryker-academy/hello-world.git"
+CONTACT_REQUEST_REPO="https://github.com/spryker-academy/contact-request.git"
 SUPPLIER_REPO="https://github.com/spryker-academy/supplier.git"
 
 # Colors
