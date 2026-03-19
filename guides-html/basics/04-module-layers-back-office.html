@@ -261,20 +261,16 @@
 <p>The Reader uses the Repository and prepares the response.</p>
 <p><strong>Coding time:</strong></p>
 <p>Open <code>src/SprykerAcademy/Zed/ContactRequest/Business/Reader/ContactRequestReader.php</code>: - Inject <code>ContactRequestRepositoryInterface</code> through the constructor - In the <code>findContactRequest()</code> method, use the Repository to find a message by criteria - Create a <code>ContactRequestResponseTransfer</code> and set <code>message</code> and <code>isSuccessful</code> based on the result - Return the response</p>
-<h4 id="instantiate-business-models">2.4 Instantiate Business Models</h4>
-<p>Each layer has its own Factory. The Business Factory can access <code>getEntityManager()</code> and <code>getRepository()</code>.</p>
+<h4 id="expose-functionality-through-the-facade">2.4 Expose Functionality through the Facade</h4>
+<p>The Facade is the module’s public API. Since Spryker 202602.0, you can use <code>$this->getService(ClassName::class)</code> directly in the Facade — no Business Factory needed. Spryker’s DI container automatically wires the dependencies of the service class.</p>
 <p><strong>Coding time:</strong></p>
-<p>Open <code>src/SprykerAcademy/Zed/ContactRequest/Business/ContactRequestBusinessFactory.php</code>. Instantiate <code>ContactRequestWriter</code> and <code>ContactRequestReader</code> with their dependencies.</p>
-<h4 id="expose-functionality-through-the-facade">2.5 Expose Functionality through the Facade</h4>
-<p>The Facade is the module’s public API. Use <code>getFactory()</code> to access the Business Factory.</p>
-<p><strong>Coding time:</strong></p>
-<p>Open <code>src/SprykerAcademy/Zed/ContactRequest/Business/ContactRequestFacade.php</code>. Implement <code>createContactRequest()</code> and <code>findContactRequest()</code> using the factory’s writer and reader.</p>
+<p>Open <code>src/SprykerAcademy/Zed/ContactRequest/Business/ContactRequestFacade.php</code>. Implement <code>createContactRequest()</code> and <code>findContactRequest()</code> using <code>$this->getService(ContactRequestWriter::class)</code> and <code>$this->getService(ContactRequestReader::class)</code>.</p>
 <hr />
 <h3 id="visual-in-the-back-office">3. Visual in the Back Office</h3>
 <h4 id="controller-for-the-back-office">3.1 Controller for the Back Office</h4>
-<p>The controller uses the <code>message</code> query parameter for simplicity. Use <code>getFacade()</code> to access the module’s Facade.</p>
+<p>Since Spryker 202602.0, controllers support constructor dependency injection. The facade is injected directly — no need for <code>$this->getFacade()</code>.</p>
 <p><strong>Coding time:</strong></p>
-<p>Open <code>src/SprykerAcademy/Zed/ContactRequest/Communication/Controller/IndexController.php</code>. Complete <code>addAction()</code>: 1. Instantiate <code>ContactRequestCriteriaTransfer</code> and set the message from the query parameter 2. Use the Facade to find the contact request 3. If no contact request is found, create a new <code>ContactRequestTransfer</code> with the message and use the Facade to create it</p>
+<p>Open <code>src/SprykerAcademy/Zed/ContactRequest/Communication/Controller/IndexController.php</code>. The facade is already injected via the constructor as <code>$this->contactRequestFacade</code>. Complete <code>addAction()</code>: 1. Instantiate <code>ContactRequestCriteriaTransfer</code> and set the message from the query parameter 2. Call <code>$this->contactRequestFacade->findContactRequest()</code> to look it up 3. If not found, create a new <code>ContactRequestTransfer</code> with the message and persist it via <code>$this->contactRequestFacade->createContactRequest()</code></p>
 <h4 id="template-for-the-back-office">3.2 Template for the Back Office</h4>
 <p>The controller passes <code>message</code> (a <code>ContactRequestTransfer</code>) to the template. Access object properties with dot notation: <code>objectName.objectProperty</code>.</p>
 <p><strong>Coding time:</strong></p>
