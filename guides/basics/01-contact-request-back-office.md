@@ -53,9 +53,9 @@ Use `$this->viewResponse()` and return the result. Pass a key-value array where 
 
 ### 2. The Template
 
-In the module folder `ContactRequest`, the **Presentation** layer follows the same naming as the Controller prefix. Create a folder called `Hello` and inside it a twig file named `index.twig` (matching the action name without the `Action` suffix).
+In the module folder `ContactRequest`, the **Presentation** layer follows the same naming as the Controller prefix. Create a folder called `Index` and inside it a twig file named `index.twig` (matching the action name without the `Action` suffix).
 
-`src/SprykerAcademy/Zed/ContactRequest/Presentation/Hello/index.twig`
+`src/SprykerAcademy/Zed/ContactRequest/Presentation/Index/index.twig`
 
 ```twig
 {% extends '@Gui/Layout/layout.twig' %}
@@ -75,10 +75,10 @@ After editing, run:
 docker/sdk console cache:empty-all
 ```
 
-Visit: http://backoffice.eu.spryker.local/contact-request/hello/index
+Visit: http://backoffice.eu.spryker.local/contact-request/index/index
 (Credentials: `admin@spryker.com` / `change123`)
 
-Note the URL pattern: **module** / **controller** / **action** (`contact-request/hello/index`). Back Office routing is resolved automatically from these names.
+Note the URL pattern: **module** / **controller** / **action** (`contact-request/index/index`). Back Office routing is resolved automatically from these names.
 
 ### 3. The Navigation
 
