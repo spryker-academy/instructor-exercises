@@ -239,7 +239,7 @@
 <span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;/transfers&gt;</span></span></code></pre></div>
 <p>This generates a <code>HumanTransfer</code> class with a <code>height</code> property of type <code>int</code>.</p>
 <p><strong>Coding time:</strong></p>
-<p>Open <code>src/SprykerAcademy/Shared/ContactRequest/Transfer/contact_request.transfer.xml</code> and add a DTO named <strong>Message</strong> with: - Property <code>idContactRequest</code> of type <code>int</code> - Property <code>message</code> of type <code>string</code></p>
+<p>Open <code>src/SprykerAcademy/Shared/ContactRequest/Transfer/contact_request.transfer.xml</code> and add a DTO named <strong>ContactRequest</strong> with: - Property <code>idContactRequest</code> of type <code>int</code> - Property <code>message</code> of type <code>string</code></p>
 <p>Then generate the transfers:</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span></code></pre></div>
 <p>Check the auto-generated file at <code>src/Generated/Shared/Transfer/ContactRequestTransfer.php</code> and review the helper methods.</p>
@@ -252,8 +252,11 @@
 <p>Access object properties in Twig using dot notation:</p>
 <pre class="twig"><code>{{ myVar.property }}</code></pre>
 <p><strong>Coding time:</strong></p>
-<p>Open <code>src/SprykerAcademy/Zed/ContactRequest/Presentation/Hello/index.twig</code> and use the passed object to greet the message by its name instead of greeting the whole world.</p>
-<p>Visit: http://backoffice.eu.spryker.local/contact-request/hello/index (Credentials: <code>admin@spryker.com</code> / <code>change123</code>)</p>
+<p>Open <code>src/SprykerAcademy/Zed/ContactRequest/Presentation/Index/index.twig</code> and display the transfer's <code>message</code> property using dot notation.</p>
+<p>Visit: http://backoffice.eu.spryker.local/contact-request/index/index (Credentials: <code>admin@spryker.com</code> / <code>change123</code>)</p>
+<blockquote>
+<p><strong>Tip:</strong> <code>http://backoffice.eu.spryker.local/contact-request</code> resolves to the same page.</p>
+</blockquote>
 <hr />
 <h2 id="verify-your-work">Verify Your Work</h2>
 <p>Run the automated tests for this exercise:</p>

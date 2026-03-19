@@ -40,7 +40,7 @@ This generates a `HumanTransfer` class with a `height` property of type `int`.
 
 **Coding time:**
 
-Open `src/SprykerAcademy/Shared/ContactRequest/Transfer/contact_request.transfer.xml` and add a DTO named **Message** with:
+Open `src/SprykerAcademy/Shared/ContactRequest/Transfer/contact_request.transfer.xml` and add a DTO named **ContactRequest** with:
 - Property `idContactRequest` of type `int`
 - Property `message` of type `string`
 
@@ -74,10 +74,12 @@ Access object properties in Twig using dot notation:
 
 **Coding time:**
 
-Open `src/SprykerAcademy/Zed/ContactRequest/Presentation/Hello/index.twig` and use the passed object to greet the message by its name instead of greeting the whole world.
+Open `src/SprykerAcademy/Zed/ContactRequest/Presentation/Index/index.twig` and display the transfer's `message` property using dot notation.
 
-Visit: http://backoffice.eu.spryker.local/contact-request/hello/index
+Visit: http://backoffice.eu.spryker.local/contact-request/index/index
 (Credentials: `admin@spryker.com` / `change123`)
+
+> **Tip:** `http://backoffice.eu.spryker.local/contact-request` resolves to the same page.
 
 ---
 
