@@ -252,8 +252,8 @@ if [ -f "$REPO_DIR/config/Zed/navigation-main-merchant-portal.xml" ]; then
     fi
 fi
 
-# Add ContactRequest config value to config_default.php for configuration exercise
-if [ "$PACKAGE" = "contact-request" ]; then
+# Add ContactRequest config value to config_default.php for configuration exercise (basics/configuration/* onwards)
+if [ "$PACKAGE" = "contact-request" ] && [[ "$BRANCH" == basics/configuration/* ]]; then
     CONFIG_FILE="$PROJECT_DIR/config/Shared/config_default.php"
     if file_needs_update "$CONFIG_FILE" 'ContactRequestConstants'; then
         cat >> "$CONFIG_FILE" << 'PHPEOF'
