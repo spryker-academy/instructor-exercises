@@ -428,9 +428,9 @@ Keep intact: Angular components, updated Twig template, factory methods.
 ### Task 22: Write exercise guides
 
 **Files:**
-- Create: `guides/intermediate/09-merchant-portal-table.md`
-- Create: `guides/intermediate/10-merchant-portal-form.md`
-- Create: `guides/intermediate/11-merchant-portal-locations.md`
+- Create: `guides/intermediate/08-merchant-portal-table.md`
+- Create: `guides/intermediate/09-merchant-portal-form.md`
+- Create: `guides/intermediate/10-merchant-portal-locations.md`
 
 **Step 1:** Write guide for Exercise 15 covering:
 - Merchant Portal architecture overview (GuiTable, Angular web components, data providers)
