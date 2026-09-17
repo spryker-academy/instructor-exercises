@@ -20,6 +20,7 @@ The `load.sh` script automates the process of loading exercise code into a Spryk
 ### Packages
 
 - **contact-request**: Basic Spryker concepts (back-office, DTOs, table schema, module layers, configuration, extending core modules)
+- **ai-product-creation**: Advanced topic: a custom Back Office Assistant agent built on AI Foundation (tools, tool set, agent, AI configuration). Requires the Back Office Assistant, see `guides/advanced/01-back-office-assistant-setup.md`
 - **supplier**: Intermediate topics (back-office, data import, publish-synchronize, search, storage, Glue API, OMS, Yves storefront, Merchant Portal)
 
 ### Available Branches
@@ -63,6 +64,12 @@ The `load.sh` script automates the process of loading exercise code into a Spryk
 - `intermediate/merchant-portal-locations/skeleton`
 - `intermediate/merchant-portal-locations/complete`
 
+#### AI Product Creation
+- `advanced/ai-foundation-agent/skeleton`
+- `advanced/ai-foundation-agent/complete`
+
+The `complete` branch is wired into the project automatically. Every line the loader adds is marked `ai-product-creation exercise` and is removed again when you load the skeleton or another package.
+
 ## Examples
 
 ```bash
@@ -74,6 +81,9 @@ The `load.sh` script automates the process of loading exercise code into a Spryk
 
 # Load Supplier data-import exercise
 ./exercises/load.sh supplier intermediate/data-import/skeleton
+
+# Load the AI Foundation agent exercise
+./exercises/load.sh ai-product-creation advanced/ai-foundation-agent/skeleton
 ```
 
 ## Post-Installation Steps
@@ -87,6 +97,15 @@ docker/sdk console propel:install
 docker/sdk console transfer:generate
 ```
 
+For the AI exercise the order differs, because `config_ai.php` references an exercise class:
+
+```bash
+docker/sdk cli composer dump-autoload
+docker/sdk console transfer:generate
+docker/sdk console configuration:sync
+docker/sdk console c:e
+```
+
 ## Student Setup Guide
 
 See [STUDENT_SETUP_GUIDE.md](STUDENT_SETUP_GUIDE.md) for detailed setup instructions.
@@ -95,6 +114,7 @@ See [STUDENT_SETUP_GUIDE.md](STUDENT_SETUP_GUIDE.md) for detailed setup instruct
 
 - `guides/` - Markdown format guides
 - `guides-html/` - HTML format guides and presentations
+- `guides/advanced/` - Back Office Assistant setup and the AI Foundation exercise
 - `guides-pptx/` - PowerPoint slides generated from the HTML presentations with `html_to_pptx.py`
 
 ## Requirements
@@ -107,3 +127,4 @@ See [STUDENT_SETUP_GUIDE.md](STUDENT_SETUP_GUIDE.md) for detailed setup instruct
 
 - Contact Request: `https://github.com/spryker-academy/contact-request.git`
 - Supplier: `https://github.com/spryker-academy/supplier.git`
+- AI Product Creation: `https://github.com/spryker-academy/ai-product-creation.git` (private, students need read access)

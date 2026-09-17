@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>02-ai-foundation-agent</title>
+  <style>
+    html {
+      line-height: 1.5;
+      font-family: Georgia, serif;
+      font-size: 20px;
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      word-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 1em;
+      }
+    }
+    @media print {
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, 'Lucida Console', Consolas, monospace;
+      font-size: 85%;
+      margin: 0;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="exercise-19-ai-foundation---product-creation-agent">Exercise 19: AI Foundation - Product Creation Agent</h1>
+<p>In this exercise, you will build a custom agent for the Back Office Assistant. The agent creates catalog products from a plain-language description such as <em>“Create a red cotton t-shirt in sizes S, M and L for 19.99 EUR”</em>. It interviews the user for missing data, asks for confirmation, and then calls your tools to create the product.</p>
+<p>You will learn how to: - Write an AI <strong>tool</strong> plugin: name, description, parameters, and execution - Group tools into a <strong>tool set</strong> plugin - Write an <strong>agent</strong> plugin that sends a prompt request to AiFoundation and maps the structured answer - Register a dedicated <strong>AI configuration</strong> with a system prompt - Wire the agent into the Back Office Assistant, including SSE streaming</p>
+<p>The business logic that creates products, prices, stock, and images is provided. You focus on the AI Foundation layer.</p>
+<p><strong>Official documentation:</strong> - <a href="https://docs.spryker.com/docs/dg/dev/ai/ai-commerce/backoffice-assistant/add-custom-backoffice-assistant-agent.html">Add a custom Back Office Assistant agent</a> - <a href="https://docs.spryker.com/docs/dg/dev/ai/ai-commerce/extend-ai-commerce-agents-with-toolsets.html">Extend AI Commerce agents with custom toolsets</a></p>
+<h2 id="prerequisites">Prerequisites</h2>
+<ul>
+<li>The Back Office Assistant is installed and answers questions. See <a href="01-back-office-assistant-setup.md">Setup: Install the Back Office Assistant</a></li>
+<li>An OpenAI API token is configured in the Back Office</li>
+<li>Access to the private <code>spryker-academy/ai-product-creation</code> repository on GitHub</li>
+</ul>
+<h2 id="loading-the-exercise">Loading the Exercise</h2>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> ai-product-creation advanced/ai-foundation-agent/skeleton</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli composer dump-autoload</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console configuration:sync</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span></code></pre></div>
+<blockquote>
+<p><strong>Order matters.</strong> Run <code>composer dump-autoload</code> first. Later in this exercise <code>config_ai.php</code> references a <code>SprykerAcademy</code> class, and every console command fails until the class can be autoloaded.</p>
+</blockquote>
+<p>The loader copies the module to <code>src/SprykerAcademy/</code>, the agent settings to <code>data/configuration/ai_product_creation.configuration.yml</code>, and the tests to <code>tests/SprykerAcademyTest/</code>.</p>
+<hr />
+<h2 id="background-how-an-agent-talks-to-the-ai-model">Background: How an Agent Talks to the AI Model</h2>
+<pre><code>User message
+   |
+Intent router --- reads every agent&#39;s getDescription() and picks one
+   |
+ProductCreationAgentPlugin::executeAgent()
+   |   builds a PromptRequestTransfer:
+   |   AI configuration name + conversation reference + tool set name + structured message
+   |
+AiFoundationFacade::prompt()
+   |   sends system prompt, user message, and tool definitions to the AI provider
+   |
+AI model &lt;----&gt; your ToolPlugins (the model asks, AiFoundation executes, the result goes back)
+   |
+Structured answer (ProductCreationAgentResponseTransfer) --&gt; chat widget</code></pre>
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 31%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Concept</th>
+<th>Class or file</th>
+<th>What the AI model sees</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Tool</strong></td>
+<td><code>ToolPluginInterface</code></td>
+<td>Only <code>getName()</code>, <code>getDescription()</code>, and <code>getParameters()</code>. Never your PHP code</td>
+</tr>
+<tr class="even">
+<td><strong>Tool set</strong></td>
+<td><code>ToolSetPluginInterface</code></td>
+<td>Nothing. It is a named group the agent requests</td>
+</tr>
+<tr class="odd">
+<td><strong>Agent</strong></td>
+<td><code>BackofficeAssistantAgentPluginInterface</code></td>
+<td><code>getDescription()</code> is read by the intent router</td>
+</tr>
+<tr class="even">
+<td><strong>System prompt</strong></td>
+<td><code>ai_product_creation.configuration.yml</code></td>
+<td>The full text. It defines the behavior and conversation flow</td>
+</tr>
+<tr class="odd">
+<td><strong>Structured message</strong></td>
+<td><code>ai_product_creation.transfer.xml</code></td>
+<td>The property descriptions. The model must answer in this shape</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>The description is the interface.</strong> A tool with a vague description is never called, or is called at the wrong time. Write descriptions for a reader who knows nothing about your code.</p>
+</blockquote>
+<p>The module has nine tools. Seven are complete. Look at <code>CreateProductToolPlugin</code> and <code>SetProductStockToolPlugin</code> before you start. They show the full pattern.</p>
+<hr />
+<h2 id="working-on-the-exercise">Working on the Exercise</h2>
+<h3 id="part-1-your-first-tool">Part 1: Your First Tool</h3>
+<p>Open <code>src/SprykerAcademy/Zed/AiProductCreation/Communication/Plugin/AiFoundation/Tool/ListTaxSetsToolPlugin.php</code>.</p>
+<p>The model needs a valid tax set name before it can call <code>create_product</code>. This tool lists the tax sets. Complete <strong>TODO-1</strong> to <strong>TODO-4</strong>:</p>
+<ol type="1">
+<li><code>getName()</code> returns <code>'list_tax_sets'</code>. The system prompt refers to the tool by this exact name.</li>
+<li><code>getDescription()</code> explains what the tool returns and why that is useful.</li>
+<li><code>getParameters()</code> returns an empty array, because the tool needs no input.</li>
+<li><code>execute()</code> delegates to the business layer: <code>$this-&gt;getBusinessFactory()-&gt;createProductCreationReader()-&gt;listTaxSets($arguments)</code>.</li>
+</ol>
+<blockquote>
+<p><strong>Tools return JSON strings.</strong> Open <code>ProductCreationReader::listTaxSets()</code>. It returns <code>json_encode([...])</code>. The model reads that text. On failure, a tool returns a JSON error message instead of throwing, so the model can explain the problem to the user.</p>
+</blockquote>
+<h3 id="part-2-tool-parameters">Part 2: Tool Parameters</h3>
+<p>Open <code>ApproveProductToolPlugin.php</code> in the same directory. New products are created as <code>draft</code> and stay invisible in the storefront until approved.</p>
+<p>Complete <strong>TODO-5</strong>. Return two <code>ToolParameter</code> objects from <code>getParameters()</code>:</p>
+<table>
+<colgroup>
+<col style="width: 17%" />
+<col style="width: 17%" />
+<col style="width: 28%" />
+<col style="width: 37%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>name</th>
+<th>type</th>
+<th>required</th>
+<th>description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>sku</code></td>
+<td><code>string</code></td>
+<td>yes</td>
+<td>Abstract or concrete product SKU</td>
+</tr>
+<tr class="even">
+<td><code>status</code></td>
+<td><code>string</code></td>
+<td>no</td>
+<td><code>approved</code>, <code>draft</code>, <code>waiting_for_approval</code>, or <code>denied</code>. Defaults to <code>approved</code></td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb3"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">new</span> <span class="cn">T</span>oolParameter(</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    name<span class="ot">:</span> <span class="st">&#39;sku&#39;</span><span class="ot">,</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    type<span class="ot">:</span> <span class="st">&#39;string&#39;</span><span class="ot">,</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    description<span class="ot">:</span> <span class="st">&#39;...&#39;</span><span class="ot">,</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    isRequired<span class="ot">:</span> <span class="kw">true</span><span class="ot">,</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>)<span class="ot">,</span></span></code></pre></div>
+<blockquote>
+<p><strong>Parameter names are a contract.</strong> AiFoundation passes the model’s arguments to <code>execute(...$arguments)</code> as a named array. <code>ProductCreationWriter::approveProduct()</code> reads <code>$arguments['sku']</code> and <code>$arguments['status']</code>. If the names differ, the value is lost.</p>
+</blockquote>
+<h3 id="part-3-the-tool-set">Part 3: The Tool Set</h3>
+<p>Open <code>src/SprykerAcademy/Zed/AiProductCreation/Communication/Plugin/AiFoundation/ProductCreationToolSetPlugin.php</code>.</p>
+<ul>
+<li><strong>TODO-6:</strong> <code>getName()</code> returns <code>AiProductCreationConstants::TOOL_SET_PRODUCT_CREATION</code>.</li>
+<li><strong>TODO-7:</strong> <code>getTools()</code> returns all nine tools. Create each one through the factory, for example <code>$this-&gt;getFactory()-&gt;createListCategoriesToolPlugin()</code>. <code>AiProductCreationCommunicationFactory</code> lists all nine <code>create*ToolPlugin()</code> methods.</li>
+</ul>
+<blockquote>
+<p><strong>A tool that is not in a tool set does not exist for the model</strong>, even if its class is fully implemented.</p>
+</blockquote>
+<h3 id="part-4-the-agent">Part 4: The Agent</h3>
+<p>Open <code>src/SprykerAcademy/Zed/AiProductCreation/Communication/Plugin/Agent/ProductCreationAgentPlugin.php</code>. Read <code>getDescription()</code> first. The intent router uses this text to decide whether a user message belongs to your agent.</p>
+<p><strong>TODO-8:</strong> build the <code>PromptRequestTransfer</code> in <code>executeAgent()</code>:</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 29%" />
+<col style="width: 37%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Setter</th>
+<th>Value</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>setAiConfigurationName()</code></td>
+<td><code>$this-&gt;getConfig()-&gt;getProductCreationAgentAiConfigurationName()</code></td>
+<td>Provider, model, and system prompt</td>
+</tr>
+<tr class="even">
+<td><code>setConversationReference()</code></td>
+<td>From the assistant request</td>
+<td>Conversation memory across messages</td>
+</tr>
+<tr class="odd">
+<td><code>setStructuredMessage()</code></td>
+<td><code>new ProductCreationAgentResponseTransfer()</code></td>
+<td>Forces the answer into this shape</td>
+</tr>
+<tr class="even">
+<td><code>addToolSetName()</code></td>
+<td><code>AiProductCreationConstants::TOOL_SET_PRODUCT_CREATION</code></td>
+<td>The tools the model may call</td>
+</tr>
+<tr class="odd">
+<td><code>setPromptMessage()</code></td>
+<td>A <code>PromptMessageTransfer</code> with type <code>AiFoundationConstants::MESSAGE_TYPE_USER</code>, the prompt as content, and the attachments</td>
+<td>The user’s message</td>
+</tr>
+</tbody>
+</table>
+<p><strong>TODO-9:</strong> copy <code>agent</code>, <code>message</code>, and <code>reasoningMessage</code> from the structured answer to the <code>BackofficeAssistantPromptResponseTransfer</code>.</p>
+<blockquote>
+<p><strong>Why a structured message?</strong> Without it the model answers with free text. With it, AiFoundation asks the provider for JSON that matches the transfer, and you get typed getters. Open <code>ai_product_creation.transfer.xml</code>: the property descriptions are instructions for the model. The <code>agent</code> property lets the model answer <code>Guardrail</code> when the request is off-topic.</p>
+</blockquote>
+<h3 id="verify-parts-1-to-4">Verify Parts 1 to 4</h3>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept build <span class="at">-c</span> tests/SprykerAcademyTest/Zed/AiProductCreation/</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/AiProductCreation/ Exercise19</span></code></pre></div>
+<p>All 12 tests must pass. They use mocks, so no AI call is made and no token is spent. An error like <code>getName(): Return value must be of type string, none returned</code> points at a TODO you have not completed yet.</p>
+<hr />
+<h3 id="part-5-wire-the-agent-into-the-project">Part 5: Wire the Agent into the Project</h3>
+<p>Your plugins exist, but the project does not know them yet.</p>
+<p><strong>1. Register the agent.</strong> In <code>src/Pyz/Zed/AiCommerce/AiCommerceDependencyProvider.php</code>, add <code>new ProductCreationAgentPlugin()</code> to <code>getBackofficeAssistantAgentPlugins()</code>.</p>
+<p><strong>2. Register the tool set.</strong> In <code>src/Pyz/Zed/AiFoundation/AiFoundationDependencyProvider.php</code>, add <code>new ProductCreationToolSetPlugin()</code> to <code>getAiToolSetPlugins()</code>.</p>
+<p>Both classes need an import:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="cn">S</span>prykerAcademy\<span class="cn">Z</span>ed\<span class="cn">A</span>iProductCreation\<span class="cn">C</span>ommunication\<span class="cn">P</span>lugin\<span class="cn">A</span>gent\<span class="cn">P</span>roductCreationAgentPlugin<span class="ot">;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="cn">S</span>prykerAcademy\<span class="cn">Z</span>ed\<span class="cn">A</span>iProductCreation\<span class="cn">C</span>ommunication\<span class="cn">P</span>lugin\<span class="cn">A</span>iFoundation\<span class="cn">P</span>roductCreationToolSetPlugin<span class="ot">;</span></span></code></pre></div>
+<p><strong>3. Add the AI configuration.</strong> Append to <code>config/Shared/config_ai.php</code>:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="cn">S</span>prykerAcademy\<span class="cn">S</span>hared\<span class="cn">A</span>iProductCreation\<span class="cn">A</span>iProductCreationConstants<span class="ot">;</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="va">$config</span>[<span class="cn">A</span>iFoundationConstants::<span class="cn">AI_CONFIGURATIONS</span>][<span class="cn">A</span>iProductCreationConstants::<span class="cn">AI_CONFIGURATION_PRODUCT_CREATION_OPENAI</span>] <span class="op">=</span> [</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;provider_name&#39;</span> =&gt; <span class="cn">A</span>iFoundationConstants::<span class="cn">PROVIDER_OPENAI</span><span class="ot">,</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;provider_config&#39;</span> =&gt; [</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;key&#39;</span> =&gt; <span class="cn">A</span>iFoundationConstants::<span class="cn">CONFIGURATION_REFERENCE_PREFIX</span> <span class="op">.</span> <span class="cn">A</span>iCommerceConstants::<span class="cn">CONFIGURATION_KEY_OPENAI_API_TOKEN</span><span class="ot">,</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;model&#39;</span> =&gt; <span class="cn">A</span>iFoundationConstants::<span class="cn">CONFIGURATION_REFERENCE_PREFIX</span> <span class="op">.</span> <span class="cn">A</span>iCommerceConstants::<span class="cn">CONFIGURATION_KEY_BACKOFFICE_ASSISTANT_OPENAI_MODEL</span><span class="ot">,</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    ]<span class="ot">,</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;system_prompt&#39;</span> =&gt; <span class="cn">A</span>iFoundationConstants::<span class="cn">CONFIGURATION_REFERENCE_PREFIX</span> <span class="op">.</span> <span class="cn">A</span>iProductCreationConstants::<span class="cn">CONFIGURATION_KEY_SYSTEM_PROMPT</span><span class="ot">,</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>]<span class="ot">;</span></span></code></pre></div>
+<p>Put the <code>use</code> line at the top of the file with the other imports. The agent reuses the assistant’s token and model settings and brings its own system prompt.</p>
+<p><strong>4. Enable SSE streaming.</strong> Tool call progress is only streamed for AI configuration names the assistant knows. Add to <code>src/Pyz/Zed/AiCommerce/AiCommerceConfig.php</code>:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>    <span class="co">/**</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="co">     * </span><span class="an">@return</span><span class="co"> array</span><span class="kw">&lt;string&gt;</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co">     */</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">function</span> getBackofficeAssistantSseAiConfigurationNames()<span class="ot">:</span> <span class="dt">array</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    {</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="fu">array_values</span>(<span class="fu">array_filter</span>([</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>            ...<span class="kw">parent</span>::getBackofficeAssistantSseAiConfigurationNames()<span class="ot">,</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>            <span class="cn">A</span>iProductCreationConstants::<span class="cn">AI_CONFIGURATION_PRODUCT_CREATION_OPENAI</span><span class="ot">,</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>        ]))<span class="ot">;</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>    }</span></code></pre></div>
+<p>Import the constants interface here as well: <code>use SprykerAcademy\Shared\AiProductCreation\AiProductCreationConstants;</code></p>
+<p><strong>5. Apply.</strong></p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console configuration:sync</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span></code></pre></div>
+<blockquote>
+<p><strong>Where does the system prompt come from?</strong> <code>configuration:sync</code> loaded it from <code>data/configuration/ai_product_creation.configuration.yml</code>. You can now edit it live under <strong>Configuration &gt; AI Commerce &gt; Back Office Assistant &gt; System Prompts</strong>, next to a toggle that enables or disables the agent. Read the prompt: it defines the five conversation phases, including the mandatory confirmation before anything is created.</p>
+</blockquote>
+<hr />
+<h2 id="testing">Testing</h2>
+<ol type="1">
+<li>Open the Back Office Assistant and select <strong>Product Creation</strong>, or leave it on Auto.</li>
+<li>Ask: <em>“Which tax sets can I use for a new product?”</em> You see the <code>list_tax_sets</code> tool call stream in, followed by the list. This proves Parts 1, 3, 4, and 5.</li>
+<li>Ask: <em>“Create a red cotton t-shirt in sizes S and M for 19.99 EUR, 50 in stock each.”</em> Answer the agent’s questions and confirm the summary.</li>
+<li>Open the edit link from the final answer. Check the variants, the price, the stock, and the approval status. Approval proves Part 2.</li>
+<li>Optional: let the agent generate a product image. This uses the OpenAI image model and costs more than a chat message.</li>
+</ol>
+<blockquote>
+<p><strong>Searchability:</strong> the product appears in storefront search only after Publish and Synchronize ran, as in Exercise 10.</p>
+</blockquote>
+<h2 id="solution">Solution</h2>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> ai-product-creation advanced/ai-foundation-agent/complete</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli composer dump-autoload</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console configuration:sync</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span></code></pre></div>
+<p>For the <code>complete</code> branch the loader also does the wiring of Part 5 for you. It marks every line it adds with <code>ai-product-creation exercise</code> and removes those lines again when you load the skeleton or another package.</p>
+<blockquote>
+<p><strong>Switching packages:</strong> if you wired Part 5 by hand, remove those lines before you load <code>contact-request</code> or <code>supplier</code>. The loader replaces <code>src/SprykerAcademy/</code>, and the Back Office fails when a registered plugin class no longer exists. The loader warns you about this.</p>
+</blockquote>
+<h2 id="going-further">Going Further</h2>
+<ul>
+<li>Change the system prompt so the agent always proposes a SKU prefix, and watch the behavior change without a deployment.</li>
+<li>Add a tenth tool, for example <code>get_product</code> to look up an existing product by SKU. Remember the three places: the tool class, the factory, and the tool set.</li>
+<li>Read the audit log to see every prompt and tool call your agent made.</li>
+</ul>
+</body>
+</html>

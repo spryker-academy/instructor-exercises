@@ -394,6 +394,21 @@
 <p>Check the solution:</p>
 <div class="sourceCode" id="cb49"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> supplier intermediate/yves-storefront/complete</span></code></pre></div>
 <hr />
+<h4 id="module-16-ai-foundation---product-creation-agent">Module 16: AI Foundation - Product Creation Agent</h4>
+<p>Prerequisite: the Back Office Assistant must be installed and working. Follow <code>exercises/guides/advanced/01-back-office-assistant-setup.md</code> first. You also need an OpenAI API token and read access to the private <code>ai-product-creation</code> repository.</p>
+<div class="sourceCode" id="cb50"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> ai-product-creation advanced/ai-foundation-agent/skeleton</span></code></pre></div>
+<p>Your task: Complete an AI tool, the tool parameters, the tool set, and the agent plugin. Then wire the agent into the Back Office Assistant.</p>
+<p>After loading, run the commands in this order:</p>
+<div class="sourceCode" id="cb51"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli composer dump-autoload</span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span>
+<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console configuration:sync</span>
+<span id="cb51-4"><a href="#cb51-4" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span></code></pre></div>
+<p>Verify your work without spending AI tokens:</p>
+<div class="sourceCode" id="cb52"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept build <span class="at">-c</span> tests/SprykerAcademyTest/Zed/AiProductCreation/</span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/AiProductCreation/ Exercise19</span></code></pre></div>
+<p>Check the solution. The loader wires the agent into the project for you:</p>
+<div class="sourceCode" id="cb53"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> ai-product-creation advanced/ai-foundation-agent/complete</span></code></pre></div>
+<hr />
 <h2 id="common-commands-reference">Common Commands Reference</h2>
 <table>
 <colgroup>
@@ -451,18 +466,22 @@
 <td><code>docker/sdk console cache:empty-all</code></td>
 <td>After loading Yves or Merchant Portal exercises</td>
 </tr>
+<tr class="even">
+<td><code>docker/sdk console configuration:sync</code></td>
+<td>After adding or changing <code>*.configuration.yml</code> setting schemas</td>
+</tr>
 </tbody>
 </table>
 <h2 id="troubleshooting">Troubleshooting</h2>
 <p><strong>Script says “not found” or permission denied:</strong></p>
-<div class="sourceCode" id="cb50"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="fu">chmod</span> +x exercises/load.sh</span></code></pre></div>
+<div class="sourceCode" id="cb54"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="fu">chmod</span> +x exercises/load.sh</span></code></pre></div>
 <p><strong>Transfer/Propel errors after switching exercises:</strong> Always regenerate after switching:</p>
-<div class="sourceCode" id="cb51"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli composer dump-autoload</span>
-<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console propel:install</span>
-<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span></code></pre></div>
+<div class="sourceCode" id="cb55"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli composer dump-autoload</span>
+<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console propel:install</span>
+<span id="cb55-3"><a href="#cb55-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span></code></pre></div>
 <p><strong>Cache issues:</strong></p>
-<div class="sourceCode" id="cb52"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span></code></pre></div>
+<div class="sourceCode" id="cb56"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span></code></pre></div>
 <p><strong>List available branches:</strong></p>
-<div class="sourceCode" id="cb53"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span></span></code></pre></div>
+<div class="sourceCode" id="cb57"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span></span></code></pre></div>
 </body>
 </html>

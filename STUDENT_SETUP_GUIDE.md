@@ -418,6 +418,40 @@ Check the solution:
 
 ---
 
+#### Module 16: AI Foundation - Product Creation Agent
+
+Prerequisite: the Back Office Assistant must be installed and working. Follow `exercises/guides/advanced/01-back-office-assistant-setup.md` first. You also need an OpenAI API token and read access to the private `ai-product-creation` repository.
+
+```bash
+./exercises/load.sh ai-product-creation advanced/ai-foundation-agent/skeleton
+```
+
+Your task: Complete an AI tool, the tool parameters, the tool set, and the agent plugin. Then wire the agent into the Back Office Assistant.
+
+After loading, run the commands in this order:
+
+```bash
+docker/sdk cli composer dump-autoload
+docker/sdk console transfer:generate
+docker/sdk console configuration:sync
+docker/sdk console cache:empty-all
+```
+
+Verify your work without spending AI tokens:
+
+```bash
+docker/sdk cli vendor/bin/codecept build -c tests/SprykerAcademyTest/Zed/AiProductCreation/
+docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/AiProductCreation/ Exercise19
+```
+
+Check the solution. The loader wires the agent into the project for you:
+
+```bash
+./exercises/load.sh ai-product-creation advanced/ai-foundation-agent/complete
+```
+
+---
+
 ## Common Commands Reference
 
 | Command | When to use |
@@ -433,6 +467,7 @@ Check the solution:
 | `docker/sdk console router:cache:warm-up` | After adding new route providers |
 | `docker/sdk console navigation:build-cache` | After modifying navigation XML |
 | `docker/sdk console cache:empty-all` | After loading Yves or Merchant Portal exercises |
+| `docker/sdk console configuration:sync` | After adding or changing `*.configuration.yml` setting schemas |
 
 ## Troubleshooting
 

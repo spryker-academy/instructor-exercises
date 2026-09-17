@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>01-back-office-assistant-setup</title>
+  <style>
+    html {
+      line-height: 1.5;
+      font-family: Georgia, serif;
+      font-size: 20px;
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      word-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 1em;
+      }
+    }
+    @media print {
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, 'Lucida Console', Consolas, monospace;
+      font-size: 85%;
+      margin: 0;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="setup-install-the-back-office-assistant">Setup: Install the Back Office Assistant</h1>
+<p>The Back Office Assistant is an AI chat widget in the Spryker Back Office. It routes each message to an <strong>agent</strong>, and each agent can call <strong>tools</strong> to read or change shop data. Exercise 19 adds a new agent to it, so the assistant must work first.</p>
+<p>This guide follows the official Spryker documentation and was verified against <code>b2b-demo-marketplace</code> with <code>spryker-feature/ai-commerce</code> 202608.0 and <code>spryker/ai-foundation</code> 0.8.4.</p>
+<p>You will: - Register AI configurations for the intent router and the built-in agents - Register the built-in agent, tool set, SSE, and audit log plugins - Add the assistant settings to the Configuration Management UI - Build the chat widget frontend</p>
+<p><strong>Official documentation:</strong> - <a href="https://docs.spryker.com/docs/dg/dev/ai/ai-commerce/backoffice-assistant/install-backoffice-assistant.html">Install Back Office Assistant</a> - <a href="https://docs.spryker.com/docs/dg/dev/ai/ai-commerce/install-ai-commerce.html">Install AI Commerce</a> - <a href="https://docs.spryker.com/docs/dg/dev/ai/ai-commerce/configure-multiple-ai-providers.html">Configure multiple AI providers</a></p>
+<h2 id="prerequisites">Prerequisites</h2>
+<ul>
+<li>A running <code>b2b-demo-marketplace</code> with the AI Commerce feature installed. Check with:</li>
+</ul>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli composer show spryker-feature/ai-commerce spryker/ai-foundation <span class="kw">|</span> <span class="fu">grep</span> <span class="at">-E</span> <span class="st">&quot;^name|^versions&quot;</span></span></code></pre></div>
+<ul>
+<li>An OpenAI API token. You enter it in the Back Office in step 6. This guide sets up OpenAI only. For AWS Bedrock or Anthropic see <em>Configure multiple AI providers</em>.</li>
+</ul>
+<hr />
+<h2 id="background-how-the-pieces-fit-together">Background: How the Pieces Fit Together</h2>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 38%" />
+<col style="width: 28%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Piece</th>
+<th>Module</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>AI configuration</strong></td>
+<td>AiFoundation</td>
+<td>A named entry in <code>config/Shared/config_ai.php</code>: provider, API key, model, and optional system prompt</td>
+</tr>
+<tr class="even">
+<td><strong>Agent plugin</strong></td>
+<td>AiCommerce</td>
+<td>Handles one domain, for example orders or discounts. Sends a prompt to AiFoundation</td>
+</tr>
+<tr class="odd">
+<td><strong>Intent router</strong></td>
+<td>AiCommerce</td>
+<td>Reads every agent’s description and picks the agent for a user message</td>
+</tr>
+<tr class="even">
+<td><strong>Tool set plugin</strong></td>
+<td>AiFoundation</td>
+<td>A named group of tools an agent may call</td>
+</tr>
+<tr class="odd">
+<td><strong>SSE plugins</strong></td>
+<td>AiCommerce</td>
+<td>Stream tool call progress to the chat widget with Server-Sent Events</td>
+</tr>
+<tr class="even">
+<td><strong>Audit log plugins</strong></td>
+<td>AiFoundation</td>
+<td>Record every prompt and tool call</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Why one AI configuration per agent?</strong> Each named configuration is tracked separately in the AiFoundation audit log. You can review the AI calls of one agent without the noise of the others.</p>
+</blockquote>
+<p>The values <code>key</code> and <code>model</code> are not hard-coded. The prefix <code>CONFIGURATION_REFERENCE_PREFIX</code> tells AiFoundation to read them at runtime from the Configuration Management UI in the Back Office.</p>
+<hr />
+<h2 id="step-1-define-the-constants">Step 1: Define the Constants</h2>
+<p>Open <code>src/Pyz/Shared/AiCommerce/AiCommerceConstants.php</code>. The interface already exists in the demo shop and holds the Smart PIM constants. Add the Back Office Assistant constants to it:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">const</span> <span class="dt">string</span> <span class="cn">CONFIGURATION_KEY_BACKOFFICE_ASSISTANT_OPENAI_MODEL</span> <span class="op">=</span> <span class="st">&#39;ai_commerce:backoffice_assistant:ai_vendor:openai_model&#39;</span><span class="ot">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">const</span> <span class="dt">string</span> <span class="cn">AI_CONFIGURATION_INTENT_ROUTER_OPENAI</span> <span class="op">=</span> <span class="st">&#39;AI_COMMERCE:AI_CONFIGURATION_INTENT_ROUTER_OPENAI&#39;</span><span class="ot">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">const</span> <span class="dt">string</span> <span class="cn">AI_CONFIGURATION_GENERAL_AGENT_OPENAI</span> <span class="op">=</span> <span class="st">&#39;AI_COMMERCE:AI_CONFIGURATION_GENERAL_AGENT_OPENAI&#39;</span><span class="ot">;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">const</span> <span class="dt">string</span> <span class="cn">AI_CONFIGURATION_ORDER_MANAGEMENT_OPENAI</span> <span class="op">=</span> <span class="st">&#39;AI_COMMERCE:AI_CONFIGURATION_ORDER_MANAGEMENT_OPENAI&#39;</span><span class="ot">;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">const</span> <span class="dt">string</span> <span class="cn">AI_CONFIGURATION_DISCOUNT_MANAGEMENT_OPENAI</span> <span class="op">=</span> <span class="st">&#39;AI_COMMERCE:AI_CONFIGURATION_DISCOUNT_MANAGEMENT_OPENAI&#39;</span><span class="ot">;</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">const</span> <span class="dt">string</span> <span class="cn">AI_CONFIGURATION_FORM_FILL_OPENAI</span> <span class="op">=</span> <span class="st">&#39;AI_COMMERCE:AI_CONFIGURATION_FORM_FILL_OPENAI&#39;</span><span class="ot">;</span></span></code></pre></div>
+<p><code>CONFIGURATION_KEY_OPENAI_API_TOKEN</code> must also exist in this interface. The demo shop already defines it as <code>'ai_vendor:openai:general:api_token'</code>.</p>
+<h2 id="step-2-register-the-ai-configurations">Step 2: Register the AI Configurations</h2>
+<p>Append five entries to <code>config/Shared/config_ai.php</code>. The intent router has no system prompt. Each agent references its own prompt setting:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="va">$config</span>[<span class="cn">A</span>iFoundationConstants::<span class="cn">AI_CONFIGURATIONS</span>][<span class="cn">A</span>iCommerceConstants::<span class="cn">AI_CONFIGURATION_INTENT_ROUTER_OPENAI</span>] <span class="op">=</span> [</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;provider_name&#39;</span> =&gt; <span class="cn">A</span>iFoundationConstants::<span class="cn">PROVIDER_OPENAI</span><span class="ot">,</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;provider_config&#39;</span> =&gt; [</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;key&#39;</span> =&gt; <span class="cn">A</span>iFoundationConstants::<span class="cn">CONFIGURATION_REFERENCE_PREFIX</span> <span class="op">.</span> <span class="cn">A</span>iCommerceConstants::<span class="cn">CONFIGURATION_KEY_OPENAI_API_TOKEN</span><span class="ot">,</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;model&#39;</span> =&gt; <span class="cn">A</span>iFoundationConstants::<span class="cn">CONFIGURATION_REFERENCE_PREFIX</span> <span class="op">.</span> <span class="cn">A</span>iCommerceConstants::<span class="cn">CONFIGURATION_KEY_BACKOFFICE_ASSISTANT_OPENAI_MODEL</span><span class="ot">,</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    ]<span class="ot">,</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>]<span class="ot">;</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="va">$config</span>[<span class="cn">A</span>iFoundationConstants::<span class="cn">AI_CONFIGURATIONS</span>][<span class="cn">A</span>iCommerceConstants::<span class="cn">AI_CONFIGURATION_GENERAL_AGENT_OPENAI</span>] <span class="op">=</span> [</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;provider_name&#39;</span> =&gt; <span class="cn">A</span>iFoundationConstants::<span class="cn">PROVIDER_OPENAI</span><span class="ot">,</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;provider_config&#39;</span> =&gt; [</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;key&#39;</span> =&gt; <span class="cn">A</span>iFoundationConstants::<span class="cn">CONFIGURATION_REFERENCE_PREFIX</span> <span class="op">.</span> <span class="cn">A</span>iCommerceConstants::<span class="cn">CONFIGURATION_KEY_OPENAI_API_TOKEN</span><span class="ot">,</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;model&#39;</span> =&gt; <span class="cn">A</span>iFoundationConstants::<span class="cn">CONFIGURATION_REFERENCE_PREFIX</span> <span class="op">.</span> <span class="cn">A</span>iCommerceConstants::<span class="cn">CONFIGURATION_KEY_BACKOFFICE_ASSISTANT_OPENAI_MODEL</span><span class="ot">,</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    ]<span class="ot">,</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;system_prompt&#39;</span> =&gt; <span class="cn">A</span>iFoundationConstants::<span class="cn">CONFIGURATION_REFERENCE_PREFIX</span> <span class="op">.</span> <span class="cn">A</span>iCommerceConstants::<span class="cn">CONFIGURATION_KEY_GENERAL_PURPOSE_SYSTEM_PROMPT</span><span class="ot">,</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>]<span class="ot">;</span></span></code></pre></div>
+<p>Repeat the second block three more times with these pairs:</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Configuration constant</th>
+<th>System prompt constant</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>AI_CONFIGURATION_ORDER_MANAGEMENT_OPENAI</code></td>
+<td><code>CONFIGURATION_KEY_ORDER_MANAGEMENT_SYSTEM_PROMPT</code></td>
+</tr>
+<tr class="even">
+<td><code>AI_CONFIGURATION_DISCOUNT_MANAGEMENT_OPENAI</code></td>
+<td><code>CONFIGURATION_KEY_DISCOUNT_MANAGEMENT_SYSTEM_PROMPT</code></td>
+</tr>
+<tr class="odd">
+<td><code>AI_CONFIGURATION_FORM_FILL_OPENAI</code></td>
+<td><code>CONFIGURATION_KEY_FORM_FILL_SYSTEM_PROMPT</code></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Array style:</strong> The demo shop file starts with one big <code>$config[AiFoundationConstants::AI_CONFIGURATIONS] = [...]</code> assignment for Smart PIM. Add the new entries <strong>below</strong> it with the <code>$config[...][...] = [...]</code> form shown here, so you do not overwrite the existing entries.</p>
+</blockquote>
+<h2 id="step-3-point-the-router-and-the-agents-at-their-configuration">Step 3: Point the Router and the Agents at Their Configuration</h2>
+<p>By default every <code>get*AiConfigurationName()</code> method in the feature returns <code>null</code>. Override them in <code>src/Pyz/Zed/AiCommerce/AiCommerceConfig.php</code>. Add these methods to the existing class:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">function</span> getIntentRouterAiConfigurationName()<span class="ot">:</span> <span class="ot">?</span><span class="dt">string</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    {</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="cn">A</span>iCommerceConstants::<span class="cn">AI_CONFIGURATION_INTENT_ROUTER_OPENAI</span><span class="ot">;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">function</span> getGeneralAgentAiConfigurationName()<span class="ot">:</span> <span class="ot">?</span><span class="dt">string</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    {</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="cn">A</span>iCommerceConstants::<span class="cn">AI_CONFIGURATION_GENERAL_AGENT_OPENAI</span><span class="ot">;</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">function</span> getOrderManagementAgentAiConfigurationName()<span class="ot">:</span> <span class="ot">?</span><span class="dt">string</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>    {</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="cn">A</span>iCommerceConstants::<span class="cn">AI_CONFIGURATION_ORDER_MANAGEMENT_OPENAI</span><span class="ot">;</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">function</span> getDiscountManagementAgentAiConfigurationName()<span class="ot">:</span> <span class="ot">?</span><span class="dt">string</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>    {</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="cn">A</span>iCommerceConstants::<span class="cn">AI_CONFIGURATION_DISCOUNT_MANAGEMENT_OPENAI</span><span class="ot">;</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">function</span> getFormFillAgentAiConfigurationName()<span class="ot">:</span> <span class="ot">?</span><span class="dt">string</span></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>    {</span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="cn">A</span>iCommerceConstants::<span class="cn">AI_CONFIGURATION_FORM_FILL_OPENAI</span><span class="ot">;</span></span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>    }</span></code></pre></div>
+<h2 id="step-4-register-the-plugins">Step 4: Register the Plugins</h2>
+<h3 id="agents">Agents</h3>
+<p>Create <code>src/Pyz/Zed/AiCommerce/AiCommerceDependencyProvider.php</code>:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;?php</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="kw">declare</span>(strict_types <span class="op">=</span> <span class="dv">1</span>)<span class="ot">;</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="kw">namespace</span> <span class="cn">P</span>yz\<span class="cn">Z</span>ed\<span class="cn">A</span>iCommerce<span class="ot">;</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="cn">S</span>prykerFeature\<span class="cn">Z</span>ed\<span class="cn">A</span>iCommerce\<span class="cn">A</span>iCommerceDependencyProvider <span class="kw">as</span> <span class="cn">S</span>prykerFeatureAiCommerceDependencyProvider<span class="ot">;</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="cn">S</span>prykerFeature\<span class="cn">Z</span>ed\<span class="cn">A</span>iCommerce\<span class="cn">C</span>ommunication\<span class="cn">P</span>lugin\<span class="cn">A</span>gent\<span class="cn">D</span>iscountManagementAgentPlugin<span class="ot">;</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="cn">S</span>prykerFeature\<span class="cn">Z</span>ed\<span class="cn">A</span>iCommerce\<span class="cn">C</span>ommunication\<span class="cn">P</span>lugin\<span class="cn">A</span>gent\<span class="cn">F</span>ormFillAgentPlugin<span class="ot">;</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="cn">S</span>prykerFeature\<span class="cn">Z</span>ed\<span class="cn">A</span>iCommerce\<span class="cn">C</span>ommunication\<span class="cn">P</span>lugin\<span class="cn">A</span>gent\<span class="cn">G</span>eneralAgentPlugin<span class="ot">;</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="cn">S</span>prykerFeature\<span class="cn">Z</span>ed\<span class="cn">A</span>iCommerce\<span class="cn">C</span>ommunication\<span class="cn">P</span>lugin\<span class="cn">A</span>gent\<span class="cn">O</span>rderManagementAgentPlugin<span class="ot">;</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="cn">A</span>iCommerceDependencyProvider <span class="kw">extends</span> <span class="cn">S</span>prykerFeatureAiCommerceDependencyProvider</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    <span class="co">/**</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a><span class="co">     * </span><span class="an">@return</span><span class="co"> array&lt;</span><span class="an">\SprykerFeature\Zed\AiCommerce\Dependency\BackofficeAssistant\BackofficeAssistantAgentPluginInterface&gt;</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a><span class="co">     */</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>    <span class="kw">protected</span> <span class="kw">function</span> getBackofficeAssistantAgentPlugins()<span class="ot">:</span> <span class="dt">array</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>    {</span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> [</span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>            <span class="kw">new</span> <span class="cn">G</span>eneralAgentPlugin()<span class="ot">,</span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>            <span class="kw">new</span> <span class="cn">O</span>rderManagementAgentPlugin()<span class="ot">,</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>            <span class="kw">new</span> <span class="cn">D</span>iscountManagementAgentPlugin()<span class="ot">,</span></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>            <span class="kw">new</span> <span class="cn">F</span>ormFillAgentPlugin()<span class="ot">,</span></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>        ]<span class="ot">;</span></span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="tool-sets-sse-streaming-and-audit-log">Tool sets, SSE streaming, and audit log</h3>
+<p>Create <code>src/Pyz/Zed/AiFoundation/AiFoundationDependencyProvider.php</code>:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;?php</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="kw">declare</span>(strict_types <span class="op">=</span> <span class="dv">1</span>)<span class="ot">;</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="kw">namespace</span> <span class="cn">P</span>yz\<span class="cn">Z</span>ed\<span class="cn">A</span>iFoundation<span class="ot">;</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="cn">S</span>pryker\<span class="cn">Z</span>ed\<span class="cn">A</span>iFoundation\<span class="cn">A</span>iFoundationDependencyProvider <span class="kw">as</span> <span class="cn">S</span>prykerAiFoundationDependencyProvider<span class="ot">;</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="cn">S</span>pryker\<span class="cn">Z</span>ed\<span class="cn">A</span>iFoundation\<span class="cn">C</span>ommunication\<span class="cn">P</span>lugin\<span class="cn">A</span>uditLogPostPromptPlugin<span class="ot">;</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="cn">S</span>pryker\<span class="cn">Z</span>ed\<span class="cn">A</span>iFoundation\<span class="cn">C</span>ommunication\<span class="cn">P</span>lugin\<span class="cn">A</span>uditLogPostToolCallPlugin<span class="ot">;</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="cn">S</span>pryker\<span class="cn">Z</span>ed\<span class="cn">A</span>iFoundation\<span class="cn">C</span>ommunication\<span class="cn">P</span>lugin\<span class="fu">Log</span>\<span class="cn">A</span>iInteractionHandlerPlugin<span class="ot">;</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="cn">S</span>prykerFeature\<span class="cn">Z</span>ed\<span class="cn">A</span>iCommerce\<span class="cn">C</span>ommunication\<span class="cn">P</span>lugin\<span class="cn">A</span>iFoundation\<span class="cn">B</span>ackofficeAssistantSsePostToolCallPlugin<span class="ot">;</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="cn">S</span>prykerFeature\<span class="cn">Z</span>ed\<span class="cn">A</span>iCommerce\<span class="cn">C</span>ommunication\<span class="cn">P</span>lugin\<span class="cn">A</span>iFoundation\<span class="cn">B</span>ackofficeAssistantSsePreToolCallPlugin<span class="ot">;</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="cn">S</span>prykerFeature\<span class="cn">Z</span>ed\<span class="cn">A</span>iCommerce\<span class="cn">C</span>ommunication\<span class="cn">P</span>lugin\<span class="cn">A</span>iFoundation\<span class="cn">D</span>iscountManagementToolSetPlugin<span class="ot">;</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="cn">S</span>prykerFeature\<span class="cn">Z</span>ed\<span class="cn">A</span>iCommerce\<span class="cn">C</span>ommunication\<span class="cn">P</span>lugin\<span class="cn">A</span>iFoundation\<span class="cn">F</span>ormFillToolSetPlugin<span class="ot">;</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="cn">S</span>prykerFeature\<span class="cn">Z</span>ed\<span class="cn">A</span>iCommerce\<span class="cn">C</span>ommunication\<span class="cn">P</span>lugin\<span class="cn">A</span>iFoundation\<span class="cn">N</span>avigationToolSetPlugin<span class="ot">;</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="cn">S</span>prykerFeature\<span class="cn">Z</span>ed\<span class="cn">A</span>iCommerce\<span class="cn">C</span>ommunication\<span class="cn">P</span>lugin\<span class="cn">A</span>iFoundation\<span class="cn">O</span>rderDetailsToolSetPlugin<span class="ot">;</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="cn">S</span>prykerFeature\<span class="cn">Z</span>ed\<span class="cn">A</span>iCommerce\<span class="cn">C</span>ommunication\<span class="cn">P</span>lugin\<span class="cn">A</span>iFoundation\<span class="cn">O</span>rderManagementToolSetPlugin<span class="ot">;</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="cn">A</span>iFoundationDependencyProvider <span class="kw">extends</span> <span class="cn">S</span>prykerAiFoundationDependencyProvider</span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>    <span class="co">/**</span></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a><span class="co">     * </span><span class="an">@return</span><span class="co"> array&lt;</span><span class="an">\Spryker\Zed\AiFoundation\Dependency\Plugin\PostPromptPluginInterface&gt;</span></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a><span class="co">     */</span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>    <span class="kw">protected</span> <span class="kw">function</span> getPostPromptPlugins()<span class="ot">:</span> <span class="dt">array</span></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>    {</span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> [</span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>            <span class="kw">new</span> <span class="cn">A</span>uditLogPostPromptPlugin()<span class="ot">,</span></span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>        ]<span class="ot">;</span></span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a>    <span class="co">/**</span></span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a><span class="co">     * </span><span class="an">@return</span><span class="co"> array&lt;</span><span class="an">\Spryker\Zed\AiFoundation\Dependency\Plugin\PreToolCallPluginInterface&gt;</span></span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a><span class="co">     */</span></span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a>    <span class="kw">protected</span> <span class="kw">function</span> getPreToolCallPlugins()<span class="ot">:</span> <span class="dt">array</span></span>
+<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a>    {</span>
+<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> [</span>
+<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a>            <span class="kw">new</span> <span class="cn">B</span>ackofficeAssistantSsePreToolCallPlugin()<span class="ot">,</span></span>
+<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a>        ]<span class="ot">;</span></span>
+<span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-41"><a href="#cb6-41" aria-hidden="true" tabindex="-1"></a>    <span class="co">/**</span></span>
+<span id="cb6-42"><a href="#cb6-42" aria-hidden="true" tabindex="-1"></a><span class="co">     * </span><span class="an">@return</span><span class="co"> array&lt;</span><span class="an">\Spryker\Zed\AiFoundation\Dependency\Plugin\PostToolCallPluginInterface&gt;</span></span>
+<span id="cb6-43"><a href="#cb6-43" aria-hidden="true" tabindex="-1"></a><span class="co">     */</span></span>
+<span id="cb6-44"><a href="#cb6-44" aria-hidden="true" tabindex="-1"></a>    <span class="kw">protected</span> <span class="kw">function</span> getPostToolCallPlugins()<span class="ot">:</span> <span class="dt">array</span></span>
+<span id="cb6-45"><a href="#cb6-45" aria-hidden="true" tabindex="-1"></a>    {</span>
+<span id="cb6-46"><a href="#cb6-46" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> [</span>
+<span id="cb6-47"><a href="#cb6-47" aria-hidden="true" tabindex="-1"></a>            <span class="kw">new</span> <span class="cn">B</span>ackofficeAssistantSsePostToolCallPlugin()<span class="ot">,</span></span>
+<span id="cb6-48"><a href="#cb6-48" aria-hidden="true" tabindex="-1"></a>            <span class="kw">new</span> <span class="cn">A</span>uditLogPostToolCallPlugin()<span class="ot">,</span></span>
+<span id="cb6-49"><a href="#cb6-49" aria-hidden="true" tabindex="-1"></a>        ]<span class="ot">;</span></span>
+<span id="cb6-50"><a href="#cb6-50" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb6-51"><a href="#cb6-51" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-52"><a href="#cb6-52" aria-hidden="true" tabindex="-1"></a>    <span class="co">/**</span></span>
+<span id="cb6-53"><a href="#cb6-53" aria-hidden="true" tabindex="-1"></a><span class="co">     * </span><span class="an">@return</span><span class="co"> array&lt;</span><span class="an">\Spryker\Shared\Log\Dependency\Plugin\LogHandlerPluginInterface&gt;</span></span>
+<span id="cb6-54"><a href="#cb6-54" aria-hidden="true" tabindex="-1"></a><span class="co">     */</span></span>
+<span id="cb6-55"><a href="#cb6-55" aria-hidden="true" tabindex="-1"></a>    <span class="kw">protected</span> <span class="kw">function</span> getAiInteractionLogHandlerPlugins()<span class="ot">:</span> <span class="dt">array</span></span>
+<span id="cb6-56"><a href="#cb6-56" aria-hidden="true" tabindex="-1"></a>    {</span>
+<span id="cb6-57"><a href="#cb6-57" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> [</span>
+<span id="cb6-58"><a href="#cb6-58" aria-hidden="true" tabindex="-1"></a>            <span class="kw">new</span> <span class="cn">A</span>iInteractionHandlerPlugin()<span class="ot">,</span></span>
+<span id="cb6-59"><a href="#cb6-59" aria-hidden="true" tabindex="-1"></a>        ]<span class="ot">;</span></span>
+<span id="cb6-60"><a href="#cb6-60" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb6-61"><a href="#cb6-61" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-62"><a href="#cb6-62" aria-hidden="true" tabindex="-1"></a>    <span class="co">/**</span></span>
+<span id="cb6-63"><a href="#cb6-63" aria-hidden="true" tabindex="-1"></a><span class="co">     * </span><span class="an">@return</span><span class="co"> array&lt;</span><span class="an">\Spryker\Zed\AiFoundation\Dependency\Tools\ToolSetPluginInterface&gt;</span></span>
+<span id="cb6-64"><a href="#cb6-64" aria-hidden="true" tabindex="-1"></a><span class="co">     */</span></span>
+<span id="cb6-65"><a href="#cb6-65" aria-hidden="true" tabindex="-1"></a>    <span class="kw">protected</span> <span class="kw">function</span> getAiToolSetPlugins()<span class="ot">:</span> <span class="dt">array</span></span>
+<span id="cb6-66"><a href="#cb6-66" aria-hidden="true" tabindex="-1"></a>    {</span>
+<span id="cb6-67"><a href="#cb6-67" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> [</span>
+<span id="cb6-68"><a href="#cb6-68" aria-hidden="true" tabindex="-1"></a>            <span class="kw">new</span> <span class="cn">N</span>avigationToolSetPlugin()<span class="ot">,</span></span>
+<span id="cb6-69"><a href="#cb6-69" aria-hidden="true" tabindex="-1"></a>            <span class="kw">new</span> <span class="cn">O</span>rderManagementToolSetPlugin()<span class="ot">,</span></span>
+<span id="cb6-70"><a href="#cb6-70" aria-hidden="true" tabindex="-1"></a>            <span class="kw">new</span> <span class="cn">O</span>rderDetailsToolSetPlugin()<span class="ot">,</span></span>
+<span id="cb6-71"><a href="#cb6-71" aria-hidden="true" tabindex="-1"></a>            <span class="kw">new</span> <span class="cn">D</span>iscountManagementToolSetPlugin()<span class="ot">,</span></span>
+<span id="cb6-72"><a href="#cb6-72" aria-hidden="true" tabindex="-1"></a>            <span class="kw">new</span> <span class="cn">F</span>ormFillToolSetPlugin()<span class="ot">,</span></span>
+<span id="cb6-73"><a href="#cb6-73" aria-hidden="true" tabindex="-1"></a>        ]<span class="ot">;</span></span>
+<span id="cb6-74"><a href="#cb6-74" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb6-75"><a href="#cb6-75" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="twig-plugin">Twig plugin</h3>
+<p>Open <code>src/Pyz/Zed/Twig/TwigDependencyProvider.php</code> and make sure <code>getTwigPlugins()</code> contains <code>new AiCommerceTwigPlugin()</code>. The current demo shop already registers it. It provides the Twig variables the chat widget needs.</p>
+<blockquote>
+<p><strong>Project-level layout override:</strong> If your project overrides <code>src/Pyz/Zed/Gui/Presentation/Layout/layout.twig</code>, include <code>@AiCommerce/Partials/chat-widget.twig</code> in the <code>footer_js</code> block as described in the official guide. The stock demo shop has no such override, so you can skip this.</p>
+</blockquote>
+<h2 id="step-5-add-the-assistant-settings">Step 5: Add the Assistant Settings</h2>
+<p>Project-level setting schemas live in <code>data/configuration/</code>. The feature package already ships the <strong>General</strong> and <strong>System Prompts</strong> groups of the assistant. You add the <strong>AI Vendor</strong> group, which backs the <code>openai_model</code> reference from step 2.</p>
+<p>Open <code>data/configuration/ai_commerce.configuration.yml</code> and add this tab as the first item under <code>tabs:</code>:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="kw">-</span><span class="at"> </span><span class="fu">key</span><span class="kw">:</span><span class="at"> backoffice_assistant</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">groups</span><span class="kw">:</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="at">                </span><span class="kw">-</span><span class="at"> </span><span class="fu">key</span><span class="kw">:</span><span class="at"> ai_vendor</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="at">                  </span><span class="fu">name</span><span class="kw">:</span><span class="at"> AI Vendor</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="at">                  </span><span class="fu">description</span><span class="kw">:</span><span class="at"> AI configuration and vendor model used for the Backoffice Assistant.</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="at">                  </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="at">                  </span><span class="fu">order</span><span class="kw">:</span><span class="at"> </span><span class="dv">1</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="at">                  </span><span class="fu">scopes</span><span class="kw">:</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="at">                      </span><span class="kw">-</span><span class="at"> global</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="at">                  </span><span class="fu">settings</span><span class="kw">:</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="at">                      </span><span class="kw">-</span><span class="at"> </span><span class="fu">key</span><span class="kw">:</span><span class="at"> ai_configuration</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="at">                        </span><span class="fu">name</span><span class="kw">:</span><span class="at"> AI Configuration</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="at">                        </span><span class="fu">description</span><span class="kw">:</span><span class="at"> AI configuration used for all Backoffice Assistant agents.</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a><span class="at">                        </span><span class="fu">type</span><span class="kw">:</span><span class="at"> radio</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a><span class="at">                        </span><span class="fu">default_value</span><span class="kw">:</span><span class="at"> </span><span class="st">&#39;AI_COMMERCE:AI_CONFIGURATION_BACKOFFICE_ASSISTANT_OPENAI&#39;</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a><span class="at">                        </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a><span class="at">                        </span><span class="fu">secret</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a><span class="at">                        </span><span class="fu">storefront</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a><span class="at">                        </span><span class="fu">order</span><span class="kw">:</span><span class="at"> </span><span class="dv">1</span></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a><span class="at">                        </span><span class="fu">scopes</span><span class="kw">:</span></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a><span class="at">                            </span><span class="kw">-</span><span class="at"> global</span></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a><span class="at">                        </span><span class="fu">options</span><span class="kw">:</span></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a><span class="at">                            </span><span class="kw">-</span><span class="at"> </span><span class="fu">value</span><span class="kw">:</span><span class="at"> </span><span class="st">&#39;AI_COMMERCE:AI_CONFIGURATION_BACKOFFICE_ASSISTANT_OPENAI&#39;</span></span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a><span class="at">                              </span><span class="fu">label</span><span class="kw">:</span><span class="at"> OpenAI</span></span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a><span class="at">                      </span><span class="kw">-</span><span class="at"> </span><span class="fu">key</span><span class="kw">:</span><span class="at"> openai_model</span></span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a><span class="at">                        </span><span class="fu">name</span><span class="kw">:</span><span class="at"> OpenAI Model</span></span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a><span class="at">                        </span><span class="fu">description</span><span class="kw">:</span><span class="at"> The OpenAI model used for the Backoffice Assistant. Model must support image input and structured output.</span></span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a><span class="at">                        </span><span class="fu">type</span><span class="kw">:</span><span class="at"> string</span></span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a><span class="at">                        </span><span class="fu">default_value</span><span class="kw">:</span><span class="at"> </span><span class="st">&#39;gpt-4.1&#39;</span></span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a><span class="at">                        </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a><span class="at">                        </span><span class="fu">secret</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span></span>
+<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a><span class="at">                        </span><span class="fu">storefront</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span></span>
+<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a><span class="at">                        </span><span class="fu">order</span><span class="kw">:</span><span class="at"> </span><span class="dv">2</span></span>
+<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a><span class="at">                        </span><span class="fu">scopes</span><span class="kw">:</span></span>
+<span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a><span class="at">                            </span><span class="kw">-</span><span class="at"> global</span></span></code></pre></div>
+<blockquote>
+<p><strong>Indentation matters.</strong> The tab sits at the same depth as the existing <code>- key: smart_pim</code> tab. The official guide also lists AWS Bedrock and Anthropic options. Add them when you configure those providers.</p>
+</blockquote>
+<h2 id="step-6-generate-sync-and-enable">Step 6: Generate, Sync, and Enable</h2>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console propel:install</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console configuration:sync</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console router:cache:warm-up:backoffice</span></code></pre></div>
+<p><code>configuration:sync</code> reports the number of processed settings. The number grows after you add the tab.</p>
+<p>Then in the Back Office:</p>
+<ol type="1">
+<li>Go to <strong>Configuration &gt; AI Vendor &gt; OpenAI</strong> and enter your API token, if it is not set yet.</li>
+<li>Go to <strong>Configuration &gt; AI Commerce &gt; Back Office Assistant &gt; General</strong>.</li>
+<li>Turn on <strong>Enable Back Office Assistant</strong> and save. The feature is <strong>off</strong> by default.</li>
+</ol>
+<h2 id="step-7-build-the-chat-widget">Step 7: Build the Chat Widget</h2>
+<p>The widget renders Markdown answers with two npm packages:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli npm install marked@^15.0.0 dompurify@^3.2.0</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console frontend:project:install-dependencies</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console frontend:zed:build</span></code></pre></div>
+<hr />
+<h2 id="testing">Testing</h2>
+<ol type="1">
+<li>Reload any Back Office page. A chat icon appears in the bottom-right corner.</li>
+<li>Ask: <em>“Where can I create a discount?”</em> The General agent answers with a navigation path.</li>
+<li>Ask: <em>“Show me the latest orders.”</em> The Order Management agent answers, and you see tool call progress while it works.</li>
+</ol>
+<h2 id="troubleshooting">Troubleshooting</h2>
+<table>
+<colgroup>
+<col style="width: 39%" />
+<col style="width: 60%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Symptom</th>
+<th>Likely cause</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>No chat icon</td>
+<td>The assistant is not enabled in step 6, the Zed frontend was not built, or the Twig cache is stale. Run <code>cache:empty-all</code>.</td>
+</tr>
+<tr class="even">
+<td>Icon visible, every answer fails</td>
+<td>Missing or invalid OpenAI token, or an AI configuration name returns <code>null</code>. Recheck steps 2 and 3.</td>
+</tr>
+<tr class="odd">
+<td><code>configuration:sync</code> fails</td>
+<td>YAML indentation in step 5.</td>
+</tr>
+<tr class="even">
+<td>Tool progress never streams</td>
+<td>The SSE plugins from step 4 are missing.</td>
+</tr>
+<tr class="odd">
+<td>Where do I see what the AI did?</td>
+<td>The audit log plugins record every prompt and tool call of each AI configuration.</td>
+</tr>
+</tbody>
+</table>
+<p>You are now ready for Exercise 19.</p>
+</body>
+</html>

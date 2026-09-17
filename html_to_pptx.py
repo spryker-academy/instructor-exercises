@@ -91,6 +91,15 @@ INTERMEDIATE_OBJECTIVES = [
 ]
 
 
+ADVANCED_OBJECTIVES = [
+    "Install and configure the AI-powered Back Office Assistant",
+    "Register AI configurations with providers, models, and system prompts",
+    "Write AI tools with names, descriptions, and typed parameters",
+    "Group tools into tool sets and expose them to an agent",
+    "Build a custom agent with structured responses on AI Foundation",
+]
+
+
 def create_presentation():
     """Create a blank widescreen presentation."""
     prs = Presentation()
@@ -792,6 +801,13 @@ def main():
             "subtitle": "Instructor-Led Training | Advanced Spryker Development",
             "output": "spryker-academy-professional.pptx",
             "objectives": INTERMEDIATE_OBJECTIVES,
+        },
+        {
+            "subdir": "advanced",
+            "title": "Spryker Academy \u2014 AI Exercises",
+            "subtitle": "Instructor-Led Training | AI Foundation and the Back Office Assistant",
+            "output": "spryker-academy-ai.pptx",
+            "objectives": ADVANCED_OBJECTIVES,
         },
     ]
 

@@ -8,6 +8,7 @@
 # Examples:
 #   ./exercises/load.sh contact-request basics/contact-request-back-office/skeleton
 #   ./exercises/load.sh supplier intermediate/back-office/skeleton
+#   ./exercises/load.sh ai-product-creation advanced/ai-foundation-agent/skeleton
 #
 # First run will clone the repos and configure the project automatically.
 #
@@ -20,6 +21,7 @@ REPOS_DIR="$SCRIPT_DIR/repos"
 
 CONTACT_REQUEST_REPO="https://github.com/spryker-academy/contact-request.git"
 SUPPLIER_REPO="https://github.com/spryker-academy/supplier.git"
+AI_PRODUCT_CREATION_REPO="https://github.com/spryker-academy/ai-product-creation.git"
 
 # Colors
 RED='\033[0;31m'
@@ -45,7 +47,7 @@ file_needs_update() {
 usage() {
     echo "Usage: ./exercises/load.sh <package> <branch>"
     echo ""
-    echo "Packages: contact-request, supplier"
+    echo "Packages: contact-request, supplier, ai-product-creation"
     echo ""
     echo "Contact Request branches:"
     echo "  basics/contact-request-back-office/skeleton"
@@ -85,6 +87,10 @@ usage() {
     echo "  intermediate/merchant-portal-form/complete"
     echo "  intermediate/merchant-portal-locations/skeleton"
     echo "  intermediate/merchant-portal-locations/complete"
+    echo ""
+    echo "AI Product Creation branches (requires the Back Office Assistant, see guides/advanced/):"
+    echo "  advanced/ai-foundation-agent/skeleton"
+    echo "  advanced/ai-foundation-agent/complete"
     exit 1
 }
 
@@ -96,14 +102,16 @@ fi
 PACKAGE="$1"
 BRANCH="$2"
 
-if [ "$PACKAGE" != "contact-request" ] && [ "$PACKAGE" != "supplier" ]; then
-    log_error "Error: Package must be 'contact-request' or 'supplier'"
+if [ "$PACKAGE" != "contact-request" ] && [ "$PACKAGE" != "supplier" ] && [ "$PACKAGE" != "ai-product-creation" ]; then
+    log_error "Error: Package must be 'contact-request', 'supplier' or 'ai-product-creation'"
     usage
 fi
 
 # Determine repo URL
 if [ "$PACKAGE" = "contact-request" ]; then
     REPO_URL="$CONTACT_REQUEST_REPO"
+elif [ "$PACKAGE" = "ai-product-creation" ]; then
+    REPO_URL="$AI_PRODUCT_CREATION_REPO"
 else
     REPO_URL="$SUPPLIER_REPO"
 fi
@@ -369,6 +377,124 @@ YAMLEOF
     fi
 fi
 
+# ---------------------------------------------------------------------------
+# AI Product Creation package (Exercise 19: AI Foundation agent)
+# ---------------------------------------------------------------------------
+AI_WIRING_MARKER="ai-product-creation exercise"
+
+# Remove wiring that a previous "complete" load added: other packages must not reference missing classes,
+# and in the skeleton branch the wiring is a student task
+if [ "$PACKAGE" != "ai-product-creation" ] || [[ "$BRANCH" == */skeleton ]]; then
+    AI_WIRED_FILES=$(grep -rl "$AI_WIRING_MARKER" "$PROJECT_DIR/src" "$PROJECT_DIR/config/Shared/config_ai.php" --include="*.php" 2>/dev/null || true)
+    if [ -n "$AI_WIRED_FILES" ]; then
+        echo "$AI_WIRED_FILES" | while read -r wired_file; do
+            php -r '
+                $file = $argv[1];
+                $marker = preg_quote($argv[2], "/");
+                $content = file_get_contents($file);
+                $content = preg_replace("/\n[ \t]*\/\/ >>> " . $marker . ".*?\/\/ <<< " . $marker . "[^\n]*/s", "", $content);
+                $content = preg_replace("/\n[^\n]*\/\/ " . $marker . "[^\n]*/", "", $content);
+                file_put_contents($file, $content);
+            ' "$wired_file" "$AI_WIRING_MARKER"
+        done
+        log_success "Removed automatic AI Product Creation wiring from the project"
+    fi
+    if [ "$PACKAGE" != "ai-product-creation" ]; then
+        rm -f "$PROJECT_DIR/data/configuration/ai_product_creation.configuration.yml"
+    fi
+    if [ "$PACKAGE" != "ai-product-creation" ] && grep -rq "AiProductCreation" "$PROJECT_DIR/src/Pyz" "$PROJECT_DIR/config/Shared/config_ai.php" 2>/dev/null; then
+        log_error "Warning: the project still references the AiProductCreation module (manual wiring from Exercise 19)."
+        log_error "         Remove those lines, or the Back Office will fail because src/SprykerAcademy was replaced."
+    fi
+fi
+
+if [ "$PACKAGE" = "ai-product-creation" ]; then
+    AGENT_PROVIDER=$(grep -rl "function getBackofficeAssistantAgentPlugins" "$PROJECT_DIR/src" --include="*.php" 2>/dev/null | head -1)
+    TOOLSET_PROVIDER=$(grep -rl "function getAiToolSetPlugins" "$PROJECT_DIR/src" --include="*.php" 2>/dev/null | head -1)
+
+    if [ -z "$AGENT_PROVIDER" ] || [ -z "$TOOLSET_PROVIDER" ]; then
+        log_error "Warning: the Back Office Assistant is not installed in this project."
+        log_error "         Follow exercises/guides/advanced/01-back-office-assistant-setup.md first."
+    fi
+
+    # Configuration schema: project-level schemas live in data/configuration
+    if [ -d "$REPO_DIR/resources/configuration" ]; then
+        mkdir -p "$PROJECT_DIR/data/configuration"
+        cp "$REPO_DIR"/resources/configuration/*.configuration.yml "$PROJECT_DIR/data/configuration/"
+        log_success "Copied agent configuration schema to data/configuration/"
+    fi
+
+    # The complete branch is wired automatically. In the skeleton branch wiring is part of the exercise.
+    if [[ "$BRANCH" == */complete ]] && [ -n "$AGENT_PROVIDER" ] && [ -n "$TOOLSET_PROVIDER" ]; then
+        wire_plugin() {
+            # $1 file, $2 method name, $3 fully qualified plugin class
+            if file_needs_update "$1" "$(basename "${3//\\//}")"; then
+                php -r '
+                    [$file, $method, $class, $marker] = [$argv[1], $argv[2], $argv[3], $argv[4]];
+                    $content = file_get_contents($file);
+                    $pattern = "/(function " . preg_quote($method, "/") . "\(\): array\s*\{\s*return \[.*?)(\n\s*\];)/s";
+                    $line = "\n            new \\" . $class . "(), // " . $marker;
+                    $updated = preg_replace($pattern, "$1" . str_replace("\\", "\\\\", $line) . "$2", $content, 1, $count);
+                    if ($count === 1) {
+                        file_put_contents($file, $updated);
+                        echo "updated";
+                    }
+                ' "$1" "$2" "$3" "$AI_WIRING_MARKER" | grep -q "updated" && log_success "Registered $(basename "${3//\\//}") in $(basename "$1")"
+            fi
+        }
+
+        wire_plugin "$AGENT_PROVIDER" "getBackofficeAssistantAgentPlugins" 'SprykerAcademy\Zed\AiProductCreation\Communication\Plugin\Agent\ProductCreationAgentPlugin'
+        wire_plugin "$TOOLSET_PROVIDER" "getAiToolSetPlugins" 'SprykerAcademy\Zed\AiProductCreation\Communication\Plugin\AiFoundation\ProductCreationToolSetPlugin'
+
+        # AI configuration (OpenAI) for the agent
+        CONFIG_AI="$PROJECT_DIR/config/Shared/config_ai.php"
+        if file_needs_update "$CONFIG_AI" "AI_CONFIGURATION_PRODUCT_CREATION_OPENAI"; then
+            cat >> "$CONFIG_AI" <<'CONFIGEOF'
+
+// >>> ai-product-creation exercise
+$config[\Spryker\Shared\AiFoundation\AiFoundationConstants::AI_CONFIGURATIONS][\SprykerAcademy\Shared\AiProductCreation\AiProductCreationConstants::AI_CONFIGURATION_PRODUCT_CREATION_OPENAI] = [
+    'provider_name' => \Spryker\Shared\AiFoundation\AiFoundationConstants::PROVIDER_OPENAI,
+    'provider_config' => [
+        'key' => \Spryker\Shared\AiFoundation\AiFoundationConstants::CONFIGURATION_REFERENCE_PREFIX . \Pyz\Shared\AiCommerce\AiCommerceConstants::CONFIGURATION_KEY_OPENAI_API_TOKEN,
+        'model' => \Spryker\Shared\AiFoundation\AiFoundationConstants::CONFIGURATION_REFERENCE_PREFIX . \Pyz\Shared\AiCommerce\AiCommerceConstants::CONFIGURATION_KEY_BACKOFFICE_ASSISTANT_OPENAI_MODEL,
+    ],
+    'system_prompt' => \Spryker\Shared\AiFoundation\AiFoundationConstants::CONFIGURATION_REFERENCE_PREFIX . \SprykerAcademy\Shared\AiProductCreation\AiProductCreationConstants::CONFIGURATION_KEY_SYSTEM_PROMPT,
+];
+// <<< ai-product-creation exercise
+CONFIGEOF
+            log_success "Added the Product Creation AI configuration to config_ai.php"
+        fi
+
+        # SSE streaming: tool call progress is only streamed for listed AI configuration names
+        SSE_CONFIG=$(grep -l "function getBackofficeAssistantSseAiConfigurationNames" "$PROJECT_DIR"/src/*/Zed/AiCommerce/AiCommerceConfig.php 2>/dev/null | head -1)
+        [ -z "$SSE_CONFIG" ] && SSE_CONFIG="$PROJECT_DIR/src/Pyz/Zed/AiCommerce/AiCommerceConfig.php"
+        if file_needs_update "$SSE_CONFIG" "AI_CONFIGURATION_PRODUCT_CREATION_OPENAI"; then
+            php -r '
+                [$file, $marker] = [$argv[1], $argv[2]];
+                $content = file_get_contents($file);
+                $constant = "\\SprykerAcademy\\Shared\\AiProductCreation\\AiProductCreationConstants::AI_CONFIGURATION_PRODUCT_CREATION_OPENAI";
+                if (strpos($content, "function getBackofficeAssistantSseAiConfigurationNames") !== false) {
+                    $pattern = "/(function getBackofficeAssistantSseAiConfigurationNames\(\): array\s*\{.*?)(\n\s*\]\)\);)/s";
+                    $content = preg_replace_callback($pattern, fn ($m) => $m[1] . "\n            " . $constant . ", // " . $marker . $m[2], $content, 1);
+                } else {
+                    $method = "\n    // >>> " . $marker . "\n"
+                        . "    /**\n     * @return array<string>\n     */\n"
+                        . "    public function getBackofficeAssistantSseAiConfigurationNames(): array\n    {\n"
+                        . "        return array_values(array_filter([\n"
+                        . "            ...parent::getBackofficeAssistantSseAiConfigurationNames(),\n"
+                        . "            " . $constant . ",\n"
+                        . "        ]));\n    }\n"
+                        . "    // <<< " . $marker . "\n";
+                    $position = strrpos($content, "}");
+                    $content = rtrim(substr($content, 0, $position)) . "\n" . $method . "}\n";
+                }
+                file_put_contents($file, $content);
+            ' "$SSE_CONFIG" "$AI_WIRING_MARKER"
+            log_success "Enabled SSE streaming for the agent in $(basename "$SSE_CONFIG")"
+        fi
+    fi
+fi
+
 # Copy exercise tests if present
 if [ -d "$REPO_DIR/tests/SprykerAcademyTest" ]; then
     log_info "Installing exercise tests..."
@@ -398,10 +524,29 @@ echo -e "  Branch:  ${GREEN}$BRANCH${NC}"
 echo -e "  Files:   ${GREEN}$FILE_COUNT${NC} files in src/SprykerAcademy/"
 echo ""
 echo -e "${YELLOW}Next steps:${NC}"
-echo "  docker/sdk console c:e"
-echo "  docker/sdk cli composer dump-autoload"
-echo "  docker/sdk console propel:install"
-echo "  docker/sdk console transfer:generate"
+if [ "$PACKAGE" = "ai-product-creation" ]; then
+    # dump-autoload must run first: config_ai.php references a SprykerAcademy class
+    echo "  docker/sdk cli composer dump-autoload"
+    echo "  docker/sdk console transfer:generate"
+    echo "  docker/sdk console configuration:sync"
+    echo "  docker/sdk console c:e"
+else
+    echo "  docker/sdk console c:e"
+    echo "  docker/sdk cli composer dump-autoload"
+    echo "  docker/sdk console propel:install"
+    echo "  docker/sdk console transfer:generate"
+fi
+
+if [ "$PACKAGE" = "ai-product-creation" ]; then
+    echo ""
+    if [[ "$BRANCH" == */skeleton ]]; then
+        echo -e "${YELLOW}This is the skeleton:${NC} complete the TODOs and wire the plugins yourself."
+        echo "  Guide: exercises/guides/advanced/02-ai-foundation-agent.md"
+    fi
+    echo -e "${YELLOW}Verify your work:${NC}"
+    echo "  docker/sdk cli vendor/bin/codecept build -c tests/SprykerAcademyTest/Zed/AiProductCreation/"
+    echo "  docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/AiProductCreation/ Exercise19"
+fi
 
 # Show test run command for contact-request package
 if [ "$PACKAGE" = "contact-request" ] && [ -d "$PROJECT_DIR/tests/SprykerAcademyTest" ]; then
