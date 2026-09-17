@@ -87,6 +87,7 @@ INTERMEDIATE_OBJECTIVES = [
     "Model order workflows using the Order Management System (OMS)",
     "Read from Storage (Redis) using the Client layer",
     "Build Yves Storefront pages with Twig, routing, and controllers",
+    "Extend the Merchant Portal with tables, forms, and nested tables",
 ]
 
 

@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>09-merchant-portal-table</title>
+  <style>
+    html {
+      line-height: 1.5;
+      font-family: Georgia, serif;
+      font-size: 20px;
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      word-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 1em;
+      }
+    }
+    @media print {
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, 'Lucida Console', Consolas, monospace;
+      font-size: 85%;
+      margin: 0;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="exercise-15-merchant-portal-supplier-table">Exercise 15: Merchant Portal — Supplier Table</h1>
+<p>In this exercise, you will build a supplier list page in the Merchant Portal using Spryker’s GuiTable framework. The table displays only suppliers belonging to the current merchant and supports pagination, sorting, searching, and filtering.</p>
+<p>You will learn how to: - Create a Merchant Portal GUI module (<code>SupplierMerchantPortalGui</code>) - Build a GuiTable configuration (columns, filters, row actions) - Implement a data provider that fetches merchant-scoped data - Write a repository query that joins suppliers with merchant assignments - Register an Angular web component in the module - Configure ACL rules and Merchant Portal navigation</p>
+<h2 id="prerequisites">Prerequisites</h2>
+<ul>
+<li>Completed Exercise 9 (Back Office) — supplier facade, repository, and entity manager must exist</li>
+<li>Suppliers assigned to a merchant via <code>pyz_merchant_to_supplier</code></li>
+<li>Logged in as a demo merchant user</li>
+</ul>
+<h2 id="loading-the-exercise">Loading the Exercise</h2>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> supplier intermediate/merchant-portal-table/skeleton</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli composer dump-autoload</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span></code></pre></div>
+<hr />
+<h2 id="background-merchant-portal-architecture">Background: Merchant Portal Architecture</h2>
+<p>The Merchant Portal uses a different architecture from the Back Office:</p>
+<table>
+<colgroup>
+<col style="width: 21%" />
+<col style="width: 34%" />
+<col style="width: 44%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Aspect</th>
+<th>Back Office</th>
+<th>Merchant Portal</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Frontend</td>
+<td>Twig + jQuery</td>
+<td>Angular Web Components</td>
+</tr>
+<tr class="even">
+<td>Tables</td>
+<td><code>AbstractTable</code> (server-rendered HTML)</td>
+<td>GuiTable (JSON config + Angular)</td>
+</tr>
+<tr class="odd">
+<td>Data flow</td>
+<td>Controller renders full page</td>
+<td>Controller returns JSON, Angular renders UI</td>
+</tr>
+<tr class="even">
+<td>Layout</td>
+<td><code>@Gui/Layout/layout.twig</code></td>
+<td><code>@ZedUi/Layout/merchant-layout-main.twig</code></td>
+</tr>
+<tr class="odd">
+<td>Navigation</td>
+<td><code>navigation.xml</code></td>
+<td><code>navigation-main-merchant-portal.xml</code></td>
+</tr>
+<tr class="even">
+<td>Access control</td>
+<td>Back Office ACL</td>
+<td>Merchant Portal ACL plugins</td>
+</tr>
+</tbody>
+</table>
+<p><strong>GuiTable flow:</strong></p>
+<pre><code>GET /supplier-merchant-portal-gui/supplier (page load)
+├── SupplierController::indexAction()
+├── Returns GuiTable configuration as JSON in Twig
+└── Angular &lt;web-mp-supplier-list&gt; renders the table shell
+
+GET /supplier-merchant-portal-gui/supplier/table-data (AJAX)
+├── SupplierController::tableDataAction()
+├── GuiTableHttpDataRequestExecutor executes the request
+├── SupplierGuiTableDataProvider creates merchant-scoped criteria
+├── Repository fetches paginated data
+└── Returns JSON rows to Angular table</code></pre>
+<hr />
+<h2 id="setup-navigation-and-acl">Setup: Navigation and ACL</h2>
+<p>The exercise skeleton provides these pre-built:</p>
+<h3 id="navigation">Navigation</h3>
+<p>The Merchant Portal navigation is in <code>config/Zed/navigation-main-merchant-portal.xml</code> (separate from the Back Office <code>navigation.xml</code>). The supplier entry is automatically merged by <code>load.sh</code>.</p>
+<h3 id="acl-access-control">ACL (Access Control)</h3>
+<p>Every Merchant Portal module must register ACL rules so merchant users can access its controllers. The skeleton includes:</p>
+<ul>
+<li><code>SupplierMerchantPortalGuiMerchantAclRuleExpanderPlugin</code> — allows all routes in the <code>supplier-merchant-portal-gui</code> bundle</li>
+<li><code>AclMerchantPortalDependencyProvider</code> override — registers the plugin via SprykerAcademy namespace</li>
+</ul>
+<blockquote>
+<p><strong>Why ACL?</strong> The Merchant Portal is multi-tenant. Each merchant user can only access modules explicitly allowed by ACL rules. Without the ACL plugin, all routes return 403 Forbidden.</p>
+</blockquote>
+<hr />
+<h2 id="working-on-the-exercise">Working on the Exercise</h2>
+<h3 id="part-1-guitable-configuration-provider">Part 1: GuiTable Configuration Provider</h3>
+<p>The configuration provider defines the table structure: columns, filters, sorting, row actions, and data source URL.</p>
+<p><strong>Coding time:</strong></p>
+<p>Open <code>src/SprykerAcademy/Zed/SupplierMerchantPortalGui/Communication/ConfigurationProvider/SupplierGuiTableConfigurationProvider.php</code>:</p>
+<ol type="1">
+<li><p>Get a configuration builder from <code>$this-&gt;guiTableFactory-&gt;createConfigurationBuilder()</code></p></li>
+<li><p>Add columns:</p>
+<ul>
+<li><code>addColumnText('name', 'Name', sortable: true, searchable: true)</code></li>
+<li><code>addColumnText('description', 'Description', sortable: true, searchable: false)</code></li>
+<li><code>addColumnChip('status', 'Status', ...)</code> with color map: <code>1 =&gt; green/Active</code>, <code>0 =&gt; gray/Inactive</code></li>
+<li><code>addColumnText('email', 'Email', ...)</code></li>
+<li><code>addColumnText('phone', 'Phone', ...)</code></li>
+</ul></li>
+<li><p>Add a status filter: <code>addFilterSelect('status', 'Status', false, [1 =&gt; 'Active', 0 =&gt; 'Inactive'])</code></p></li>
+<li><p>Add a row action for editing: <code>addRowActionDrawerAjaxForm('edit', 'Edit', '/supplier-merchant-portal-gui/update-supplier?id-supplier=${row.idSupplier}')</code></p></li>
+<li><p>Set data source URL, page size, and enable search</p></li>
+</ol>
+<blockquote>
+<p><strong>Column types:</strong> <code>addColumnText()</code> for plain text, <code>addColumnChip()</code> for status badges with color coding, <code>addColumnDate()</code> for dates.</p>
+</blockquote>
+<blockquote>
+<p><strong>Row action:</strong> <code>addRowActionDrawerAjaxForm()</code> opens a drawer overlay that loads a form via AJAX — you’ll build this in Exercise 16.</p>
+</blockquote>
+<hr />
+<h3 id="part-2-guitable-data-provider">Part 2: GuiTable Data Provider</h3>
+<p>The data provider bridges the GuiTable framework with your repository.</p>
+<p><strong>Coding time:</strong></p>
+<p>Open <code>src/SprykerAcademy/Zed/SupplierMerchantPortalGui/Communication/DataProvider/SupplierGuiTableDataProvider.php</code>:</p>
+<ol type="1">
+<li><p>In <code>createCriteria()</code>, build a <code>SupplierMerchantPortalTableCriteriaTransfer</code> with the current merchant’s reference:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="va">$this</span>-&gt;merchantUserFacade-&gt;getCurrentMerchantUser()-&gt;getMerchantOrFail()-&gt;getMerchantReference()</span></code></pre></div></li>
+<li><p>In <code>fetchData()</code>, delegate to the repository: <code>$this-&gt;repository-&gt;getSupplierTableData($criteriaTransfer)</code></p></li>
+</ol>
+<blockquote>
+<p><strong>AbstractGuiTableDataProvider:</strong> The base class handles extracting pagination, sorting, filtering, and search parameters from the HTTP request and passing them to your criteria transfer.</p>
+</blockquote>
+<hr />
+<h3 id="part-3-repository-merchant-scoped-query">Part 3: Repository (Merchant-Scoped Query)</h3>
+<p>The repository builds a Propel query that only returns suppliers assigned to the current merchant.</p>
+<p><strong>Coding time:</strong></p>
+<p>Open <code>src/SprykerAcademy/Zed/SupplierMerchantPortalGui/Persistence/SupplierMerchantPortalGuiRepository.php</code>:</p>
+<p>In <code>getSupplierTableData()</code>:</p>
+<ol type="1">
+<li><p>Get a fresh <code>PyzSupplierQuery</code> from the factory</p></li>
+<li><p>Join with <code>PyzMerchantToSupplier</code> and filter by merchant reference:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="va">$supplierQuery</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    -&gt;usePyzMerchantToSupplierQuery()</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>        -&gt;useSpyMerchantQuery()</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>            -&gt;filterByMerchantReference(<span class="va">$criteriaTransfer</span>-&gt;getMerchantReference())</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>        -&gt;endUse()</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    -&gt;endUse()<span class="ot">;</span></span></code></pre></div></li>
+<li><p>Apply search filter on name/description/email if <code>searchTerm</code> is set</p></li>
+<li><p>Apply status filter if <code>filterStatus</code> is set</p></li>
+<li><p>Count total before pagination</p></li>
+<li><p>Apply sorting and pagination</p></li>
+<li><p>Map each <code>PyzSupplier</code> entity to a <code>GuiTableRowDataResponseTransfer</code> with keys matching the column IDs</p></li>
+</ol>
+<blockquote>
+<p><strong>Propel nested joins:</strong> <code>usePyzMerchantToSupplierQuery()</code> creates a JOIN with the bridge table. <code>useSpyMerchantQuery()</code> then joins with the merchant table to filter by reference.</p>
+</blockquote>
+<hr />
+<h3 id="part-4-controller">Part 4: Controller</h3>
+<p>The controller has two actions: one for the page and one for AJAX table data.</p>
+<p><strong>Coding time:</strong></p>
+<p>Open <code>src/SprykerAcademy/Zed/SupplierMerchantPortalGui/Communication/Controller/SupplierController.php</code>:</p>
+<ol type="1">
+<li><code>indexAction()</code> — return <code>viewResponse</code> with <code>supplierTableConfiguration</code> from the configuration provider</li>
+<li><code>tableDataAction()</code> — use <code>GuiTableHttpDataRequestExecutor::execute()</code> with the data provider and configuration</li>
+</ol>
+<hr />
+<h3 id="part-5-angular-component-wiring">Part 5: Angular Component Wiring</h3>
+<p>The Angular components are provided. You need to register them as web components.</p>
+<p><strong>Coding time:</strong></p>
+<p>Open <code>src/SprykerAcademy/Zed/SupplierMerchantPortalGui/Presentation/Components/app/components.module.ts</code>:</p>
+<p>Add <code>SupplierListComponent</code> to the <code>WebComponentsModule.withComponents([...])</code> array. This transforms the Angular component into a custom HTML element (<code>&lt;web-mp-supplier-list&gt;</code>) that Twig can use.</p>
+<blockquote>
+<p><strong>Web Components pattern:</strong> Spryker uses <code>@spryker/web-components</code> to bridge Angular components with server-rendered Twig. The <code>withComponents([...])</code> call registers each Angular component as a custom element with the <code>web-</code> prefix added to its selector.</p>
+</blockquote>
+<hr />
+<h2 id="testing">Testing</h2>
+<p>After completing all parts:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span></code></pre></div>
+<ol type="1">
+<li>Log in to the Merchant Portal (e.g., <code>mp.eu.spryker.local</code>)</li>
+<li>You should see “Suppliers” in the navigation</li>
+<li>The table should show only suppliers assigned to your merchant</li>
+<li>Try the search, status filter, and column sorting</li>
+</ol>
+<hr />
+<h2 id="solution">Solution</h2>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> supplier intermediate/merchant-portal-table/complete</span></code></pre></div>
+</body>
+</html>

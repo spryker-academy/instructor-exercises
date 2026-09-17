@@ -1,4 +1,4 @@
-# Exercise 13: Storage Client - Redis Supplier Lookup
+# Exercise 14: Storage Client - Redis Supplier Lookup
 
 In this exercise, you will build a Client module that reads supplier data from Redis (the key-value storage). While the Search module uses Elasticsearch for full-text search, the Storage module uses Redis for fast key-value lookups by ID.
 

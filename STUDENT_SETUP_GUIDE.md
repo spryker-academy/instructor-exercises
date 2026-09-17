@@ -132,13 +132,13 @@ Check the solution:
 
 ---
 
-#### Module 3: Message Table Schema
+#### Module 3: Contact Request Table Schema
 
 ```bash
 ./exercises/load.sh contact-request basics/contact-request-table-schema/skeleton
 ```
 
-Your task: Define the Propel database schema for the message table.
+Your task: Define the Propel database schema for the contact request table.
 
 After modifying schema XML files, run:
 
@@ -323,6 +323,101 @@ Check the solution:
 
 ---
 
+#### Module 12: Yves Storefront
+
+```bash
+./exercises/load.sh supplier intermediate/yves-storefront/skeleton
+```
+
+Your task: Build a Yves storefront page that shows supplier data, with its route, controller, and Twig template.
+
+After loading, run:
+
+```bash
+docker/sdk cli composer dump-autoload
+docker/sdk console cache:empty-all
+```
+
+Check the solution:
+
+```bash
+./exercises/load.sh supplier intermediate/yves-storefront/complete
+```
+
+---
+
+#### Module 13: Merchant Portal - Supplier Table
+
+```bash
+./exercises/load.sh supplier intermediate/merchant-portal-table/skeleton
+```
+
+Your task: Add a supplier table to the Merchant Portal. The navigation entry in `config/Zed/navigation-main-merchant-portal.xml` is merged automatically by `load.sh`.
+
+After loading, run:
+
+```bash
+docker/sdk cli composer dump-autoload
+docker/sdk console transfer:generate
+docker/sdk console cache:empty-all
+```
+
+Check the solution:
+
+```bash
+./exercises/load.sh supplier intermediate/merchant-portal-table/complete
+```
+
+---
+
+#### Module 14: Merchant Portal - Supplier Create/Edit Form
+
+```bash
+./exercises/load.sh supplier intermediate/merchant-portal-form/skeleton
+```
+
+Your task: Add create and edit forms for suppliers in the Merchant Portal.
+
+After loading, run:
+
+```bash
+docker/sdk cli composer dump-autoload
+docker/sdk console transfer:generate
+docker/sdk console cache:empty-all
+```
+
+Check the solution:
+
+```bash
+./exercises/load.sh supplier intermediate/merchant-portal-form/complete
+```
+
+---
+
+#### Module 15: Merchant Portal - Supplier Locations
+
+```bash
+./exercises/load.sh supplier intermediate/merchant-portal-locations/skeleton
+```
+
+Your task: Add a nested supplier locations table inside the supplier edit view of the Merchant Portal.
+
+After loading, run:
+
+```bash
+docker/sdk cli composer dump-autoload
+docker/sdk console transfer:generate
+docker/sdk console cache:empty-all
+```
+
+Check the solution:
+
+```bash
+./exercises/load.sh supplier intermediate/merchant-portal-locations/complete
+```
+
+---
+
 ## Common Commands Reference
 
 | Command | When to use |
@@ -337,6 +432,7 @@ Check the solution:
 | `docker/sdk console glue-api:controller:cache:warm-up` | After adding Glue API resources |
 | `docker/sdk console router:cache:warm-up` | After adding new route providers |
 | `docker/sdk console navigation:build-cache` | After modifying navigation XML |
+| `docker/sdk console cache:empty-all` | After loading Yves or Merchant Portal exercises |
 
 ## Troubleshooting
 

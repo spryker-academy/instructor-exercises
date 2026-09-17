@@ -19,22 +19,23 @@ The `load.sh` script automates the process of loading exercise code into a Spryk
 
 ### Packages
 
-- **hello-world**: Basic Spryker concepts (back-office, DTOs, message broker, module layers)
-- **supplier**: Intermediate topics (back-office, data import, publish-synchronize, search, storage, Glue API, OMS)
+- **contact-request**: Basic Spryker concepts (back-office, DTOs, table schema, module layers, configuration, extending core modules)
+- **supplier**: Intermediate topics (back-office, data import, publish-synchronize, search, storage, Glue API, OMS, Yves storefront, Merchant Portal)
 
 ### Available Branches
 
-#### Hello World
-- `basics/hello-world-back-office/skeleton`
-- `basics/hello-world-back-office/complete`
+#### Contact Request
+- `basics/contact-request-back-office/skeleton`
+- `basics/contact-request-back-office/complete`
 - `basics/data-transfer-object/skeleton`
 - `basics/data-transfer-object/complete`
-- `basics/message-table-schema/skeleton`
-- `basics/message-table-schema/complete`
+- `basics/contact-request-table-schema/skeleton`
+- `basics/contact-request-table-schema/complete`
 - `basics/module-layers/skeleton`
 - `basics/module-layers/complete`
 - `basics/extending-core-modules/skeleton`
 - `basics/extending-core-modules/complete`
+- `basics/extending-core-modules/complete-ajax`
 - `basics/configuration/complete`
 
 #### Supplier
@@ -55,12 +56,18 @@ The `load.sh` script automates the process of loading exercise code into a Spryk
 - `intermediate/oms/complete`
 - `intermediate/yves-storefront/skeleton`
 - `intermediate/yves-storefront/complete`
+- `intermediate/merchant-portal-table/skeleton`
+- `intermediate/merchant-portal-table/complete`
+- `intermediate/merchant-portal-form/skeleton`
+- `intermediate/merchant-portal-form/complete`
+- `intermediate/merchant-portal-locations/skeleton`
+- `intermediate/merchant-portal-locations/complete`
 
 ## Examples
 
 ```bash
-# Load Hello World back-office exercise
-./exercises/load.sh hello-world basics/hello-world-back-office/skeleton
+# Load Contact Request back-office exercise
+./exercises/load.sh contact-request basics/contact-request-back-office/skeleton
 
 # Load Supplier back-office complete solution
 ./exercises/load.sh supplier intermediate/back-office/complete
@@ -87,7 +94,8 @@ See [STUDENT_SETUP_GUIDE.md](STUDENT_SETUP_GUIDE.md) for detailed setup instruct
 ## Guides
 
 - `guides/` - Markdown format guides
-- `guides-html/` - HTML format guides
+- `guides-html/` - HTML format guides and presentations
+- `guides-pptx/` - PowerPoint slides generated from the HTML presentations with `html_to_pptx.py`
 
 ## Requirements
 
@@ -97,5 +105,5 @@ See [STUDENT_SETUP_GUIDE.md](STUDENT_SETUP_GUIDE.md) for detailed setup instruct
 
 ## Repository URLs
 
-- Hello World: `https://github.com/spryker-academy/hello-world.git`
+- Contact Request: `https://github.com/spryker-academy/contact-request.git`
 - Supplier: `https://github.com/spryker-academy/supplier.git`

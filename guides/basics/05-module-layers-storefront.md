@@ -101,7 +101,7 @@ Open `src/SprykerAcademy/Yves/ContactRequestPage/ContactRequestPageDependencyPro
 
 **Coding time:**
 
-Open `src/SprykerAcademy/Yves/ContactRequestPage/ContactRequestPageFactory.php`. Complete `getContactRequestClient()` by returning the provided dependency using `ContactRequestPageDependencyProvider::CLIENT_HELLOWORLD`.
+Open `src/SprykerAcademy/Yves/ContactRequestPage/ContactRequestPageFactory.php`. Complete `getContactRequestClient()` by returning the provided dependency using `ContactRequestPageDependencyProvider::CLIENT_CONTACT_REQUEST`.
 
 #### 3.2 Controller
 
