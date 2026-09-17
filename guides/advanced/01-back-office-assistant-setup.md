@@ -1,6 +1,6 @@
 # Setup: Install the Back Office Assistant
 
-The Back Office Assistant is an AI chat widget in the Spryker Back Office. It routes each message to an **agent**, and each agent can call **tools** to read or change shop data. Exercise 19 adds a new agent to it, so the assistant must work first.
+The Back Office Assistant is an AI chat widget in the Spryker Back Office. It routes each message to an **agent**, and each agent can call **tools** to read or change shop data. Exercise 20 adds a new agent to it, so the assistant must work first. Exercise 19 does not need it.
 
 This guide follows the official Spryker documentation and was verified against `b2b-demo-marketplace` with `spryker-feature/ai-commerce` 202608.0 and `spryker/ai-foundation` 0.8.4.
 
@@ -345,4 +345,4 @@ docker/sdk console frontend:zed:build
 | Tool progress never streams | The SSE plugins from step 4 are missing. |
 | Where do I see what the AI did? | The audit log plugins record every prompt and tool call of each AI configuration. |
 
-You are now ready for Exercise 19.
+You are now ready for Exercise 20.

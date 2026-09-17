@@ -20,7 +20,7 @@ The `load.sh` script automates the process of loading exercise code into a Spryk
 ### Packages
 
 - **contact-request**: Basic Spryker concepts (back-office, DTOs, table schema, module layers, configuration, extending core modules)
-- **ai-product-creation**: Advanced topic: a custom Back Office Assistant agent built on AI Foundation (tools, tool set, agent, AI configuration). Requires the Back Office Assistant, see `guides/advanced/01-back-office-assistant-setup.md`
+- **ai-foundation**: Advanced topics on AI Foundation: a Storefront API endpoint that talks to an LLM with memory, and a custom Back Office Assistant agent with tools. The agent exercise requires the Back Office Assistant, see `guides/advanced/01-back-office-assistant-setup.md`
 - **supplier**: Intermediate topics (back-office, data import, publish-synchronize, search, storage, Glue API, OMS, Yves storefront, Merchant Portal)
 
 ### Available Branches
@@ -64,11 +64,13 @@ The `load.sh` script automates the process of loading exercise code into a Spryk
 - `intermediate/merchant-portal-locations/skeleton`
 - `intermediate/merchant-portal-locations/complete`
 
-#### AI Product Creation
+#### AI Foundation
+- `advanced/ai-foundation-hello/skeleton`
+- `advanced/ai-foundation-hello/complete`
 - `advanced/ai-foundation-agent/skeleton`
 - `advanced/ai-foundation-agent/complete`
 
-The `complete` branch is wired into the project automatically. Every line the loader adds is marked `ai-product-creation exercise` and is removed again when you load the skeleton or another package.
+The `complete` branches are wired into the project automatically. Every line the loader adds is marked `ai-foundation exercise` and is removed again when you load a skeleton or another package.
 
 ## Examples
 
@@ -83,7 +85,7 @@ The `complete` branch is wired into the project automatically. Every line the lo
 ./exercises/load.sh supplier intermediate/data-import/skeleton
 
 # Load the AI Foundation agent exercise
-./exercises/load.sh ai-product-creation advanced/ai-foundation-agent/skeleton
+./exercises/load.sh ai-foundation advanced/ai-foundation-hello/skeleton
 ```
 
 ## Post-Installation Steps
@@ -97,7 +99,7 @@ docker/sdk console propel:install
 docker/sdk console transfer:generate
 ```
 
-For the AI exercise the order differs, because `config_ai.php` references an exercise class:
+For the AI exercises the order differs, because `config_ai.php` references an exercise class. The loader prints the exact list per branch:
 
 ```bash
 docker/sdk cli composer dump-autoload
@@ -114,7 +116,7 @@ See [STUDENT_SETUP_GUIDE.md](STUDENT_SETUP_GUIDE.md) for detailed setup instruct
 
 - `guides/` - Markdown format guides
 - `guides-html/` - HTML format guides and presentations
-- `guides/advanced/` - Back Office Assistant setup and the AI Foundation exercise
+- `guides/advanced/` - Back Office Assistant setup and the AI Foundation exercises
 - `guides-pptx/` - PowerPoint slides generated from the HTML presentations with `html_to_pptx.py`
 
 ## Requirements
@@ -127,4 +129,4 @@ See [STUDENT_SETUP_GUIDE.md](STUDENT_SETUP_GUIDE.md) for detailed setup instruct
 
 - Contact Request: `https://github.com/spryker-academy/contact-request.git`
 - Supplier: `https://github.com/spryker-academy/supplier.git`
-- AI Product Creation: `https://github.com/spryker-academy/ai-product-creation.git` (private, students need read access)
+- AI Foundation: `https://github.com/spryker-academy/ai-foundation.git`

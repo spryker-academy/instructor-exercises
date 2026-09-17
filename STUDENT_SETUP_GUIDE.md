@@ -418,12 +418,48 @@ Check the solution:
 
 ---
 
-#### Module 16: AI Foundation - Product Creation Agent
+#### Module 16: AI Foundation - Hello AI Storefront API
 
-Prerequisite: the Back Office Assistant must be installed and working. Follow `exercises/guides/advanced/01-back-office-assistant-setup.md` first. You also need an OpenAI API token and read access to the private `ai-product-creation` repository.
+Prerequisite: the AI Commerce feature is installed and an OpenAI API token is saved in the Back Office under Configuration > AI Vendor.
 
 ```bash
-./exercises/load.sh ai-product-creation advanced/ai-foundation-agent/skeleton
+./exercises/load.sh ai-foundation advanced/ai-foundation-hello/skeleton
+```
+
+Your task: Complete an API Platform POST resource and its processor. The processor sends the message to an LLM through the AiFoundation client and returns the answer. A conversation reference gives the LLM memory.
+
+After loading, run the commands in this order:
+
+```bash
+docker/sdk cli composer dump-autoload
+docker/sdk console transfer:generate
+docker/sdk console cache:empty-all
+docker/sdk cli GLUE_APPLICATION=GLUE_STOREFRONT glue api:generate
+docker/sdk cli GLUE_APPLICATION=GLUE glue cache:clear
+docker/sdk cli GLUE_APPLICATION=GLUE_STOREFRONT glue cache:clear
+```
+
+Verify your work without spending AI tokens:
+
+```bash
+docker/sdk cli vendor/bin/codecept build -c tests/SprykerAcademyTest/Glue/HelloAi/
+docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Glue/HelloAi/ Exercise19
+```
+
+Check the solution:
+
+```bash
+./exercises/load.sh ai-foundation advanced/ai-foundation-hello/complete
+```
+
+---
+
+#### Module 17: AI Foundation - Product Creation Agent
+
+Prerequisite: the Back Office Assistant must be installed and working. Follow `exercises/guides/advanced/01-back-office-assistant-setup.md` first.
+
+```bash
+./exercises/load.sh ai-foundation advanced/ai-foundation-agent/skeleton
 ```
 
 Your task: Complete an AI tool, the tool parameters, the tool set, and the agent plugin. Then wire the agent into the Back Office Assistant.
@@ -441,13 +477,13 @@ Verify your work without spending AI tokens:
 
 ```bash
 docker/sdk cli vendor/bin/codecept build -c tests/SprykerAcademyTest/Zed/AiProductCreation/
-docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/AiProductCreation/ Exercise19
+docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/AiProductCreation/ Exercise20
 ```
 
 Check the solution. The loader wires the agent into the project for you:
 
 ```bash
-./exercises/load.sh ai-product-creation advanced/ai-foundation-agent/complete
+./exercises/load.sh ai-foundation advanced/ai-foundation-agent/complete
 ```
 
 ---
@@ -468,6 +504,7 @@ Check the solution. The loader wires the agent into the project for you:
 | `docker/sdk console navigation:build-cache` | After modifying navigation XML |
 | `docker/sdk console cache:empty-all` | After loading Yves or Merchant Portal exercises |
 | `docker/sdk console configuration:sync` | After adding or changing `*.configuration.yml` setting schemas |
+| `GLUE_APPLICATION=GLUE glue cache:clear` | After changing API Platform resources or source directories, also for `GLUE_STOREFRONT` |
 
 ## Troubleshooting
 

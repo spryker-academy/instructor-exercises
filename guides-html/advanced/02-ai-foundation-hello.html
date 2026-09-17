@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>02-ai-foundation-hello</title>
+  <style>
+    html {
+      line-height: 1.5;
+      font-family: Georgia, serif;
+      font-size: 20px;
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      word-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 1em;
+      }
+    }
+    @media print {
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, 'Lucida Console', Consolas, monospace;
+      font-size: 85%;
+      margin: 0;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="exercise-19-hello-ai---a-storefront-api-backed-by-an-llm">Exercise 19: Hello AI - A Storefront API Backed by an LLM</h1>
+<p>In this exercise, you will build a Storefront API endpoint with API Platform. A client posts a message, the endpoint sends it to a large language model (LLM) through AiFoundation, and returns the answer. The LLM remembers the conversation: send the returned conversation reference with the next message, and it knows what was said before.</p>
+<p>You will learn how to: - Register an <strong>AI configuration</strong> in <code>config_ai.php</code>: provider, API key, model, and system prompt - Send a prompt from the Glue application through the <strong>AiFoundation client</strong>, never through the provider library directly - Give the LLM <strong>memory</strong> with a conversation reference - Define an API Platform <strong>POST resource</strong> with a processor</p>
+<p><strong>Official documentation:</strong> - <a href="https://docs.spryker.com/docs/dg/dev/ai/ai-foundation/ai-foundation-module.html">AI Foundation module</a> - <a href="https://docs.spryker.com/docs/integrations/spryker-api/api-platform/resource-schemas.html">API Platform: resource schemas</a> - <a href="https://docs.spryker.com/docs/integrations/spryker-api/api-platform/api-platform.html#cache-warming">API Platform: cache warming</a></p>
+<h2 id="prerequisites">Prerequisites</h2>
+<ul>
+<li>The AI Commerce feature is installed and an OpenAI API token is saved in the Back Office under <strong>Configuration &gt; AI Vendor &gt; OpenAI</strong>. The Back Office Assistant is not required.</li>
+<li>Completed Exercise 12 (Glue Storefront API). You know resource schemas, providers, and <code>glue api:generate</code>.</li>
+</ul>
+<h2 id="loading-the-exercise">Loading the Exercise</h2>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> ai-foundation advanced/ai-foundation-hello/skeleton</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli composer dump-autoload</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span></code></pre></div>
+<p>The loader copies the module to <code>src/SprykerAcademy/</code>, registers <code>src/SprykerAcademy</code> as an API Platform source directory in <code>config/Glue</code>, <code>config/GlueStorefront</code>, and <code>config/GlueBackend</code>, and installs the tests.</p>
+<hr />
+<h2 id="background-who-talks-to-whom">Background: Who Talks to Whom</h2>
+<pre><code>curl  --POST /ai-chats--&gt;  Glue (API Platform)
+                              |
+                    AiChatsStorefrontProcessor
+                              |  AiFoundationClient::prompt()      &lt;- Client layer, Zed request
+                              v
+                            Zed: AiFoundation facade
+                              |  resolves the AI configuration by name
+                              |  loads the history of the conversation reference
+                              |  calls the provider (OpenAI, Bedrock, Anthropic)
+                              |  stores the new messages under the reference
+                              v
+                            answer  --&gt;  back to Glue  --&gt;  JSON:API response</code></pre>
+<table>
+<colgroup>
+<col style="width: 28%" />
+<col style="width: 21%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Concept</th>
+<th>Where</th>
+<th>Why it matters</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>AI configuration</strong></td>
+<td><code>config/Shared/config_ai.php</code></td>
+<td>A named bundle of provider, key, model, and system prompt. Code refers to it by name only, so the provider can change without a deployment of the code</td>
+</tr>
+<tr class="even">
+<td><strong>AiFoundation client</strong></td>
+<td><code>Spryker\Client\AiFoundation\AiFoundationClientInterface</code></td>
+<td>The only door from Glue or Yves to the LLM. It forwards the prompt to Zed</td>
+</tr>
+<tr class="odd">
+<td><strong>Conversation reference</strong></td>
+<td><code>PromptRequestTransfer::conversationReference</code></td>
+<td>AiFoundation stores every message under this string and replays the history on the next prompt. No reference, no memory</td>
+</tr>
+<tr class="even">
+<td><strong>NeuronAI</strong></td>
+<td>vendor library</td>
+<td>AiFoundation uses it internally. Your code never does</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Why not call OpenAI directly?</strong> The API token lives in the Back Office configuration, the audit log records every prompt, and the provider can be switched per configuration. All of that only works when every call goes through AiFoundation.</p>
+</blockquote>
+<hr />
+<h2 id="working-on-the-exercise">Working on the Exercise</h2>
+<h3 id="part-1-the-resource-schema">Part 1: The Resource Schema</h3>
+<p>Open <code>src/SprykerAcademy/Glue/HelloAi/resources/api/storefront/ai-chats.resource.yml</code>. Complete <strong>TODO-1</strong> to <strong>TODO-4</strong>:</p>
+<ol type="1">
+<li>Set <code>processor</code> to <code>SprykerAcademy\Glue\HelloAi\Api\Storefront\Processor\AiChatsStorefrontProcessor</code>. A POST resource has a processor. The GET resources of Exercise 12 had a provider.</li>
+<li>Declare one operation of type <code>Post</code> with <code>uriTemplate: '/ai-chats'</code> and <code>normalizationContext: { gen_id: false }</code>.</li>
+<li>Declare <code>conversationReference</code>: type string, writable, readable, not required.</li>
+<li>Declare <code>answer</code>: type string, readable, not writable.</li>
+</ol>
+<p>The <code>message</code> property is already there. Look at how <code>writable</code>, <code>readable</code>, and <code>required</code> describe the direction of each field.</p>
+<blockquote>
+<p><strong>Reference:</strong> <code>vendor/spryker/agent-auth-rest-api/resources/api/storefront/agent-customer-impersonation-access-tokens.resource.yml</code> is a complete POST resource from the core.</p>
+</blockquote>
+<h3 id="part-2-the-processor">Part 2: The Processor</h3>
+<p>Open <code>src/SprykerAcademy/Glue/HelloAi/Api/Storefront/Processor/AiChatsStorefrontProcessor.php</code>. The class extends <code>AbstractStorefrontProcessor</code>, which routes a POST request to <code>processPost()</code>.</p>
+<p><strong>TODO-5:</strong> add a constructor that receives <code>AiFoundationClientInterface</code> and stores it. Symfony autowires the client.</p>
+<p><strong>TODO-6:</strong> decide the conversation reference. Reuse the one from the request, or generate a new one with <code>uniqid(static::CONVERSATION_REFERENCE_PREFIX)</code>.</p>
+<p><strong>TODO-7:</strong> build the prompt request and send it:</p>
+<table>
+<colgroup>
+<col style="width: 53%" />
+<col style="width: 46%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Setter</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>setAiConfigurationName()</code></td>
+<td><code>HelloAiConstants::AI_CONFIGURATION_HELLO_AI</code></td>
+</tr>
+<tr class="even">
+<td><code>setConversationReference()</code></td>
+<td>the reference from TODO-6</td>
+</tr>
+<tr class="odd">
+<td><code>setPromptMessage()</code></td>
+<td>a <code>PromptMessageTransfer</code> with type <code>AiFoundationConstants::MESSAGE_TYPE_USER</code> and the message as content</td>
+</tr>
+</tbody>
+</table>
+<p>Then call <code>$this-&gt;aiFoundationClient-&gt;prompt($promptRequestTransfer)</code>.</p>
+<p><strong>TODO-8:</strong> if the response is not successful or has no message, throw a <code>ServiceUnavailableHttpException</code>. Otherwise copy the conversation reference and the answer into the resource and return it.</p>
+<blockquote>
+<p><strong>Where is the answer?</strong> <code>PromptResponseTransfer::getMessage()</code> returns a <code>PromptMessageTransfer</code>. Its <code>getContent()</code> is the text of the LLM.</p>
+</blockquote>
+<h3 id="verify-parts-1-and-2">Verify Parts 1 and 2</h3>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli GLUE_APPLICATION=GLUE_STOREFRONT glue api:generate</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept build <span class="at">-c</span> tests/SprykerAcademyTest/Glue/HelloAi/</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Glue/HelloAi/ Exercise19</span></code></pre></div>
+<p><code>api:generate</code> creates <code>Generated\Api\Storefront\AiChatsStorefrontResource</code>, which the tests need. All 11 tests must pass. The AiFoundation client is mocked, so no token is spent. One test fails if your processor references the <code>NeuronAI</code> namespace.</p>
+<h3 id="part-3-the-ai-configuration">Part 3: The AI Configuration</h3>
+<p>Your code names a configuration that does not exist yet. Add it to <code>config/Shared/config_ai.php</code>:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="cn">S</span>prykerAcademy\<span class="cn">S</span>hared\<span class="cn">H</span>elloAi\<span class="cn">H</span>elloAiConstants<span class="ot">;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="va">$config</span>[<span class="cn">A</span>iFoundationConstants::<span class="cn">AI_CONFIGURATIONS</span>][<span class="cn">H</span>elloAiConstants::<span class="cn">AI_CONFIGURATION_HELLO_AI</span>] <span class="op">=</span> [</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;provider_name&#39;</span> =&gt; <span class="cn">A</span>iFoundationConstants::<span class="cn">PROVIDER_OPENAI</span><span class="ot">,</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;provider_config&#39;</span> =&gt; [</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;key&#39;</span> =&gt; <span class="cn">A</span>iFoundationConstants::<span class="cn">CONFIGURATION_REFERENCE_PREFIX</span> <span class="op">.</span> <span class="cn">A</span>iCommerceConstants::<span class="cn">CONFIGURATION_KEY_OPENAI_API_TOKEN</span><span class="ot">,</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;model&#39;</span> =&gt; <span class="st">&#39;gpt-4.1-mini&#39;</span><span class="ot">,</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    ]<span class="ot">,</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;system_prompt&#39;</span> =&gt; <span class="st">&#39;You are a friendly assistant for a Spryker developer training. Answer in one or two short sentences.&#39;</span><span class="ot">,</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>]<span class="ot">;</span></span></code></pre></div>
+<p>Put the <code>use</code> line at the top with the other imports. <code>AiCommerceConstants</code> here is <code>Pyz\Shared\AiCommerce\AiCommerceConstants</code>, which the demo shop already imports in this file.</p>
+<blockquote>
+<p><strong>Two ways to set a value.</strong> <code>key</code> uses the prefix <code>configuration::</code> and is read at runtime from the Back Office configuration. <code>model</code> and <code>system_prompt</code> are plain strings. Both forms are valid for every field. Use the prefix for secrets and for anything an admin should change without a deployment.</p>
+</blockquote>
+<h3 id="part-4-apply-and-call-the-api">Part 4: Apply and Call the API</h3>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli GLUE_APPLICATION=GLUE glue cache:clear</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli GLUE_APPLICATION=GLUE_STOREFRONT glue cache:clear</span></code></pre></div>
+<blockquote>
+<p><strong>Why two cache commands?</strong> The Glue applications compile a Symfony container that caches the API Platform source directories and routes. <code>cache:empty-all</code> does not touch it. In the demo shop, <code>glue.eu.spryker.local</code> is served by the <code>GLUE</code> application, and <code>GLUE_STOREFRONT</code> is the dedicated storefront application. Clear both. This is the documented step, see <em>API Platform: cache warming</em> above.</p>
+</blockquote>
+<p>Send the first message:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-s</span> <span class="at">-X</span> POST http://glue.eu.spryker.local/ai-chats <span class="dt">\</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-H</span> <span class="st">&#39;Content-Type: application/vnd.api+json&#39;</span> <span class="dt">\</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">-d</span> <span class="st">&#39;{&quot;data&quot;:{&quot;type&quot;:&quot;ai-chats&quot;,&quot;attributes&quot;:{&quot;message&quot;:&quot;Hello world! My name is Hidran.&quot;}}}&#39;</span></span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span><span class="dt">&quot;data&quot;</span><span class="fu">:{</span><span class="dt">&quot;id&quot;</span><span class="fu">:</span><span class="kw">null</span><span class="fu">,</span><span class="dt">&quot;type&quot;</span><span class="fu">:</span><span class="st">&quot;ai-chats&quot;</span><span class="fu">,</span><span class="dt">&quot;attributes&quot;</span><span class="fu">:{</span><span class="dt">&quot;message&quot;</span><span class="fu">:</span><span class="st">&quot;Hello world! My name is Hidran.&quot;</span><span class="fu">,</span><span class="dt">&quot;conversationReference&quot;</span><span class="fu">:</span><span class="st">&quot;hello-ai-6aac7af26ec95&quot;</span><span class="fu">,</span><span class="dt">&quot;answer&quot;</span><span class="fu">:</span><span class="st">&quot;Hello Hidran! How can I assist you with Spryker development today?&quot;</span><span class="fu">}}}</span></span></code></pre></div>
+<p>Now send the <code>conversationReference</code> back with a second message:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-s</span> <span class="at">-X</span> POST http://glue.eu.spryker.local/ai-chats <span class="dt">\</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-H</span> <span class="st">&#39;Content-Type: application/vnd.api+json&#39;</span> <span class="dt">\</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">-d</span> <span class="st">&#39;{&quot;data&quot;:{&quot;type&quot;:&quot;ai-chats&quot;,&quot;attributes&quot;:{&quot;message&quot;:&quot;What is my name?&quot;,&quot;conversationReference&quot;:&quot;hello-ai-6aac7af26ec95&quot;}}}&#39;</span></span></code></pre></div>
+<p>The answer names you. Send the same question without the reference, and the LLM does not know you. That is the memory.</p>
+<hr />
+<h2 id="testing">Testing</h2>
+<ol type="1">
+<li>First message without a reference returns an answer and a new <code>conversationReference</code>.</li>
+<li>Second message with that reference gets an answer that uses the earlier context.</li>
+<li>Same question without the reference gets an answer without that context.</li>
+<li>An empty <code>message</code> returns HTTP 422 with the message <em>The attribute “message” must not be empty.</em></li>
+<li>Open the audit log in the Back Office. Every prompt of the <code>SPRYKER_ACADEMY:AI_CONFIGURATION_HELLO_AI</code> configuration is listed there.</li>
+</ol>
+<h2 id="solution">Solution</h2>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> ai-foundation advanced/ai-foundation-hello/complete</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli composer dump-autoload</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli GLUE_APPLICATION=GLUE_STOREFRONT glue api:generate</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli GLUE_APPLICATION=GLUE glue cache:clear</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli GLUE_APPLICATION=GLUE_STOREFRONT glue cache:clear</span></code></pre></div>
+<p>For the <code>complete</code> branch the loader adds the AI configuration of Part 3 for you, marked with <code>ai-foundation exercise</code>. It removes it again when you load the skeleton or another package.</p>
+<h2 id="going-further">Going Further</h2>
+<ul>
+<li>Change the system prompt to answer only in German, and clear the caches. No code changed.</li>
+<li>Switch the model to <code>gpt-4.1</code> and compare answers.</li>
+<li>Add a <code>GET /ai-chats/{conversationReference}</code> operation with a provider that returns the history through <code>AiFoundationClientInterface::getConversationHistoryCollection()</code>.</li>
+<li>Exercise 20 builds on this: the same <code>PromptRequestTransfer</code>, plus tools and a structured answer.</li>
+</ul>
+</body>
+</html>

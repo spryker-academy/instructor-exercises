@@ -1,4 +1,4 @@
-# Exercise 19: AI Foundation - Product Creation Agent
+# Exercise 20: AI Foundation - Product Creation Agent
 
 In this exercise, you will build a custom agent for the Back Office Assistant. The agent creates catalog products from a plain-language description such as *"Create a red cotton t-shirt in sizes S, M and L for 19.99 EUR"*. It interviews the user for missing data, asks for confirmation, and then calls your tools to create the product.
 
@@ -19,12 +19,12 @@ The business logic that creates products, prices, stock, and images is provided.
 
 - The Back Office Assistant is installed and answers questions. See [Setup: Install the Back Office Assistant](01-back-office-assistant-setup.md)
 - An OpenAI API token is configured in the Back Office
-- Access to the private `spryker-academy/ai-product-creation` repository on GitHub
+- Completed [Exercise 19: Hello AI](02-ai-foundation-hello.md), which introduces AiFoundation prompts and AI configurations
 
 ## Loading the Exercise
 
 ```bash
-./exercises/load.sh ai-product-creation advanced/ai-foundation-agent/skeleton
+./exercises/load.sh ai-foundation advanced/ai-foundation-agent/skeleton
 docker/sdk cli composer dump-autoload
 docker/sdk console transfer:generate
 docker/sdk console configuration:sync
@@ -138,7 +138,7 @@ Open `src/SprykerAcademy/Zed/AiProductCreation/Communication/Plugin/Agent/Produc
 
 ```bash
 docker/sdk cli vendor/bin/codecept build -c tests/SprykerAcademyTest/Zed/AiProductCreation/
-docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/AiProductCreation/ Exercise19
+docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/AiProductCreation/ Exercise20
 ```
 
 All 12 tests must pass. They use mocks, so no AI call is made and no token is spent. An error like `getName(): Return value must be of type string, none returned` points at a TODO you have not completed yet.
@@ -218,14 +218,14 @@ docker/sdk console cache:empty-all
 ## Solution
 
 ```bash
-./exercises/load.sh ai-product-creation advanced/ai-foundation-agent/complete
+./exercises/load.sh ai-foundation advanced/ai-foundation-agent/complete
 docker/sdk cli composer dump-autoload
 docker/sdk console transfer:generate
 docker/sdk console configuration:sync
 docker/sdk console cache:empty-all
 ```
 
-For the `complete` branch the loader also does the wiring of Part 5 for you. It marks every line it adds with `ai-product-creation exercise` and removes those lines again when you load the skeleton or another package.
+For the `complete` branch the loader also does the wiring of Part 5 for you. It marks every line it adds with `ai-foundation exercise` and removes those lines again when you load the skeleton or another package.
 
 > **Switching packages:** if you wired Part 5 by hand, remove those lines before you load `contact-request` or `supplier`. The loader replaces `src/SprykerAcademy/`, and the Back Office fails when a registered plugin class no longer exists. The loader warns you about this.
 
