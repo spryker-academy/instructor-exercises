@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>11-merchant-portal-locations</title>
+  <title>09-merchant-portal-form</title>
   <style>
     html {
       line-height: 1.5;
@@ -212,93 +212,132 @@
   <![endif]-->
 </head>
 <body>
-<h1 id="exercise-17-merchant-portal-supplier-locations-nested-table">Exercise 17: Merchant Portal — Supplier Locations (Nested Table)</h1>
-<p>In this exercise, you will add an editable locations table inside the supplier edit drawer. This teaches the pattern for nested tables within forms — similar to how Spryker’s ProductOffer module embeds a price table inside the offer edit form.</p>
-<p>You will learn how to: - Build an editable GuiTable with inline add/edit capabilities - Configure <code>enableAddingNewRows()</code> for adding rows to the table - Implement a Symfony form data transformer for nested table data - Embed a GuiTable inside a form template - Register a nested Angular table component</p>
+<h1 id="exercise-16-merchant-portal-supplier-createedit-form">Exercise 16: Merchant Portal — Supplier Create/Edit Form</h1>
+<p>In this exercise, you will add create and edit functionality for suppliers in the Merchant Portal using drawer forms. You will learn the Merchant Portal form pattern: Symfony forms rendered in Angular drawers, with JSON responses controlling the UI lifecycle (close drawer, refresh table, show notifications).</p>
+<p>You will learn how to: - Create a Symfony form type for the Merchant Portal - Build create and update controllers that return <code>JsonResponse</code> - Use <code>ZedUiFormResponseBuilder</code> for drawer actions (close, refresh, notify) - Auto-link new suppliers to the current merchant - Register an Angular edit component as a web component</p>
 <h2 id="prerequisites">Prerequisites</h2>
 <ul>
-<li>Completed Exercise 16 (Merchant Portal Form)</li>
+<li>Completed Exercise 15 (Merchant Portal Table)</li>
 </ul>
 <h2 id="loading-the-exercise">Loading the Exercise</h2>
-<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> supplier intermediate/merchant-portal-locations/skeleton</span>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> supplier intermediate/merchant-portal-form/skeleton</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli composer dump-autoload</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span></code></pre></div>
 <hr />
-<h2 id="background-editable-guitable-pattern">Background: Editable GuiTable Pattern</h2>
-<p>A regular GuiTable displays read-only data. An <strong>editable GuiTable</strong> allows inline editing and adding of rows, with the data submitted as part of a parent form.</p>
-<pre><code>Edit Supplier drawer
-├── Supplier Details card (name, description)
-├── Contact Info card (email, phone)
-├── Status card (isActive)
-└── Locations card
-    └── Editable GuiTable
-        ├── Existing location rows (editable)
-        ├── &quot;Add Location&quot; button → new empty row
-        └── Hidden form inputs: supplierForm[locations][0][city], etc.</code></pre>
-<p>When the form is submitted, the table data is sent as nested form fields. A <strong>data transformer</strong> converts between the transfer objects and the array format the table uses.</p>
+<h2 id="background-merchant-portal-form-pattern">Background: Merchant Portal Form Pattern</h2>
+<p>Unlike the Back Office (which uses full page reloads), the Merchant Portal uses <strong>drawer forms</strong> that open as side panels over the table:</p>
+<pre><code>Table row action &quot;Edit&quot; clicked
+    → AJAX GET /supplier-merchant-portal-gui/update-supplier?id-supplier=5
+    → Controller renders form HTML as JsonResponse
+    → Angular opens drawer with the HTML content
+
+Form submitted
+    → AJAX POST to same URL
+    → Controller validates form
+    → If valid: returns ZedUiFormResponse with actions
+        → addSuccessNotification(&quot;Supplier updated&quot;)
+        → addActionCloseDrawer()
+        → addActionRefreshTable()
+    → Angular executes actions: closes drawer, refreshes table, shows toast
+    → If invalid: returns re-rendered form HTML with errors</code></pre>
+<p><strong>Key difference from Back Office:</strong> Controllers return <code>JsonResponse</code> (not <code>viewResponse</code>), and the response contains either rendered HTML (for the form) or a ZedUI action payload (after successful submit).</p>
 <hr />
 <h2 id="working-on-the-exercise">Working on the Exercise</h2>
-<h3 id="part-1-location-guitable-configuration">Part 1: Location GuiTable Configuration</h3>
+<h3 id="part-1-supplier-form">Part 1: Supplier Form</h3>
 <p><strong>Coding time:</strong></p>
-<p>Open <code>src/SprykerAcademy/Zed/SupplierMerchantPortalGui/Communication/ConfigurationProvider/SupplierLocationGuiTableConfigurationProvider.php</code>:</p>
+<p>Open <code>src/SprykerAcademy/Zed/SupplierMerchantPortalGui/Communication/Form/SupplierForm.php</code>:</p>
+<p>In <code>buildForm()</code>, add these fields:</p>
+<table>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Type</th>
+<th>Options</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>name</code></td>
+<td><code>TextType</code></td>
+<td>required, <code>NotBlank</code> constraint</td>
+</tr>
+<tr class="even">
+<td><code>description</code></td>
+<td><code>TextareaType</code></td>
+<td>optional</td>
+</tr>
+<tr class="odd">
+<td><code>email</code></td>
+<td><code>EmailType</code></td>
+<td>required, <code>NotBlank</code> constraint</td>
+</tr>
+<tr class="even">
+<td><code>phone</code></td>
+<td><code>TextType</code></td>
+<td>optional</td>
+</tr>
+<tr class="odd">
+<td><code>isActive</code></td>
+<td><code>CheckboxType</code></td>
+<td><code>property_path: 'status'</code>, not required</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong><code>property_path</code>:</strong> The <code>isActive</code> checkbox maps to the <code>status</code> field on <code>SupplierTransfer</code> via <code>property_path</code>. This lets the form display a friendly checkbox while the transfer uses an integer status.</p>
+</blockquote>
+<blockquote>
+<p><strong><code>getBlockPrefix()</code>:</strong> Returns <code>'supplierForm'</code> — this determines the HTML form field name prefix (e.g., <code>supplierForm[name]</code>).</p>
+</blockquote>
+<hr />
+<h3 id="part-2-create-supplier-controller">Part 2: Create Supplier Controller</h3>
+<p><strong>Coding time:</strong></p>
+<p>Open <code>src/SprykerAcademy/Zed/SupplierMerchantPortalGui/Communication/Controller/CreateSupplierController.php</code>:</p>
+<p>In <code>indexAction()</code>:</p>
 <ol type="1">
-<li><p>Add editable columns using <code>addEditableColumnInput()</code>:</p>
+<li>Get form data provider, create empty <code>SupplierTransfer</code></li>
+<li>Create the form via factory</li>
+<li>Handle the request: <code>$form-&gt;handleRequest($request)</code></li>
+<li>If submitted and valid:
 <ul>
-<li><code>city</code> → text input</li>
-<li><code>country</code> → text input</li>
-<li><code>address</code> → text input</li>
-<li><code>zipCode</code> → text input</li>
-<li><code>isDefault</code> → checkbox input</li>
+<li><p>Create supplier via facade: <code>$this-&gt;getFactory()-&gt;getSupplierFacade()-&gt;createSupplier($supplierTransfer)</code></p></li>
+<li><p>Link to current merchant: create a <code>PyzMerchantToSupplier</code> entity</p></li>
+<li><p>Return <code>JsonResponse</code> with ZedUI actions:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="va">$this</span>-&gt;getFactory()-&gt;getZedUiFactory()</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    -&gt;createZedUiFormResponseBuilder()</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    -&gt;addSuccessNotification(<span class="st">&#39;Supplier created successfully.&#39;</span>)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    -&gt;addActionCloseDrawer()</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    -&gt;addActionRefreshTable()</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    -&gt;createResponse()<span class="ot">;</span></span></code></pre></div></li>
 </ul></li>
-<li><p>Enable adding new rows:</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="va">$guiTableConfigurationBuilder</span>-&gt;enableAddingNewRows(</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">static</span>::<span class="cn">FORM_INPUT_NAME</span><span class="ot">,</span>  <span class="co">// &#39;supplierForm[locations]&#39;</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="va">$initialData</span><span class="ot">,</span></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    [<span class="st">&#39;title&#39;</span> =&gt; <span class="st">&#39;Add Location&#39;</span><span class="ot">,</span> <span class="st">&#39;variant&#39;</span> =&gt; <span class="st">&#39;outline&#39;</span>]<span class="ot">,</span>  <span class="co">// Add button</span></span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    [<span class="st">&#39;title&#39;</span> =&gt; <span class="st">&#39;Cancel&#39;</span><span class="ot">,</span> <span class="st">&#39;variant&#39;</span> =&gt; <span class="st">&#39;outline&#39;</span>]<span class="ot">,</span>        <span class="co">// Cancel button</span></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>)<span class="ot">;</span></span></code></pre></div></li>
+<li>Otherwise: render the form template as <code>JsonResponse</code></li>
 </ol>
 <blockquote>
-<p><strong><code>enableAddingNewRows()</code></strong> tells the GuiTable to render an “Add” button that creates empty editable rows. The <code>FORM_INPUT_NAME</code> determines how the data is submitted as form fields.</p>
-</blockquote>
-<blockquote>
-<p><strong><code>addEditableColumnInput()</code></strong> vs <code>addColumnText()</code>: Editable columns render as form inputs (text, checkbox, select) instead of plain text.</p>
+<p><strong>Merchant linking:</strong> When a merchant creates a supplier, it must be automatically linked via <code>pyz_merchant_to_supplier</code>. Get the current merchant from <code>MerchantUserFacade::getCurrentMerchantUser()-&gt;getMerchantOrFail()</code>.</p>
 </blockquote>
 <hr />
-<h3 id="part-2-location-data-provider">Part 2: Location Data Provider</h3>
+<h3 id="part-3-update-supplier-controller">Part 3: Update Supplier Controller</h3>
 <p><strong>Coding time:</strong></p>
-<p>Open <code>src/SprykerAcademy/Zed/SupplierMerchantPortalGui/Communication/DataProvider/SupplierLocationGuiTableDataProvider.php</code>:</p>
-<p>In <code>getData($idSupplier)</code>: 1. Query <code>PyzSupplierLocationQuery</code> filtered by <code>fkSupplier</code> 2. Map each location entity to a <code>GuiTableRowDataResponseTransfer</code> with: <code>idSupplierLocation</code>, <code>city</code>, <code>country</code>, <code>address</code>, <code>zipCode</code>, <code>isDefault</code></p>
-<hr />
-<h3 id="part-3-location-form-transformer">Part 3: Location Form Transformer</h3>
-<p>The transformer converts between <code>SupplierLocationTransfer[]</code> (PHP) and the array format (editable table rows).</p>
-<p><strong>Coding time:</strong></p>
-<p>Open <code>src/SprykerAcademy/Zed/SupplierMerchantPortalGui/Communication/Form/Transformer/SupplierLocationTransformer.php</code>:</p>
-<ol type="1">
-<li><p><code>transform()</code> — convert <code>ArrayObject&lt;SupplierLocationTransfer&gt;</code> to array of arrays. Each array has: <code>idSupplierLocation</code>, <code>city</code>, <code>country</code>, <code>address</code>, <code>zipCode</code>, <code>isDefault</code>.</p></li>
-<li><p><code>reverseTransform()</code> — convert submitted array data back to <code>ArrayObject&lt;SupplierLocationTransfer&gt;</code>. Create a <code>SupplierLocationTransfer</code> for each row.</p></li>
-</ol>
-<blockquote>
-<p><strong>DataTransformerInterface:</strong> Symfony’s form component calls <code>transform()</code> when rendering the form (PHP → view) and <code>reverseTransform()</code> when handling submission (view → PHP).</p>
-</blockquote>
+<p>Open <code>src/SprykerAcademy/Zed/SupplierMerchantPortalGui/Communication/Controller/UpdateSupplierController.php</code>:</p>
+<p>Same pattern as create, but: 1. Read <code>id-supplier</code> from the request 2. Load existing supplier via form data provider 3. Throw <code>NotFoundHttpException</code> if supplier doesn’t exist 4. On valid submit: call <code>updateSupplier()</code> instead of <code>createSupplier()</code></p>
 <hr />
 <h3 id="part-4-angular-component-wiring">Part 4: Angular Component Wiring</h3>
 <p><strong>Coding time:</strong></p>
-<p>Open <code>components.module.ts</code> and add <code>SupplierLocationsTableComponent</code> to <code>WebComponentsModule.withComponents([...])</code>.</p>
-<p>The template already includes the locations card with <code>&lt;web-mp-supplier-locations-table&gt;</code> — it renders conditionally when <code>supplierLocationTableConfiguration</code> is present (only in the edit drawer, not create).</p>
+<p>Open <code>components.module.ts</code> and add <code>EditSupplierComponent</code> and <code>CardComponent</code> to <code>WebComponentsModule.withComponents([...])</code>.</p>
+<p>The edit component (<code>&lt;web-mp-edit-supplier&gt;</code>) wraps the form content with named slots for title and action buttons.</p>
+<p>The card component (<code>&lt;web-spy-card&gt;</code>) provides the card layout used in the form template to group related fields.</p>
 <hr />
 <h2 id="testing">Testing</h2>
 <div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span></code></pre></div>
 <ol type="1">
-<li>Edit an existing supplier in the Merchant Portal</li>
-<li>The “Locations” card should appear with existing locations</li>
-<li>Click “Add Location” → a new editable row should appear</li>
-<li>Fill in the location fields and save</li>
-<li>Re-open the edit drawer → the new location should be listed</li>
+<li>In the Merchant Portal supplier table, click “Add Supplier” → the create form should open</li>
+<li>Fill in the form and submit → supplier should be created and table refreshed</li>
+<li>Click “Edit” on a table row → the edit drawer should open with pre-filled data</li>
+<li>Update and submit → changes should be saved</li>
 </ol>
 <hr />
 <h2 id="solution">Solution</h2>
-<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> supplier intermediate/merchant-portal-locations/complete</span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> supplier intermediate/merchant-portal-form/complete</span></code></pre></div>
 </body>
 </html>

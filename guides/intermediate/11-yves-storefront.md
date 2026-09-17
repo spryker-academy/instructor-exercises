@@ -1,4 +1,4 @@
-# Exercise 15: Yves Storefront - Supplier Page
+# Exercise 18: Yves Storefront - Supplier Page
 
 In this exercise, you will build a Yves (storefront) interface to display suppliers. You will create a controller with two actions: one to list all suppliers in a table, and another to show details of a single supplier.
 

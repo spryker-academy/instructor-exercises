@@ -323,30 +323,7 @@ Check the solution:
 
 ---
 
-#### Module 12: Yves Storefront
-
-```bash
-./exercises/load.sh supplier intermediate/yves-storefront/skeleton
-```
-
-Your task: Build a Yves storefront page that shows supplier data, with its route, controller, and Twig template.
-
-After loading, run:
-
-```bash
-docker/sdk cli composer dump-autoload
-docker/sdk console cache:empty-all
-```
-
-Check the solution:
-
-```bash
-./exercises/load.sh supplier intermediate/yves-storefront/complete
-```
-
----
-
-#### Module 13: Merchant Portal - Supplier Table
+#### Module 12: Merchant Portal - Supplier Table
 
 ```bash
 ./exercises/load.sh supplier intermediate/merchant-portal-table/skeleton
@@ -370,7 +347,7 @@ Check the solution:
 
 ---
 
-#### Module 14: Merchant Portal - Supplier Create/Edit Form
+#### Module 13: Merchant Portal - Supplier Create/Edit Form
 
 ```bash
 ./exercises/load.sh supplier intermediate/merchant-portal-form/skeleton
@@ -394,7 +371,7 @@ Check the solution:
 
 ---
 
-#### Module 15: Merchant Portal - Supplier Locations
+#### Module 14: Merchant Portal - Supplier Locations
 
 ```bash
 ./exercises/load.sh supplier intermediate/merchant-portal-locations/skeleton
@@ -414,6 +391,29 @@ Check the solution:
 
 ```bash
 ./exercises/load.sh supplier intermediate/merchant-portal-locations/complete
+```
+
+---
+
+#### Module 15: Yves Storefront
+
+```bash
+./exercises/load.sh supplier intermediate/yves-storefront/skeleton
+```
+
+Your task: Build a Yves storefront page that shows supplier data, with its route, controller, and Twig template.
+
+After loading, run:
+
+```bash
+docker/sdk cli composer dump-autoload
+docker/sdk console cache:empty-all
+```
+
+Check the solution:
+
+```bash
+./exercises/load.sh supplier intermediate/yves-storefront/complete
 ```
 
 ---
