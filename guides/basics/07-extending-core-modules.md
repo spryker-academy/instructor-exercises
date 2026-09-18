@@ -120,6 +120,7 @@ Clear cache after adding new controller actions:
 
 ```bash
 docker/sdk console cache:empty-all
+docker/sdk console propel:model:build
 ```
 
 ---
@@ -228,27 +229,41 @@ In `deleteAction()`:
 **Coding time:**
 
 Open `src/SprykerAcademy/Yves/CustomerPage/Plugin/Router/CustomerPageRouteProviderPlugin.php`:
-1. In `addCustomerMessagesRoute()`, build a route for `/customer/contact-requests` pointing to `Message` controller, `listAction` (GET + POST)
-2. Add a `addCustomerMessagesDeleteRoute()` for `POST /customer/contact-requests/delete` pointing to `Message` controller, `deleteAction`
+1. In `addCustomerContactRequestsRoute()`, build a route for `/customer/contact-requests` pointing to the `ContactRequest` controller, `listAction` (GET + POST)
+2. Add an `addCustomerContactRequestsDeleteRoute()` for `POST /customer/contact-requests/delete` pointing to the `ContactRequest` controller, `deleteAction`
 
 #### 6.6 Provided Scaffolding (no coding needed)
 
 The following files are already provided by the exercise skeleton:
 
-- **`src/Pyz/Yves/Router/RouterDependencyProvider.php`** — Replaces the core `CustomerPageRouteProviderPlugin` with your extended version
-- **`src/Pyz/Yves/CustomerPage/Theme/.../navigation-sidebar/navigation-sidebar.twig`** — Adds a "My Contact Requests" link to the customer account sidebar menu
-- **`src/SprykerAcademy/Yves/CustomerPage/Theme/.../views/message/list.twig`** — The Twig template showing the message table with delete buttons and the add form
+- **`src/SprykerAcademy/Yves/Router/RouterDependencyProvider.php`** — Extends the project's `Pyz\Yves\Router\RouterDependencyProvider` and swaps the core `CustomerPageRouteProviderPlugin` for your extended version. Because `SprykerAcademy` is resolved before `Pyz`, no project file is edited.
+- **`src/SprykerAcademy/Yves/CustomerPage/Theme/.../views/contact-request/list.twig`** — The Twig template showing the message table with delete buttons and the add form
 
 Take a moment to review these files to understand:
 - How Spryker's **template override** mechanism works (project-level Twig overrides vendor templates by matching the file path)
-- How the **navigation sidebar** uses a data-driven items array
 - How the **form** is rendered with `form_start`/`form_widget`/`form_end` (Symfony form rendering helpers)
 - How each table row has a **mini POST form** for the delete button (no link — delete is always POST)
+
+#### 6.7 Sidebar Menu Item
+
+Once the route exists, add a "My Contact Requests" entry to the customer account sidebar. The project overrides that molecule in `src/Pyz/Yves/CustomerPage/Theme/default/components/molecules/navigation-sidebar/navigation-sidebar.twig`; append one more entry to its `items` array:
+
+```twig
+        {
+            name: 'messages',
+            url: path('customer/messages'),
+            label: 'My Contact Requests',
+            icon: 'envelopes',
+        },
+```
+
+> `customer/messages` is the route **name** (`ContactRequestController::ROUTE_CUSTOMER_CONTACT_REQUESTS`), not the path. Add the item only after the route is registered, otherwise `path()` fails on every account page. When you load the `complete` branch, the loader adds this item for you (between `{# >>> contact-request exercise #}` markers) and removes it again when you load another branch.
 
 Clear cache:
 
 ```bash
 docker/sdk console cache:empty-all
+docker/sdk console propel:model:build
 ```
 
 ---

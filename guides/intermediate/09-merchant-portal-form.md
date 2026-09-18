@@ -20,6 +20,7 @@ You will learn how to:
 docker/sdk cli composer dump-autoload
 docker/sdk console transfer:generate
 docker/sdk console cache:empty-all
+docker/sdk console propel:model:build
 ```
 
 ---
@@ -132,6 +133,7 @@ The card component (`<web-spy-card>`) provides the card layout used in the form 
 
 ```bash
 docker/sdk console cache:empty-all
+docker/sdk console propel:model:build
 ```
 
 1. In the Merchant Portal supplier table, click "Add Supplier" → the create form should open

@@ -23,6 +23,7 @@ You will learn how to:
 docker/sdk cli composer dump-autoload
 docker/sdk console transfer:generate
 docker/sdk console cache:empty-all
+docker/sdk console propel:model:build
 ```
 
 ---
@@ -73,7 +74,13 @@ Every Merchant Portal module must register ACL rules so merchant users can acces
 - `SupplierMerchantPortalGuiMerchantAclRuleExpanderPlugin` — allows all routes in the `supplier-merchant-portal-gui` bundle
 - `AclMerchantPortalDependencyProvider` override — registers the plugin via SprykerAcademy namespace
 
-> **Why ACL?** The Merchant Portal is multi-tenant. Each merchant user can only access modules explicitly allowed by ACL rules. Without the ACL plugin, all routes return 403 Forbidden.
+> **Why ACL?** The Merchant Portal is multi-tenant. Each merchant user can only access modules explicitly allowed by ACL rules. Without the ACL plugin, the Merchant Portal logs you out (redirect to the login page) as soon as you open a supplier route.
+
+The expander plugin only runs when a merchant or merchant user is created. The demo merchant users already exist, so apply the rules to them once:
+
+```bash
+docker/sdk console acl-entity:synchronize
+```
 
 ---
 
@@ -190,6 +197,7 @@ After completing all parts:
 
 ```bash
 docker/sdk console cache:empty-all
+docker/sdk console propel:model:build
 ```
 
 1. Log in to the Merchant Portal (e.g., `mp.eu.spryker.local`)

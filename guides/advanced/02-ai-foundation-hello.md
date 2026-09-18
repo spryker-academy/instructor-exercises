@@ -25,6 +25,7 @@ You will learn how to:
 docker/sdk cli composer dump-autoload
 docker/sdk console transfer:generate
 docker/sdk console cache:empty-all
+docker/sdk console propel:model:build
 ```
 
 The loader copies the module to `src/SprykerAcademy/`, registers `src/SprykerAcademy` as an API Platform source directory in `config/Glue`, `config/GlueStorefront`, and `config/GlueBackend`, and installs the tests.
@@ -131,6 +132,7 @@ Put the `use` line at the top with the other imports. `AiCommerceConstants` here
 
 ```bash
 docker/sdk console cache:empty-all
+docker/sdk console propel:model:build
 docker/sdk cli GLUE_APPLICATION=GLUE glue cache:clear
 docker/sdk cli GLUE_APPLICATION=GLUE_STOREFRONT glue cache:clear
 ```
@@ -176,6 +178,7 @@ The answer names you. Send the same question without the reference, and the LLM 
 docker/sdk cli composer dump-autoload
 docker/sdk console transfer:generate
 docker/sdk console cache:empty-all
+docker/sdk console propel:model:build
 docker/sdk cli GLUE_APPLICATION=GLUE_STOREFRONT glue api:generate
 docker/sdk cli GLUE_APPLICATION=GLUE glue cache:clear
 docker/sdk cli GLUE_APPLICATION=GLUE_STOREFRONT glue cache:clear

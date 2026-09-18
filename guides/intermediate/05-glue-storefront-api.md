@@ -167,6 +167,7 @@ After completing all parts, generate the API resources and clear cache:
 ```bash
 docker/sdk cli GLUE_APPLICATION=GLUE_STOREFRONT glue api:generate
 docker/sdk console cache:empty-all
+docker/sdk console propel:model:build
 ```
 
 Test collection (JSON-LD format):

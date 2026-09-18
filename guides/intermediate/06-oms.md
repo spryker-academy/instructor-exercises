@@ -22,6 +22,7 @@ You will learn how to:
 ./exercises/load.sh supplier intermediate/oms/skeleton
 docker/sdk cli composer dump-autoload
 docker/sdk console cache:empty-all
+docker/sdk console propel:model:build
 ```
 
 ---

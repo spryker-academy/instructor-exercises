@@ -1,6 +1,6 @@
 # Exercise 11: Search - Supplier
 
-In this exercise, you will build a search client that queries Elasticsearch for suppliers by name and displays the result in the Yves storefront. You will work with Spryker's Elasticsearch abstraction: query plugins, result formatter plugins, and the SearchClient.
+In this exercise, you will build a search client that queries Elasticsearch for suppliers. You will work with Spryker's Elasticsearch abstraction: query plugins, result formatter plugins, and the SearchClient. The storefront page that displays the results is built in Exercise 11 (Yves Storefront).
 
 You will learn how to:
 - Define an Elasticsearch mapping (analyzer, index schema)
@@ -8,7 +8,6 @@ You will learn how to:
 - Build a result formatter plugin to convert Elasticsearch results to Transfer objects
 - Wire the SearchClient through the DependencyProvider and Factory
 - Create a Client module that exposes search functionality
-- Display search results in a Yves storefront page
 
 ## Prerequisites
 
@@ -32,12 +31,15 @@ docker/sdk console search:setup
 Spryker uses Elasticsearch as the search storage. The Client layer provides an abstraction over raw Elasticsearch queries:
 
 ```
-SupplierSearchClient
+SupplierSearchClient::searchSuppliers()
     ↓
-SupplierSearchFactory
-    ├── createSupplierQueryPlugin(name) → builds Elastica Query
-    ├── getSearchQueryFormatters()      → result formatter plugins
-    └── getSearchClient()               → Spryker SearchClient
+SupplierSearchFactory::createSupplierSearchReader()
+    ├── getSearchClient()                        → Spryker SearchClient
+    ├── getSupplierSearchQueryPlugin()           → builds the Elastica Query
+    ├── getSupplierSearchQueryExpanderPlugins()  → optional query expanders (empty here)
+    └── getSupplierSearchResultFormatterPlugins() → result formatter plugins
+                                              ↓
+                                   SupplierSearchReader::searchSuppliers()
                                               ↓
                                          Elasticsearch
                                               ↓
@@ -45,7 +47,7 @@ SupplierSearchFactory
                                               ↓
                                     SupplierSearchResultFormatterPlugin
                                               ↓
-                                         SupplierTransfer
+                                    SupplierCollectionTransfer
 ```
 
 **Key components:**
@@ -109,19 +111,19 @@ The query plugins build the Elastica queries that get sent to Elasticsearch. The
 
 Both plugins implement `SearchContextAwareQueryInterface` with `sourceIdentifier = 'supplier'`. This tells Spryker which Elasticsearch index to query — since every document in the supplier index is already a supplier, we don't need a `type` filter.
 
-**Coding time:**
+Both plugins are provided by the skeleton. **Review time:**
 
 Open `src/SprykerAcademy/Client/SupplierSearch/Plugin/Elasticsearch/Query/SupplierSearchQueryPlugin.php`:
 
-1. In `createSearchQuery()`, build a query using `Elastica\Query\Exists` on the `id_supplier` field. This returns all documents that have a supplier ID (i.e., all suppliers in the index).
+1. `createSearchQuery()` builds a query using `Elastica\Query\Exists` on the `id_supplier` field. This returns all documents that have a supplier ID (i.e., all suppliers in the index).
 
-2. Implement `getSearchContext()` to return a `SearchContextTransfer` with the source identifier set to `'supplier'`.
+2. `getSearchContext()` returns a `SearchContextTransfer` with the source identifier `SupplierSearchConfig::SUPPLIER_SOURCE_IDENTIFIER` (`'supplier'`).
 
 Open `src/SprykerAcademy/Client/SupplierSearch/Plugin/Elasticsearch/Query/SupplierByIdSearchQueryPlugin.php`:
 
-1. In `createSearchQuery()`, build a query using `Elastica\Query\Term` on the `id_supplier` field with the value from `$this->idSupplier`. The `Term` query performs an **exact match** — no analysis or tokenization, just a direct value comparison. Set the query size to 1 since we expect a single result.
+1. `createSearchQuery()` builds a query using `Elastica\Query\Term` on the `id_supplier` field with the value from `$this->idSupplier`. The `Term` query performs an **exact match** — no analysis or tokenization, just a direct value comparison. The query size is 1 since we expect a single result.
 
-2. Implement `setIdSupplier()` as a setter that stores the ID and resets the cached query (so it rebuilds with the new ID).
+2. `setIdSupplier()` stores the ID and resets the cached query (so it rebuilds with the new ID).
 
 > **Exists vs Term vs MatchQuery:**
 > - `Exists('field')` — returns documents where the field is present (any value). Used for "give me all suppliers".
@@ -136,13 +138,13 @@ Open `src/SprykerAcademy/Client/SupplierSearch/Plugin/Elasticsearch/Query/Suppli
 
 ### Part 3: Build the Result Formatter Plugin
 
-The result formatter converts raw Elasticsearch results into Spryker Transfer objects.
+The result formatter converts raw Elasticsearch results into Spryker Transfer objects. It is provided by the skeleton.
 
-**Coding time:**
+**Review time:**
 
 Open `src/SprykerAcademy/Client/SupplierSearch/Plugin/Elasticsearch/ResultFormatter/SupplierSearchResultFormatterPlugin.php`:
 
-In `formatSearchResult()`, iterate through the result set, get the source data from the first document, and create a `SupplierTransfer` from it.
+`formatSearchResult()` iterates through the result set, takes the source data of every document and adds a `SupplierTransfer` built from it to a `SupplierCollectionTransfer`. `getName()` returns the key under which the SearchClient returns this formatted result (`SupplierSearchCollection`).
 
 > **Document source:** Each Elasticsearch result has a `_source` field containing the original JSON document. Elastica provides it via `$document->getSource()`, which returns an array.
 
@@ -158,9 +160,12 @@ In `formatSearchResult()`, iterate through the result set, get the source data f
 
 Open `src/SprykerAcademy/Client/SupplierSearch/SupplierSearchDependencyProvider.php`:
 
-1. In `provideServiceLayerDependencies()`, call `addSearchClient()` and `addSupplierSearchResultFormatterPlugins()`
-2. In `addSearchClient()`, provide the core `SearchClient` via the locator
-3. In `getSupplierSearchResultFormatterPlugins()`, return an array containing the `SupplierSearchResultFormatterPlugin` instance
+Complete the four TODOs in `provideServiceLayerDependencies()`. Every dependency is registered with `$container->set(KEY, closure)`:
+
+1. `CLIENT_SEARCH` — the core Search client: `fn (Container $container) => $container->getLocator()->search()->client()`
+2. `PLUGIN_SUPPLIER_SEARCH_QUERY` — a new `SupplierSearchQueryPlugin`
+3. `PLUGINS_SUPPLIER_SEARCH_RESULT_FORMATTER` — an array with a new `SupplierSearchResultFormatterPlugin`
+4. `PLUGINS_SUPPLIER_SEARCH_QUERY_EXPANDER` — an empty array (no query expanders in this exercise)
 
 > **Client vs Zed DependencyProvider:** In the Client layer, the method is `provideServiceLayerDependencies()` (not `provideBusinessLayerDependencies()` like in Zed).
 
@@ -170,53 +175,42 @@ Open `src/SprykerAcademy/Client/SupplierSearch/SupplierSearchDependencyProvider.
 
 Open `src/SprykerAcademy/Client/SupplierSearch/SupplierSearchFactory.php`:
 
-1. `getSearchQueryFormatters()` — return the formatters from the DependencyProvider
-2. `getSearchClient()` — return the SearchClient from the DependencyProvider
+Complete the five TODOs:
+
+1. `createSupplierSearchReader()` — create the `SupplierSearchReader` with the Search client, the query plugin, the query expander plugins and the result formatter plugins (the skeleton passes empty arrays for the last two)
+2. `getSearchClient()`, `getSupplierSearchQueryPlugin()`, `getSupplierSearchQueryExpanderPlugins()`, `getSupplierSearchResultFormatterPlugins()` — return the corresponding provided dependency with `$this->getProvidedDependency(SupplierSearchDependencyProvider::...)`
+
+The `SupplierSearchReader` (provided) runs the search: it expands the query, calls `SearchClient::search()` with the formatters and returns the `SupplierCollectionTransfer` the formatter produced. `findSupplierById()` does the same with the `SupplierByIdSearchQueryPlugin`.
 
 ---
 
 ### Part 5: Implement the SupplierSearchClient
 
-The client orchestrates the search: creates the query, gets the formatters, executes the search, and returns the result.
+The client is the public entry point of the module and only delegates to the reader.
 
 **Coding time:**
 
-Open `src/SprykerAcademy/Client/SupplierSearch/SupplierSearchClient.php`. In `getSupplierByName()`:
+Open `src/SprykerAcademy/Client/SupplierSearch/SupplierSearchClient.php`. In `searchSuppliers()`, replace the empty collection with:
 
-1. Create the query plugin via the factory (passing the name)
-2. Get the result formatter plugins via the factory
-3. Execute the search using the SearchClient's `search()` method (passing query + formatters)
-4. Return the supplier from the results array using the formatter's `NAME` constant as key
+```php
+return $this->getFactory()->createSupplierSearchReader()->searchSuppliers($requestParameters);
+```
 
-> **SearchClient::search()** returns an associative array keyed by formatter names. Since our formatter is named `'supplier'`, the result is at `$results['supplier']`.
+> **SearchClient::search()** returns an associative array keyed by formatter names. Our formatter is named `SupplierSearchCollection`, so the reader takes the collection from `$result['SupplierSearchCollection']`.
 
 ---
 
-### Part 6: Display in Yves
-
-The exercise provides a `SupplierPage` Yves module with two routes:
-
-| Route | Action | Description |
-|-------|--------|-------------|
-| `/suppliers` | `listAction` | Shows all suppliers in a table |
-| `/supplier/{idSupplier}` | `detailAction` | Shows a single supplier by ID |
-
-Review these files:
-- `SupplierPageRouteProviderPlugin` — registers both routes
-- `SupplierPageDependencyProvider` — provides the `SupplierSearchClient`
-- `SupplierPageFactory` — accesses the client
-- `IndexController` — `listAction()` calls `searchSuppliers()`, `detailAction()` calls `findSupplierById()`
-
-**Router registration:** The route provider is registered via `SprykerAcademy\Yves\Router\RouterDependencyProvider`, which extends the Pyz Router and adds the `SupplierPageRouteProviderPlugin`. This is done automatically by the exercise — no project modification needed.
+### Part 6: Try it out
 
 After completing all parts:
 
 ```bash
 docker/sdk console cache:empty-all
+docker/sdk console propel:model:build
+docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/Supplier/ Search
 ```
 
-- Visit http://yves.eu.spryker.local/suppliers to see the supplier list
-- Click a supplier to see its detail page at `/supplier/{id}`
+The storefront page that lists the suppliers through this client is built in Exercise 11 (Yves Storefront).
 
 ---
 
@@ -228,8 +222,7 @@ docker/sdk console cache:empty-all
      -d '{"query":{"exists":{"field":"id_supplier"}}}'
    ```
 
-2. Visit the Yves supplier list page and verify the table renders
-3. Click a supplier and verify the detail page loads
+2. Run the automated tests below
 
 ---
 

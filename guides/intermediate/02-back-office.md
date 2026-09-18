@@ -23,6 +23,7 @@ docker/sdk cli composer dump-autoload
 docker/sdk console transfer:generate
 docker/sdk console propel:install
 docker/sdk console cache:empty-all
+docker/sdk console propel:model:build
 ```
 
 ---
@@ -182,6 +183,7 @@ Clear cache:
 
 ```bash
 docker/sdk console cache:empty-all
+docker/sdk console propel:model:build
 ```
 
 Visit http://backoffice.eu.spryker.local/supplier-gui to see the table.
@@ -305,6 +307,7 @@ After loading the exercise, clear cache to see the navigation:
 
 ```bash
 docker/sdk console cache:empty-all
+docker/sdk console propel:model:build
 ```
 
 ---

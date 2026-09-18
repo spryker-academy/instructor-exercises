@@ -3,12 +3,11 @@
 In this exercise, you will build a Yves (storefront) interface to display suppliers. You will create a controller with two actions: one to list all suppliers in a table, and another to show details of a single supplier.
 
 You will learn how to:
-- Create a Yves Controller with multiple actions
-- Register routes using the RouteProviderPlugin
-- Create Twig templates for the storefront
 - Wire dependencies through the Yves DependencyProvider and Factory
-- Access the SearchClient from the Yves layer
-- Handle request parameters and redirects
+- Access the SupplierSearchClient from the Yves layer
+- Read how a Yves Controller with multiple actions renders Twig templates
+- Read how routes are registered with a RouteProviderPlugin
+- Handle route and request parameters
 
 ## Prerequisites
 
@@ -21,6 +20,7 @@ You will learn how to:
 ./exercises/load.sh supplier intermediate/yves-storefront/skeleton
 docker/sdk cli composer dump-autoload
 docker/sdk console cache:empty-all
+docker/sdk console propel:model:build
 ```
 
 ---
@@ -44,7 +44,7 @@ HTML Response
 ```
 
 **Key differences from Zed (Back Office):**
-- Yves uses `AbstractController` from `Spryker\Yves\Kernel`
+- Yves controllers extend `SprykerShop\Yves\ShopApplication\Controller\AbstractController` and return a `View`
 - Templates extend `page-layout-main` instead of `@Gui/Layout/layout.twig`
 - Routes are registered via `RouteProviderPlugin` (not navigation.xml)
 - URL generation uses `url()` Twig function (not hardcoded paths)
@@ -87,221 +87,79 @@ Open `src/SprykerAcademy/Yves/SupplierPage/SupplierPageFactory.php`:
 
 ---
 
-### Part 3: Routes
+### Part 3: Routes (provided)
 
-Routes connect URLs to controller actions.
+Routes connect URLs to controller actions. The skeleton provides them; **review** `src/SprykerAcademy/Yves/SupplierPage/Plugin/Router/SupplierPageRouteProviderPlugin.php`:
 
-**Coding time:**
+| Route name | Path | Action |
+|------------|------|--------|
+| `supplier-list` | `/suppliers` | `IndexController::listAction()` |
+| `supplier-detail` | `/suppliers/{idSupplier}` | `IndexController::detailAction()` |
 
-Open `src/SprykerAcademy/Yves/SupplierPage/Plugin/Router/SupplierPageRouteProviderPlugin.php`:
+- `buildRoute()` parameters: path, module, controller, action
+- `setMethods(['GET'])` limits the route to GET requests
+- `setRequirement('idSupplier', '\d+')` only matches numeric IDs
 
-1. Add two constants:
-   - `ROUTE_NAME_SUPPLIER_INDEX = 'supplier-index'`
-   - `ROUTE_NAME_SUPPLIER_DETAIL = 'supplier-detail'`
-
-2. In `addRoutes()`, call both private methods to add routes to the collection
-
-3. Implement `addSupplierIndexRoute()`:
-   - Use `$this->buildRoute('/supplier', 'SupplierPage', 'Index', 'indexAction')`
-   - Set method to GET: `$route->setMethods(['GET'])`
-   - Add to collection with the index route name constant
-
-4. Implement `addSupplierDetailRoute()`:
-   - Use `$this->buildRoute('/supplier/detail', 'SupplierPage', 'Index', 'detailAction')`
-   - Set method to GET
-   - Add to collection with the detail route name constant
-
-> **buildRoute()** parameters: path, module, controller, action
+**Router registration:** `src/SprykerAcademy/Yves/Router/RouterDependencyProvider.php` extends the project's `Pyz\Yves\Router\RouterDependencyProvider` and appends the `SupplierPageRouteProviderPlugin` to `getRouteProvider()`. Because `SprykerAcademy` comes before `Pyz` in the project namespaces, the kernel resolves this class instead of the Pyz one, so no project file has to be edited.
 
 ---
 
-### Part 4: Controller
+### Part 4: Controller (provided)
 
-The Controller handles HTTP requests and returns data for templates.
+**Review** `src/SprykerAcademy/Yves/SupplierPage/Controller/IndexController.php`:
 
-**Coding time:**
-
-Open `src/SprykerAcademy/Yves/SupplierPage/Controller/IndexController.php`:
-
-#### 4.1 indexAction - List All Suppliers
+#### 4.1 listAction - List All Suppliers
 
 ```php
-public function indexAction(Request $request): array
+public function listAction(Request $request): View
 {
-    // 1. Get the client from factory
     $supplierCollection = $this->getFactory()
         ->getSupplierSearchClient()
-        ->searchSuppliers([]); // Pass empty array for no filters
+        ->searchSuppliers($request->query->all());
 
-    // 2. Return array for template
-    return [
-        'suppliers' => $supplierCollection->getSuppliers(),
-    ];
+    return $this->view(
+        ['suppliers' => $supplierCollection->getSuppliers()],
+        [],
+        '@SupplierPage/views/list/list.twig',
+    );
 }
 ```
 
-> **searchSuppliers([]):** The empty array means no search filters — returns all suppliers.
+> **searchSuppliers():** the query parameters are passed through, so `?q=...` style filters can be added later. With no parameters, all suppliers are returned.
 
 #### 4.2 detailAction - Single Supplier
 
 ```php
-public function detailAction(Request $request)
+public function detailAction(Request $request): View
 {
-    // 1. Get ID from query parameter
-    $idSupplier = $request->query->getInt('id');
+    $idSupplier = (int)$request->get('idSupplier');
 
-    // 2. Validate ID exists
-    if (!$idSupplier) {
-        $this->addErrorMessage('Supplier ID is required.');
-        return $this->redirectResponse('/supplier');
-    }
-
-    // 3. Fetch supplier
     $supplier = $this->getFactory()
         ->getSupplierSearchClient()
         ->findSupplierById($idSupplier);
 
-    // 4. Handle not found
-    if (!$supplier) {
-        $this->addErrorMessage('Supplier not found.');
-        return $this->redirectResponse('/supplier');
-    }
-
-    // 5. Return for template
-    return [
-        'supplier' => $supplier,
-    ];
+    return $this->view(
+        ['supplier' => $supplier],
+        [],
+        '@SupplierPage/views/detail/detail.twig',
+    );
 }
 ```
 
-> **Request parameters:** Use `$request->query->getInt('id')` for URL query params (e.g., `/supplier/detail?id=1`)
-> 
-> **Flash messages:** `addErrorMessage()` shows a toast notification that persists through redirects
-> 
-> **Redirect:** `redirectResponse()` returns a Response object for redirects
+> **Route parameters:** `{idSupplier}` from the route is available through `$request->get('idSupplier')`.
+>
+> **view():** the third argument names the template explicitly. Without it, Spryker derives the template from the module, controller and action names.
 
 ---
 
-### Part 5: Templates
+### Part 5: Templates (provided)
 
-Twig templates render the HTML using data from controllers.
+Twig templates render the HTML using data from the controller. **Review** them:
 
-#### 5.1 List Template (index.twig)
+- `src/SprykerAcademy/Yves/SupplierPage/Theme/default/views/list/list.twig` — extends `page-layout-main`, reads `_view.suppliers` into `data.suppliers` and renders a table with a link to the detail page: `{{ url('supplier-detail', {idSupplier: supplier.idSupplier}) }}`
+- `src/SprykerAcademy/Yves/SupplierPage/Theme/default/views/detail/detail.twig` — shows one supplier and links back to the list
 
-**Coding time:**
-
-Open `src/SprykerAcademy/Yves/SupplierPage/Theme/default/templates/index/index.twig`:
-
-```twig
-{% extends template('page-layout-main') %}
-
-{% block title %}{{ 'Suppliers' | trans }}{% endblock %}
-
-{% block content %}
-    <div class="container">
-        <h1>{{ 'Suppliers' | trans }}</h1>
-        
-        {% if suppliers is empty %}
-            <div class="alert alert-info">{{ 'No suppliers found.' | trans }}</div>
-        {% else %}
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>{{ 'ID' | trans }}</th>
-                        <th>{{ 'Name' | trans }}</th>
-                        <th>{{ 'Email' | trans }}</th>
-                        <th>{{ 'Phone' | trans }}</th>
-                        <th>{{ 'Status' | trans }}</th>
-                        <th>{{ 'Actions' | trans }}</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for supplier in suppliers %}
-                        <tr>
-                            <td>{{ supplier.idSupplier }}</td>
-                            <td>{{ supplier.name }}</td>
-                            <td>{{ supplier.email }}</td>
-                            <td>{{ supplier.phone }}</td>
-                            <td>
-                                {% if supplier.status == 1 %}
-                                    <span class="badge badge-success">{{ 'Active' | trans }}</span>
-                                {% else %}
-                                    <span class="badge badge-secondary">{{ 'Inactive' | trans }}</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <a href="{{ url('supplier-detail', {id: supplier.idSupplier}) }}" class="btn btn-sm btn-primary">
-                                    {{ 'View' | trans }}
-                                </a>
-                            </td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        {% endif %}
-    </div>
-{% endblock %}
-```
-
-> **template('page-layout-main'):** The base layout for Yves storefront pages
-> 
-> **url():** Generates URLs using route names: `{{ url('supplier-detail', {id: 1}) }}` → `/supplier/detail?id=1`
-> 
-> **supplier.idSupplier:** Access transfer properties using camelCase (idSupplier, not id_supplier)
-
-#### 5.2 Detail Template (detail.twig)
-
-**Coding time:**
-
-Open `src/SprykerAcademy/Yves/SupplierPage/Theme/default/templates/index/detail.twig`:
-
-```twig
-{% extends template('page-layout-main') %}
-
-{% block title %}{{ supplier.name }}{% endblock %}
-
-{% block content %}
-    <div class="container">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{{ url('supplier-index') }}">{{ 'Suppliers' | trans }}</a></li>
-                <li class="breadcrumb-item active" aria-current="page">{{ supplier.name }}</li>
-            </ol>
-        </nav>
-
-        <h1>{{ supplier.name }}</h1>
-        
-        <div class="card">
-            <div class="card-body">
-                <table class="table table-borderless">
-                    <tbody>
-                        <tr><th>ID</th><td>{{ supplier.idSupplier }}</td></tr>
-                        <tr><th>Name</th><td>{{ supplier.name }}</td></tr>
-                        <tr><th>Description</th><td>{{ supplier.description }}</td></tr>
-                        <tr><th>Email</th><td>{{ supplier.email }}</td></tr>
-                        <tr><th>Phone</th><td>{{ supplier.phone }}</td></tr>
-                        <tr>
-                            <th>Status</th>
-                            <td>
-                                {% if supplier.status == 1 %}
-                                    <span class="badge badge-success">{{ 'Active' | trans }}</span>
-                                {% else %}
-                                    <span class="badge badge-secondary">{{ 'Inactive' | trans }}</span>
-                                {% endif %}
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            <div class="card-footer">
-                <a href="{{ url('supplier-index') }}" class="btn btn-secondary">
-                    {{ 'Back to List' | trans }}
-                </a>
-            </div>
-        </div>
-    </div>
-{% endblock %}
-```
+> **url():** generates URLs from route names, so changing a path in the route provider never breaks the links.
 
 ---
 
@@ -312,17 +170,19 @@ After implementing all parts:
 1. Clear cache:
    ```bash
    docker/sdk console cache:empty-all
+   docker/sdk console propel:model:build
    ```
 
 2. Visit the list page:
    ```
-   http://yves.eu.spryker.local/supplier
+   http://yves.eu.spryker.local/suppliers
    ```
 
 3. Click "View" on a supplier to see the detail page:
    ```
-   http://yves.eu.spryker.local/supplier/detail?id=1
+   http://yves.eu.spryker.local/suppliers/1
    ```
+   (use an ID from the list; the suppliers were imported in Exercise 8)
 
 ---
 
@@ -332,7 +192,7 @@ After implementing all parts:
 
 | Aspect | Zed (Back Office) | Yves (Storefront) |
 |--------|-------------------|-------------------|
-| Controller base | `AbstractController` (Kernel) | `AbstractController` (Kernel) |
+| Controller base | `Spryker\Zed\Kernel\...\AbstractController` | `SprykerShop\Yves\ShopApplication\Controller\AbstractController` |
 | Template layout | `@Gui/Layout/layout.twig` | `page-layout-main` |
 | Routing | `navigation.xml` | `RouteProviderPlugin` |
 | URL generation | Hardcoded paths | `url()` Twig function |
@@ -342,21 +202,24 @@ After implementing all parts:
 
 | Return | Purpose |
 |--------|---------|
-| `array` | Renders Twig template with data |
+| `View` (from `$this->view()`) | Renders a Twig template with data |
 | `Response` | Raw response (e.g., redirect, JSON) |
 
 ### Request Handling
 
 ```php
-// Query parameters: /supplier/detail?id=1
-$id = $request->query->getInt('id');
+// Route parameters: /suppliers/{idSupplier}
+$idSupplier = (int)$request->get('idSupplier');
+
+// Query parameters: /suppliers?q=acme
+$query = $request->query->get('q');
 
 // Flash messages
 $this->addErrorMessage('Error message');
 $this->addSuccessMessage('Success message');
 
-// Redirect
-return $this->redirectResponse('/supplier');
+// Redirect by route name
+return $this->redirectResponseInternal('supplier-list');
 ```
 
 ---

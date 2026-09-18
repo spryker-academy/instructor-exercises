@@ -20,6 +20,7 @@ You will learn how to:
 docker/sdk cli composer dump-autoload
 docker/sdk console transfer:generate
 docker/sdk console cache:empty-all
+docker/sdk console propel:model:build
 ```
 
 ---
@@ -117,6 +118,7 @@ The template already includes the locations card with `<web-mp-supplier-location
 
 ```bash
 docker/sdk console cache:empty-all
+docker/sdk console propel:model:build
 ```
 
 1. Edit an existing supplier in the Merchant Portal

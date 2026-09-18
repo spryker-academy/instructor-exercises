@@ -25,6 +25,7 @@ You will learn how to:
 docker/sdk cli composer dump-autoload
 docker/sdk console transfer:generate
 docker/sdk console cache:empty-all
+docker/sdk console propel:model:build
 ```
 
 ---
@@ -166,6 +167,7 @@ $config[AiFoundationConstants::AI_CONFIGURATIONS][CatalogAssistantConstants::AI_
 
 ```bash
 docker/sdk console cache:empty-all
+docker/sdk console propel:model:build
 docker/sdk cli GLUE_APPLICATION=GLUE glue cache:clear
 docker/sdk cli GLUE_APPLICATION=GLUE_STOREFRONT glue cache:clear
 ```
@@ -201,6 +203,7 @@ curl -s -X POST http://glue.eu.spryker.local/product-questions \
 docker/sdk cli composer dump-autoload
 docker/sdk console transfer:generate
 docker/sdk console cache:empty-all
+docker/sdk console propel:model:build
 docker/sdk cli GLUE_APPLICATION=GLUE_STOREFRONT glue api:generate
 docker/sdk cli GLUE_APPLICATION=GLUE glue cache:clear
 docker/sdk cli GLUE_APPLICATION=GLUE_STOREFRONT glue cache:clear

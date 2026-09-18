@@ -73,6 +73,7 @@ After editing, run:
 
 ```bash
 docker/sdk console cache:empty-all
+docker/sdk console propel:model:build
 ```
 
 Visit: http://backoffice.eu.spryker.local/contact-request/index/index

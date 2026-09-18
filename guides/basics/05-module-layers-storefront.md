@@ -28,6 +28,7 @@ Clear cache:
 
 ```bash
 docker/sdk console cache:empty-all
+docker/sdk console propel:model:build
 ```
 
 ---
@@ -124,7 +125,9 @@ Open `src/SprykerAcademy/Yves/ContactRequestPage/Plugin/Router/ContactRequestPag
 
 **Coding time:**
 
-Open `src/SprykerAcademy/Yves/Router/RouterDependencyProvider.php`. Add an instance of `ContactRequestPageRouteProviderPlugin` at the end of the router plugins in `getRouteProvider()`.
+Open `src/SprykerAcademy/Yves/Router/RouterDependencyProvider.php`. It extends the project's `Pyz\Yves\Router\RouterDependencyProvider`; in `getRouteProvider()`, add a new `ContactRequestPageRouteProviderPlugin` to the plugins returned by the parent.
+
+> **Why does this work without editing Pyz?** `SprykerAcademy` is listed before `Pyz` in `KernelConstants::PROJECT_NAMESPACES` (the loader adds it), so the kernel resolves `SprykerAcademy\Yves\Router\RouterDependencyProvider` instead of the Pyz class. The parent call keeps all project routes.
 
 ---
 

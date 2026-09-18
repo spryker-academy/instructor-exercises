@@ -82,9 +82,11 @@ After loading, run:
 ```bash
 docker/sdk console c:e
 docker/sdk cli composer dump-autoload
-docker/sdk console transfer:generate
 docker/sdk console propel:install
+docker/sdk console transfer:generate
 ```
+
+The loader prints the exact list for the branch you loaded (the AI exercises add `configuration:sync` or the Glue API commands). Keep `c:e` first: `cache:empty-all` deletes the Propel table map together with the other caches, and `propel:install` writes it again. If you run `cache:empty-all` on its own later, follow it with `docker/sdk console propel:model:build`, otherwise the Back Office and the console fail with "Database map was not initialized".
 
 ---
 

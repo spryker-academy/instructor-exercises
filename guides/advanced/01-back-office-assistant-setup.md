@@ -306,6 +306,7 @@ docker/sdk console transfer:generate
 docker/sdk console propel:install
 docker/sdk console configuration:sync
 docker/sdk console cache:empty-all
+docker/sdk console propel:model:build
 docker/sdk console router:cache:warm-up:backoffice
 ```
 

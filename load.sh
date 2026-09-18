@@ -264,19 +264,33 @@ if [ -f "$REPO_DIR/config/Zed/navigation-main-merchant-portal.xml" ]; then
     fi
 fi
 
-# Add ContactRequest config value to config_default.php for configuration exercise (basics/configuration/* onwards)
-if [ "$PACKAGE" = "contact-request" ] && [[ "$BRANCH" == basics/configuration/* ]]; then
-    CONFIG_FILE="$PROJECT_DIR/config/Shared/config_default.php"
-    if file_needs_update "$CONFIG_FILE" 'ContactRequestConstants'; then
-        cat >> "$CONFIG_FILE" << 'PHPEOF'
+# ContactRequest config value in config_default.php (Exercise 6, Configuration).
+# Always removed first: the constant class lives in src/SprykerAcademy, which was just replaced. Added again below when the loaded branch ships it.
+CONFIG_FILE="$PROJECT_DIR/config/Shared/config_default.php"
+if grep -q "ContactRequest exercise config value\|contact-request exercise" "$CONFIG_FILE" 2>/dev/null; then
+    php -r '
+        $file = $argv[1];
+        $content = file_get_contents($file);
+        // block written by this loader version
+        $content = preg_replace("/\n[ \t]*\/\/ >>> contact-request exercise.*?\/\/ <<< contact-request exercise[^\n]*/s", "", $content);
+        // block written by an earlier loader version
+        $content = preg_replace("/\n*\/\/ ContactRequest exercise config value\nuse SprykerAcademy\\\\Shared\\\\ContactRequest\\\\ContactRequestConstants;\n\n\\\$config\[ContactRequestConstants::MY_CONFIG_VALUE\][^\n]*\n?/", "\n", $content);
+        file_put_contents($file, rtrim($content) . "\n");
+    ' "$CONFIG_FILE"
+    log_success "Removed the ContactRequest config value from config_default.php"
+fi
+if [ ! -f "$PROJECT_DIR/src/SprykerAcademy/Shared/ContactRequest/ContactRequestConstants.php" ] && grep -q "ContactRequestConstants" "$CONFIG_FILE" 2>/dev/null; then
+    log_error "Warning: config/Shared/config_default.php still references ContactRequestConstants, which this branch does not contain (manual wiring from Exercise 6)."
+    log_error "         Remove those lines, or every console command will fail with a class not found error."
+fi
+if [ "$PACKAGE" = "contact-request" ] && [ -f "$PROJECT_DIR/src/SprykerAcademy/Shared/ContactRequest/ContactRequestConstants.php" ]; then
+    cat >> "$CONFIG_FILE" << 'PHPEOF'
 
-// ContactRequest exercise config value
-use SprykerAcademy\Shared\ContactRequest\ContactRequestConstants;
-
-$config[ContactRequestConstants::MY_CONFIG_VALUE] = 'Hello from config!';
+// >>> contact-request exercise
+$config[\SprykerAcademy\Shared\ContactRequest\ContactRequestConstants::MY_CONFIG_VALUE] = 'Hello from config!';
+// <<< contact-request exercise
 PHPEOF
-        log_success "Added ContactRequest config value to config_default.php"
-    fi
+    log_success "Added the ContactRequest config value to config_default.php"
 fi
 
 # Register the SprykerAcademy source directory in every API Platform application config and reset their kernel caches
@@ -309,6 +323,22 @@ register_api_platform_sources() {
     [ "$updated" = 1 ] && log_success "Reset the Glue kernel caches (data/cache/Glue*)"
     return 0
 }
+
+# Always remove the Glue service registration of a previous load (the registered directories may no longer exist)
+for SERVICES_FILE in "$PROJECT_DIR/config/GlueBackend/ApplicationServices.php" "$PROJECT_DIR/config/GlueStorefront/ApplicationServices.php"; do
+    [ -f "$SERVICES_FILE" ] || continue
+    if grep -q "supplier exercise\|services->load('SprykerAcademy" "$SERVICES_FILE"; then
+        php -r '
+            $file = $argv[1];
+            $content = file_get_contents($file);
+            $content = preg_replace("/\n[ \t]*\/\/ >>> supplier exercise.*?\/\/ <<< supplier exercise[^\n]*/s", "", $content);
+            // line written by an earlier loader version
+            $content = preg_replace("/\n[ \t]*\\\$services->load\(\x27SprykerAcademy[^\n]*/", "", $content);
+            file_put_contents($file, preg_replace("/\n{2,}(};)\s*$/", "\n$1\n", $content));
+        ' "$SERVICES_FILE"
+        log_success "Removed the SprykerAcademy service registration from $(echo "$SERVICES_FILE" | sed "s#$PROJECT_DIR/##")"
+    fi
+done
 
 # Copy config and data files for supplier package
 if [ "$PACKAGE" = "supplier" ]; then
@@ -347,32 +377,90 @@ YAMLEOF
 
     register_api_platform_sources
 
-    # Register SprykerAcademy services in Glue ApplicationServices.php
+    # Register the SprykerAcademy Zed (facades) and Client services in the Glue application containers (marked block, see unwiring above)
     if [ -d "$REPO_DIR/src/SprykerAcademy/Glue" ]; then
-        # GlueBackend: load SprykerAcademy Zed services (facades)
-        BACKEND_SERVICES="$PROJECT_DIR/config/GlueBackend/ApplicationServices.php"
-        if [ -f "$BACKEND_SERVICES" ] && file_needs_update "$BACKEND_SERVICES" 'SprykerAcademy'; then
+        for APP_SERVICES in GlueBackend:Zed GlueStorefront:Client; do
+            SERVICES_FILE="$PROJECT_DIR/config/${APP_SERVICES%%:*}/ApplicationServices.php"
+            LAYER="${APP_SERVICES##*:}"
+            [ -f "$SERVICES_FILE" ] || continue
             php -r '
                 $file = $argv[1];
+                $layer = $argv[2];
                 $content = file_get_contents($file);
-                $load = "\n    \$services->load(\x27SprykerAcademy\\\\Zed\\\\\x27, \x27../../src/SprykerAcademy/Zed/\x27);\n";
-                $content = preg_replace("/(};)\s*$/", $load . "$1", $content);
-                file_put_contents($file, $content);
-            ' "$BACKEND_SERVICES"
-            log_success "Loaded SprykerAcademy\\Zed services in GlueBackend/ApplicationServices.php"
-        fi
+                $block = "\n    // >>> supplier exercise\n"
+                    . "    \$configurator->services()\n"
+                    . "        ->defaults()\n        ->autowire()\n        ->public()\n        ->autoconfigure()\n"
+                    . "        ->load(\x27SprykerAcademy\\\\" . $layer . "\\\\\x27, \x27../../src/SprykerAcademy/" . $layer . "/\x27);\n"
+                    . "    // <<< supplier exercise\n";
+                $content = preg_replace_callback("/\n(};)\s*$/", fn ($m) => $block . $m[1] . "\n", $content, 1, $count);
+                if ($count) { file_put_contents($file, $content); echo "updated"; }
+            ' "$SERVICES_FILE" "$LAYER" | grep -q updated && log_success "Registered SprykerAcademy\\$LAYER services in config/${APP_SERVICES%%:*}/ApplicationServices.php"
+        done
+    fi
+fi
 
-        # GlueStorefront: load SprykerAcademy Client services
-        STOREFRONT_SERVICES="$PROJECT_DIR/config/GlueStorefront/ApplicationServices.php"
-        if [ -f "$STOREFRONT_SERVICES" ] && file_needs_update "$STOREFRONT_SERVICES" 'SprykerAcademy'; then
+# ---------------------------------------------------------------------------
+# Contact Request package: Yves wiring in the project (marked lines, removed again on every load)
+# ---------------------------------------------------------------------------
+CR_WIRING_MARKER="contact-request exercise"
+YVES_ROUTER="$PROJECT_DIR/src/Pyz/Yves/Router/RouterDependencyProvider.php"
+SIDEBAR_TWIG="$PROJECT_DIR/src/Pyz/Yves/CustomerPage/Theme/default/components/molecules/navigation-sidebar/navigation-sidebar.twig"
+
+# Always remove the wiring of a previous load: the classes it points to live in src/SprykerAcademy, which was just replaced
+if [ -f "$YVES_ROUTER" ] && grep -q "// $CR_WIRING_MARKER" "$YVES_ROUTER"; then
+    php -r '
+        $file = $argv[1];
+        $marker = preg_quote($argv[2], "/");
+        $content = file_get_contents($file);
+        // a line that replaced a core plugin gets the core plugin back
+        $content = preg_replace("/^([ \t]*)new [^\n]*\/\/ " . $marker . " \(replaces ([A-Za-z]+)\)[^\n]*$/m", "$1new $2(),", $content);
+        // every other marked line disappears
+        $content = preg_replace("/\n[^\n]*\/\/ " . $marker . "[^\n]*/", "", $content);
+        file_put_contents($file, $content);
+    ' "$YVES_ROUTER" "$CR_WIRING_MARKER"
+    log_success "Removed the Contact Request routes from src/Pyz/Yves/Router/RouterDependencyProvider.php"
+fi
+if [ -f "$SIDEBAR_TWIG" ] && grep -q "{# >>> $CR_WIRING_MARKER #}" "$SIDEBAR_TWIG"; then
+    php -r '
+        $file = $argv[1];
+        $marker = preg_quote($argv[2], "/");
+        $content = file_get_contents($file);
+        $content = preg_replace("/\n[ \t]*\{# >>> " . $marker . " #\}.*?\{# <<< " . $marker . " #\}[^\n]*/s", "", $content);
+        file_put_contents($file, $content);
+    ' "$SIDEBAR_TWIG" "$CR_WIRING_MARKER"
+    log_success "Removed the Contact Request menu item from navigation-sidebar.twig"
+fi
+
+if [ "$PACKAGE" = "contact-request" ]; then
+    CR_CUSTOMER_ROUTE_PLUGIN="$PROJECT_DIR/src/SprykerAcademy/Yves/CustomerPage/Plugin/Router/CustomerPageRouteProviderPlugin.php"
+
+    # Exercise 7 (extending core modules): the routes come from src/SprykerAcademy/Yves/Router. On the complete branches the account
+    # sidebar of the project gets the link; in the skeleton the route does not exist yet (path() would fail), so adding it is a student step.
+    if [ -f "$CR_CUSTOMER_ROUTE_PLUGIN" ] && [[ "$BRANCH" != */skeleton ]]; then
+        if [ -f "$SIDEBAR_TWIG" ]; then
             php -r '
                 $file = $argv[1];
+                $marker = $argv[2];
                 $content = file_get_contents($file);
-                $load = "\n    \$services->load(\x27SprykerAcademy\\\\Client\\\\\x27, \x27../../src/SprykerAcademy/Client/\x27);\n";
-                $content = preg_replace("/(};)\s*$/", $load . "$1", $content);
-                file_put_contents($file, $content);
-            ' "$STOREFRONT_SERVICES"
-            log_success "Loaded SprykerAcademy\\Client services in GlueStorefront/ApplicationServices.php"
+                $item = "        {# >>> " . $marker . " #}\n"
+                    . "        {\n"
+                    . "            name: \x27messages\x27,\n"
+                    . "            url: path(\x27customer/messages\x27),\n"
+                    . "            label: \x27My Contact Requests\x27,\n"
+                    . "            icon: \x27envelopes\x27,\n"
+                    . "        },\n"
+                    . "        {# <<< " . $marker . " #}";
+                // last element of the items array in the data definition
+                $content = preg_replace_callback(
+                    "/(items:\s*\[.*?)(\n[ \t]*\]\s*\n\s*\}\s*%\})/s",
+                    fn ($m) => $m[1] . "\n" . $item . $m[2],
+                    $content,
+                    1,
+                    $count,
+                );
+                if ($count) { file_put_contents($file, $content); echo "updated"; }
+            ' "$SIDEBAR_TWIG" "$CR_WIRING_MARKER" | grep -q updated && log_success "Added the My Contact Requests item to navigation-sidebar.twig" \
+                || log_error "Warning: could not add the menu item to navigation-sidebar.twig (add a link to customer/messages yourself)"
         fi
     fi
 fi
@@ -579,6 +667,17 @@ CONFIGEOF
     fi
 fi
 
+# Safety net: warn about project files that still reference SprykerAcademy classes this branch does not contain (manual wiring from another exercise)
+MISSING_REFS=$(grep -rhoE "SprykerAcademy(\\\\[A-Za-z0-9_]+)+" "$PROJECT_DIR/src/Pyz" "$PROJECT_DIR/config" --include="*.php" 2>/dev/null | sort -u | while read -r class; do
+    rel=$(echo "${class#SprykerAcademy\\}" | tr '\\' '/')
+    [ -f "$PROJECT_DIR/src/SprykerAcademy/$rel.php" ] || echo "$class"
+done)
+if [ -n "$MISSING_REFS" ]; then
+    log_error "Warning: src/Pyz or config still references classes this branch does not contain:"
+    echo "$MISSING_REFS" | sed 's/^/           /'
+    log_error "         Remove those references (manual wiring from another exercise), or the application will fail."
+fi
+
 # Copy exercise tests if present
 if [ -d "$REPO_DIR/tests/SprykerAcademyTest" ]; then
     log_info "Installing exercise tests..."
@@ -610,22 +709,29 @@ echo ""
 echo -e "${YELLOW}Next steps:${NC}"
 if [ "$PACKAGE" = "ai-foundation" ]; then
     # dump-autoload must run first: config_ai.php references a SprykerAcademy class
+    # cache:empty-all deletes data/cache, which holds the Propel table map (data/cache/propel/generated-conf/loadDatabase.php);
+    # propel:install (propel:model:build) writes it again, so it must run after cache:empty-all
     echo "  docker/sdk cli composer dump-autoload"
     echo "  docker/sdk console transfer:generate"
+    echo "  docker/sdk console c:e"
+    echo "  docker/sdk console propel:install"
     if [[ "$BRANCH" == advanced/ai-foundation-hello/* ]] || [[ "$BRANCH" == advanced/ai-foundation-catalog/* ]]; then
-        echo "  docker/sdk console c:e"
         echo "  docker/sdk cli GLUE_APPLICATION=GLUE_STOREFRONT glue api:generate"
         echo "  docker/sdk cli GLUE_APPLICATION=GLUE glue cache:clear"
         echo "  docker/sdk cli GLUE_APPLICATION=GLUE_STOREFRONT glue cache:clear"
     else
         echo "  docker/sdk console configuration:sync"
-        echo "  docker/sdk console c:e"
     fi
 else
+    # cache:empty-all deletes data/cache, which holds the Propel table map (data/cache/propel/generated-conf/loadDatabase.php);
+    # propel:install (propel:model:build) writes it again, so it must run after cache:empty-all
     echo "  docker/sdk console c:e"
     echo "  docker/sdk cli composer dump-autoload"
     echo "  docker/sdk console propel:install"
     echo "  docker/sdk console transfer:generate"
+    if [ -d "$PROJECT_DIR/src/SprykerAcademy/Zed/SupplierMerchantPortalGui" ]; then
+        echo "  docker/sdk console acl-entity:synchronize   # grants the existing merchant users access to the supplier-merchant-portal-gui bundle"
+    fi
 fi
 
 if [ "$PACKAGE" = "ai-foundation" ]; then

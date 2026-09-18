@@ -807,8 +807,9 @@ This enables running subsets of tests: `vendor/bin/codecept run --group Supplier
 | `docker/sdk console glue-api:controller:cache:warm-up` | After adding Glue API resources |
 | `docker/sdk console router:cache:warm-up` | After adding new route providers |
 | `docker/sdk console navigation:build-cache` | After modifying navigation XML |
-| `docker/sdk console cache:empty-all` | When experiencing cache issues |
+| `docker/sdk console cache:empty-all` | When experiencing cache issues. It also deletes the Propel table map, so follow it with `propel:model:build` |
 | `docker/sdk console c:e` | Shortcut for cache:empty-all |
+| `docker/sdk console propel:model:build` | After `cache:empty-all`: rebuilds the ORM classes and the table map in `data/cache/propel` |
 
 ---
 
