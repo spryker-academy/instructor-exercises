@@ -1,4 +1,4 @@
-# Exercise 20: AI Foundation - Product Creation Agent
+# Exercise 21: AI Foundation - Product Creation Agent
 
 In this exercise, you will build a custom agent for the Back Office Assistant. The agent creates catalog products from a plain-language description such as *"Create a red cotton t-shirt in sizes S, M and L for 19.99 EUR"*. It interviews the user for missing data, asks for confirmation, and then calls your tools to create the product.
 
@@ -19,7 +19,7 @@ The business logic that creates products, prices, stock, and images is provided.
 
 - The Back Office Assistant is installed and answers questions. See [Setup: Install the Back Office Assistant](01-back-office-assistant-setup.md)
 - An OpenAI API token is configured in the Back Office
-- Completed [Exercise 19: Hello AI](02-ai-foundation-hello.md), which introduces AiFoundation prompts and AI configurations
+- Completed [Exercise 20: Ask the Catalog](03-ai-foundation-catalog.md), which introduces tools, tool sets, and structured answers
 
 ## Loading the Exercise
 
@@ -138,7 +138,7 @@ Open `src/SprykerAcademy/Zed/AiProductCreation/Communication/Plugin/Agent/Produc
 
 ```bash
 docker/sdk cli vendor/bin/codecept build -c tests/SprykerAcademyTest/Zed/AiProductCreation/
-docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/AiProductCreation/ Exercise20
+docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/AiProductCreation/ Exercise21
 ```
 
 All 12 tests must pass. They use mocks, so no AI call is made and no token is spent. An error like `getName(): Return value must be of type string, none returned` points at a TODO you have not completed yet.

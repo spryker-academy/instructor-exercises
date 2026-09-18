@@ -188,4 +188,4 @@ For the `complete` branch the loader adds the AI configuration of Part 3 for you
 - Change the system prompt to answer only in German, and clear the caches. No code changed.
 - Switch the model to `gpt-4.1` and compare answers.
 - Add a `GET /ai-chats/{conversationReference}` operation with a provider that returns the history through `AiFoundationClientInterface::getConversationHistoryCollection()`.
-- Exercise 20 builds on this: the same `PromptRequestTransfer`, plus tools and a structured answer.
+- Exercise 20 builds on this: the same `PromptRequestTransfer`, plus a tool and a structured answer.

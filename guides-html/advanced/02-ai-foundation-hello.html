@@ -375,7 +375,7 @@
 <li>Second message with that reference gets an answer that uses the earlier context.</li>
 <li>Same question without the reference gets an answer without that context.</li>
 <li>An empty <code>message</code> returns HTTP 422 with the message <em>The attribute “message” must not be empty.</em></li>
-<li>Open the audit log in the Back Office. Every prompt of the <code>SPRYKER_ACADEMY:AI_CONFIGURATION_HELLO_AI</code> configuration is listed there.</li>
+<li>AiFoundation records every prompt of the <code>SPRYKER_ACADEMY:AI_CONFIGURATION_HELLO_AI</code> configuration in its audit log, separate from the other AI features.</li>
 </ol>
 <h2 id="solution">Solution</h2>
 <div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> ai-foundation advanced/ai-foundation-hello/complete</span>
@@ -391,7 +391,7 @@
 <li>Change the system prompt to answer only in German, and clear the caches. No code changed.</li>
 <li>Switch the model to <code>gpt-4.1</code> and compare answers.</li>
 <li>Add a <code>GET /ai-chats/{conversationReference}</code> operation with a provider that returns the history through <code>AiFoundationClientInterface::getConversationHistoryCollection()</code>.</li>
-<li>Exercise 20 builds on this: the same <code>PromptRequestTransfer</code>, plus tools and a structured answer.</li>
+<li>Exercise 20 builds on this: the same <code>PromptRequestTransfer</code>, plus a tool and a structured answer.</li>
 </ul>
 </body>
 </html>

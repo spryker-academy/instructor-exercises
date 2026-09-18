@@ -91,6 +91,8 @@ usage() {
     echo "AI Foundation branches (see guides/advanced/):"
     echo "  advanced/ai-foundation-hello/skeleton"
     echo "  advanced/ai-foundation-hello/complete"
+    echo "  advanced/ai-foundation-catalog/skeleton"
+    echo "  advanced/ai-foundation-catalog/complete"
     echo "  advanced/ai-foundation-agent/skeleton      (requires the Back Office Assistant)"
     echo "  advanced/ai-foundation-agent/complete"
     exit 1
@@ -376,14 +378,15 @@ YAMLEOF
 fi
 
 # ---------------------------------------------------------------------------
-# AI Foundation package (Exercise 19: Hello AI storefront API, Exercise 20: Product Creation agent)
+# AI Foundation package (Exercise 19: Hello AI, Exercise 20: Ask the Catalog, Exercise 21: Product Creation agent)
 # ---------------------------------------------------------------------------
 AI_WIRING_MARKER="ai-foundation exercise"
 AI_WIRING_MARKERS="$AI_WIRING_MARKER|ai-product-creation exercise" # second value: marker of an earlier loader version
 
-# Remove wiring that a previous "complete" load added: other packages must not reference missing classes,
-# and in the skeleton branches the wiring is a student task
-if [ "$PACKAGE" != "ai-foundation" ] || [[ "$BRANCH" == */skeleton ]]; then
+# Always remove wiring that a previous "complete" load added: other packages and other branches must not reference
+# classes that src/SprykerAcademy no longer contains, and in the skeleton branches the wiring is a student task.
+# The complete branches add their own wiring again below.
+if true; then
     AI_WIRED_FILES=$(grep -rlE "$AI_WIRING_MARKERS" "$PROJECT_DIR/src/Pyz" "$PROJECT_DIR/src/Demo" "$PROJECT_DIR/config/Shared/config_ai.php" --include="*.php" 2>/dev/null || true)
     if [ -n "$AI_WIRED_FILES" ]; then
         echo "$AI_WIRED_FILES" | while read -r wired_file; do
@@ -402,8 +405,8 @@ if [ "$PACKAGE" != "ai-foundation" ] || [[ "$BRANCH" == */skeleton ]]; then
     fi
     if [ "$PACKAGE" != "ai-foundation" ]; then
         rm -f "$PROJECT_DIR/data/configuration/ai_product_creation.configuration.yml"
-        if grep -rq "AiProductCreation\|HelloAi" "$PROJECT_DIR/src/Pyz" "$PROJECT_DIR/config/Shared/config_ai.php" 2>/dev/null; then
-            log_error "Warning: the project still references the AiProductCreation or HelloAi module (manual wiring from the AI exercises)."
+        if grep -rq "AiProductCreation\|HelloAi\|CatalogAssistant" "$PROJECT_DIR/src/Pyz" "$PROJECT_DIR/config/Shared/config_ai.php" 2>/dev/null; then
+            log_error "Warning: the project still references an AI exercise module (AiProductCreation, HelloAi, CatalogAssistant) (manual wiring from the AI exercises)."
             log_error "         Remove those lines, or the application will fail because src/SprykerAcademy was replaced."
         fi
     fi
@@ -444,7 +447,75 @@ CONFIGEOF
         log_success "Added the Hello AI configuration to config_ai.php"
     fi
 
-    # --- Exercise 20 (agent): needs the Back Office Assistant
+    # Registers a plugin instance inside a dependency provider method, marked so it can be removed again
+    wire_plugin() {
+        # $1 file, $2 method name, $3 fully qualified plugin class
+        if file_needs_update "$1" "$(basename "${3//\\//}")"; then
+            php -r '
+                [$file, $method, $class, $marker] = [$argv[1], $argv[2], $argv[3], $argv[4]];
+                $content = file_get_contents($file);
+                $pattern = "/(function " . preg_quote($method, "/") . "\(\): array\s*\{\s*return \[.*?)(\n\s*\];)/s";
+                $line = "\n            new \\" . $class . "(), // " . $marker;
+                $updated = preg_replace($pattern, "$1" . str_replace("\\", "\\\\", $line) . "$2", $content, 1, $count);
+                if ($count === 1) {
+                    file_put_contents($file, $updated);
+                    echo "updated";
+                }
+            ' "$1" "$2" "$3" "$AI_WIRING_MARKER" | grep -q "updated" && log_success "Registered $(basename "${3//\\//}") in $(basename "$1")"
+        fi
+    }
+
+    # --- Exercise 20 (Ask the Catalog), complete branch: AI configuration and tool set registration
+    if [[ "$BRANCH" == advanced/ai-foundation-catalog/complete ]]; then
+        if [ -f "$CONFIG_AI" ] && file_needs_update "$CONFIG_AI" "AI_CONFIGURATION_CATALOG_ASSISTANT"; then
+            cat >> "$CONFIG_AI" <<'CONFIGEOF'
+
+// >>> ai-foundation exercise
+$config[\Spryker\Shared\AiFoundation\AiFoundationConstants::AI_CONFIGURATIONS][\SprykerAcademy\Shared\CatalogAssistant\CatalogAssistantConstants::AI_CONFIGURATION_CATALOG_ASSISTANT] = [
+    'provider_name' => \Spryker\Shared\AiFoundation\AiFoundationConstants::PROVIDER_OPENAI,
+    'provider_config' => [
+        'key' => \Spryker\Shared\AiFoundation\AiFoundationConstants::CONFIGURATION_REFERENCE_PREFIX . \Pyz\Shared\AiCommerce\AiCommerceConstants::CONFIGURATION_KEY_OPENAI_API_TOKEN,
+        'model' => 'gpt-4.1-mini',
+    ],
+    'system_prompt' => 'You are a product advisor for an online shop. You answer questions about one product at a time. ALWAYS call get_product_details with the given SKU before answering, even for follow-up questions. Answer only with facts from the tool result. If the tool returns an error or the details do not cover the question, say so and set confidence to low. Prices in the tool result are gross amounts in cents; show them in major units. Keep the answer under 80 words.',
+];
+// <<< ai-foundation exercise
+CONFIGEOF
+            log_success "Added the Catalog Assistant AI configuration to config_ai.php"
+        fi
+
+        TOOLSET_PROVIDER=$(grep -rl "function getAiToolSetPlugins" "$PROJECT_DIR/src" --include="*.php" 2>/dev/null | head -1)
+        if [ -z "$TOOLSET_PROVIDER" ]; then
+            # No project-level AiFoundationDependencyProvider yet (Back Office Assistant not installed): create a minimal one
+            TOOLSET_PROVIDER="$PROJECT_DIR/src/Pyz/Zed/AiFoundation/AiFoundationDependencyProvider.php"
+            mkdir -p "$(dirname "$TOOLSET_PROVIDER")"
+            cat > "$TOOLSET_PROVIDER" <<'PROVIDEREOF'
+<?php
+
+declare(strict_types = 1);
+
+namespace Pyz\Zed\AiFoundation;
+
+use Spryker\Zed\AiFoundation\AiFoundationDependencyProvider as SprykerAiFoundationDependencyProvider;
+
+class AiFoundationDependencyProvider extends SprykerAiFoundationDependencyProvider
+{
+    /**
+     * @return array<\Spryker\Zed\AiFoundation\Dependency\Tools\ToolSetPluginInterface>
+     */
+    protected function getAiToolSetPlugins(): array
+    {
+        return [
+        ];
+    }
+}
+PROVIDEREOF
+            log_success "Created src/Pyz/Zed/AiFoundation/AiFoundationDependencyProvider.php"
+        fi
+        wire_plugin "$TOOLSET_PROVIDER" "getAiToolSetPlugins" 'SprykerAcademy\Zed\CatalogAssistant\Communication\Plugin\AiFoundation\CatalogToolSetPlugin'
+    fi
+
+    # --- Exercise 21 (agent): needs the Back Office Assistant
     if [[ "$BRANCH" == advanced/ai-foundation-agent/* ]]; then
         AGENT_PROVIDER=$(grep -rl "function getBackofficeAssistantAgentPlugins" "$PROJECT_DIR/src" --include="*.php" 2>/dev/null | head -1)
         TOOLSET_PROVIDER=$(grep -rl "function getAiToolSetPlugins" "$PROJECT_DIR/src" --include="*.php" 2>/dev/null | head -1)
@@ -457,23 +528,6 @@ CONFIGEOF
 
     # The complete branch of the agent is wired automatically. In the skeleton branch wiring is part of the exercise.
     if [[ "$BRANCH" == advanced/ai-foundation-agent/complete ]] && [ -n "$AGENT_PROVIDER" ] && [ -n "$TOOLSET_PROVIDER" ]; then
-        wire_plugin() {
-            # $1 file, $2 method name, $3 fully qualified plugin class
-            if file_needs_update "$1" "$(basename "${3//\\//}")"; then
-                php -r '
-                    [$file, $method, $class, $marker] = [$argv[1], $argv[2], $argv[3], $argv[4]];
-                    $content = file_get_contents($file);
-                    $pattern = "/(function " . preg_quote($method, "/") . "\(\): array\s*\{\s*return \[.*?)(\n\s*\];)/s";
-                    $line = "\n            new \\" . $class . "(), // " . $marker;
-                    $updated = preg_replace($pattern, "$1" . str_replace("\\", "\\\\", $line) . "$2", $content, 1, $count);
-                    if ($count === 1) {
-                        file_put_contents($file, $updated);
-                        echo "updated";
-                    }
-                ' "$1" "$2" "$3" "$AI_WIRING_MARKER" | grep -q "updated" && log_success "Registered $(basename "${3//\\//}") in $(basename "$1")"
-            fi
-        }
-
         wire_plugin "$AGENT_PROVIDER" "getBackofficeAssistantAgentPlugins" 'SprykerAcademy\Zed\AiProductCreation\Communication\Plugin\Agent\ProductCreationAgentPlugin'
         wire_plugin "$TOOLSET_PROVIDER" "getAiToolSetPlugins" 'SprykerAcademy\Zed\AiProductCreation\Communication\Plugin\AiFoundation\ProductCreationToolSetPlugin'
 
@@ -558,7 +612,7 @@ if [ "$PACKAGE" = "ai-foundation" ]; then
     # dump-autoload must run first: config_ai.php references a SprykerAcademy class
     echo "  docker/sdk cli composer dump-autoload"
     echo "  docker/sdk console transfer:generate"
-    if [[ "$BRANCH" == advanced/ai-foundation-hello/* ]]; then
+    if [[ "$BRANCH" == advanced/ai-foundation-hello/* ]] || [[ "$BRANCH" == advanced/ai-foundation-catalog/* ]]; then
         echo "  docker/sdk console c:e"
         echo "  docker/sdk cli GLUE_APPLICATION=GLUE_STOREFRONT glue api:generate"
         echo "  docker/sdk cli GLUE_APPLICATION=GLUE glue cache:clear"
@@ -585,11 +639,17 @@ if [ "$PACKAGE" = "ai-foundation" ]; then
         echo "  docker/sdk cli vendor/bin/codecept build -c tests/SprykerAcademyTest/Glue/HelloAi/"
         echo "  docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Glue/HelloAi/ Exercise19"
         echo "  curl -s -X POST http://glue.eu.spryker.local/ai-chats -H 'Content-Type: application/vnd.api+json' -d '{\"data\":{\"type\":\"ai-chats\",\"attributes\":{\"message\":\"Hello world!\"}}}'"
+    elif [[ "$BRANCH" == advanced/ai-foundation-catalog/* ]]; then
+        echo "  Guide: exercises/guides/advanced/03-ai-foundation-catalog.md"
+        echo -e "${YELLOW}Verify your work:${NC}"
+        echo "  docker/sdk cli vendor/bin/codecept build -c tests/SprykerAcademyTest/Zed/CatalogAssistant/"
+        echo "  docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/CatalogAssistant/ Exercise20"
+        echo "  curl -s -X POST http://glue.eu.spryker.local/product-questions -H 'Content-Type: application/vnd.api+json' -d '{\"data\":{\"type\":\"product-questions\",\"attributes\":{\"sku\":\"M1000785\",\"question\":\"Is it in stock?\"}}}'"
     else
-        echo "  Guide: exercises/guides/advanced/03-ai-foundation-agent.md"
+        echo "  Guide: exercises/guides/advanced/04-ai-foundation-agent.md"
         echo -e "${YELLOW}Verify your work:${NC}"
         echo "  docker/sdk cli vendor/bin/codecept build -c tests/SprykerAcademyTest/Zed/AiProductCreation/"
-        echo "  docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/AiProductCreation/ Exercise20"
+        echo "  docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/AiProductCreation/ Exercise21"
     fi
 fi
 

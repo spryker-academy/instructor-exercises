@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>03-ai-foundation-agent</title>
+  <title>04-ai-foundation-agent</title>
   <style>
     html {
       line-height: 1.5;
@@ -212,7 +212,7 @@
   <![endif]-->
 </head>
 <body>
-<h1 id="exercise-20-ai-foundation---product-creation-agent">Exercise 20: AI Foundation - Product Creation Agent</h1>
+<h1 id="exercise-21-ai-foundation---product-creation-agent">Exercise 21: AI Foundation - Product Creation Agent</h1>
 <p>In this exercise, you will build a custom agent for the Back Office Assistant. The agent creates catalog products from a plain-language description such as <em>“Create a red cotton t-shirt in sizes S, M and L for 19.99 EUR”</em>. It interviews the user for missing data, asks for confirmation, and then calls your tools to create the product.</p>
 <p>You will learn how to: - Write an AI <strong>tool</strong> plugin: name, description, parameters, and execution - Group tools into a <strong>tool set</strong> plugin - Write an <strong>agent</strong> plugin that sends a prompt request to AiFoundation and maps the structured answer - Register a dedicated <strong>AI configuration</strong> with a system prompt - Wire the agent into the Back Office Assistant, including SSE streaming</p>
 <p>The business logic that creates products, prices, stock, and images is provided. You focus on the AI Foundation layer.</p>
@@ -221,7 +221,7 @@
 <ul>
 <li>The Back Office Assistant is installed and answers questions. See <a href="01-back-office-assistant-setup.md">Setup: Install the Back Office Assistant</a></li>
 <li>An OpenAI API token is configured in the Back Office</li>
-<li>Completed <a href="02-ai-foundation-hello.md">Exercise 19: Hello AI</a>, which introduces AiFoundation prompts and AI configurations</li>
+<li>Completed <a href="03-ai-foundation-catalog.md">Exercise 20: Ask the Catalog</a>, which introduces tools, tool sets, and structured answers</li>
 </ul>
 <h2 id="loading-the-exercise">Loading the Exercise</h2>
 <div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> ai-foundation advanced/ai-foundation-agent/skeleton</span>
@@ -409,7 +409,7 @@ Structured answer (ProductCreationAgentResponseTransfer) --&gt; chat widget</cod
 </blockquote>
 <h3 id="verify-parts-1-to-4">Verify Parts 1 to 4</h3>
 <div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept build <span class="at">-c</span> tests/SprykerAcademyTest/Zed/AiProductCreation/</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/AiProductCreation/ Exercise20</span></code></pre></div>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/AiProductCreation/ Exercise21</span></code></pre></div>
 <p>All 12 tests must pass. They use mocks, so no AI call is made and no token is spent. An error like <code>getName(): Return value must be of type string, none returned</code> points at a TODO you have not completed yet.</p>
 <hr />
 <h3 id="part-5-wire-the-agent-into-the-project">Part 5: Wire the Agent into the Project</h3>

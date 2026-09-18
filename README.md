@@ -20,7 +20,7 @@ The `load.sh` script automates the process of loading exercise code into a Spryk
 ### Packages
 
 - **contact-request**: Basic Spryker concepts (back-office, DTOs, table schema, module layers, configuration, extending core modules)
-- **ai-foundation**: Advanced topics on AI Foundation: a Storefront API endpoint that talks to an LLM with memory, and a custom Back Office Assistant agent with tools. The agent exercise requires the Back Office Assistant, see `guides/advanced/01-back-office-assistant-setup.md`
+- **ai-foundation**: Advanced topics on AI Foundation: a Storefront API endpoint that talks to an LLM with memory, a second one where the LLM calls a tool and answers in a structured transfer, and a custom Back Office Assistant agent. The agent exercise requires the Back Office Assistant, see `guides/advanced/01-back-office-assistant-setup.md`
 - **supplier**: Intermediate topics (back-office, data import, publish-synchronize, search, storage, Glue API, OMS, Yves storefront, Merchant Portal)
 
 ### Available Branches
@@ -67,6 +67,8 @@ The `load.sh` script automates the process of loading exercise code into a Spryk
 #### AI Foundation
 - `advanced/ai-foundation-hello/skeleton`
 - `advanced/ai-foundation-hello/complete`
+- `advanced/ai-foundation-catalog/skeleton`
+- `advanced/ai-foundation-catalog/complete`
 - `advanced/ai-foundation-agent/skeleton`
 - `advanced/ai-foundation-agent/complete`
 

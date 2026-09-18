@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>03-ai-foundation-catalog</title>
+  <style>
+    html {
+      line-height: 1.5;
+      font-family: Georgia, serif;
+      font-size: 20px;
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      word-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 1em;
+      }
+    }
+    @media print {
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, 'Lucida Console', Consolas, monospace;
+      font-size: 85%;
+      margin: 0;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="exercise-20-ask-the-catalog---tool-calling-and-structured-answers">Exercise 20: Ask the Catalog - Tool Calling and Structured Answers</h1>
+<p>In this exercise, you extend the Hello AI pattern with the two ideas that make an LLM useful in a shop. A customer asks a question about a product. The LLM does not know your catalog, so it <strong>calls a tool</strong> that reads the product from the database. Then it answers in a <strong>fixed structure</strong> with typed fields instead of free text.</p>
+<p>You will learn how to: - Write a <strong>tool plugin</strong> that the LLM can call: name, description, typed parameters, and execution in Zed - Group tools in a <strong>tool set plugin</strong> and register it with AiFoundation - Define a <strong>structured answer</strong> as a transfer object and get typed getters back - Request tools and the answer shape from a Storefront API processor - Write a system prompt with a <strong>guardrail</strong> against invented facts</p>
+<p><strong>Official documentation:</strong> - <a href="https://docs.spryker.com/docs/dg/dev/ai/ai-commerce/extend-ai-commerce-agents-with-toolsets.html">Extend AI Commerce agents with custom toolsets</a> - <a href="https://docs.spryker.com/docs/dg/dev/ai/ai-foundation/ai-foundation-module.html">AI Foundation module</a></p>
+<h2 id="prerequisites">Prerequisites</h2>
+<ul>
+<li>Completed <a href="02-ai-foundation-hello.md">Exercise 19: Hello AI</a>. The endpoint, the processor, and the AI configuration follow the same pattern.</li>
+<li>An OpenAI API token in the Back Office. The Back Office Assistant is not required.</li>
+</ul>
+<h2 id="loading-the-exercise">Loading the Exercise</h2>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> ai-foundation advanced/ai-foundation-catalog/skeleton</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli composer dump-autoload</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span></code></pre></div>
+<hr />
+<h2 id="background-one-request-several-round-trips">Background: One Request, Several Round Trips</h2>
+<pre><code>POST /product-questions {sku, question}
+   |
+ProductQuestionsStorefrontProcessor   builds a PromptRequestTransfer with
+   |                                  tool set name + structured message + conversation reference
+   v  AiFoundationClient::prompt()
+Zed: AiFoundation
+   |  1. sends system prompt, question, and the TOOL DEFINITIONS to the provider
+   |  2. the model answers &quot;call get_product_details(sku=...)&quot;
+   |  3. AiFoundation runs GetProductDetailsToolPlugin::execute() in Zed and sends the JSON result back
+   |  4. the model answers in the JSON shape of ProductAnswerTransfer
+   |  5. AiFoundation validates the shape, retries when it does not fit
+   v
+typed ProductAnswerTransfer  --&gt;  processor maps it  --&gt;  JSON:API response</code></pre>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 60%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Piece</th>
+<th>Class</th>
+<th>What the model sees</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Tool</strong></td>
+<td><code>GetProductDetailsToolPlugin</code></td>
+<td>Only <code>getName()</code>, <code>getDescription()</code>, and <code>getParameters()</code>. It never sees <code>execute()</code></td>
+</tr>
+<tr class="even">
+<td><strong>Tool set</strong></td>
+<td><code>CatalogToolSetPlugin</code></td>
+<td>Nothing. It is the name the processor requests</td>
+</tr>
+<tr class="odd">
+<td><strong>Structured answer</strong></td>
+<td><code>ProductAnswerTransfer</code></td>
+<td>A JSON schema built from the transfer. The property descriptions are the field instructions</td>
+</tr>
+<tr class="even">
+<td><strong>Business logic</strong></td>
+<td><code>ProductDetailsReader</code></td>
+<td>Nothing. Tools are thin, the reader does the work with facades</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Tools run in Zed.</strong> The Storefront API only names the tool set. AiFoundation looks the tool set up in the Zed <code>AiFoundationDependencyProvider</code> and executes tools there, with full access to facades. That is why the tool plugin lives in <code>src/SprykerAcademy/Zed</code> while the endpoint lives in <code>Glue</code>.</p>
+</blockquote>
+<p>The business layer is provided. Open <code>ProductDetailsReader</code> once: it resolves an abstract or concrete SKU, collects name, description, attributes, and every variant with availability and price, and returns one JSON string. When nothing is found, it returns a JSON error. The tool passes that string to the model unchanged.</p>
+<hr />
+<h2 id="working-on-the-exercise">Working on the Exercise</h2>
+<h3 id="part-1-the-tool">Part 1: The Tool</h3>
+<p>Open <code>src/SprykerAcademy/Zed/CatalogAssistant/Communication/Plugin/AiFoundation/Tool/GetProductDetailsToolPlugin.php</code>. Complete <strong>TODO-1</strong> to <strong>TODO-4</strong>:</p>
+<ol type="1">
+<li><code>getName()</code> returns <code>'get_product_details'</code>.</li>
+<li><code>getDescription()</code> says what comes back, what the tool needs, and when to call it. Write it for a reader who has never seen your code: “Call it before answering any question about a product.”</li>
+<li><code>getParameters()</code> returns one required <code>ToolParameter</code> named <code>sku</code> of type <code>string</code>.</li>
+<li><code>execute()</code> delegates to <code>ProductDetailsReader::getProductDetailsJson()</code> with the <code>sku</code> argument.</li>
+</ol>
+<blockquote>
+<p><strong>The parameter name is a contract.</strong> AiFoundation passes the model’s arguments to <code>execute(...$arguments)</code> as a named array. The reader is called with <code>$arguments['sku']</code>. Rename the parameter and the value is lost.</p>
+</blockquote>
+<h3 id="part-2-the-tool-set">Part 2: The Tool Set</h3>
+<p>Open <code>CatalogToolSetPlugin.php</code> in the parent directory. <strong>TODO-5</strong> returns <code>CatalogAssistantConstants::TOOL_SET_CATALOG</code>. <strong>TODO-6</strong> returns the tool from the factory.</p>
+<h3 id="part-3-the-structured-answer">Part 3: The Structured Answer</h3>
+<p>Open <code>src/SprykerAcademy/Shared/CatalogAssistant/Transfer/catalog_assistant.transfer.xml</code>. The <code>ProductAnswer</code> transfer has only <code>answer</code>. <strong>TODO-7:</strong> add <code>isInStock</code> (bool), <code>confidence</code> (string), and <code>relatedSkus</code> (string[]) with descriptions.</p>
+<p>Then regenerate the transfer:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span></code></pre></div>
+<blockquote>
+<p><strong>Never null.</strong> AiFoundation validates the model’s JSON against the transfer and rejects an answer with a null property. A description like “null when unknown” therefore causes failures. Say instead what to return when the value is unknown: <code>false</code>, <code>'low'</code>, or an empty list. The tests check for the words “never null” in the two descriptions where this matters.</p>
+</blockquote>
+<h3 id="part-4-the-processor">Part 4: The Processor</h3>
+<p>Open <code>src/SprykerAcademy/Glue/CatalogAssistant/Api/Storefront/Processor/ProductQuestionsStorefrontProcessor.php</code>. The prompt request already carries the configuration name, the conversation reference, and the message. <strong>TODO-8</strong> adds three calls:</p>
+<table>
+<colgroup>
+<col style="width: 42%" />
+<col style="width: 57%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Call</th>
+<th>Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>addToolSetName(CatalogAssistantConstants::TOOL_SET_CATALOG)</code></td>
+<td>The model may call every tool in that set</td>
+</tr>
+<tr class="even">
+<td><code>setStructuredMessage(new ProductAnswerTransfer())</code></td>
+<td>The model must answer in that shape</td>
+</tr>
+<tr class="odd">
+<td><code>setMaxRetries(2)</code></td>
+<td>AiFoundation retries when the answer does not fit the shape</td>
+</tr>
+</tbody>
+</table>
+<p><strong>TODO-9:</strong> copy <code>answer</code>, <code>isInStock</code>, <code>confidence</code>, and <code>relatedSkus</code> from the typed transfer into the resource.</p>
+<p>The resource schema <code>product-questions.resource.yml</code> is complete. Read it to see how the four answer fields are declared read-only.</p>
+<h3 id="verify-parts-1-to-4">Verify Parts 1 to 4</h3>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli GLUE_APPLICATION=GLUE_STOREFRONT glue api:generate</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept build <span class="at">-c</span> tests/SprykerAcademyTest/Zed/CatalogAssistant/</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/CatalogAssistant/ Exercise20</span></code></pre></div>
+<p>All 15 tests must pass. The client is mocked, so no token is spent.</p>
+<h3 id="part-5-wire-it-into-the-project">Part 5: Wire It Into the Project</h3>
+<p><strong>1. Register the tool set.</strong> In <code>src/Pyz/Zed/AiFoundation/AiFoundationDependencyProvider.php</code>, add <code>new CatalogToolSetPlugin()</code> to <code>getAiToolSetPlugins()</code>. If the file does not exist yet, create it:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;?php</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="kw">declare</span>(strict_types <span class="op">=</span> <span class="dv">1</span>)<span class="ot">;</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="kw">namespace</span> <span class="cn">P</span>yz\<span class="cn">Z</span>ed\<span class="cn">A</span>iFoundation<span class="ot">;</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="cn">S</span>pryker\<span class="cn">Z</span>ed\<span class="cn">A</span>iFoundation\<span class="cn">A</span>iFoundationDependencyProvider <span class="kw">as</span> <span class="cn">S</span>prykerAiFoundationDependencyProvider<span class="ot">;</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="cn">S</span>prykerAcademy\<span class="cn">Z</span>ed\<span class="cn">C</span>atalogAssistant\<span class="cn">C</span>ommunication\<span class="cn">P</span>lugin\<span class="cn">A</span>iFoundation\<span class="cn">C</span>atalogToolSetPlugin<span class="ot">;</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="cn">A</span>iFoundationDependencyProvider <span class="kw">extends</span> <span class="cn">S</span>prykerAiFoundationDependencyProvider</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    <span class="co">/**</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="co">     * </span><span class="an">@return</span><span class="co"> array&lt;</span><span class="an">\Spryker\Zed\AiFoundation\Dependency\Tools\ToolSetPluginInterface&gt;</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="co">     */</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">protected</span> <span class="kw">function</span> getAiToolSetPlugins()<span class="ot">:</span> <span class="dt">array</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>    {</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> [</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>            <span class="kw">new</span> <span class="cn">C</span>atalogToolSetPlugin()<span class="ot">,</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>        ]<span class="ot">;</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p><strong>2. Add the AI configuration with a guardrail prompt</strong> to <code>config/Shared/config_ai.php</code>:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="cn">S</span>prykerAcademy\<span class="cn">S</span>hared\<span class="cn">C</span>atalogAssistant\<span class="cn">C</span>atalogAssistantConstants<span class="ot">;</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="va">$config</span>[<span class="cn">A</span>iFoundationConstants::<span class="cn">AI_CONFIGURATIONS</span>][<span class="cn">C</span>atalogAssistantConstants::<span class="cn">AI_CONFIGURATION_CATALOG_ASSISTANT</span>] <span class="op">=</span> [</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;provider_name&#39;</span> =&gt; <span class="cn">A</span>iFoundationConstants::<span class="cn">PROVIDER_OPENAI</span><span class="ot">,</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;provider_config&#39;</span> =&gt; [</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;key&#39;</span> =&gt; <span class="cn">A</span>iFoundationConstants::<span class="cn">CONFIGURATION_REFERENCE_PREFIX</span> <span class="op">.</span> <span class="cn">A</span>iCommerceConstants::<span class="cn">CONFIGURATION_KEY_OPENAI_API_TOKEN</span><span class="ot">,</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;model&#39;</span> =&gt; <span class="st">&#39;gpt-4.1-mini&#39;</span><span class="ot">,</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    ]<span class="ot">,</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;system_prompt&#39;</span> =&gt; <span class="st">&#39;You are a product advisor for an online shop. You answer questions about one product at a time. &#39;</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span> <span class="st">&#39;ALWAYS call get_product_details with the given SKU before answering, even for follow-up questions. &#39;</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span> <span class="st">&#39;Answer only with facts from the tool result. If the tool returns an error or the details do not cover the question, &#39;</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span> <span class="st">&#39;say so and set confidence to low. Prices in the tool result are gross amounts in cents; show them in major units. &#39;</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span> <span class="st">&#39;Keep the answer under 80 words.&#39;</span><span class="ot">,</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>]<span class="ot">;</span></span></code></pre></div>
+<blockquote>
+<p><strong>The guardrail.</strong> Without “answer only with facts from the tool result”, the model happily describes a product it has never seen. Test it later with a SKU that does not exist.</p>
+</blockquote>
+<p><strong>3. Apply:</strong></p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli GLUE_APPLICATION=GLUE glue cache:clear</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli GLUE_APPLICATION=GLUE_STOREFRONT glue cache:clear</span></code></pre></div>
+<hr />
+<h2 id="testing">Testing</h2>
+<p>Ask about a real product from the demo data:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-s</span> <span class="at">-X</span> POST http://glue.eu.spryker.local/product-questions <span class="dt">\</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-H</span> <span class="st">&#39;Content-Type: application/vnd.api+json&#39;</span> <span class="dt">\</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">-d</span> <span class="st">&#39;{&quot;data&quot;:{&quot;type&quot;:&quot;product-questions&quot;,&quot;attributes&quot;:{&quot;sku&quot;:&quot;M1000785&quot;,&quot;question&quot;:&quot;What is this product, is it in stock, and how much does it cost?&quot;}}}&#39;</span></span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span><span class="dt">&quot;data&quot;</span><span class="fu">:{</span><span class="dt">&quot;type&quot;</span><span class="fu">:</span><span class="st">&quot;product-questions&quot;</span><span class="fu">,</span><span class="dt">&quot;attributes&quot;</span><span class="fu">:{</span><span class="dt">&quot;sku&quot;</span><span class="fu">:</span><span class="st">&quot;M1000785&quot;</span><span class="fu">,</span><span class="dt">&quot;question&quot;</span><span class="fu">:</span><span class="st">&quot;...&quot;</span><span class="fu">,</span><span class="dt">&quot;conversationReference&quot;</span><span class="fu">:</span><span class="st">&quot;catalog-6aac80f1d0217&quot;</span><span class="fu">,</span><span class="dt">&quot;answer&quot;</span><span class="fu">:</span><span class="st">&quot;This product is a set of 4 wood stackable chairs ... It is currently in stock with 20 pieces available. The price for the package of 4 chairs is 482.69 euros.&quot;</span><span class="fu">,</span><span class="dt">&quot;isInStock&quot;</span><span class="fu">:</span><span class="kw">true</span><span class="fu">,</span><span class="dt">&quot;confidence&quot;</span><span class="fu">:</span><span class="st">&quot;high&quot;</span><span class="fu">,</span><span class="dt">&quot;relatedSkus&quot;</span><span class="fu">:</span><span class="ot">[</span><span class="st">&quot;212427&quot;</span><span class="ot">]</span><span class="fu">}}}</span></span></code></pre></div>
+<ol type="1">
+<li><strong>Tool call:</strong> the answer contains the real name, stock, and price. The model can only know them from the tool.</li>
+<li><strong>Structure:</strong> <code>isInStock</code> is a boolean, <code>relatedSkus</code> is a list, <code>confidence</code> is one of three words. No parsing on the client side.</li>
+<li><strong>Guardrail:</strong> ask about SKU <code>DOES-NOT-EXIST</code>. The answer says the product was not found, <code>isInStock</code> is <code>false</code>, and <code>confidence</code> is <code>low</code>.</li>
+<li><strong>Memory:</strong> send the <code>conversationReference</code> back with “And how many can I order at most?”. The model still answers about the same product.</li>
+<li><strong>Validation:</strong> an empty <code>question</code> returns HTTP 422.</li>
+</ol>
+<blockquote>
+<p><strong>Where did the model go wrong?</strong> When the shape does not fit, the API returns HTTP 503 with <em>The AI provider did not return a structured answer</em> followed by AiFoundation’s reason, for example <em>Failed to map structured response to transfer. Missing or empty properties: is_in_stock</em>. Fix the description of that property, not the code.</p>
+</blockquote>
+<h2 id="solution">Solution</h2>
+<div class="sourceCode" id="cb10"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> ai-foundation advanced/ai-foundation-catalog/complete</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli composer dump-autoload</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli GLUE_APPLICATION=GLUE_STOREFRONT glue api:generate</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli GLUE_APPLICATION=GLUE glue cache:clear</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli GLUE_APPLICATION=GLUE_STOREFRONT glue cache:clear</span></code></pre></div>
+<p>For the <code>complete</code> branch the loader does Part 5 for you, marked with <code>ai-foundation exercise</code>, and removes it again when you load a skeleton or another package.</p>
+<h2 id="going-further">Going Further</h2>
+<ul>
+<li>Add a second tool <code>list_similar_products</code> that searches the catalog by the product’s category, and let the model fill <code>relatedSkus</code> from it.</li>
+<li>Add a <code>language</code> property to the answer and ask in German.</li>
+<li>Exercise 21 wraps the same tool mechanics into a Back Office Assistant agent with an intent router and streaming.</li>
+</ul>
+</body>
+</html>

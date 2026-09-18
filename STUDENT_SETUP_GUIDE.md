@@ -454,7 +454,34 @@ Check the solution:
 
 ---
 
-#### Module 17: AI Foundation - Product Creation Agent
+#### Module 17: AI Foundation - Ask the Catalog
+
+Prerequisite: Module 16 completed. The Back Office Assistant is not required.
+
+```bash
+./exercises/load.sh ai-foundation advanced/ai-foundation-catalog/skeleton
+```
+
+Your task: Complete a tool plugin that reads a product, a tool set, a structured answer transfer, and the processor that requests both. Then register the tool set and add an AI configuration with a guardrail system prompt.
+
+After loading, run the same commands as in Module 16.
+
+Verify your work without spending AI tokens:
+
+```bash
+docker/sdk cli vendor/bin/codecept build -c tests/SprykerAcademyTest/Zed/CatalogAssistant/
+docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/CatalogAssistant/ Exercise20
+```
+
+Check the solution:
+
+```bash
+./exercises/load.sh ai-foundation advanced/ai-foundation-catalog/complete
+```
+
+---
+
+#### Module 18: AI Foundation - Product Creation Agent
 
 Prerequisite: the Back Office Assistant must be installed and working. Follow `exercises/guides/advanced/01-back-office-assistant-setup.md` first.
 
@@ -477,7 +504,7 @@ Verify your work without spending AI tokens:
 
 ```bash
 docker/sdk cli vendor/bin/codecept build -c tests/SprykerAcademyTest/Zed/AiProductCreation/
-docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/AiProductCreation/ Exercise20
+docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/AiProductCreation/ Exercise21
 ```
 
 Check the solution. The loader wires the agent into the project for you:

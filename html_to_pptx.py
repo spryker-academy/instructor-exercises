@@ -95,6 +95,7 @@ ADVANCED_OBJECTIVES = [
     "Install and configure the AI-powered Back Office Assistant",
     "Register AI configurations with providers, models, and system prompts",
     "Expose an LLM with conversation memory through a Storefront API on the AiFoundation client",
+    "Let the LLM call catalog tools and answer in structured transfer objects",
     "Write AI tools with names, descriptions, and typed parameters",
     "Group tools into tool sets and expose them to an agent",
     "Build a custom agent with structured responses on AI Foundation",

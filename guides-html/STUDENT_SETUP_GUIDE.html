@@ -411,20 +411,31 @@
 <p>Check the solution:</p>
 <div class="sourceCode" id="cb53"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> ai-foundation advanced/ai-foundation-hello/complete</span></code></pre></div>
 <hr />
-<h4 id="module-17-ai-foundation---product-creation-agent">Module 17: AI Foundation - Product Creation Agent</h4>
+<h4 id="module-17-ai-foundation---ask-the-catalog">Module 17: AI Foundation - Ask the Catalog</h4>
+<p>Prerequisite: Module 16 completed. The Back Office Assistant is not required.</p>
+<div class="sourceCode" id="cb54"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> ai-foundation advanced/ai-foundation-catalog/skeleton</span></code></pre></div>
+<p>Your task: Complete a tool plugin that reads a product, a tool set, a structured answer transfer, and the processor that requests both. Then register the tool set and add an AI configuration with a guardrail system prompt.</p>
+<p>After loading, run the same commands as in Module 16.</p>
+<p>Verify your work without spending AI tokens:</p>
+<div class="sourceCode" id="cb55"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept build <span class="at">-c</span> tests/SprykerAcademyTest/Zed/CatalogAssistant/</span>
+<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/CatalogAssistant/ Exercise20</span></code></pre></div>
+<p>Check the solution:</p>
+<div class="sourceCode" id="cb56"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> ai-foundation advanced/ai-foundation-catalog/complete</span></code></pre></div>
+<hr />
+<h4 id="module-18-ai-foundation---product-creation-agent">Module 18: AI Foundation - Product Creation Agent</h4>
 <p>Prerequisite: the Back Office Assistant must be installed and working. Follow <code>exercises/guides/advanced/01-back-office-assistant-setup.md</code> first.</p>
-<div class="sourceCode" id="cb54"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> ai-foundation advanced/ai-foundation-agent/skeleton</span></code></pre></div>
+<div class="sourceCode" id="cb57"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> ai-foundation advanced/ai-foundation-agent/skeleton</span></code></pre></div>
 <p>Your task: Complete an AI tool, the tool parameters, the tool set, and the agent plugin. Then wire the agent into the Back Office Assistant.</p>
 <p>After loading, run the commands in this order:</p>
-<div class="sourceCode" id="cb55"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli composer dump-autoload</span>
-<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span>
-<span id="cb55-3"><a href="#cb55-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console configuration:sync</span>
-<span id="cb55-4"><a href="#cb55-4" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span></code></pre></div>
+<div class="sourceCode" id="cb58"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli composer dump-autoload</span>
+<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span>
+<span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console configuration:sync</span>
+<span id="cb58-4"><a href="#cb58-4" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span></code></pre></div>
 <p>Verify your work without spending AI tokens:</p>
-<div class="sourceCode" id="cb56"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept build <span class="at">-c</span> tests/SprykerAcademyTest/Zed/AiProductCreation/</span>
-<span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/AiProductCreation/ Exercise20</span></code></pre></div>
+<div class="sourceCode" id="cb59"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept build <span class="at">-c</span> tests/SprykerAcademyTest/Zed/AiProductCreation/</span>
+<span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/AiProductCreation/ Exercise21</span></code></pre></div>
 <p>Check the solution. The loader wires the agent into the project for you:</p>
-<div class="sourceCode" id="cb57"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> ai-foundation advanced/ai-foundation-agent/complete</span></code></pre></div>
+<div class="sourceCode" id="cb60"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> ai-foundation advanced/ai-foundation-agent/complete</span></code></pre></div>
 <hr />
 <h2 id="common-commands-reference">Common Commands Reference</h2>
 <table>
@@ -495,14 +506,14 @@
 </table>
 <h2 id="troubleshooting">Troubleshooting</h2>
 <p><strong>Script says “not found” or permission denied:</strong></p>
-<div class="sourceCode" id="cb58"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="fu">chmod</span> +x exercises/load.sh</span></code></pre></div>
+<div class="sourceCode" id="cb61"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a><span class="fu">chmod</span> +x exercises/load.sh</span></code></pre></div>
 <p><strong>Transfer/Propel errors after switching exercises:</strong> Always regenerate after switching:</p>
-<div class="sourceCode" id="cb59"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli composer dump-autoload</span>
-<span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console propel:install</span>
-<span id="cb59-3"><a href="#cb59-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span></code></pre></div>
+<div class="sourceCode" id="cb62"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli composer dump-autoload</span>
+<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console propel:install</span>
+<span id="cb62-3"><a href="#cb62-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span></code></pre></div>
 <p><strong>Cache issues:</strong></p>
-<div class="sourceCode" id="cb60"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span></code></pre></div>
+<div class="sourceCode" id="cb63"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span></code></pre></div>
 <p><strong>List available branches:</strong></p>
-<div class="sourceCode" id="cb61"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span></span></code></pre></div>
+<div class="sourceCode" id="cb64"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span></span></code></pre></div>
 </body>
 </html>
