@@ -14,6 +14,7 @@
 #
 
 set -e
+trap 'echo -e "\033[0;31mload.sh failed at line $LINENO: $BASH_COMMAND\033[0m" >&2' ERR
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
@@ -487,7 +488,8 @@ if true; then
                     $content = preg_replace("/\n[ \t]*\/\/ >>> " . $marker . ".*?\/\/ <<< " . $marker . "[^\n]*/s", "", $content);
                     $content = preg_replace("/\n[^\n]*\/\/ " . $marker . "[^\n]*/", "", $content);
                 }
-                file_put_contents($file, $content);
+                $content = preg_replace("/\n{3,}/", "\n\n", $content);
+                file_put_contents($file, rtrim($content) . "\n");
             ' "$wired_file" "$AI_WIRING_MARKERS"
         done
         log_success "Removed automatic AI Foundation wiring from the project"

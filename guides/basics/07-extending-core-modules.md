@@ -213,7 +213,7 @@ In `listAction()`:
 4. Create the message form with `$this->getFactory()->createContactRequestForm(new ContactRequestTransfer())` — pass a fresh transfer as the data object
 5. Handle the request with `$messageForm->handleRequest($request)`
 6. If the form is submitted and valid, get the hydrated transfer with `$messageForm->getData()`, set the `fkCustomer`, and create the message
-7. Return a view with the `messages` and `messageForm` variables, using the template `@CustomerPage/views/message/list.twig`
+7. Return a view with the `messages` and `messageForm` variables, using the template `@CustomerPage/views/contact-request/list.twig`
 
 In `deleteAction()`:
 1. Use `$this->castId($request->request->get('idContactRequest'))` to safely extract and validate the message ID
