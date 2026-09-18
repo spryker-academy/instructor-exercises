@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spryker Academy - AI Foundation Exercises</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/white.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/monokai.css">
+<style>
+  :root { --r-heading-color: #00a89b; --r-link-color: #00a89b; }
+  .reveal h1, .reveal h2, .reveal h3 { text-transform: none; }
+  .reveal h1 { font-size: 2.0em; }
+  .reveal h2 { font-size: 1.4em; }
+  .reveal h3 { font-size: 1.05em; }
+  .reveal h4 { font-size: 0.85em; }
+  .reveal pre { font-size: 0.42em; width: 100%; }
+  .reveal pre code { }
+  .reveal code { font-size: 0.85em; }
+  .reveal table { font-size: 0.65em; margin: 0 auto; }
+  .reveal th { background: #00a89b; color: white; padding: 6px 12px; }
+  .reveal td { padding: 4px 12px; border-bottom: 1px solid #ddd; }
+  .reveal .small { font-size: 0.55em; }
+  .reveal .accent { color: #00a89b; font-weight: bold; }
+  .reveal .warning { color: #e74c3c; }
+  .reveal .dim { color: #888; }
+  .reveal .box { background: #f5f5f5; border-radius: 8px; padding: 12px 16px; margin: 8px 0; text-align: left; font-size: 0.75em; }
+  .reveal .box-accent { background: #e8f8f7; border-left: 4px solid #00a89b; }
+  .reveal .diagram { font-family: monospace; line-height: 1.4; text-align: center; }
+  .reveal .diagram pre { font-size: 0.32em; margin: 0 auto; text-align: left; display: inline-block; }
+  .reveal section { text-align: left; }
+  .reveal .center { text-align: center; }
+  .reveal ul, .reveal ol { font-size: 0.75em; }
+  .reveal li { margin-bottom: 0.2em; }
+  .slide-number { font-size: 12px !important; }
+</style>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+
+<!-- TITLE -->
+<section class="center">
+  <h1>Spryker Academy</h1>
+  <h2>AI Foundation Exercises</h2>
+  <p class="dim">LLM Prompts, Memory, Tools, Structured Answers, Back Office Assistant Agents</p>
+  <p class="small dim">Namespace: <code>SprykerAcademy\</code> | Modules: <code>HelloAi</code>, <code>CatalogAssistant</code>, <code>AiProductCreation</code></p>
+</section>
+
+<!-- AGENDA -->
+<section>
+  <h2>Agenda</h2>
+  <table>
+    <tr><th>#</th><th>Topic</th><th>Key Concepts</th></tr>
+    <tr><td>&mdash;</td><td>AI Foundation</td><td>AI configurations, providers, prompt request, audit log</td></tr>
+    <tr><td>&mdash;</td><td>Back Office Assistant Setup</td><td>Intent router, agents, tool sets, SSE, configuration sync</td></tr>
+    <tr><td>19</td><td>Hello AI</td><td>Storefront API + AiFoundation client + conversation memory</td></tr>
+    <tr><td>20</td><td>Ask the Catalog</td><td>Tool plugin, tool set, structured transfer answer, guardrails</td></tr>
+    <tr><td>21</td><td>Product Creation Agent</td><td>Agent plugin, 9 tools, system prompt, SSE streaming</td></tr>
+  </table>
+  <div class="box box-accent">
+    <strong>Prerequisites:</strong> AI Commerce feature installed, OpenAI token in <em>Configuration &gt; AI Vendor</em>. Exercise 21 also needs the Back Office Assistant.
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- AI FOUNDATION -->
+<!-- ============================================================ -->
+<section>
+  <section>
+    <h2>AI Foundation</h2>
+    <h3>One Door to Every LLM</h3>
+    <div class="box box-accent">
+      <strong>Idea:</strong> Application code never talks to OpenAI, Bedrock, or Anthropic directly. It sends a <code>PromptRequestTransfer</code> to AiFoundation and names a configuration.
+    </div>
+    <ul>
+      <li><code>spryker/ai-foundation</code> — provider adapters (NeuronAI inside), tool execution, conversation history, audit log</li>
+      <li><code>spryker-feature/ai-commerce</code> — features on top: Smart PIM, Back Office Assistant, Smart CMS</li>
+      <li>Zed: <code>AiFoundationFacade::prompt()</code> &nbsp;|&nbsp; Glue/Yves: <code>AiFoundationClient::prompt()</code> (Zed request)</li>
+    </ul>
+  </section>
+  <section>
+    <h3>AI Configuration</h3>
+    <pre><code class="language-php">// config/Shared/config_ai.php
+$config[AiFoundationConstants::AI_CONFIGURATIONS][HelloAiConstants::AI_CONFIGURATION_HELLO_AI] = [
+    'provider_name' => AiFoundationConstants::PROVIDER_OPENAI,
+    'provider_config' => [
+        // "configuration::" prefix: read at runtime from Back Office > Configuration
+        'key'   => AiFoundationConstants::CONFIGURATION_REFERENCE_PREFIX . AiCommerceConstants::CONFIGURATION_KEY_OPENAI_API_TOKEN,
+        'model' => 'gpt-4.1-mini',                       // plain value
+    ],
+    'system_prompt' => 'You are a friendly assistant ...', // plain value or configuration:: reference
+];</code></pre>
+    <ul>
+      <li>Code refers to a configuration <strong>by name</strong> — the provider can change without a code deployment</li>
+      <li>One configuration per feature or agent: each is tracked separately in the audit log</li>
+      <li>Secrets and admin-editable texts use the <code>configuration::</code> prefix</li>
+    </ul>
+  </section>
+  <section>
+    <h3>The Prompt Request</h3>
+    <pre><code class="language-php">$promptRequest = (new PromptRequestTransfer())
+    ->setAiConfigurationName(HelloAiConstants::AI_CONFIGURATION_HELLO_AI) // provider, model, system prompt
+    ->setConversationReference('hello-ai-6aac7af26ec95')                  // memory: history is stored + replayed
+    ->addToolSetName('catalog_tools')                                     // tools the model MAY call (Ex. 20)
+    ->setStructuredMessage(new ProductAnswerTransfer())                   // shape the model MUST answer in (Ex. 20)
+    ->setMaxRetries(2)                                                    // retry when the shape does not fit
+    ->setPromptMessage((new PromptMessageTransfer())
+        ->setType(AiFoundationConstants::MESSAGE_TYPE_USER)
+        ->setContent('Hello world!'));
+
+$promptResponse = $this->aiFoundationClient->prompt($promptRequest);
+$promptResponse->getIsSuccessful();          // false + getErrors() on failure
+$promptResponse->getMessage()->getContent(); // free text answer
+$promptResponse->getStructuredMessage();     // typed transfer when requested</code></pre>
+    <p class="small dim">The three exercises add one line at a time: 19 = configuration + memory, 20 = tools + structure, 21 = the same request inside an agent.</p>
+  </section>
+  <section>
+    <h3>What the Model Sees</h3>
+    <table>
+      <tr><th>Concept</th><th>Class</th><th>Visible to the model</th></tr>
+      <tr><td>Tool</td><td><code>ToolPluginInterface</code></td><td>Only <code>getName()</code>, <code>getDescription()</code>, <code>getParameters()</code>. Never <code>execute()</code></td></tr>
+      <tr><td>Tool set</td><td><code>ToolSetPluginInterface</code></td><td>Nothing. A named group the request asks for</td></tr>
+      <tr><td>Structured answer</td><td>any transfer</td><td>A JSON schema built from the transfer. Property descriptions = field instructions</td></tr>
+      <tr><td>System prompt</td><td>configuration</td><td>The full text. Defines behavior and guardrails</td></tr>
+      <tr><td>Business logic</td><td>Facades, readers</td><td>Nothing</td></tr>
+    </table>
+    <div class="box box-accent">
+      <strong>The description is the interface.</strong> A vague tool description is never called or called at the wrong time. Write it for a reader who has never seen your code.
+    </div>
+  </section>
+</section>
+
+<!-- ============================================================ -->
+<!-- BACK OFFICE ASSISTANT SETUP -->
+<!-- ============================================================ -->
+<section>
+  <section>
+    <h2>Back Office Assistant Setup</h2>
+    <h3>Prerequisite for Exercise 21</h3>
+    <div class="box box-accent">
+      <strong>Goal:</strong> An AI chat widget in the Back Office that routes each message to an agent, which may call tools.
+    </div>
+    <p class="small dim">Guide: <code>guides/advanced/01-back-office-assistant-setup.md</code> &mdash; follows the official <em>Install Back Office Assistant</em> page.</p>
+  </section>
+  <section>
+    <h3>Request Flow</h3>
+    <div class="diagram">
+<pre>
+  Chat widget (Twig partial, marked + dompurify)
+        |
+  Intent router  --- reads every agent's getDescription() ---&gt; picks ONE agent
+        |
+  Agent plugin::executeAgent()   builds a PromptRequestTransfer, names its tool set
+        |
+  AiFoundation   system prompt + tool definitions --&gt; provider --&gt; tool calls run in Zed
+        |                    SSE pre/post tool call plugins stream progress to the widget
+  Structured answer --&gt; BackofficeAssistantPromptResponseTransfer --&gt; widget
+</pre>
+    </div>
+  </section>
+  <section>
+    <h3>Seven Steps</h3>
+    <ol>
+      <li><code>Pyz\Shared\AiCommerce\AiCommerceConstants</code> — model key + 5 configuration names (router, 4 agents)</li>
+      <li><code>config_ai.php</code> — 5 OpenAI entries, agents reference their system prompt setting</li>
+      <li><code>Pyz\Zed\AiCommerce\AiCommerceConfig</code> — <code>get*AiConfigurationName()</code> overrides (default is <code>null</code>)</li>
+      <li>Plugins: agents in <code>AiCommerceDependencyProvider</code>; tool sets, SSE, audit log in <code>AiFoundationDependencyProvider</code>; <code>AiCommerceTwigPlugin</code></li>
+      <li><code>data/configuration/ai_commerce.configuration.yml</code> — AI Vendor tab, then <code>configuration:sync</code></li>
+      <li>Back Office: <em>AI Commerce &gt; Back Office Assistant &gt; General &gt; Enable</em> (off by default)</li>
+      <li><code>npm install marked dompurify</code> + <code>frontend:zed:build</code></li>
+    </ol>
+  </section>
+  <section>
+    <h3>Registering Agents and Tool Sets</h3>
+    <pre><code class="language-php">// src/Pyz/Zed/AiCommerce/AiCommerceDependencyProvider.php
+protected function getBackofficeAssistantAgentPlugins(): array
+{
+    return [
+        new GeneralAgentPlugin(),
+        new OrderManagementAgentPlugin(),
+        new DiscountManagementAgentPlugin(),
+        new FormFillAgentPlugin(),
+    ];
+}
+
+// src/Pyz/Zed/AiFoundation/AiFoundationDependencyProvider.php
+protected function getAiToolSetPlugins(): array          { /* NavigationToolSetPlugin, ... */ }
+protected function getPreToolCallPlugins(): array        { return [new BackofficeAssistantSsePreToolCallPlugin()]; }
+protected function getPostToolCallPlugins(): array       { return [new BackofficeAssistantSsePostToolCallPlugin(), new AuditLogPostToolCallPlugin()]; }
+protected function getPostPromptPlugins(): array         { return [new AuditLogPostPromptPlugin()]; }</code></pre>
+    <div class="box">
+      <strong>Verify:</strong> chat icon bottom-right on every Back Office page. Ask <em>"Where can I create a discount?"</em>
+    </div>
+  </section>
+</section>
+
+<!-- ============================================================ -->
+<!-- EXERCISE 19: HELLO AI -->
+<!-- ============================================================ -->
+<section>
+  <section>
+    <h2>Exercise 19: Hello AI</h2>
+    <h3>A Storefront API Backed by an LLM</h3>
+    <div class="box box-accent">
+      <strong>Goal:</strong> <code>POST /ai-chats</code> sends a message to the LLM through the AiFoundation <em>client</em> and returns the answer. A conversation reference gives the LLM memory.
+    </div>
+    <pre><code class="language-bash">./exercises/load.sh ai-foundation advanced/ai-foundation-hello/skeleton</code></pre>
+  </section>
+  <section>
+    <h3>Who Talks to Whom</h3>
+    <div class="diagram">
+<pre>
+  curl --POST /ai-chats--&gt; Glue (API Platform)
+                              |
+                    AiChatsStorefrontProcessor
+                              |  AiFoundationClient::prompt()      &lt;- Client layer, Zed request
+                              v
+                            Zed: AiFoundation facade
+                              |  resolves the AI configuration by name
+                              |  loads the history of the conversation reference
+                              |  calls the provider, stores the new messages
+                              v
+                            answer --&gt; back to Glue --&gt; JSON:API response
+</pre>
+    </div>
+    <p class="small"><span class="accent">Never NeuronAI directly.</span> Token in Back Office config, audit log, switchable provider: all of it only works through AiFoundation. A test fails if the processor references the <code>NeuronAI\</code> namespace.</p>
+  </section>
+  <section>
+    <h3>The Resource Schema</h3>
+    <pre><code class="language-yaml">resource:
+    name: AiChats
+    shortName: ai-chats
+    processor: SprykerAcademy\Glue\HelloAi\Api\Storefront\Processor\AiChatsStorefrontProcessor
+    operations:
+        - type: Post
+          uriTemplate: '/ai-chats'
+          normalizationContext: { gen_id: false }
+    properties:
+        message:               { type: string, writable: true,  readable: true, required: true }
+        conversationReference: { type: string, writable: true,  readable: true, required: false }
+        answer:                { type: string, writable: false, readable: true }</code></pre>
+    <ul>
+      <li>POST resource = <strong>processor</strong> (Exercise 12 GET resources used a provider)</li>
+      <li><code>writable</code> / <code>readable</code> describe the direction of each field</li>
+    </ul>
+  </section>
+  <section>
+    <h3>The Processor</h3>
+    <pre><code class="language-php">class AiChatsStorefrontProcessor extends AbstractStorefrontProcessor
+{
+    public function __construct(protected AiFoundationClientInterface $aiFoundationClient) {} // autowired
+
+    protected function processPost(mixed $data): mixed
+    {
+        $conversationReference = $data->conversationReference ?: uniqid('hello-ai-');
+
+        $promptResponse = $this->aiFoundationClient->prompt((new PromptRequestTransfer())
+            ->setAiConfigurationName(HelloAiConstants::AI_CONFIGURATION_HELLO_AI)
+            ->setConversationReference($conversationReference)
+            ->setPromptMessage((new PromptMessageTransfer())
+                ->setType(AiFoundationConstants::MESSAGE_TYPE_USER)->setContent($data->message)));
+
+        if (!$promptResponse->getIsSuccessful()) {
+            throw new ServiceUnavailableHttpException(null, 'The AI provider did not return an answer.');
+        }
+        $data->conversationReference = $conversationReference;
+        $data->answer = $promptResponse->getMessageOrFail()->getContent();
+        return $data;
+    }
+}</code></pre>
+  </section>
+  <section>
+    <h3>Memory in Action</h3>
+    <pre><code class="language-bash"># 1st message: no reference -> a new one comes back
+curl -s -X POST http://glue.eu.spryker.local/ai-chats -H 'Content-Type: application/vnd.api+json' \
+  -d '{"data":{"type":"ai-chats","attributes":{"message":"Hello world! My name is Hidran."}}}'
+# {"conversationReference":"hello-ai-6aac7af26ec95","answer":"Hello Hidran! How can I assist you ..."}
+
+# 2nd message: send the reference back
+#   "What is my name?"  ->  "Your name is Hidran."
+# same question without the reference  ->  "I don't know your name yet."</code></pre>
+    <div class="box">
+      <strong>Apply:</strong> <code>glue api:generate</code>, then <code>GLUE_APPLICATION=GLUE glue cache:clear</code> and the same for <code>GLUE_STOREFRONT</code>. The compiled Glue kernels cache API Platform source directories and routes — <code>cache:empty-all</code> does not touch them.
+    </div>
+    <p class="small">Tests: <code>codecept run -c tests/SprykerAcademyTest/Glue/HelloAi/ Exercise19</code> — 11 tests, client mocked, no tokens spent.</p>
+  </section>
+</section>
+
+<!-- ============================================================ -->
+<!-- EXERCISE 20: ASK THE CATALOG -->
+<!-- ============================================================ -->
+<section>
+  <section>
+    <h2>Exercise 20: Ask the Catalog</h2>
+    <h3>Tool Calling and Structured Answers</h3>
+    <div class="box box-accent">
+      <strong>Goal:</strong> <code>POST /product-questions</code> with a SKU and a question. The LLM reads the product through a <em>tool in Zed</em> and answers in a <em>typed transfer</em>: answer, isInStock, confidence, relatedSkus.
+    </div>
+    <pre><code class="language-bash">./exercises/load.sh ai-foundation advanced/ai-foundation-catalog/skeleton</code></pre>
+  </section>
+  <section>
+    <h3>One Request, Several Round Trips</h3>
+    <div class="diagram">
+<pre>
+  POST /product-questions {sku, question}
+     |
+  ProductQuestionsStorefrontProcessor   tool set name + structured message + conversation reference
+     v  AiFoundationClient::prompt()
+  Zed: AiFoundation
+     |  1. system prompt, question, TOOL DEFINITIONS --&gt; provider
+     |  2. model: "call get_product_details(sku=M1000785)"
+     |  3. AiFoundation runs GetProductDetailsToolPlugin::execute() in Zed, sends JSON back
+     |  4. model answers in the JSON shape of ProductAnswerTransfer
+     |  5. AiFoundation validates the shape, retries when it does not fit
+     v
+  typed ProductAnswerTransfer --&gt; processor maps it --&gt; JSON:API response
+</pre>
+    </div>
+    <p class="small"><span class="accent">Tools run in Zed.</span> Glue only names the tool set. AiFoundation looks it up in the Zed <code>AiFoundationDependencyProvider</code> and executes tools with full facade access.</p>
+  </section>
+  <section>
+    <h3>The Tool</h3>
+    <pre><code class="language-php">class GetProductDetailsToolPlugin extends AbstractPlugin implements ToolPluginInterface
+{
+    public function getName(): string { return 'get_product_details'; }
+
+    public function getDescription(): string
+    {
+        return 'Returns the details of one catalog product by SKU: name, attributes, every variant with '
+            . 'availability and gross price in cents. Call it before answering any question about a product.';
+    }
+
+    public function getParameters(): array
+    {
+        return [new ToolParameter(name: 'sku', type: 'string', description: 'Abstract or concrete SKU.', isRequired: true)];
+    }
+
+    public function execute(...$arguments): mixed   // thin: delegate, return JSON, never throw
+    {
+        return $this->getBusinessFactory()->createProductDetailsReader()
+            ->getProductDetailsJson((string)($arguments['sku'] ?? ''));
+    }
+}</code></pre>
+    <p class="small">Parameter names are a contract: <code>$arguments['sku']</code>. Tools return JSON strings, errors as <code>{"error": "..."}</code> so the model can explain them.</p>
+  </section>
+  <section>
+    <h3>Tool Set and Registration</h3>
+    <pre><code class="language-php">class CatalogToolSetPlugin extends AbstractPlugin implements ToolSetPluginInterface
+{
+    public function getName(): string { return CatalogAssistantConstants::TOOL_SET_CATALOG; } // 'catalog_tools'
+
+    public function getTools(): array
+    {
+        return [$this->getFactory()->createGetProductDetailsToolPlugin()];
+    }
+}
+
+// src/Pyz/Zed/AiFoundation/AiFoundationDependencyProvider.php
+protected function getAiToolSetPlugins(): array
+{
+    return [/* ... */ new CatalogToolSetPlugin()];
+}</code></pre>
+    <div class="box box-accent">
+      A tool that is not in a registered tool set <strong>does not exist</strong> for the model, even if its class is complete.
+    </div>
+  </section>
+  <section>
+    <h3>The Structured Answer</h3>
+    <pre><code class="language-xml">&lt;transfer name="ProductAnswer" strict="true"&gt;
+    &lt;property name="answer"      type="string"   description="The answer, based only on the product details returned by the tools."/&gt;
+    &lt;property name="isInStock"   type="bool"     description="True when at least one variant is available. False otherwise,
+                                                              and also when the product was not found. Never null."/&gt;
+    &lt;property name="confidence"  type="string"   description="'high', 'medium', or 'low'. 'low' when the tools returned nothing useful."/&gt;
+    &lt;property name="relatedSkus" type="string[]" singular="relatedSku"
+                                                 description="Concrete SKUs that match the question best. An empty list when none apply, never null."/&gt;
+&lt;/transfer&gt;</code></pre>
+    <ul>
+      <li>AiFoundation turns the transfer into a JSON schema; <strong>descriptions are the field instructions</strong></li>
+      <li><span class="warning">Never null:</span> an answer with a null property is rejected. Say what to return when unknown</li>
+      <li>Processor: <code>setStructuredMessage(new ProductAnswerTransfer())</code> + <code>setMaxRetries(2)</code>, then typed getters</li>
+    </ul>
+  </section>
+  <section>
+    <h3>Guardrail and Result</h3>
+    <pre><code class="language-php">'system_prompt' => 'You are a product advisor for an online shop. ALWAYS call get_product_details with the given SKU '
+    . 'before answering, even for follow-up questions. Answer only with facts from the tool result. If the tool '
+    . 'returns an error or the details do not cover the question, say so and set confidence to low. '
+    . 'Prices in the tool result are gross amounts in cents; show them in major units.',</code></pre>
+    <pre><code class="language-json">// SKU M1000785, "What is this product, is it in stock, and how much does it cost?"
+{"answer":"This product is a set of 4 wood stackable chairs ... in stock with 20 pieces available ... 482.69 euros.",
+ "isInStock":true,"confidence":"high","relatedSkus":["212427"]}
+
+// SKU DOES-NOT-EXIST
+{"answer":"There is no product found with the SKU \"DOES-NOT-EXIST\" ...","isInStock":false,"confidence":"low","relatedSkus":[]}</code></pre>
+    <p class="small">HTTP 503 with the AiFoundation reason when the shape does not fit, e.g. <em>Missing or empty properties: is_in_stock</em> — fix the description, not the code. Tests: 15, client mocked.</p>
+  </section>
+</section>
+
+<!-- ============================================================ -->
+<!-- EXERCISE 21: PRODUCT CREATION AGENT -->
+<!-- ============================================================ -->
+<section>
+  <section>
+    <h2>Exercise 21: Product Creation Agent</h2>
+    <h3>A Custom Back Office Assistant Agent</h3>
+    <div class="box box-accent">
+      <strong>Goal:</strong> "Create a red cotton t-shirt in sizes S and M for 19.99 EUR" &mdash; the agent interviews, confirms, then calls tools to create the product, price, stock, category, approval, and image.
+    </div>
+    <pre><code class="language-bash">./exercises/load.sh ai-foundation advanced/ai-foundation-agent/skeleton</code></pre>
+    <p class="small dim">Requires the Back Office Assistant. Business logic (ProductCreationWriter, image generation) is provided; you build the AI Foundation layer.</p>
+  </section>
+  <section>
+    <h3>Module Layout</h3>
+    <table>
+      <tr><th>Piece</th><th>Class / file</th><th>Your task</th></tr>
+      <tr><td>9 tools</td><td><code>Plugin/AiFoundation/Tool/*ToolPlugin</code></td><td>Complete <code>ListTaxSetsToolPlugin</code>, parameters of <code>ApproveProductToolPlugin</code></td></tr>
+      <tr><td>Tool set</td><td><code>ProductCreationToolSetPlugin</code></td><td>Name + all nine tools from the factory</td></tr>
+      <tr><td>Agent</td><td><code>Plugin/Agent/ProductCreationAgentPlugin</code></td><td>Build the prompt request, map the structured answer</td></tr>
+      <tr><td>Structured answer</td><td><code>ProductCreationAgentResponse</code> transfer</td><td><code>agent</code> lets the model answer <em>Guardrail</em></td></tr>
+      <tr><td>System prompt</td><td><code>ai_product_creation.configuration.yml</code></td><td>5 phases; editable in the Back Office after <code>configuration:sync</code></td></tr>
+      <tr><td>Wiring</td><td>2 dependency providers, <code>config_ai.php</code>, <code>AiCommerceConfig</code></td><td>Register, configure, enable SSE</td></tr>
+    </table>
+  </section>
+  <section>
+    <h3>The Agent Plugin</h3>
+    <pre><code class="language-php">class ProductCreationAgentPlugin extends AbstractPlugin implements BackofficeAssistantAgentPluginInterface
+{
+    // getName() 'Product Creation' is matched against the router's answer; getDescription() drives the routing;
+    // isApplicable() gates the agent behind the Back Office toggle.
+
+    public function executeAgent(BackofficeAssistantPromptRequestTransfer $request): BackofficeAssistantPromptResponseTransfer
+    {
+        $promptRequest = (new PromptRequestTransfer())
+            ->setAiConfigurationName($this->getConfig()->getProductCreationAgentAiConfigurationName())
+            ->setConversationReference($request->getConversationReference())
+            ->setStructuredMessage(new ProductCreationAgentResponseTransfer())
+            ->addToolSetName(AiProductCreationConstants::TOOL_SET_PRODUCT_CREATION)
+            ->setPromptMessage((new PromptMessageTransfer())
+                ->setType(AiFoundationConstants::MESSAGE_TYPE_USER)
+                ->setContent($request->getPrompt())
+                ->setAttachments($request->getAttachments()));
+
+        $answer = $this->getFactory()->getAiFoundationFacade()->prompt($promptRequest)->getStructuredMessage();
+
+        return (new BackofficeAssistantPromptResponseTransfer())
+            ->setAgent($answer->getAgent())
+            ->setMessage($answer->getMessage())
+            ->setReasoningMessage($answer->getReasoningMessage());
+    }
+}</code></pre>
+    <p class="small">Same <code>PromptRequestTransfer</code> as Exercises 19 and 20 &mdash; now inside an agent that the intent router selects by its description.</p>
+  </section>
+  <section>
+    <h3>Wiring the Agent</h3>
+    <ol>
+      <li><code>AiCommerceDependencyProvider::getBackofficeAssistantAgentPlugins()</code> += <code>new ProductCreationAgentPlugin()</code></li>
+      <li><code>AiFoundationDependencyProvider::getAiToolSetPlugins()</code> += <code>new ProductCreationToolSetPlugin()</code></li>
+      <li><code>config_ai.php</code>: <code>AI_CONFIGURATION_PRODUCT_CREATION_OPENAI</code> reusing the assistant's token and model, own system prompt via <code>configuration::</code></li>
+      <li><code>AiCommerceConfig::getBackofficeAssistantSseAiConfigurationNames()</code> += the configuration name (tool progress streams only for listed names)</li>
+      <li><code>configuration:sync</code> loads the enable toggle and the system prompt into the Back Office</li>
+    </ol>
+    <div class="box">
+      <strong>Order matters:</strong> <code>composer dump-autoload</code> first &mdash; <code>config_ai.php</code> references a <code>SprykerAcademy</code> class. The loader wires the <code>complete</code> branch itself and marks every line with <code>ai-foundation exercise</code>.
+    </div>
+  </section>
+  <section>
+    <h3>A Real Conversation</h3>
+    <div class="diagram">
+<pre>
+  User:  Create ILT-TEE-01, "ILT Test T-Shirt", one variant size M, 19.99 EUR, 50 in stock, approve it.
+  Agent: [summary of everything it will create]  "Shall I create this product?"
+  User:  Yes.
+         list_tax_sets      --&gt; {"taxSets":[{"idTaxSet":1,"name":"Standard Taxes"}, ...]}
+         create_product     --&gt; {"idProductAbstract":469,"concretes":[{"sku":"ILT-TEE-01-M",...}]}
+         set_product_price  --&gt; {"message":"Price 1999 EUR set for ..."}
+         set_product_stock  --&gt; {"message":"Stock 50 set for ... in Warehouse1"}
+         approve_product    --&gt; {"message":"Approval status changed from draft to approved."}
+  Agent: [final summary + link to edit the product]
+</pre>
+    </div>
+    <p class="small">Every tool call streams into the chat widget through the SSE plugins. Tests: 12, facade mocked &mdash; <code>codecept run -c tests/SprykerAcademyTest/Zed/AiProductCreation/ Exercise21</code>.</p>
+  </section>
+</section>
+
+<!-- SUMMARY -->
+<section>
+  <h2>Key Takeaways</h2>
+  <ul>
+    <li><span class="accent">AI configuration</span> &mdash; named bundle of provider, key, model, system prompt; code names it, admins change it</li>
+    <li><span class="accent">One door</span> &mdash; Zed facade or Client <code>prompt()</code>, never the provider library</li>
+    <li><span class="accent">Memory</span> &mdash; a conversation reference; AiFoundation stores and replays the history</li>
+    <li><span class="accent">Tools</span> &mdash; name, description, typed parameters are the contract; thin <code>execute()</code>, JSON in and out, run in Zed; unregistered tools do not exist</li>
+    <li><span class="accent">Structured answers</span> &mdash; a transfer becomes the JSON schema; descriptions instruct the model; never null; retries</li>
+    <li><span class="accent">Guardrails</span> &mdash; "answer only with facts from the tool result", confidence field, Guardrail agent value</li>
+    <li><span class="accent">Agents</span> &mdash; description drives the intent router; SSE streams tool progress for listed configurations</li>
+    <li><span class="accent">Apply and test</span> &mdash; <code>glue cache:clear</code> per Glue app, <code>configuration:sync</code> for settings; mock the client, spend no tokens</li>
+  </ul>
+</section>
+
+<!-- END -->
+<section class="center">
+  <h1>Questions?</h1>
+  <p class="dim">Spryker Academy | AI Foundation Exercises</p>
+</section>
+
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/highlight.js"></script>
+<script>
+Reveal.initialize({
+  hash: true,
+  slideNumber: 'c/t',
+  width: 1280,
+  height: 720,
+  margin: 0.05,
+  plugins: [RevealHighlight],
+  highlight: { highlightOnLoad: true },
+});
+</script>
+</body>
+</html>

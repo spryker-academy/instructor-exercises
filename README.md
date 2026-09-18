@@ -117,7 +117,7 @@ See [STUDENT_SETUP_GUIDE.md](STUDENT_SETUP_GUIDE.md) for detailed setup instruct
 ## Guides
 
 - `guides/` - Markdown format guides
-- `guides-html/` - HTML format guides and presentations
+- `guides-html/` - HTML format guides and the reveal.js presentations (fundamentals, intermediate, AI Foundation)
 - `guides/advanced/` - Back Office Assistant setup and the AI Foundation exercises
 - `guides-pptx/` - PowerPoint slides generated from the HTML presentations with `html_to_pptx.py`
 
