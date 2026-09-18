@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>10-merchant-portal-locations</title>
+  <title>Exercise 17: Merchant Portal — Supplier Locations (Nested Table)</title>
   <style>
     html {
       line-height: 1.5;
@@ -212,9 +212,16 @@
   <![endif]-->
 </head>
 <body>
-<h1 id="exercise-17-merchant-portal-supplier-locations-nested-table">Exercise 17: Merchant Portal — Supplier Locations (Nested Table)</h1>
-<p>In this exercise, you will add an editable locations table inside the supplier edit drawer. This teaches the pattern for nested tables within forms — similar to how Spryker’s ProductOffer module embeds a price table inside the offer edit form.</p>
-<p>You will learn how to: - Build an editable GuiTable with inline add/edit capabilities - Configure <code>enableAddingNewRows()</code> for adding rows to the table - Implement a Symfony form data transformer for nested table data - Embed a GuiTable inside a form template - Register a nested Angular table component</p>
+<h1 id="exercise-17-merchant-portal--supplier-locations-nested-table">Exercise 17: Merchant Portal — Supplier Locations (Nested Table)</h1>
+<p>In this exercise, you will add an editable locations table inside the supplier edit drawer. This teaches the pattern for nested tables within forms — similar to how Spryker's ProductOffer module embeds a price table inside the offer edit form.</p>
+<p>You will learn how to:</p>
+<ul>
+<li>Build an editable GuiTable with inline add/edit capabilities</li>
+<li>Configure <code>enableAddingNewRows()</code> for adding rows to the table</li>
+<li>Implement a Symfony form data transformer for nested table data</li>
+<li>Embed a GuiTable inside a form template</li>
+<li>Register a nested Angular table component</li>
+</ul>
 <h2 id="prerequisites">Prerequisites</h2>
 <ul>
 <li>Completed Exercise 16 (Merchant Portal Form)</li>
@@ -223,7 +230,8 @@
 <div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> supplier intermediate/merchant-portal-locations/skeleton</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli composer dump-autoload</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span></code></pre></div>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console propel:model:build</span></code></pre></div>
 <hr />
 <h2 id="background-editable-guitable-pattern">Background: Editable GuiTable Pattern</h2>
 <p>A regular GuiTable displays read-only data. An <strong>editable GuiTable</strong> allows inline editing and adding of rows, with the data submitted as part of a parent form.</p>
@@ -242,6 +250,7 @@
 <h3 id="part-1-location-guitable-configuration">Part 1: Location GuiTable Configuration</h3>
 <p><strong>Coding time:</strong></p>
 <p>Open <code>src/SprykerAcademy/Zed/SupplierMerchantPortalGui/Communication/ConfigurationProvider/SupplierLocationGuiTableConfigurationProvider.php</code>:</p>
+<p>The five display columns (<code>addColumnText()</code> for city, country, address, zip code and default) are already there: a GuiTable must declare at least one regular column, otherwise <code>createConfiguration()</code> throws <em>Table must have at least one column</em>. The editable inputs you add now are rendered on top of those columns.</p>
 <ol type="1">
 <li><p>Add editable columns using <code>addEditableColumnInput()</code>:</p>
 <ul>
@@ -260,16 +269,20 @@
 <span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>)<span class="ot">;</span></span></code></pre></div></li>
 </ol>
 <blockquote>
-<p><strong><code>enableAddingNewRows()</code></strong> tells the GuiTable to render an “Add” button that creates empty editable rows. The <code>FORM_INPUT_NAME</code> determines how the data is submitted as form fields.</p>
+<p><strong><code>enableAddingNewRows()</code></strong> tells the GuiTable to render an "Add" button that creates empty editable rows. The <code>FORM_INPUT_NAME</code> determines how the data is submitted as form fields.</p>
 </blockquote>
 <blockquote>
-<p><strong><code>addEditableColumnInput()</code></strong> vs <code>addColumnText()</code>: Editable columns render as form inputs (text, checkbox, select) instead of plain text.</p>
+<p><strong><code>addEditableColumnInput()</code></strong> vs <code>addColumnText()</code>: <code>addColumnText()</code> declares the column of the table; <code>addEditableColumnInput()</code> declares the form input (text, checkbox, select) rendered in that column when the row is edited or added. An editable table needs both.</p>
 </blockquote>
 <hr />
 <h3 id="part-2-location-data-provider">Part 2: Location Data Provider</h3>
 <p><strong>Coding time:</strong></p>
 <p>Open <code>src/SprykerAcademy/Zed/SupplierMerchantPortalGui/Communication/DataProvider/SupplierLocationGuiTableDataProvider.php</code>:</p>
-<p>In <code>getData($idSupplier)</code>: 1. Query <code>PyzSupplierLocationQuery</code> filtered by <code>fkSupplier</code> 2. Map each location entity to a <code>GuiTableRowDataResponseTransfer</code> with: <code>idSupplierLocation</code>, <code>city</code>, <code>country</code>, <code>address</code>, <code>zipCode</code>, <code>isDefault</code></p>
+<p>In <code>getData($idSupplier)</code>:</p>
+<ol type="1">
+<li>Query <code>PyzSupplierLocationQuery</code> filtered by <code>fkSupplier</code></li>
+<li>Map each location entity to a <code>GuiTableRowDataResponseTransfer</code> with: <code>idSupplierLocation</code>, <code>city</code>, <code>country</code>, <code>address</code>, <code>zipCode</code>, <code>isDefault</code></li>
+</ol>
 <hr />
 <h3 id="part-3-location-form-transformer">Part 3: Location Form Transformer</h3>
 <p>The transformer converts between <code>SupplierLocationTransfer[]</code> (PHP) and the array format (editable table rows).</p>
@@ -280,7 +293,7 @@
 <li><p><code>reverseTransform()</code> — convert submitted array data back to <code>ArrayObject&lt;SupplierLocationTransfer&gt;</code>. Create a <code>SupplierLocationTransfer</code> for each row.</p></li>
 </ol>
 <blockquote>
-<p><strong>DataTransformerInterface:</strong> Symfony’s form component calls <code>transform()</code> when rendering the form (PHP → view) and <code>reverseTransform()</code> when handling submission (view → PHP).</p>
+<p><strong>DataTransformerInterface:</strong> Symfony's form component calls <code>transform()</code> when rendering the form (PHP → view) and <code>reverseTransform()</code> when handling submission (view → PHP).</p>
 </blockquote>
 <hr />
 <h3 id="part-4-angular-component-wiring">Part 4: Angular Component Wiring</h3>
@@ -289,11 +302,12 @@
 <p>The template already includes the locations card with <code>&lt;web-mp-supplier-locations-table&gt;</code> — it renders conditionally when <code>supplierLocationTableConfiguration</code> is present (only in the edit drawer, not create).</p>
 <hr />
 <h2 id="testing">Testing</h2>
-<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console propel:model:build</span></code></pre></div>
 <ol type="1">
 <li>Edit an existing supplier in the Merchant Portal</li>
-<li>The “Locations” card should appear with existing locations</li>
-<li>Click “Add Location” → a new editable row should appear</li>
+<li>The "Locations" card should appear with existing locations</li>
+<li>Click "Add Location" → a new editable row should appear</li>
 <li>Fill in the location fields and save</li>
 <li>Re-open the edit drawer → the new location should be listed</li>
 </ol>

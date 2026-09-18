@@ -53,6 +53,8 @@ When the form is submitted, the table data is sent as nested form fields. A **da
 
 Open `src/SprykerAcademy/Zed/SupplierMerchantPortalGui/Communication/ConfigurationProvider/SupplierLocationGuiTableConfigurationProvider.php`:
 
+The five display columns (`addColumnText()` for city, country, address, zip code and default) are already there: a GuiTable must declare at least one regular column, otherwise `createConfiguration()` throws *Table must have at least one column*. The editable inputs you add now are rendered on top of those columns.
+
 1. Add editable columns using `addEditableColumnInput()`:
    - `city` → text input
    - `country` → text input
@@ -72,7 +74,7 @@ Open `src/SprykerAcademy/Zed/SupplierMerchantPortalGui/Communication/Configurati
 
 > **`enableAddingNewRows()`** tells the GuiTable to render an "Add" button that creates empty editable rows. The `FORM_INPUT_NAME` determines how the data is submitted as form fields.
 
-> **`addEditableColumnInput()`** vs `addColumnText()`: Editable columns render as form inputs (text, checkbox, select) instead of plain text.
+> **`addEditableColumnInput()`** vs `addColumnText()`: `addColumnText()` declares the column of the table; `addEditableColumnInput()` declares the form input (text, checkbox, select) rendered in that column when the row is edited or added. An editable table needs both.
 
 ---
 

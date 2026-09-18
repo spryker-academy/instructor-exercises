@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Exercise 9b: Configure AI Commerce in the Back Office</title>
+  <style>
+    html {
+      line-height: 1.5;
+      font-family: Georgia, serif;
+      font-size: 20px;
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      word-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 1em;
+      }
+    }
+    @media print {
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, 'Lucida Console', Consolas, monospace;
+      font-size: 85%;
+      margin: 0;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="exercise-9b-configure-ai-commerce-in-the-back-office">Exercise 9b: Configure AI Commerce in the Back Office</h1>
+<p>In Exercise 9 you built Back Office pages by hand. Spryker also generates Back Office pages from YAML: the <strong>Configuration</strong> module turns setting schemas into the <strong>Configuration</strong> menu, stores the values in the database and hands them to the code at runtime. The AI Commerce feature of the demo shop is configured entirely this way. In this exercise you connect the shop to OpenAI, try the Smart PIM features on a product, and add a setting of your own.</p>
+<p>You will learn how to:</p>
+<ul>
+<li>Read a <strong>configuration schema</strong> (<code>*.configuration.yml</code>): features, tabs, groups, settings, scopes, secrets</li>
+<li>Publish schemas with <code>configuration:sync</code> and edit values in <strong>Back Office &gt; Configuration</strong></li>
+<li>Understand the <strong>AI configurations</strong> in <code>config/Shared/config_ai.php</code> and the <code>configuration::</code> references</li>
+<li>Use the <strong>Smart PIM</strong> features of AI Commerce from the product form</li>
+<li>Read a configuration value from code</li>
+</ul>
+<p><strong>Official documentation:</strong></p>
+<ul>
+<li><a href="https://docs.spryker.com/docs/dg/dev/ai/ai-foundation/ai-foundation-module.html">AI Foundation module</a></li>
+<li><a href="https://docs.spryker.com/docs/dg/dev/backend-development/configuration/configuration-module.html">Configuration module</a></li>
+</ul>
+<h2 id="prerequisites">Prerequisites</h2>
+<ul>
+<li>Exercise 9 completed.</li>
+<li>An OpenAI API token. The instructor provides one per participant. Every call to OpenAI costs money, so use the small model named below.</li>
+</ul>
+<p>No exercise branch is needed. Everything happens in the demo shop.</p>
+<hr />
+<h2 id="background-three-files-one-menu">Background: Three Files, One Menu</h2>
+<table>
+<thead>
+<tr class="header">
+<th>File</th>
+<th>Owner</th>
+<th>What it is</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>data/configuration/ai_vendor.configuration.yml</code></td>
+<td>project</td>
+<td>Schema of <strong>Configuration &gt; AI Vendor</strong>: the API tokens of OpenAI, Anthropic and AWS Bedrock. Tokens are <code>secret: true</code>, so they are encrypted in the database and never shown again</td>
+</tr>
+<tr class="even">
+<td><code>data/configuration/ai_commerce.configuration.yml</code></td>
+<td>project</td>
+<td>Schema of <strong>Configuration &gt; AI Commerce</strong>: which AI configuration and which model the <strong>Smart PIM</strong> features and the <strong>Back Office Assistant</strong> use</td>
+</tr>
+<tr class="odd">
+<td><code>config/Shared/config_ai.php</code></td>
+<td>project</td>
+<td>The <strong>AI configurations</strong> of AiFoundation: named entries with <code>provider_name</code>, <code>provider_config</code> (<code>key</code>, <code>model</code>) and optionally <code>system_prompt</code></td>
+</tr>
+</tbody>
+</table>
+<p>A schema is a tree <code>feature &gt; tab &gt; group &gt; setting</code>. A setting has a <code>type</code> (<code>string</code>, <code>boolean</code>, <code>radio</code>, <code>color</code>, <code>regex</code>, ...), a <code>default_value</code>, <code>scopes</code> (<code>global</code> or per store) and <code>secret</code>. The key of a setting is the path through the tree with colons, for example <code>ai_vendor:openai:general:api_token</code>.</p>
+<p><code>docker/sdk console configuration:sync</code> reads every <code>*.configuration.yml</code> of the project and of the vendor modules, merges them and writes the schema to the database. The Back Office renders the menu from that schema. Values are edited in the Back Office, without a deployment.</p>
+<p>The AI configurations connect the two worlds. Look at <code>config/Shared/config_ai.php</code>:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="cn">A</span>iCommerceConstants::<span class="cn">AI_CONFIGURATION_SMART_PIM_OPENAI</span> =&gt; [</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;provider_name&#39;</span> =&gt; <span class="cn">A</span>iFoundationConstants::<span class="cn">PROVIDER_OPENAI</span><span class="ot">,</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;provider_config&#39;</span> =&gt; [</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;key&#39;</span> =&gt; <span class="cn">A</span>iFoundationConstants::<span class="cn">CONFIGURATION_REFERENCE_PREFIX</span> <span class="op">.</span> <span class="cn">A</span>iCommerceConstants::<span class="cn">CONFIGURATION_KEY_OPENAI_API_TOKEN</span><span class="ot">,</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;model&#39;</span> =&gt; <span class="cn">A</span>iFoundationConstants::<span class="cn">CONFIGURATION_REFERENCE_PREFIX</span> <span class="op">.</span> <span class="cn">A</span>iCommerceConstants::<span class="cn">CONFIGURATION_KEY_SMART_PIM_OPENAI_MODEL</span><span class="ot">,</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    ]<span class="ot">,</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>]<span class="ot">,</span></span></code></pre></div>
+<p><code>CONFIGURATION_REFERENCE_PREFIX</code> is the string <code>configuration::</code>. A value with that prefix is not a value but a <strong>reference to a setting key</strong>: AiFoundation reads <code>ai_vendor:openai:general:api_token</code> from the Configuration module at the moment of the call. A plain string (<code>'model' =&gt; 'gpt-4.1-mini'</code>) is fixed in code. Use references for secrets and for everything an admin should be able to change.</p>
+<blockquote>
+<p><strong>Where is the cache?</strong> <code>cache:empty-all</code> deletes <code>data/cache/configuration</code>, the synced schema. After every cache clear run <code>configuration:sync</code> again, otherwise AI calls fail with an unknown setting.</p>
+</blockquote>
+<hr />
+<h2 id="part-1-connect-the-shop-to-openai-5-minutes">Part 1: Connect the Shop to OpenAI (5 minutes)</h2>
+<ol type="1">
+<li>Log in to the Back Office (<code>admin@spryker.com</code> / <code>change123</code>).</li>
+<li>Open <strong>Configuration &gt; AI Vendor &gt; OpenAI</strong> and enter your API token. Save. The token is stored encrypted, because the setting is <code>secret: true</code>.</li>
+<li>Open <strong>Configuration &gt; AI Commerce &gt; Smart PIM</strong>. Keep <strong>AI Configuration</strong> on <em>OpenAI</em> and set <strong>OpenAI Model</strong> to <code>gpt-4.1-mini</code>. Save.</li>
+</ol>
+<p>Where did those pages come from? Open <code>data/configuration/ai_vendor.configuration.yml</code> and find the <code>api_token</code> setting. Note <code>secret: true</code> and <code>scopes: [global]</code>. Other possible scopes are <code>store</code>, <code>locale</code>, <code>customer_group</code> and <code>customer</code>. Then open <code>ai_commerce.configuration.yml</code> and find the <code>smart_pim</code> tab with the <code>ai_configuration</code> radio and the <code>openai_model</code> string.</p>
+<hr />
+<h2 id="part-2-try-smart-pim-10-minutes">Part 2: Try Smart PIM (10 minutes)</h2>
+<p>Smart PIM is the group of AI helpers in the product form. Open <strong>Catalog &gt; Products</strong>, edit any abstract product, and try:</p>
+<ul>
+<li><strong>Category suggestion</strong>: the AI proposes categories from the product name and description.</li>
+<li><strong>Translate</strong>: fills the other locale from the one you wrote.</li>
+<li><strong>Content improver</strong>: rewrites a description.</li>
+<li><strong>Image alt text</strong>: generates alt texts for the product images.</li>
+</ul>
+<p>Each button sends a prompt through AiFoundation with the <code>SMART_PIM_OPENAI</code> configuration, so it uses the token and the model you just saved. Change the model to a name that does not exist, save, and try again: the error shows you that the configuration is read at call time, not at deployment.</p>
+<p>Set the model back to <code>gpt-4.1-mini</code>.</p>
+<hr />
+<h2 id="part-3-add-a-setting-of-your-own-15-minutes">Part 3: Add a Setting of Your Own (15 minutes)</h2>
+<p>Add a <strong>tone of voice</strong> setting that a content manager can change. Open <code>data/configuration/ai_commerce.configuration.yml</code> and add a group to the <code>smart_pim</code> tab, after the <code>ai_vendor</code> group:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="at">                </span><span class="kw">-</span><span class="at"> </span><span class="fu">key</span><span class="kw">:</span><span class="at"> content_style</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="at">                  </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Content Style</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="at">                  </span><span class="fu">description</span><span class="kw">:</span><span class="at"> How Smart PIM should write product content.</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="at">                  </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="at">                  </span><span class="fu">order</span><span class="kw">:</span><span class="at"> </span><span class="dv">2</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="at">                  </span><span class="fu">scopes</span><span class="kw">:</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="at">                      </span><span class="kw">-</span><span class="at"> global</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="at">                  </span><span class="fu">settings</span><span class="kw">:</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="at">                      </span><span class="kw">-</span><span class="at"> </span><span class="fu">key</span><span class="kw">:</span><span class="at"> tone</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="at">                        </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Tone of voice</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="at">                        </span><span class="fu">description</span><span class="kw">:</span><span class="at"> Adjective the AI uses when it rewrites descriptions, for example &quot;friendly&quot; or &quot;technical&quot;.</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="at">                        </span><span class="fu">type</span><span class="kw">:</span><span class="at"> string</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="at">                        </span><span class="fu">default_value</span><span class="kw">:</span><span class="at"> </span><span class="st">&#39;friendly&#39;</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="at">                        </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="at">                        </span><span class="fu">secret</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="at">                        </span><span class="fu">storefront</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="at">                        </span><span class="fu">order</span><span class="kw">:</span><span class="at"> </span><span class="dv">1</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="at">                        </span><span class="fu">scopes</span><span class="kw">:</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="at">                            </span><span class="kw">-</span><span class="at"> global</span></span></code></pre></div>
+<p>Indentation matters: <code>- key: content_style</code> sits at the same depth as <code>- key: ai_vendor</code>. Then publish the schema:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console configuration:sync</span></code></pre></div>
+<p>The command reports the number of processed settings. It is one higher than before. Open <strong>Configuration &gt; AI Commerce &gt; Smart PIM</strong> and find your group. Set the value to <code>technical</code> and save.</p>
+<p>Read it from code. The key is <code>ai_commerce:smart_pim:content_style:tone</code>. In Zed:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="cn">G</span>enerated\<span class="cn">S</span>hared\<span class="cn">T</span>ransfer\<span class="cn">C</span>onfigurationValueRequestTransfer<span class="ot">;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="va">$tone</span> <span class="op">=</span> <span class="va">$this</span>-&gt;getFactory()-&gt;getConfigurationFacade()-&gt;getConfigurationValue(</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">new</span> <span class="cn">C</span>onfigurationValueRequestTransfer())-&gt;setKey(<span class="st">&#39;ai_commerce:smart_pim:content_style:tone&#39;</span>)<span class="ot">,</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>)<span class="ot">;</span></span></code></pre></div>
+<p>The facade resolves the scope, decrypts secrets and casts the value to the type of the setting. Try it in a quick way: add the three lines to <code>indexAction()</code> of your <code>SupplierGui</code> <code>IndexController</code> from Exercise 9, inject the Configuration facade through the DependencyProvider as you learned, and dump the value with <code>dd($tone)</code>. Remove it again.</p>
+<p><strong>Bonus.</strong> Reference the setting from an AI configuration. In <code>config/Shared/config_ai.php</code> add to the Smart PIM OpenAI entry:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="st">&#39;system_prompt&#39;</span> =&gt; <span class="st">&#39;Write in a &#39;</span> <span class="op">.</span> <span class="cn">A</span>iFoundationConstants::<span class="cn">CONFIGURATION_REFERENCE_PREFIX</span> <span class="op">.</span> <span class="st">&#39;ai_commerce:smart_pim:content_style:tone&#39;</span> <span class="op">.</span> <span class="st">&#39; tone.&#39;</span><span class="ot">,</span></span></code></pre></div>
+<p>This does not work: a reference must be the whole value, not part of a string. Replace it with a reference to a new <code>system_prompt</code> setting of type <code>string</code> that holds the complete sentence, sync, and try the content improver again. That is the pattern the Back Office Assistant uses for all its system prompts (see <code>guides/advanced/01-back-office-assistant-setup.md</code>).</p>
+<hr />
+<h2 id="testing">Testing</h2>
+<ol type="1">
+<li><strong>Configuration &gt; AI Vendor &gt; OpenAI</strong> shows the token field empty after saving; a Smart PIM action returns a result.</li>
+<li>A wrong model name makes the Smart PIM action fail with a provider error; the correct name fixes it without a deployment.</li>
+<li>After <code>configuration:sync</code>, the <strong>Content Style</strong> group appears under Smart PIM and its value survives a page reload.</li>
+<li>The dumped value in the controller is the string you saved, or <code>friendly</code> if you saved nothing.</li>
+</ol>
+<h2 id="cleanup">Cleanup</h2>
+<p>Remove the <code>dd()</code> from the controller and, if you did the bonus, keep or remove the <code>system_prompt</code> entry as you prefer. Leave your token in place: the AI Development course uses it.</p>
+<h2 id="going-further">Going Further</h2>
+<ul>
+<li>Give the <code>tone</code> setting <code>scopes: [store]</code> and see how the Back Office lets you set it per store.</li>
+<li>Look at how the Back Office Assistant guide (advanced, Exercise 21 prerequisites) adds a whole tab with the same mechanics.</li>
+<li>Exercise 19 of the AI Development course registers an AI configuration of your own with a <code>configuration::</code> reference for the key and a plain string for the model.</li>
+</ul>
+</body>
+</html>
