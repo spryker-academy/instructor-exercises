@@ -119,6 +119,7 @@ See [STUDENT_SETUP_GUIDE.md](STUDENT_SETUP_GUIDE.md) for detailed setup instruct
 - `guides/` - Markdown format guides
 - `guides-html/` - HTML format guides and the reveal.js presentations (fundamentals, intermediate, AI Foundation)
 - `guides/advanced/` - Back Office Assistant setup and the AI Foundation exercises
+- `guides/presentations/` - Markdown versions of the three instructor presentations, readable on GitHub (generated from the HTML with `tools/presentation_to_markdown.py`)
 - `guides-pptx/` - PowerPoint slides generated from the HTML presentations with `html_to_pptx.py`
 
 ## Requirements
