@@ -30,6 +30,7 @@ docker/sdk console transfer:generate
 docker/sdk console configuration:sync
 docker/sdk console cache:empty-all
 docker/sdk console propel:model:build
+docker/sdk console configuration:sync
 ```
 
 > **Order matters.** Run `composer dump-autoload` first. Later in this exercise `config_ai.php` references a `SprykerAcademy` class, and every console command fails until the class can be autoloaded.
@@ -201,6 +202,7 @@ Import the constants interface here as well: `use SprykerAcademy\Shared\AiProduc
 docker/sdk console configuration:sync
 docker/sdk console cache:empty-all
 docker/sdk console propel:model:build
+docker/sdk console configuration:sync
 ```
 
 > **Where does the system prompt come from?** `configuration:sync` loaded it from `data/configuration/ai_product_creation.configuration.yml`. You can now edit it live under **Configuration > AI Commerce > Back Office Assistant > System Prompts**, next to a toggle that enables or disables the agent. Read the prompt: it defines the five conversation phases, including the mandatory confirmation before anything is created.
@@ -226,6 +228,7 @@ docker/sdk console transfer:generate
 docker/sdk console configuration:sync
 docker/sdk console cache:empty-all
 docker/sdk console propel:model:build
+docker/sdk console configuration:sync
 ```
 
 For the `complete` branch the loader also does the wiring of Part 5 for you. It marks every line it adds with `ai-foundation exercise` and removes those lines again when you load the skeleton or another package.

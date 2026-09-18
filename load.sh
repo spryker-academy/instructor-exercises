@@ -325,7 +325,7 @@ register_api_platform_sources() {
 }
 
 # Always remove the Glue service registration of a previous load (the registered directories may no longer exist)
-for SERVICES_FILE in "$PROJECT_DIR/config/GlueBackend/ApplicationServices.php" "$PROJECT_DIR/config/GlueStorefront/ApplicationServices.php"; do
+for SERVICES_FILE in "$PROJECT_DIR/config/Glue/ApplicationServices.php" "$PROJECT_DIR/config/GlueBackend/ApplicationServices.php" "$PROJECT_DIR/config/GlueStorefront/ApplicationServices.php"; do
     [ -f "$SERVICES_FILE" ] || continue
     if grep -q "supplier exercise\|services->load('SprykerAcademy" "$SERVICES_FILE"; then
         php -r '
@@ -379,7 +379,8 @@ YAMLEOF
 
     # Register the SprykerAcademy Zed (facades) and Client services in the Glue application containers (marked block, see unwiring above)
     if [ -d "$REPO_DIR/src/SprykerAcademy/Glue" ]; then
-        for APP_SERVICES in GlueBackend:Zed GlueStorefront:Client; do
+        # config/Glue serves glue.eu.spryker.local (storefront and backend resources), so it needs both layers
+        for APP_SERVICES in Glue:Zed Glue:Client GlueBackend:Zed GlueStorefront:Client; do
             SERVICES_FILE="$PROJECT_DIR/config/${APP_SERVICES%%:*}/ApplicationServices.php"
             LAYER="${APP_SERVICES##*:}"
             [ -f "$SERVICES_FILE" ] || continue
@@ -715,12 +716,12 @@ if [ "$PACKAGE" = "ai-foundation" ]; then
     echo "  docker/sdk console transfer:generate"
     echo "  docker/sdk console c:e"
     echo "  docker/sdk console propel:install"
+    # cache:empty-all also deletes data/cache/configuration (the synced configuration schemas the AI configuration references)
+    echo "  docker/sdk console configuration:sync"
     if [[ "$BRANCH" == advanced/ai-foundation-hello/* ]] || [[ "$BRANCH" == advanced/ai-foundation-catalog/* ]]; then
         echo "  docker/sdk cli GLUE_APPLICATION=GLUE_STOREFRONT glue api:generate"
         echo "  docker/sdk cli GLUE_APPLICATION=GLUE glue cache:clear"
         echo "  docker/sdk cli GLUE_APPLICATION=GLUE_STOREFRONT glue cache:clear"
-    else
-        echo "  docker/sdk console configuration:sync"
     fi
 else
     # cache:empty-all deletes data/cache, which holds the Propel table map (data/cache/propel/generated-conf/loadDatabase.php);

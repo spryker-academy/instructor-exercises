@@ -13,8 +13,8 @@ You will learn how to:
 ## Prerequisites
 
 - Completed Exercise 9 (Back Office) — supplier facade, repository, and entity manager must exist
-- Suppliers assigned to a merchant via `pyz_merchant_to_supplier`
-- Logged in as a demo merchant user
+- Suppliers assigned to a merchant via `pyz_merchant_to_supplier` (see *Assign suppliers to your merchant* below)
+- Logged in as a demo merchant user (`harald@spryker.com` / `change123`)
 
 ## Loading the Exercise
 
@@ -76,10 +76,27 @@ Every Merchant Portal module must register ACL rules so merchant users can acces
 
 > **Why ACL?** The Merchant Portal is multi-tenant. Each merchant user can only access modules explicitly allowed by ACL rules. Without the ACL plugin, the Merchant Portal logs you out (redirect to the login page) as soon as you open a supplier route.
 
-The expander plugin only runs when a merchant or merchant user is created. The demo merchant users already exist, so apply the rules to them once:
+The Merchant Portal also restricts every **database entity** for merchant users (ACL entity rules). The skeleton therefore ships a second plugin, `SupplierMerchantPortalGuiMerchantAclEntityRuleExpanderPlugin`, which grants access to the supplier tables. Without it every supplier query returns nothing, and opening a supplier answers with a 404.
+
+Both expander plugins only run when a merchant or merchant user is created. The demo merchant users already exist, so apply the rules to them once:
 
 ```bash
 docker/sdk console acl-entity:synchronize
+```
+
+### Assign suppliers to your merchant
+
+The table is merchant-scoped: it only lists suppliers linked to the logged-in merchant through `pyz_merchant_to_supplier`. The demo user `harald@spryker.com` (password `change123`) belongs to the merchant *Spryker* (`MER000008`). Link the imported suppliers to that merchant, either with the `merchant_ids` column of `data/import/supplier.csv` (a comma-separated list of merchant IDs, then `docker/sdk console data:import supplier`) or directly:
+
+```bash
+docker/sdk cli mysql -h database -u spryker -psecret eu-docker
+```
+
+```sql
+INSERT INTO pyz_merchant_to_supplier (fk_merchant, fk_supplier)
+SELECT m.id_merchant, s.id_supplier FROM spy_merchant m, pyz_supplier s
+WHERE m.merchant_reference = 'MER000008'
+  AND NOT EXISTS (SELECT 1 FROM pyz_merchant_to_supplier x WHERE x.fk_merchant = m.id_merchant AND x.fk_supplier = s.id_supplier);
 ```
 
 ---

@@ -70,6 +70,15 @@ In `buildForm()`, add these fields:
 
 > **`property_path`:** The `isActive` checkbox maps to the `status` field on `SupplierTransfer` via `property_path`. This lets the form display a friendly checkbox while the transfer uses an integer status.
 
+A `CheckboxType` only accepts booleans as model data, but `status` is an integer (`1`/`0`). Without a transformer, opening the form fails with *"Unable to transform value for property path "status": Expected a Boolean"*. Add a model transformer to the field after the `add()` chain:
+
+```php
+$builder->get(static::FIELD_IS_ACTIVE)->addModelTransformer(new CallbackTransformer(
+    fn (?int $status): bool => (bool)$status,
+    fn (?bool $isActive): int => $isActive ? 1 : 0,
+));
+```
+
 > **`getBlockPrefix()`:** Returns `'supplierForm'` — this determines the HTML form field name prefix (e.g., `supplierForm[name]`).
 
 ---

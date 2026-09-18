@@ -132,11 +132,11 @@ docker/sdk console propel:model:build
 **Coding time:**
 
 Open `src/SprykerAcademy/Client/ContactRequest/Stub/ContactRequestStub.php`:
-1. In `createContactRequest()`, use `$this->zedRequestClient->call()` with the path `/contact-request/gateway/create-message`
-2. In `getContactRequestsByCustomer()`, use the path `/contact-request/gateway/get-messages-by-customer`
-3. In `deleteContactRequest()`, use the path `/contact-request/gateway/delete-message`
+1. In `createContactRequest()`, use `$this->zedRequestClient->call()` with the path `/contact-request/gateway/create-contact-request`
+2. In `getContactRequestsByCustomer()`, use the path `/contact-request/gateway/get-contact-requests-by-customer`
+3. In `deleteContactRequest()`, use the path `/contact-request/gateway/delete-contact-request`
 
-> **Gateway path convention:** `/module-name/gateway/action-name` where the action name is the controller method without the `Action` suffix, converted to kebab-case. For example, `deleteContactRequestAction()` becomes `/contact-request/gateway/delete-message`.
+> **Gateway path convention:** `/module-name/gateway/action-name` where the action name is the controller method without the `Action` suffix, converted to kebab-case. For example, `deleteContactRequestAction()` becomes `/contact-request/gateway/delete-contact-request`.
 
 #### 5.2 Update the Client
 

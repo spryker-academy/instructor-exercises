@@ -101,7 +101,7 @@ docker/sdk console propel:install
 docker/sdk console transfer:generate
 ```
 
-Keep this order. `cache:empty-all` deletes `data/cache`, which also holds the Propel table map (`data/cache/propel/generated-conf/loadDatabase.php`); until `propel:install` (or `propel:model:build`) has written it again, every Zed request and every console command fails with "Database map was not initialized". So whenever you run `cache:empty-all` later on, follow it with `docker/sdk console propel:model:build`.
+Keep this order. `cache:empty-all` deletes `data/cache`, which also holds the Propel table map (`data/cache/propel/generated-conf/loadDatabase.php`); until `propel:install` (or `propel:model:build`) has written it again, every Zed request and every console command fails with "Database map was not initialized". So whenever you run `cache:empty-all` later on, follow it with `docker/sdk console propel:model:build`. It also deletes the synced configuration schemas (`data/cache/configuration`), which the AI configurations reference: in the AI exercises follow it with `docker/sdk console configuration:sync` as well.
 
 For the AI exercises the order differs, because `config_ai.php` references an exercise class. The loader prints the exact list per branch:
 
@@ -111,6 +111,10 @@ docker/sdk console transfer:generate
 docker/sdk console c:e
 docker/sdk console propel:install
 docker/sdk console configuration:sync
+# storefront API exercises additionally:
+docker/sdk cli GLUE_APPLICATION=GLUE_STOREFRONT glue api:generate
+docker/sdk cli GLUE_APPLICATION=GLUE glue cache:clear
+docker/sdk cli GLUE_APPLICATION=GLUE_STOREFRONT glue cache:clear
 ```
 
 ## Student Setup Guide

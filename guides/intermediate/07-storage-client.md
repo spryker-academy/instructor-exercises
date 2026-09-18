@@ -211,7 +211,8 @@ First, ensure suppliers are synchronized to Redis (from the P&S exercise):
 
 ```bash
 # Check if data exists in the storage table
-docker/sdk cli mysql -e "SELECT COUNT(*) FROM pyz_supplier_storage;"
+docker/sdk cli
+mysql -h database -u spryker -psecret eu-docker -e "SELECT COUNT(*) FROM pyz_supplier_storage;"
 
 # If empty, run data import and trigger P&S
 docker/sdk console data:import supplier
