@@ -124,6 +124,8 @@ See [STUDENT_SETUP_GUIDE.md](STUDENT_SETUP_GUIDE.md) for detailed setup instruct
 ## Guides
 
 - `guides/` - Markdown format guides
+- `guides/basics/06b-ai-dev-sdk.md` - Exercise 6b: build the ContactRequest module again with the Spryker AI Dev SDK (no exercise branch; uses `basics/configuration/complete` and its tests)
+- `guides/intermediate/02b-ai-commerce-configuration.md` - Exercise 9b: configure AI Commerce in the Back Office (Configuration module, AI Vendor token, Smart PIM; no exercise branch)
 - `guides-html/` - HTML format guides and the reveal.js presentations (fundamentals, intermediate, AI Foundation)
 - `guides/advanced/` - Back Office Assistant setup and the AI Foundation exercises
 - `guides/presentations/` - Markdown versions of the three instructor presentations, readable on GitHub (generated from the HTML with `tools/presentation_to_markdown.py`)
