@@ -60,7 +60,7 @@ Open `src/SprykerAcademy/Shared/ContactRequest/Transfer/contact_request.transfer
 1. Add a `fkCustomer` property of type `int` to the **Message** transfer
 2. Add a `createdAt` property of type `string` to the **Message** transfer
 3. Add a `fkCustomer` property of type `int` to the **ContactRequestCriteria** transfer
-4. Add a new transfer named **ContactRequestCollection** with a property `messages` of type `Message[]`
+4. Add a new transfer named **ContactRequestCollection** with a property `contactRequests` of type `ContactRequest[]`
 
 Regenerate transfers:
 
@@ -213,7 +213,7 @@ In `listAction()`:
 4. Create the message form with `$this->getFactory()->createContactRequestForm(new ContactRequestTransfer())` — pass a fresh transfer as the data object
 5. Handle the request with `$messageForm->handleRequest($request)`
 6. If the form is submitted and valid, get the hydrated transfer with `$messageForm->getData()`, set the `fkCustomer`, and create the message
-7. Return a view with the `messages` and `messageForm` variables, using the template `@CustomerPage/views/contact-request/list.twig`
+7. Return a view with the `contactRequests` and `contactRequestForm` variables, using the template `@CustomerPage/views/contact-request/list.twig`
 
 In `deleteAction()`:
 1. Use `$this->castId($request->request->get('idContactRequest'))` to safely extract and validate the message ID
