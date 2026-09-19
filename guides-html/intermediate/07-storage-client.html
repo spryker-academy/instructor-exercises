@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>07-storage-client</title>
+  <title>Exercise 14: Storage Client - Redis Supplier Lookup</title>
   <style>
     html {
       line-height: 1.5;
@@ -310,7 +310,7 @@ Redis</code></pre>
 <p>Open <code>src/SprykerAcademy/Client/SupplierStorage/Storage/SupplierStorageReader.php</code>:</p>
 <h4 id="add-the-resource-name-constant">2.1 Add the Resource Name Constant</h4>
 <p>Add a class constant for the resource name to avoid hardcoding strings:</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">protected</span> <span class="kw">const</span> <span class="cn">RESOURCE_NAME</span> <span class="op">=</span> <span class="st">&#39;supplier&#39;</span><span class="ot">;</span></span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">protected</span> <span class="kw">const</span> <span class="dt">string</span> <span class="cn">RESOURCE_NAME</span> <span class="op">=</span> <span class="st">&#39;supplier&#39;</span><span class="ot">;</span></span></code></pre></div>
 <blockquote>
 <p><strong>Best practice:</strong> Use constants for resource identifiers. This prevents typos and makes refactoring easier.</p>
 </blockquote>
