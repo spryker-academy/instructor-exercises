@@ -92,21 +92,20 @@ The `complete` branches are wired into the project automatically. Every line the
 
 ## Post-Installation Steps
 
-After loading an exercise, run these commands:
+The loader registers the `SprykerAcademy` namespace (`composer.json` and `PROJECT_NAMESPACES`) and runs `composer dump-autoload` itself, so the exercise classes are loadable as soon as it finishes. If it cannot reach the container it says so and prints the command. After loading an exercise, run these commands:
 
 ```bash
 docker/sdk console c:e
-docker/sdk cli composer dump-autoload
 docker/sdk console propel:install
 docker/sdk console transfer:generate
 ```
 
 Keep this order. `cache:empty-all` deletes `data/cache`, which also holds the Propel table map (`data/cache/propel/generated-conf/loadDatabase.php`); until `propel:install` (or `propel:model:build`) has written it again, every Zed request and every console command fails with "Database map was not initialized". So whenever you run `cache:empty-all` later on, follow it with `docker/sdk console propel:model:build`. It also deletes the synced configuration schemas (`data/cache/configuration`), which the AI configurations reference: in the AI exercises follow it with `docker/sdk console configuration:sync` as well.
 
-For the AI exercises the order differs, because `config_ai.php` references an exercise class. The loader prints the exact list per branch:
+For the AI exercises the order differs, because `config_ai.php` references an exercise class - it has to be autoloadable before any console command runs, which is why the loader dumps the autoloader itself. The loader prints the exact list per branch:
 
 ```bash
-docker/sdk cli composer dump-autoload
+docker/sdk cli composer dump-autoload   # only if the loader could not run it
 docker/sdk console transfer:generate
 docker/sdk console c:e
 docker/sdk console propel:install

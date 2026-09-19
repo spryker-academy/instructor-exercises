@@ -45,6 +45,56 @@ file_needs_update() {
     [ "$count" = "0" ]
 }
 
+# Regenerate the composer autoloader.
+#
+# Registering the namespace in composer.json is only half the job: PHP resolves classes
+# through the generated map in vendor/composer/autoload_psr4.php. While the SprykerAcademy
+# prefix is missing there, every exercise class is invisible to PHP - the Zed router finds
+# src/SprykerAcademy/.../IndexController.php on disk, calls class_exists() on the name it
+# derived from the path, gets false and aborts the request with
+#   Expected class "SprykerAcademy\Zed\ContactRequest\Communication\Controller\IndexController" not found!
+# which reads as if the file were missing. Dump it here on every run: composer.json may
+# already carry the entry from an earlier load while the generated map is still stale.
+DUMP_AUTOLOAD_DONE=0
+dump_autoload() {
+    local map="$PROJECT_DIR/vendor/composer/autoload_psr4.php"
+
+    log_info "Regenerating the composer autoloader..."
+
+    if [ -x "$PROJECT_DIR/docker/sdk" ] \
+        && (cd "$PROJECT_DIR" && docker/sdk cli composer dump-autoload) </dev/null >/dev/null 2>&1; then
+        DUMP_AUTOLOAD_DONE=1
+    elif command -v composer >/dev/null 2>&1 \
+        && (cd "$PROJECT_DIR" && composer dump-autoload) </dev/null >/dev/null 2>&1; then
+        DUMP_AUTOLOAD_DONE=1
+    fi
+
+    if [ "$DUMP_AUTOLOAD_DONE" = "0" ]; then
+        log_error "Warning: could not run composer dump-autoload (is the shop up?)."
+        log_error "         Run it yourself before you open the Back Office, or PHP will not"
+        log_error "         know a single SprykerAcademy class:"
+        log_error "           docker/sdk cli composer dump-autoload"
+
+        return 0
+    fi
+
+    # composer wrote vendor/ inside the container, so the copy on the host can lag a moment
+    local attempt=0
+    while [ "$attempt" -lt 10 ] && file_needs_update "$map" "SprykerAcademy"; do
+        attempt=$((attempt + 1))
+        sleep 1
+    done
+
+    if [ -f "$map" ] && file_needs_update "$map" "SprykerAcademy"; then
+        log_error "Warning: vendor/composer/autoload_psr4.php still has no SprykerAcademy entry."
+        log_error "         Check the autoload.psr-4 section of composer.json."
+
+        return 0
+    fi
+
+    log_success "composer dump-autoload (SprykerAcademy is registered in vendor/composer/autoload_psr4.php)"
+}
+
 usage() {
     echo "Usage: ./exercises/load.sh <package> <branch>"
     echo ""
@@ -700,6 +750,9 @@ if [ -d "$REPO_DIR/tests/SprykerAcademyTest" ]; then
     fi
 fi
 
+# Make the namespaces registered above known to PHP (see dump_autoload)
+dump_autoload
+
 # Count files
 FILE_COUNT=$(find "$PROJECT_DIR/src/SprykerAcademy" -type f 2>/dev/null | wc -l | tr -d ' ')
 
@@ -711,10 +764,11 @@ echo -e "  Files:   ${GREEN}$FILE_COUNT${NC} files in src/SprykerAcademy/"
 echo ""
 echo -e "${YELLOW}Next steps:${NC}"
 if [ "$PACKAGE" = "ai-foundation" ]; then
-    # dump-autoload must run first: config_ai.php references a SprykerAcademy class
+    # dump_autoload already ran it above; only ask for it when that failed, and first,
+    # because config_ai.php references a SprykerAcademy class
     # cache:empty-all deletes data/cache, which holds the Propel table map (data/cache/propel/generated-conf/loadDatabase.php);
     # propel:install (propel:model:build) writes it again, so it must run after cache:empty-all
-    echo "  docker/sdk cli composer dump-autoload"
+    [ "$DUMP_AUTOLOAD_DONE" = "1" ] || echo "  docker/sdk cli composer dump-autoload"
     echo "  docker/sdk console transfer:generate"
     echo "  docker/sdk console c:e"
     echo "  docker/sdk console propel:install"
@@ -729,7 +783,8 @@ else
     # cache:empty-all deletes data/cache, which holds the Propel table map (data/cache/propel/generated-conf/loadDatabase.php);
     # propel:install (propel:model:build) writes it again, so it must run after cache:empty-all
     echo "  docker/sdk console c:e"
-    echo "  docker/sdk cli composer dump-autoload"
+    # dump_autoload already ran it above; only ask for it when that failed
+    [ "$DUMP_AUTOLOAD_DONE" = "1" ] || echo "  docker/sdk cli composer dump-autoload"
     echo "  docker/sdk console propel:install"
     echo "  docker/sdk console transfer:generate"
     if [ -d "$PROJECT_DIR/src/SprykerAcademy/Zed/SupplierMerchantPortalGui" ]; then

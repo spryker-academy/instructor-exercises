@@ -11,9 +11,29 @@ In this exercise you will create a simple Spryker Back Office page and add an en
 
 ```bash
 ./exercises/load.sh contact-request basics/contact-request-back-office/skeleton
-docker/sdk cli composer dump-autoload
 docker/sdk console transfer:generate
 ```
+
+The loader registers the `SprykerAcademy` namespace in two places - `autoload.psr-4` in `composer.json`
+and `PROJECT_NAMESPACES` in `config/Shared/config_default.php` - and then runs `composer dump-autoload`
+itself. If it cannot reach the container it says so and prints the command for you to run.
+
+> **If the page fails with `Expected class "SprykerAcademy\Zed\ContactRequest\Communication\Controller\IndexController" not found!`**
+>
+> The file is there and the `namespace` line is correct. PHP simply has no rule for loading it.
+>
+> The Zed router scans the project namespace folders for `*Controller.php`, builds the class name from
+> the file path and calls `class_exists()` on it. That lookup goes through the **generated** map in
+> `vendor/composer/autoload_psr4.php`, not through `composer.json`. Adding
+> `"SprykerAcademy\\": "src/SprykerAcademy/"` to `composer.json` changes nothing until the map is rebuilt:
+>
+> ```bash
+> docker/sdk cli composer dump-autoload
+> docker/sdk console cache:empty-all
+> ```
+>
+> One-line diagnosis: `grep SprykerAcademy vendor/composer/autoload_psr4.php` - no output means the
+> autoloader is stale, whatever `composer.json` says.
 
 ---
 
@@ -78,6 +98,9 @@ docker/sdk console propel:model:build
 
 Visit: http://backoffice.eu.spryker.local/contact-request/index/index
 (Credentials: `admin@spryker.com` / `change123`)
+
+If the page answers with *Expected class ... not found!*, see the note in [Loading the Exercise](#loading-the-exercise)
+- the class is fine, the composer autoloader is stale.
 
 Note the URL pattern: **module** / **controller** / **action** (`contact-request/index/index`). Back Office routing is resolved automatically from these names.
 

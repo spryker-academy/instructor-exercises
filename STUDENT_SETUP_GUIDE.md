@@ -56,7 +56,15 @@ $config[KernelConstants::PROJECT_NAMESPACES] = [
 
 > **Why both?** The `composer.json` entry tells PHP where to autoload the classes. The `PROJECT_NAMESPACES` entry tells Spryker's kernel class resolver to look in `SprykerAcademy` when resolving Facades, Factories, and other module classes. Without this, you'll get "class not found" or "FacadeNotFoundException" errors.
 
-> **Note:** The `load.sh` script also does this automatically, but it's good to do it once manually so the project is ready from the start.
+**4c. Rebuild the autoloader:**
+
+```bash
+docker/sdk cli composer dump-autoload
+```
+
+> **Why this is not optional.** PHP never reads `composer.json` at runtime. It resolves classes through the generated map in `vendor/composer/autoload_psr4.php`, and that file only changes when you dump the autoloader. Until you do, every `SprykerAcademy` class is unknown - and the error does not say "autoloader": the Zed router finds your controller file on disk, derives the class name from its path, calls `class_exists()`, gets `false` and aborts with `Expected class "SprykerAcademy\Zed\...\IndexController" not found!`. Check it with `grep SprykerAcademy vendor/composer/autoload_psr4.php`.
+
+> **Note:** The `load.sh` script does all three steps automatically on every run, but it's good to do them once manually so the project is ready from the start.
 
 ## Step 5: Boot the Docker Environment
 
@@ -77,11 +85,10 @@ Use the `exercises/load.sh` script to load any exercise. It handles everything a
 ./exercises/load.sh <package> <branch>
 ```
 
-After loading, run:
+The loader registers the `SprykerAcademy` namespace and runs `composer dump-autoload` itself, so the classes it copies are loadable right away. After loading, run:
 
 ```bash
 docker/sdk console c:e
-docker/sdk cli composer dump-autoload
 docker/sdk console propel:install
 docker/sdk console transfer:generate
 ```
@@ -521,7 +528,7 @@ Check the solution. The loader wires the agent into the project for you:
 
 | Command | When to use |
 |---------|-------------|
-| `docker/sdk cli composer dump-autoload` | After loading a new exercise |
+| `docker/sdk cli composer dump-autoload` | After adding a class in a namespace PHP does not know yet (the loader runs it for you) |
 | `docker/sdk console transfer:generate` | After modifying `.transfer.xml` files |
 | `docker/sdk console propel:install` | After modifying `.schema.xml` files |
 | `docker/sdk console data:import` | After implementing data importers |
@@ -549,6 +556,15 @@ Always regenerate after switching:
 docker/sdk cli composer dump-autoload
 docker/sdk console propel:install
 docker/sdk console transfer:generate
+```
+
+**`Expected class "SprykerAcademy\...\SomeController" not found!` although the file exists:**
+The composer autoloader has no entry for the namespace. `composer.json` alone does not count - PHP reads the generated map:
+
+```bash
+grep SprykerAcademy vendor/composer/autoload_psr4.php   # no output = stale autoloader
+docker/sdk cli composer dump-autoload
+docker/sdk console cache:empty-all
 ```
 
 **Cache issues:**

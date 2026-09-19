@@ -797,7 +797,7 @@ This enables running subsets of tests: `vendor/bin/codecept run --group Supplier
 
 | Command | When to Use |
 |---------|-------------|
-| `docker/sdk cli composer dump-autoload` | After loading a new exercise |
+| `docker/sdk cli composer dump-autoload` | After adding a class in a namespace PHP does not know yet (the loader runs it for you) |
 | `docker/sdk console transfer:generate` | After modifying `.transfer.xml` files |
 | `docker/sdk console propel:install` | After modifying `.schema.xml` files |
 | `docker/sdk console data:import` | After implementing data importers |
