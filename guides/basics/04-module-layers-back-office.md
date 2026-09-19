@@ -1,6 +1,6 @@
 # Exercise 4: Module Layers - Back Office Step
 
-In this exercise, you will create a message through a Back Office controller and persist it in the database. You will learn how to work with the Persistence, Business, and Communication layers in Zed.
+In this exercise, you will create a contact request through a Back Office controller and persist it in the database. You will learn how to work with the Persistence, Business, and Communication layers in Zed.
 
 **Part 1 of 2** - This guide focuses on the Zed layer.
 
@@ -55,7 +55,7 @@ Key patterns:
 **Coding time:**
 
 Open `src/SprykerAcademy/Zed/ContactRequest/Persistence/ContactRequestRepository.php`. In the `findContactRequest()` method:
-1. Get the message query from the factory
+1. Get the ContactRequest query from the factory
 2. If the criteria has an `idContactRequest`, find by ID and return the result
 3. If the criteria has a `message` string, use LIKE filtering to find a partial match and return only one result
 4. Return `null` if no entity was found
@@ -83,7 +83,7 @@ Wrap the DTO in a `*ResponseTransfer` to include success/error information.
 **Coding time:**
 
 Open `src/SprykerAcademy/Shared/ContactRequest/Transfer/contact_request.transfer.xml` and add a DTO named **ContactRequestResponse** with:
-- Property `message` of type `Message`
+- Property `contactRequest` of type `ContactRequest`
 - Property `isSuccessful` of type `bool`
 
 Regenerate:
@@ -100,7 +100,7 @@ Separate reading from writing. The Writer uses the EntityManager.
 
 Open `src/SprykerAcademy/Zed/ContactRequest/Business/Writer/ContactRequestWriter.php`:
 - Inject `ContactRequestEntityManagerInterface` through the constructor
-- In the `create()` method, use the EntityManager to create and return the message
+- In the `create()` method, use the EntityManager to create and return the contact request
 
 #### 2.3 The Reader
 
@@ -110,8 +110,8 @@ The Reader uses the Repository and prepares the response.
 
 Open `src/SprykerAcademy/Zed/ContactRequest/Business/Reader/ContactRequestReader.php`:
 - Inject `ContactRequestRepositoryInterface` through the constructor
-- In the `findContactRequest()` method, use the Repository to find a message by criteria
-- Create a `ContactRequestResponseTransfer` and set `message` and `isSuccessful` based on the result
+- In the `findContactRequest()` method, use the Repository to find a contact request by criteria
+- Create a `ContactRequestResponseTransfer` and set `contactRequest` and `isSuccessful` based on the result
 - Return the response
 
 #### 2.4 Expose Functionality through the Facade

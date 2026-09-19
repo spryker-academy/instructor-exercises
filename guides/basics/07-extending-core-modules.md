@@ -57,8 +57,8 @@ We need to make the new `fkCustomer` and `createdAt` fields available in our DTO
 **Coding time:**
 
 Open `src/SprykerAcademy/Shared/ContactRequest/Transfer/contact_request.transfer.xml` and:
-1. Add a `fkCustomer` property of type `int` to the **Message** transfer
-2. Add a `createdAt` property of type `string` to the **Message** transfer
+1. Add a `fkCustomer` property of type `int` to the **ContactRequest** transfer
+2. Add a `createdAt` property of type `string` to the **ContactRequest** transfer
 3. Add a `fkCustomer` property of type `int` to the **ContactRequestCriteria** transfer
 4. Add a new transfer named **ContactRequestCollection** with a property `contactRequests` of type `ContactRequest[]`
 
@@ -216,7 +216,7 @@ In `listAction()`:
 7. Return a view with the `contactRequests` and `contactRequestForm` variables, using the template `@CustomerPage/views/contact-request/list.twig`
 
 In `deleteAction()`:
-1. Use `$this->castId($request->request->get('idContactRequest'))` to safely extract and validate the message ID
+1. Use `$this->castId($request->request->get('idContactRequest'))` to safely extract and validate the contact request ID
 2. Create a `ContactRequestCriteriaTransfer`, set the `idContactRequest`, and call `deleteContactRequest()` on the client
 3. Redirect back to the messages list
 

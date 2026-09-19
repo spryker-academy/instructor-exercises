@@ -250,7 +250,7 @@
 <h4 id="add-messageresponsetransfer-definition">2.1 Add ContactRequestResponseTransfer Definition</h4>
 <p>Wrap the DTO in a <code>*ResponseTransfer</code> to include success/error information.</p>
 <p><strong>Coding time:</strong></p>
-<p>Open <code>src/SprykerAcademy/Shared/ContactRequest/Transfer/contact_request.transfer.xml</code> and add a DTO named <strong>ContactRequestResponse</strong> with: - Property <code>message</code> of type <code>Message</code> - Property <code>isSuccessful</code> of type <code>bool</code></p>
+<p>Open <code>src/SprykerAcademy/Shared/ContactRequest/Transfer/contact_request.transfer.xml</code> and add a DTO named <strong>ContactRequestResponse</strong> with: - Property <code>contactRequest</code> of type <code>ContactRequest</code> - Property <code>isSuccessful</code> of type <code>bool</code></p>
 <p>Regenerate:</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span></code></pre></div>
 <h4 id="the-writer">2.2 The Writer</h4>

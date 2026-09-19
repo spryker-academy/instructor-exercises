@@ -72,7 +72,7 @@ Yves communicates with Zed exclusively through the Client layer:
 Yves Controller
   -> Client (ContactRequestClient)
     -> Stub (ContactRequestStub)
-      -> ZedRequestClient::call('/contact-request/gateway/find-message', $transfer)
+      -> ZedRequestClient::call('/contact-request/gateway/find-contact-request', $transfer)
         -> Zed GatewayController
           -> Facade -> Business Logic -> Repository/EntityManager
 ```
@@ -240,7 +240,7 @@ Transfers live in `Shared/{Module}/Transfer/*.transfer.xml` and are generated in
 
     <!-- Response transfer: wraps results with success flag -->
     <transfer name="ContactRequestResponse">
-        <property name="message" type="ContactRequest"/>
+        <property name="contactRequest" type="ContactRequest"/>
         <property name="isSuccessful" type="bool"/>
     </transfer>
 </transfers>
@@ -430,7 +430,7 @@ class ContactRequestStub
     {
         // URL convention: /{module-name}/gateway/{action-name}
         return $this->zedRequestClient->call(
-            '/contact-request/gateway/find-message',
+            '/contact-request/gateway/find-contact-request',
             $contactRequestCriteria,
         );
     }
@@ -449,7 +449,7 @@ class GatewayController extends AbstractGatewayController
 }
 ```
 
-**Gateway URL convention:** `/contact-request/gateway/find-message` maps to `ContactRequest` module -> `GatewayController` -> `findContactRequestAction()`. Transfers are serialized/deserialized automatically.
+**Gateway URL convention:** `/contact-request/gateway/find-contact-request` maps to `ContactRequest` module -> `GatewayController` -> `findContactRequestAction()`. Transfers are serialized/deserialized automatically.
 
 ---
 

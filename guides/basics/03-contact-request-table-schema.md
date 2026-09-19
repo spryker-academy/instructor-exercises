@@ -79,7 +79,7 @@ docker/sdk console propel:install
 
 **Coding time:**
 
-Verify the `pyz_contact_request` table was created in the database (using a tool of your choice). Locate the generated entity in `src/Orm/Zed/Message/Persistence/` and its subfolders.
+Verify the `pyz_contact_request` table was created in the database (using a tool of your choice). Locate the generated entity in `src/Orm/Zed/ContactRequest/Persistence/` and its subfolders.
 
 ---
 

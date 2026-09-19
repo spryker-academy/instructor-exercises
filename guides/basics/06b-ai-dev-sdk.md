@@ -110,7 +110,7 @@ Scope, in this order:
    with the ContactRequest transfer (idContactRequest, message) plus ContactRequestCriteria and
    ContactRequestResponse (isSuccessful, contactRequest). Run docker/sdk console transfer:generate.
 3. Propel schema src/SprykerAcademy/Zed/ContactRequest/Persistence/Propel/Schema/pyz_contact_request.schema.xml
-   (table pyz_contact_request, namespace Orm\Zed\Message\Persistence). Run docker/sdk console propel:install.
+   (table pyz_contact_request, namespace Orm\Zed\ContactRequest\Persistence). Run docker/sdk console propel:install.
 4. Persistence layer (PersistenceFactory, Repository + interface, EntityManager + interface, Mapper),
    Business layer (Facade + interface, BusinessFactory, Reader/ContactRequestReader, Writer/ContactRequestWriter)
    and Communication layer (CommunicationFactory, IndexController, ContactRequestController with an add
@@ -122,7 +122,7 @@ Scope, in this order:
    ContactRequestPageRouteProviderPlugin (already registered in
    src/SprykerAcademy/Yves/Router/RouterDependencyProvider.php) and the template
    Theme/default/views/contact-request/get.twig that shows one contact request by id at
-   /contact-request/{idContactRequest} (route name contact-request/message/_idMessage_).
+   /contact-request/{idContactRequest} (route parameter `idContactRequest`).
 7. Module config: ContactRequestConfig with getMyConfigValue() reading
    SprykerAcademy\Shared\ContactRequest\ContactRequestConstants::MY_CONFIG_VALUE (the constants interface
    exists and the value is set in config/Shared/config_default.php) and a ConfigController at /contact-request/config/index that

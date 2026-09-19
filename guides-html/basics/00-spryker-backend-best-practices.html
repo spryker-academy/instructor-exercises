@@ -305,7 +305,7 @@
 <pre><code>Yves Controller
   -&gt; Client (ContactRequestClient)
     -&gt; Stub (ContactRequestStub)
-      -&gt; ZedRequestClient::call(&#39;/contact-request/gateway/find-message&#39;, $transfer)
+      -&gt; ZedRequestClient::call(&#39;/contact-request/gateway/find-contact-request&#39;, $transfer)
         -&gt; Zed GatewayController
           -&gt; Facade -&gt; Business Logic -&gt; Repository/EntityManager</code></pre>
 <hr />
@@ -418,7 +418,7 @@
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="ot">           xsi:schemaLocation=</span><span class="st">&quot;spryker:transfer-01 http://static.spryker.com/transfer-01.xsd&quot;</span><span class="kw">&gt;</span></span>
 <span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">&lt;!-- Core entity transfer --&gt;</span></span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">&lt;transfer</span><span class="ot"> name=</span><span class="st">&quot;Message&quot;</span><span class="kw">&gt;</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">&lt;transfer</span><span class="ot"> name=</span><span class="st">&quot;ContactRequest&quot;</span><span class="kw">&gt;</span></span>
 <span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>        <span class="kw">&lt;property</span><span class="ot"> name=</span><span class="st">&quot;idContactRequest&quot;</span><span class="ot"> type=</span><span class="st">&quot;int&quot;</span><span class="kw">/&gt;</span></span>
 <span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>        <span class="kw">&lt;property</span><span class="ot"> name=</span><span class="st">&quot;message&quot;</span><span class="ot"> type=</span><span class="st">&quot;string&quot;</span><span class="kw">/&gt;</span></span>
 <span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">&lt;/transfer&gt;</span></span>
@@ -431,7 +431,7 @@
 <span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>    <span class="co">&lt;!-- Response transfer: wraps results with success flag --&gt;</span></span>
 <span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>    <span class="kw">&lt;transfer</span><span class="ot"> name=</span><span class="st">&quot;ContactRequestResponse&quot;</span><span class="kw">&gt;</span></span>
-<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>        <span class="kw">&lt;property</span><span class="ot"> name=</span><span class="st">&quot;message&quot;</span><span class="ot"> type=</span><span class="st">&quot;Message&quot;</span><span class="kw">/&gt;</span></span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>        <span class="kw">&lt;property</span><span class="ot"> name=</span><span class="st">&quot;contactRequest&quot;</span><span class="ot"> type=</span><span class="st">&quot;ContactRequest&quot;</span><span class="kw">/&gt;</span></span>
 <span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>        <span class="kw">&lt;property</span><span class="ot"> name=</span><span class="st">&quot;isSuccessful&quot;</span><span class="ot"> type=</span><span class="st">&quot;bool&quot;</span><span class="kw">/&gt;</span></span>
 <span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a>    <span class="kw">&lt;/transfer&gt;</span></span>
 <span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;/transfers&gt;</span></span></code></pre></div>
@@ -639,7 +639,7 @@
 <span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>    {</span>
 <span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>        <span class="co">// URL convention: /{module-name}/gateway/{action-name}</span></span>
 <span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">$this</span>-&gt;zedRequestClient-&gt;call(</span>
-<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;/contact-request/gateway/find-message&#39;</span><span class="ot">,</span></span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;/contact-request/gateway/find-contact-request&#39;</span><span class="ot">,</span></span>
 <span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>            <span class="va">$contactRequestCriteria</span><span class="ot">,</span></span>
 <span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>        )<span class="ot">;</span></span>
 <span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>    }</span>
@@ -652,7 +652,7 @@
 <span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">$this</span>-&gt;getFacade()-&gt;findContactRequest(<span class="va">$contactRequestCriteria</span>)<span class="ot">;</span></span>
 <span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>    }</span>
 <span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
-<p><strong>Gateway URL convention:</strong> <code>/contact-request/gateway/find-message</code> maps to <code>ContactRequest</code> module -&gt; <code>GatewayController</code> -&gt; <code>findContactRequestAction()</code>. Transfers are serialized/deserialized automatically.</p>
+<p><strong>Gateway URL convention:</strong> <code>/contact-request/gateway/find-contact-request</code> maps to <code>ContactRequest</code> module -&gt; <code>GatewayController</code> -&gt; <code>findContactRequestAction()</code>. Transfers are serialized/deserialized automatically.</p>
 <hr />
 <h2 id="dependencyprovider-patterns">6. DependencyProvider Patterns</h2>
 <p>DependencyProviders wire external dependencies (facades, clients, services) into a module’s container.</p>
