@@ -521,7 +521,7 @@ class ContactRequestDeleter
     <p><strong>1.</strong> Constants interface (Shared layer):</p>
     <pre><code class="language-php">interface ContactRequestConstants
 {
-    public const MY_CONFIG_VALUE = 'CONTACT_REQUEST:MY_CONFIG_VALUE';
+    public const string MY_CONFIG_VALUE = 'CONTACT_REQUEST:MY_CONFIG_VALUE';
 }</code></pre>
     <p><strong>2.</strong> Set the value in <code>config_default.php</code>:</p>
     <pre><code class="language-php">$config[ContactRequestConstants::MY_CONFIG_VALUE] = 'Hello from config!';</code></pre>

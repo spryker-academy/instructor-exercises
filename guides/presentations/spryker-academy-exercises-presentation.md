@@ -500,7 +500,7 @@ class ContactRequestPageFactory extends AbstractFactory
 ```php
 interface ContactRequestConstants
 {
-    public const MY_CONFIG_VALUE = 'CONTACT_REQUEST:MY_CONFIG_VALUE';
+    public const string MY_CONFIG_VALUE = 'CONTACT_REQUEST:MY_CONFIG_VALUE';
 }
 ```
 

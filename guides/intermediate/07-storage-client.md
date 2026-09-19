@@ -98,7 +98,7 @@ Open `src/SprykerAcademy/Client/SupplierStorage/Storage/SupplierStorageReader.ph
 Add a class constant for the resource name to avoid hardcoding strings:
 
 ```php
-protected const RESOURCE_NAME = 'supplier';
+protected const string RESOURCE_NAME = 'supplier';
 ```
 
 > **Best practice:** Use constants for resource identifiers. This prevents typos and makes refactoring easier.

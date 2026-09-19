@@ -384,7 +384,7 @@ docker/sdk console queue:worker:start --stop-when-empty
     <pre><code class="language-php">class SupplierSearchQueryPlugin implements QueryInterface,
     SearchContextAwareQueryInterface
 {
-    protected const SOURCE_IDENTIFIER = 'supplier';
+    protected const string SOURCE_IDENTIFIER = 'supplier';
 
     public function getSearchQuery(): Query
     {
