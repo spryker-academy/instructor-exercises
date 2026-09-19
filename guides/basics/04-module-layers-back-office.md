@@ -120,21 +120,9 @@ The Facade is the module's public API. Since Spryker 202602.0, you can use `$thi
 
 **Coding time:**
 
-Open `src/SprykerAcademy/Zed/ContactRequest/Business/ContactRequestFacade.php`. Implement `createContactRequest()` and `findContactRequest()`:
+Open `src/SprykerAcademy/Zed/ContactRequest/Business/ContactRequestFacade.php`. Implement `createContactRequest()` and `findContactRequest()` by delegating to the `ContactRequestWriter` and `ContactRequestReader` services through `$this->getService(ClassName::class)`.
 
-```php
-public function createContactRequest(ContactRequestTransfer $contactRequestTransfer): ContactRequestTransfer
-{
-    return $this->getService(ContactRequestWriter::class)->create($contactRequestTransfer);
-}
-
-public function findContactRequest(ContactRequestCriteriaTransfer $contactRequestCriteria): ContactRequestResponseTransfer
-{
-    return $this->getService(ContactRequestReader::class)->findContactRequest($contactRequestCriteria);
-}
-```
-
-No Business Factory is needed — the container injects `ContactRequestEntityManagerInterface` into the Writer and `ContactRequestRepositoryInterface` into the Reader automatically.
+**Hint:** The Writer returns a `ContactRequestTransfer`; the Reader returns a `ContactRequestResponseTransfer`. No Business Factory is needed — the container injects `ContactRequestEntityManagerInterface` into the Writer and `ContactRequestRepositoryInterface` into the Reader automatically.
 
 ---
 
