@@ -52,6 +52,31 @@ Then generate the entity and run migrations:
 docker/sdk console propel:install
 ```
 
+> **If `propel:install` stops with `Uncommitted migrations have been found ; you should either execute or delete them before rerunning the 'diff' task. <timestamp>`**
+>
+> A previous run generated a migration that was never executed, and Propel refuses to build a new
+> diff while one is pending. The message names the timestamp; the file is in
+> `src/Orm/Propel/Migration_mysql/`. Look inside it before you delete it - the `CREATE TABLE` it
+> contains tells you what went wrong:
+>
+> ```bash
+> cat src/Orm/Propel/Migration_mysql/PropelMigration_<timestamp>.php
+> rm src/Orm/Propel/Migration_mysql/PropelMigration_<timestamp>.php
+> ```
+>
+> Two things in this exercise leave such a file behind:
+>
+> - **`CREATE TABLE \`TODO\``** - the skeleton ships `<table name="TODO">`. You ran `propel:install`
+>   before renaming the table, so Propel built a migration for a table called `TODO`.
+> - **`id_contact_request BIGINT AUTO_INCREMENT` with no key** - MySQL rejects `AUTO_INCREMENT` on a
+>   column that is not a key, so the migration aborts while executing and stays pending. That is the
+>   real error, and from the next run on it is hidden behind the "uncommitted migrations" message.
+>   Add `primaryKey="true"` to the column.
+>
+> Delete the file, correct your table definition against the list above, and run `propel:install`
+> again. `src/Orm/Propel/Migration_mysql/` should be empty before the run; a successful run creates
+> exactly one migration and executes it.
+
 **Coding time:**
 
 Verify the `pyz_contact_request` table was created in the database (using a tool of your choice). Locate the generated entity in `src/Orm/Zed/Message/Persistence/` and its subfolders.
