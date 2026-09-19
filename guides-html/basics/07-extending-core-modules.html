@@ -254,10 +254,10 @@
 <p><strong>Coding time:</strong></p>
 <p>Open <code>src/SprykerAcademy/Shared/ContactRequest/Transfer/contact_request.transfer.xml</code> and:</p>
 <ol type="1">
-<li>Add a <code>fkCustomer</code> property of type <code>int</code> to the <strong>Message</strong> transfer</li>
-<li>Add a <code>createdAt</code> property of type <code>string</code> to the <strong>Message</strong> transfer</li>
+<li>Add a <code>fkCustomer</code> property of type <code>int</code> to the <strong>ContactRequest</strong> transfer</li>
+<li>Add a <code>createdAt</code> property of type <code>string</code> to the <strong>ContactRequest</strong> transfer</li>
 <li>Add a <code>fkCustomer</code> property of type <code>int</code> to the <strong>ContactRequestCriteria</strong> transfer</li>
-<li>Add a new transfer named <strong>ContactRequestCollection</strong> with a property <code>messages</code> of type <code>Message[]</code></li>
+<li>Add a new transfer named <strong>ContactRequestCollection</strong> with a property <code>contactRequests</code> of type <code>ContactRequest[]</code></li>
 </ol>
 <p>Regenerate transfers:</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span></code></pre></div>
@@ -373,7 +373,7 @@
 </ol>
 <p>In <code>deleteAction()</code>:</p>
 <ol type="1">
-<li>Use <code>$this-&gt;castId($request-&gt;request-&gt;get('idContactRequest'))</code> to safely extract and validate the message ID</li>
+<li>Use <code>$this-&gt;castId($request-&gt;request-&gt;get('idContactRequest'))</code> to safely extract and validate the contact request ID</li>
 <li>Create a <code>ContactRequestCriteriaTransfer</code>, set the <code>idContactRequest</code>, and call <code>deleteContactRequest()</code> on the client</li>
 <li>Redirect back to the messages list</li>
 </ol>

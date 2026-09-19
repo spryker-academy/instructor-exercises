@@ -143,7 +143,7 @@ Route: `/contact-request/hello/index`
     </transfer>
 
     <transfer name="ContactRequestCollection">
-        <property name="contactRequests" type="Message[]"/>
+        <property name="contactRequests" type="ContactRequest[]"/>
     </transfer>
 </transfers>
 ```
@@ -161,10 +161,10 @@ Generates `Generated\Shared\Transfer\ContactRequestTransfer` with:
 -   Typed getters/setters: `getMessage()`, `setMessage(string $message)`
 -   Strict variants: `getMessageOrFail()`, `setFkCustomerOrFail()`
 -   Array conversion: `toArray()`, `fromArray()`, `modifiedToArray()`
--   Collection adders: `addContactRequests(ContactRequestTransfer $message)`
+-   Collection adders: `addContactRequests(ContactRequestTransfer $contactRequest)`
 -   Implements `ArrayAccess` — works with Symfony forms
 
-> **Convention:** Collection property `messages` (plural) generates adder `addContactRequests()` matching the property name.
+> **Convention:** Collection property `contactRequests` (plural) generates adder `addContactRequests()` matching the property name.
 
 ---
 
@@ -406,7 +406,7 @@ class ContactRequestStub
     {
         /** @var ContactRequestResponseTransfer $response */
         $response = $this->zedRequestClient->call(
-            '/contact-request/gateway/find-message',
+            '/contact-request/gateway/find-contact-request',
             $criteria,
         );
         return $response;
@@ -416,7 +416,7 @@ class ContactRequestStub
 
 > **Gateway path convention:**
 > `/module-name/gateway/action-name`
-> `deleteContactRequestAction()` → `/contact-request/gateway/delete-message`
+> `deleteContactRequestAction()` → `/contact-request/gateway/delete-contact-request`
 
 ---
 
@@ -868,7 +868,7 @@ class MessageAsyncController extends AbstractCustomerController
 $zedRequestMock = $this->createMock(ZedRequestClientInterface::class);
 $zedRequestMock->expects($this->once())
     ->method('call')
-    ->with('/contact-request/gateway/delete-message', $criteria)
+    ->with('/contact-request/gateway/delete-contact-request', $criteria)
     ->willReturn($expectedResponse);
 
 $stub = new ContactRequestStub($zedRequestMock);

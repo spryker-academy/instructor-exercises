@@ -1,6 +1,6 @@
 # Exercise 5: Module Layers - Storefront Step
 
-In this exercise, you will display a persisted message in Yves (the Storefront). You will learn how to communicate between Yves and Zed using the Client layer and the BackendGateway.
+In this exercise, you will display a persisted contact request in Yves (the Storefront). You will learn how to communicate between Yves and Zed using the Client layer and the BackendGateway.
 
 **Part 2 of 2** - This guide focuses on showing the message in Yves.
 
@@ -22,7 +22,7 @@ The `GatewayController` exposes an endpoint from Zed to Yves via the BackendGate
 
 **Coding time:**
 
-Open `src/SprykerAcademy/Zed/ContactRequest/Communication/Controller/GatewayController.php`. Complete `findContactRequestAction()` by finding a message through the Facade using the `ContactRequestCriteriaTransfer`.
+Open `src/SprykerAcademy/Zed/ContactRequest/Communication/Controller/GatewayController.php`. Complete `findContactRequestAction()` by finding a contact request through the Facade using the `ContactRequestCriteriaTransfer`.
 
 Clear cache:
 
@@ -111,9 +111,9 @@ The template is already provided at `src/SprykerAcademy/Yves/ContactRequestPage/
 **Coding time:**
 
 Open `src/SprykerAcademy/Yves/ContactRequestPage/Controller/IndexController.php`. Complete `getAction()`:
-1. Instantiate a `ContactRequestCriteriaTransfer` and set the message ID from the route parameter
+1. Instantiate a `ContactRequestCriteriaTransfer` and set the contact request ID (`idContactRequest`) from the route parameter
 2. Use `getFactory()` to access the `ContactRequestClient`
-3. Find a message by the criteria and assign the result to `$contactRequestResponseTransfer`
+3. Find a contact request by the criteria and assign the result to `$contactRequestResponseTransfer`
 
 #### 3.3 Routing
 
@@ -134,7 +134,7 @@ Open `src/SprykerAcademy/Yves/Router/RouterDependencyProvider.php`. It extends t
 ## Testing
 
 1. Create a message via Back Office: http://backoffice.eu.spryker.local/contact-request/index/add
-2. View the message in Yves using its ID: http://yves.eu.spryker.local/contact-request/1
+2. View the contact request in Yves using its `idContactRequest`: http://yves.eu.spryker.local/contact-request/1
 
 ---
 

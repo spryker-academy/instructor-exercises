@@ -196,7 +196,7 @@ class IndexController extends AbstractController
     &lt;/transfer&gt;
 
     &lt;transfer name="ContactRequestCollection"&gt;
-        &lt;property name="contactRequests" type="Message[]"/&gt;
+        &lt;property name="contactRequests" type="ContactRequest[]"/&gt;
     &lt;/transfer&gt;
 &lt;/transfers&gt;</code></pre>
   </section>
@@ -438,7 +438,7 @@ class ContactRequestDeleter
     {
         /** @var ContactRequestResponseTransfer $response */
         $response = $this->zedRequestClient->call(
-            '/contact-request/gateway/find-message',
+            '/contact-request/gateway/find-contact-request',
             $criteria,
         );
         return $response;
@@ -447,7 +447,7 @@ class ContactRequestDeleter
     <div class="box box-accent">
       <strong>Gateway path convention:</strong><br>
       <code>/module-name/gateway/action-name</code><br>
-      <code>deleteContactRequestAction()</code> → <code>/contact-request/gateway/delete-message</code>
+      <code>deleteContactRequestAction()</code> → <code>/contact-request/gateway/delete-contact-request</code>
     </div>
   </section>
   <section>
@@ -865,7 +865,7 @@ if ($form->isSubmitted() && $form->isValid()) {
 $zedRequestMock = $this->createMock(ZedRequestClientInterface::class);
 $zedRequestMock->expects($this->once())
     ->method('call')
-    ->with('/contact-request/gateway/delete-message', $criteria)
+    ->with('/contact-request/gateway/delete-contact-request', $criteria)
     ->willReturn($expectedResponse);
 
 $stub = new ContactRequestStub($zedRequestMock);
