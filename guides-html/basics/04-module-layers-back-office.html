@@ -290,7 +290,7 @@
 <h2 id="verify-your-work">Verify Your Work</h2>
 <p>Run the automated tests for this exercise:</p>
 <div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/ContactRequest/ Exercise4</span></code></pre></div>
-<p>This tests the ContactRequestReader, the ContactRequestWriter, the ContactRequestFacade, <code>addAction()</code> on the IndexController and the <code>add.twig</code> template. All tests should pass if your implementation is correct.</p>
+<p>Every step of this exercise is covered: the two transfer definitions, the Persistence Factory, the Repository (including the <code>Criteria::LIKE</code> partial match), the EntityManager, the Writer, the Reader, the Facade, <code>addAction()</code> and <code>add.twig</code>. All tests should pass if your implementation is correct.</p>
 <hr />
 <h2 id="solution">Solution</h2>
 <div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/module-layers/complete</span></code></pre></div>

@@ -181,7 +181,7 @@ Run the automated tests for this exercise:
 docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/ContactRequest/ Exercise4
 ```
 
-This tests the ContactRequestReader, the ContactRequestWriter, the ContactRequestFacade, `addAction()` on the IndexController and the `add.twig` template. All tests should pass if your implementation is correct.
+Every step of this exercise is covered: the two transfer definitions, the Persistence Factory, the Repository (including the `Criteria::LIKE` partial match), the EntityManager, the Writer, the Reader, the Facade, `addAction()` and `add.twig`. All tests should pass if your implementation is correct.
 
 ---
 
