@@ -272,9 +272,9 @@
 <p><strong>Coding time:</strong></p>
 <p>Open <code>src/SprykerAcademy/Zed/ContactRequest/Communication/Controller/IndexController.php</code>. The facade is already injected via the constructor as <code>$this->contactRequestFacade</code>. Complete <code>addAction()</code>: 1. Instantiate <code>ContactRequestCriteriaTransfer</code> and set the message from the query parameter 2. Call <code>$this->contactRequestFacade->findContactRequest()</code> to look it up 3. If not found, create a new <code>ContactRequestTransfer</code> with the message and persist it via <code>$this->contactRequestFacade->createContactRequest()</code></p>
 <h4 id="template-for-the-back-office">3.2 Template for the Back Office</h4>
-<p>The controller passes <code>message</code> (a <code>ContactRequestTransfer</code>) to the template. Access object properties with dot notation: <code>objectName.objectProperty</code>.</p>
+<p>The controller passes <code>contactRequest</code> (a <code>ContactRequestTransfer</code>) to the template. Access object properties with dot notation: <code>objectName.objectProperty</code>.</p>
 <p><strong>Coding time:</strong></p>
-<p>Open <code>src/SprykerAcademy/Zed/ContactRequest/Presentation/Index/add.twig</code>. Replace the placeholder <code>'show-message-name-here'</code> with the actual message value using dot notation (<code>message.message</code>).</p>
+<p>Open <code>src/SprykerAcademy/Zed/ContactRequest/Presentation/Index/add.twig</code>. Replace the placeholder <code>'show-contact-request-message-here'</code> with the message of the contact request using dot notation (<code>contactRequest.message</code>).</p>
 <p>Clear cache:</p>
 <div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span></code></pre></div>
 <p>Visit: http://backoffice.eu.spryker.local/contact-request/index/add Use query parameter <code>?message=YourName</code> to create a contact request with a custom message.</p>

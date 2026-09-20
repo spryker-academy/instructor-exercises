@@ -496,8 +496,8 @@ if [ "$PACKAGE" = "contact-request" ]; then
                 $content = file_get_contents($file);
                 $item = "        {# >>> " . $marker . " #}\n"
                     . "        {\n"
-                    . "            name: \x27messages\x27,\n"
-                    . "            url: path(\x27customer/messages\x27),\n"
+                    . "            name: \x27contact-requests\x27,\n"
+                    . "            url: path(\x27customer/contact-requests\x27),\n"
                     . "            label: \x27My Contact Requests\x27,\n"
                     . "            icon: \x27envelopes\x27,\n"
                     . "        },\n"
@@ -512,7 +512,7 @@ if [ "$PACKAGE" = "contact-request" ]; then
                 );
                 if ($count) { file_put_contents($file, $content); echo "updated"; }
             ' "$SIDEBAR_TWIG" "$CR_WIRING_MARKER" | grep -q updated && log_success "Added the My Contact Requests item to navigation-sidebar.twig" \
-                || log_error "Warning: could not add the menu item to navigation-sidebar.twig (add a link to customer/messages yourself)"
+                || log_error "Warning: could not add the menu item to navigation-sidebar.twig (add a link to customer/contact-requests yourself)"
         fi
     fi
 fi

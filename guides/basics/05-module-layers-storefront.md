@@ -2,7 +2,7 @@
 
 In this exercise, you will display a persisted contact request in Yves (the Storefront). You will learn how to communicate between Yves and Zed using the Client layer and the BackendGateway.
 
-**Part 2 of 2** - This guide focuses on showing the message in Yves.
+**Part 2 of 2** - This guide focuses on showing the contact request in Yves.
 
 ## Prerequisites
 
@@ -14,7 +14,7 @@ We continue on the code from Part 1.
 
 ## Working on the Exercise
 
-### 1. Expose Message to Storefronts
+### 1. Expose Contact Requests to Storefronts
 
 #### 1.1 GatewayController for Communication with Yves
 
@@ -80,7 +80,7 @@ The `*Client` class is what gets provided to other clients, Yves, or Glue throug
 
 **Coding time:**
 
-Open `src/SprykerAcademy/Client/ContactRequest/ContactRequestClient.php`. Complete `findContactRequest()` by using the factory to create a `ContactRequestStub` and return the found message.
+Open `src/SprykerAcademy/Client/ContactRequest/ContactRequestClient.php`. Complete `findContactRequest()` by using the factory to create a `ContactRequestStub` and return the found contact request.
 
 Update IDE auto-completion:
 
@@ -106,7 +106,7 @@ Open `src/SprykerAcademy/Yves/ContactRequestPage/ContactRequestPageFactory.php`.
 
 #### 3.2 Controller
 
-The template is already provided at `src/SprykerAcademy/Yves/ContactRequestPage/Theme/default/views/contact-request/get.twig` and expects a variable named `message`.
+The template is already provided at `src/SprykerAcademy/Yves/ContactRequestPage/Theme/default/views/contact-request/get.twig` and expects a variable named `contactRequest`.
 
 **Coding time:**
 
@@ -121,7 +121,7 @@ Unlike the Back Office, Yves requires explicit route definitions via a `*RoutePr
 
 **Coding time:**
 
-Open `src/SprykerAcademy/Yves/ContactRequestPage/Plugin/Router/ContactRequestPageRouteProviderPlugin.php`. In `addContactRequestMessageGetRoute()`, fill in the correct **module name** and **controller name** for the placeholders.
+Open `src/SprykerAcademy/Yves/ContactRequestPage/Plugin/Router/ContactRequestPageRouteProviderPlugin.php`. In `addContactRequestGetRoute()`, fill in the correct **module name** and **controller name** for the placeholders.
 
 **Coding time:**
 
@@ -133,7 +133,7 @@ Open `src/SprykerAcademy/Yves/Router/RouterDependencyProvider.php`. It extends t
 
 ## Testing
 
-1. Create a message via Back Office: http://backoffice.eu.spryker.local/contact-request/index/add
+1. Create a contact request via Back Office: http://backoffice.eu.spryker.local/contact-request/index/add
 2. View the contact request in Yves using its `idContactRequest`: http://yves.eu.spryker.local/contact-request/1
 
 ---

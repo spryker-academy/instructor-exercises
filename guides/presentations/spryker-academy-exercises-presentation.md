@@ -754,7 +754,7 @@ To override a core template, create a file at the same relative path in your pro
 
 ```text
   User clicks [Add Message]
-      │ (data-message-ajax-submit + formaction)
+      │ (data-contact-request-ajax-submit + formaction)
       ▼
   AjaxFormSubmitter → preventDefault, collect FormData
       ▼
@@ -762,7 +762,7 @@ To override a core template, create a file at the same relative path in your pro
       │ dispatches "fetching" → Loader shows spinner
       │ POST /customer/contact-requests/async/add
       ▼
-  MessageAsyncController::addAction()
+  ContactRequestAsyncController::addAction()
       │ Creates message, re-renders table
       │ Returns JSON: { messages, content }
       ▼
@@ -781,7 +781,7 @@ To override a core template, create a file at the same relative path in your pro
 ### Async Controller Response
 
 ```php
-class MessageAsyncController extends AbstractCustomerController
+class ContactRequestAsyncController extends AbstractCustomerController
 {
     public function addAction(Request $request): JsonResponse
     {
@@ -792,7 +792,7 @@ class MessageAsyncController extends AbstractCustomerController
                 '@ShopUi/.../flash-message-list.twig'
             )->getContent(),
             'content' => $this->getTwig()->render(
-                '@CustomerPage/views/message/message-async.twig',
+                '@CustomerPage/views/contact-request/contact-request-async.twig',
                 ['messages' => $collection, 'messageForm' => $form],
             ),
         ]);
@@ -815,7 +815,7 @@ class MessageAsyncController extends AbstractCustomerController
 {# Target area that gets replaced #}
 <div class="{{ contentClass }}">
     {# table + form + loader #}
-    <button data-message-ajax-submit
+    <button data-contact-request-ajax-submit
             formaction="{{ path('customer/contact-requests/async/add') }}">
         Add Message
     </button>
@@ -840,7 +840,7 @@ class MessageAsyncController extends AbstractCustomerController
 
 {% include molecule('ajax-form-submitter') with {
     attributes: {
-        'trigger-attribute': 'data-message-ajax-submit',
+        'trigger-attribute': 'data-contact-request-ajax-submit',
         'provider-class-name': providerClass,
     }
 } only %}

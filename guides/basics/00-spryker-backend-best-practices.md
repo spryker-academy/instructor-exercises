@@ -397,9 +397,9 @@ class ContactRequestController extends AbstractController
             ->findContactRequest($contactRequestCriteriaTransfer);
 
         return $this->view(
-            ['message' => $contactRequestResponseTransfer->getMessage()],
+            ['contactRequest' => $contactRequestResponseTransfer->getContactRequest()],
             [],
-            '@ContactRequestPage/views/message/get.twig',
+            '@ContactRequestPage/views/contact-request/get.twig',
         );
     }
 }

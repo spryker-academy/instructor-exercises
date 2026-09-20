@@ -251,13 +251,13 @@ Once the route exists, add a "My Contact Requests" entry to the customer account
 ```twig
         {
             name: 'messages',
-            url: path('customer/messages'),
+            url: path('customer/contact-requests'),
             label: 'My Contact Requests',
             icon: 'envelopes',
         },
 ```
 
-> `customer/messages` is the route **name** (`ContactRequestController::ROUTE_CUSTOMER_CONTACT_REQUESTS`), not the path. Add the item only after the route is registered, otherwise `path()` fails on every account page. When you load the `complete` branch, the loader adds this item for you (between `{# >>> contact-request exercise #}` markers) and removes it again when you load another branch.
+> `customer/contact-requests` is the route **name** (`ContactRequestController::ROUTE_CUSTOMER_CONTACT_REQUESTS`), not the path. Add the item only after the route is registered, otherwise `path()` fails on every account page. When you load the `complete` branch, the loader adds this item for you (between `{# >>> contact-request exercise #}` markers) and removes it again when you load another branch.
 
 Clear cache:
 
@@ -394,21 +394,21 @@ The template includes the AJAX trio after the content wrapper:
 {# AJAX components #}
 {% include molecule('ajax-provider') with { class: ajaxProviderClass, attributes: { method: 'POST' } } only %}
 {% include molecule('ajax-renderer') with { attributes: { 'provider-class-name': ajaxProviderClass, 'target-class-name': ajaxContentClass, 'mount-after-render': true } } only %}
-{% include molecule('ajax-form-submitter') with { attributes: { 'trigger-attribute': 'data-message-ajax-submit', 'provider-class-name': ajaxProviderClass } } only %}
+{% include molecule('ajax-form-submitter') with { attributes: { 'trigger-attribute': 'data-contact-request-ajax-submit', 'provider-class-name': ajaxProviderClass } } only %}
 ```
 
-Form buttons use `data-message-ajax-submit` and `formaction` to point to the async endpoint:
+Form buttons use `data-contact-request-ajax-submit` and `formaction` to point to the async endpoint:
 
 ```html
-<button data-message-ajax-submit formaction="/customer/contact-requests/async/add">Add Message</button>
-<button data-message-ajax-submit formaction="/customer/contact-requests/async/delete">Delete</button>
+<button data-contact-request-ajax-submit formaction="/customer/contact-requests/async/add">Add Contact Request</button>
+<button data-contact-request-ajax-submit formaction="/customer/contact-requests/async/delete">Delete</button>
 ```
 
 ### Key Additions in the AJAX Version
 
-- `MessageAsyncController` — `addAction()` and `deleteAction()` return `JsonResponse` instead of redirects
+- `ContactRequestAsyncController` — `addAction()` and `deleteAction()` return `JsonResponse` instead of redirects
 - Async routes: `POST /customer/contact-requests/async/add` and `POST /customer/contact-requests/async/delete`
-- `message-async.twig` — Content fragment re-rendered server-side after each operation
+- `contact-request-async.twig` — Content fragment re-rendered server-side after each operation
 - `list.twig` — Includes the AJAX component trio; uses `mount-after-render: true` so JS components in new content get re-initialized
 
 ```bash

@@ -756,7 +756,7 @@ if ($form->isSubmitted() && $form->isValid()) {
     <div class="diagram">
 <pre>
   User clicks [Add Message]
-      │ (data-message-ajax-submit + formaction)
+      │ (data-contact-request-ajax-submit + formaction)
       ▼
   AjaxFormSubmitter → preventDefault, collect FormData
       ▼
@@ -764,7 +764,7 @@ if ($form->isSubmitted() && $form->isValid()) {
       │ dispatches "fetching" → Loader shows spinner
       │ POST /customer/contact-requests/async/add
       ▼
-  MessageAsyncController::addAction()
+  ContactRequestAsyncController::addAction()
       │ Creates message, re-renders table
       │ Returns JSON: { messages, content }
       ▼
@@ -781,7 +781,7 @@ if ($form->isSubmitted() && $form->isValid()) {
   </section>
   <section>
     <h3>Async Controller Response</h3>
-    <pre><code class="language-php">class MessageAsyncController extends AbstractCustomerController
+    <pre><code class="language-php">class ContactRequestAsyncController extends AbstractCustomerController
 {
     public function addAction(Request $request): JsonResponse
     {
@@ -792,7 +792,7 @@ if ($form->isSubmitted() && $form->isValid()) {
                 '@ShopUi/.../flash-message-list.twig'
             )->getContent(),
             'content' => $this->getTwig()->render(
-                '@CustomerPage/views/message/message-async.twig',
+                '@CustomerPage/views/contact-request/contact-request-async.twig',
                 ['messages' => $collection, 'messageForm' => $form],
             ),
         ]);
@@ -812,7 +812,7 @@ if ($form->isSubmitted() && $form->isValid()) {
 {# Target area that gets replaced #}
 &lt;div class="{{ contentClass }}"&gt;
     {# table + form + loader #}
-    &lt;button data-message-ajax-submit
+    &lt;button data-contact-request-ajax-submit
             formaction="{{ path('customer/contact-requests/async/add') }}"&gt;
         Add Message
     &lt;/button&gt;
@@ -837,7 +837,7 @@ if ($form->isSubmitted() && $form->isValid()) {
 
 {% include molecule('ajax-form-submitter') with {
     attributes: {
-        'trigger-attribute': 'data-message-ajax-submit',
+        'trigger-attribute': 'data-contact-request-ajax-submit',
         'provider-class-name': providerClass,
     }
 } only %}</code></pre>

@@ -406,12 +406,12 @@
 <p>Once the route exists, add a "My Contact Requests" entry to the customer account sidebar. The project overrides that molecule in <code>src/Pyz/Yves/CustomerPage/Theme/default/components/molecules/navigation-sidebar/navigation-sidebar.twig</code>; append one more entry to its <code>items</code> array:</p>
 <pre class="twig"><code>        {
             name: &#39;messages&#39;,
-            url: path(&#39;customer/messages&#39;),
+            url: path(&#39;customer/contact-requests&#39;),
             label: &#39;My Contact Requests&#39;,
             icon: &#39;envelopes&#39;,
         },</code></pre>
 <blockquote>
-<p><code>customer/messages</code> is the route <strong>name</strong> (<code>ContactRequestController::ROUTE_CUSTOMER_CONTACT_REQUESTS</code>), not the path. Add the item only after the route is registered, otherwise <code>path()</code> fails on every account page. When you load the <code>complete</code> branch, the loader adds this item for you (between <code>{# &gt;&gt;&gt; contact-request exercise #}</code> markers) and removes it again when you load another branch.</p>
+<p><code>customer/contact-requests</code> is the route <strong>name</strong> (<code>ContactRequestController::ROUTE_CUSTOMER_CONTACT_REQUESTS</code>), not the path. Add the item only after the route is registered, otherwise <code>path()</code> fails on every account page. When you load the <code>complete</code> branch, the loader adds this item for you (between <code>{# &gt;&gt;&gt; contact-request exercise #}</code> markers) and removes it again when you load another branch.</p>
 </blockquote>
 <p>Clear cache:</p>
 <div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span>
@@ -536,15 +536,15 @@
 {# AJAX components #}
 {% include molecule(&#39;ajax-provider&#39;) with { class: ajaxProviderClass, attributes: { method: &#39;POST&#39; } } only %}
 {% include molecule(&#39;ajax-renderer&#39;) with { attributes: { &#39;provider-class-name&#39;: ajaxProviderClass, &#39;target-class-name&#39;: ajaxContentClass, &#39;mount-after-render&#39;: true } } only %}
-{% include molecule(&#39;ajax-form-submitter&#39;) with { attributes: { &#39;trigger-attribute&#39;: &#39;data-message-ajax-submit&#39;, &#39;provider-class-name&#39;: ajaxProviderClass } } only %}</code></pre>
-<p>Form buttons use <code>data-message-ajax-submit</code> and <code>formaction</code> to point to the async endpoint:</p>
-<div class="sourceCode" id="cb17"><pre class="sourceCode html"><code class="sourceCode html"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;button</span><span class="ot"> data-message-ajax-submit formaction=</span><span class="st">&quot;/customer/contact-requests/async/add&quot;</span><span class="kw">&gt;</span>Add Message<span class="kw">&lt;/button&gt;</span></span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;button</span><span class="ot"> data-message-ajax-submit formaction=</span><span class="st">&quot;/customer/contact-requests/async/delete&quot;</span><span class="kw">&gt;</span>Delete<span class="kw">&lt;/button&gt;</span></span></code></pre></div>
+{% include molecule(&#39;ajax-form-submitter&#39;) with { attributes: { &#39;trigger-attribute&#39;: &#39;data-contact-request-ajax-submit&#39;, &#39;provider-class-name&#39;: ajaxProviderClass } } only %}</code></pre>
+<p>Form buttons use <code>data-contact-request-ajax-submit</code> and <code>formaction</code> to point to the async endpoint:</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode html"><code class="sourceCode html"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;button</span><span class="ot"> data-contact-request-ajax-submit formaction=</span><span class="st">&quot;/customer/contact-requests/async/add&quot;</span><span class="kw">&gt;</span>Add Message<span class="kw">&lt;/button&gt;</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;button</span><span class="ot"> data-contact-request-ajax-submit formaction=</span><span class="st">&quot;/customer/contact-requests/async/delete&quot;</span><span class="kw">&gt;</span>Delete<span class="kw">&lt;/button&gt;</span></span></code></pre></div>
 <h3 id="key-additions-in-the-ajax-version">Key Additions in the AJAX Version</h3>
 <ul>
-<li><code>MessageAsyncController</code> — <code>addAction()</code> and <code>deleteAction()</code> return <code>JsonResponse</code> instead of redirects</li>
+<li><code>ContactRequestAsyncController</code> — <code>addAction()</code> and <code>deleteAction()</code> return <code>JsonResponse</code> instead of redirects</li>
 <li>Async routes: <code>POST /customer/contact-requests/async/add</code> and <code>POST /customer/contact-requests/async/delete</code></li>
-<li><code>message-async.twig</code> — Content fragment re-rendered server-side after each operation</li>
+<li><code>contact-request-async.twig</code> — Content fragment re-rendered server-side after each operation</li>
 <li><code>list.twig</code> — Includes the AJAX component trio; uses <code>mount-after-render: true</code> so JS components in new content get re-initialized</li>
 </ul>
 <div class="sourceCode" id="cb18"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/extending-core-modules/complete-ajax</span></code></pre></div>

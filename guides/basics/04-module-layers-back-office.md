@@ -141,11 +141,11 @@ Open `src/SprykerAcademy/Zed/ContactRequest/Communication/Controller/IndexContro
 
 #### 3.2 Template for the Back Office
 
-The controller passes `message` (a `ContactRequestTransfer`) to the template. Access object properties with dot notation: `objectName.objectProperty`.
+The controller passes `contactRequest` (a `ContactRequestTransfer`) to the template. Access object properties with dot notation: `objectName.objectProperty`.
 
 **Coding time:**
 
-Open `src/SprykerAcademy/Zed/ContactRequest/Presentation/Index/add.twig`. Replace the placeholder `'show-message-name-here'` with the actual message value using dot notation (`message.message`).
+Open `src/SprykerAcademy/Zed/ContactRequest/Presentation/Index/add.twig`. Replace the placeholder `'show-contact-request-message-here'` with the message of the contact request using dot notation (`contactRequest.message`).
 
 Clear cache:
 
