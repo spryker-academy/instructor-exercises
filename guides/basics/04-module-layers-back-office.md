@@ -159,6 +159,8 @@ The controller passes `contactRequest` (a `ContactRequestTransfer`) to the templ
 
 Open `src/SprykerAcademy/Zed/ContactRequest/Presentation/Index/add.twig`. Replace the placeholder `'show-contact-request-message-here'` with the message of the contact request using dot notation (`contactRequest.message`).
 
+`AddTemplateTest` checks this step, and `IndexControllerAddActionTest` checks the controller above it.
+
 Clear cache:
 
 ```bash
@@ -179,7 +181,7 @@ Run the automated tests for this exercise:
 docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/ContactRequest/ Exercise4
 ```
 
-This tests the ContactRequestReader, the ContactRequestWriter and the ContactRequestFacade. All tests should pass if your implementation is correct.
+This tests the ContactRequestReader, the ContactRequestWriter, the ContactRequestFacade, `addAction()` on the IndexController and the `add.twig` template. All tests should pass if your implementation is correct.
 
 ---
 

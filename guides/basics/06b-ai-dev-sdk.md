@@ -114,8 +114,8 @@ Scope, in this order:
    (table pyz_contact_request, namespace Orm\Zed\ContactRequest\Persistence). Run docker/sdk console propel:install.
 4. Persistence layer (PersistenceFactory, Repository + interface, EntityManager + interface, Mapper),
    Business layer (Facade + interface, BusinessFactory, Reader/ContactRequestReader, Writer/ContactRequestWriter)
-   and Communication layer (CommunicationFactory, IndexController, ContactRequestController with an add
-   form page at /contact-request/contact-request/add, GatewayController).
+   and Communication layer (CommunicationFactory, IndexController with indexAction() and an
+   addAction() add form page at /contact-request/index/add, GatewayController).
 5. Client layer src/SprykerAcademy/Client/ContactRequest (Client + interface, Factory, DependencyProvider,
    Stub/ContactRequestStub using the ZedRequestClient and the gateway path
    /contact-request/gateway/find-contact-request).
@@ -159,7 +159,7 @@ docker/sdk console navigation:build-cache
 ```
 
 - http://backoffice.eu.spryker.local/contact-request/index/index shows the greeting.
-- http://backoffice.eu.spryker.local/contact-request/contact-request/add creates a contact request.
+- http://backoffice.eu.spryker.local/contact-request/index/add creates a contact request.
 - http://backoffice.eu.spryker.local/contact-request/config/index shows *Hello from config!*.
 - http://yves.eu.spryker.local/en/contact-request/1 shows the first contact request.
 
