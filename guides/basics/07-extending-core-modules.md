@@ -126,7 +126,7 @@ Open `src/SprykerAcademy/Zed/ContactRequest/Business/Reader/ContactRequestReader
 
 **Coding time:**
 
-Open `src/SprykerAcademy/Zed/ContactRequest/Business/ContactRequestFacade.php`. Implement `findContactRequestsByCustomer()` by delegating to the factory's ContactRequestReader.
+Open `src/SprykerAcademy/Zed/ContactRequest/Business/ContactRequestFacade.php`. Implement `findContactRequestsByCustomer()` the same way you wrote the other two in [Exercise 4](04-module-layers-back-office.md): delegate to `$this->getService(ContactRequestReader::class)`. No Business Factory is involved — the container wires the Reader's `ContactRequestRepositoryInterface` for you.
 
 ---
 
@@ -140,6 +140,8 @@ Open `src/SprykerAcademy/Zed/ContactRequest/Communication/Controller/GatewayCont
 1. In `createContactRequestAction()`, use the Facade to create and return the message
 2. In `getContactRequestsByCustomerAction()`, use the Facade to find messages by customer and return the collection
 3. In `deleteContactRequestAction()`, use the Facade to delete by ID and return a `ContactRequestResponseTransfer` with the `isSuccessful` flag
+
+The Facade's `deleteContactRequest()` is provided and reaches the Deleter through `$this->getService(ContactRequestDeleter::class)` — the same pattern again.
 
 Clear cache after adding new controller actions:
 

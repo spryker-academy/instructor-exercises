@@ -184,7 +184,29 @@ fi
 log_info "Switching to branch: $BRANCH"
 cd "$REPO_DIR"
 git fetch origin
-git checkout "$BRANCH" 2>/dev/null || git checkout -b "$BRANCH" "origin/$BRANCH"
+
+# Uncommitted edits in the exercise clone make the checkout below fail. The old code
+# hid that error with 2>/dev/null and fell through to "checkout -b", which then said
+# "a branch named ... already exists" - the wrong problem entirely. Park the work,
+# name it, and say how to get it back.
+if [ -n "$(git status --porcelain)" ]; then
+    log_error "Uncommitted changes in $REPO_DIR:"
+    git --no-pager status --short | sed 's/^/    /'
+    git stash push --include-untracked -m "load.sh: work in progress before switching to $BRANCH" >/dev/null
+    log_error "Stashed them. To get them back:  git -C \"$REPO_DIR\" stash pop"
+fi
+
+if git show-ref --verify --quiet "refs/heads/$BRANCH"; then
+    git checkout "$BRANCH"
+else
+    if ! git show-ref --verify --quiet "refs/remotes/origin/$BRANCH"; then
+        log_error "Branch '$BRANCH' does not exist in $REPO_URL."
+        log_error "Available branches:"
+        git for-each-ref --format='    %(refname:short)' refs/remotes/origin | grep -v 'origin/HEAD'
+        exit 1
+    fi
+    git checkout -b "$BRANCH" "origin/$BRANCH"
+fi
 git pull origin "$BRANCH" 2>/dev/null || true
 cd "$PROJECT_DIR"
 

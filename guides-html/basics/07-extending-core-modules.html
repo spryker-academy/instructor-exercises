@@ -266,12 +266,13 @@
 <p>Open <code>src/SprykerAcademy/Zed/ContactRequest/Business/Reader/ContactRequestReader.php</code>. Implement <code>findContactRequestsByCustomer()</code>: - Use the repository to get the contact requests - Create a <code>ContactRequestCollectionTransfer</code> and add each one to it using <code>addContactRequest()</code></p>
 <h4 id="expose-through-the-facade">3.3 Expose Through the Facade</h4>
 <p><strong>Coding time:</strong></p>
-<p>Open <code>src/SprykerAcademy/Zed/ContactRequest/Business/ContactRequestFacade.php</code>. Implement <code>findContactRequestsByCustomer()</code> by delegating to the factory’s ContactRequestReader.</p>
+<p>Open <code>src/SprykerAcademy/Zed/ContactRequest/Business/ContactRequestFacade.php</code>. Implement <code>findContactRequestsByCustomer()</code> the same way you wrote the other two in <a href="04-module-layers-back-office.html">Exercise 4</a>: delegate to <code>$this-&gt;getService(ContactRequestReader::class)</code>. No Business Factory is involved — the container wires the Reader’s <code>ContactRequestRepositoryInterface</code> for you.</p>
 <hr />
 <h3 id="part-4-expose-via-gatewaycontroller">Part 4: Expose via GatewayController</h3>
 <p>We need three new gateway actions: create, get by customer, and delete.</p>
 <p><strong>Coding time:</strong></p>
 <p>Open <code>src/SprykerAcademy/Zed/ContactRequest/Communication/Controller/GatewayController.php</code>: 1. In <code>createContactRequestAction()</code>, use the Facade to create and return the message 2. In <code>getContactRequestsByCustomerAction()</code>, use the Facade to find messages by customer and return the collection 3. In <code>deleteContactRequestAction()</code>, use the Facade to delete by ID and return a <code>ContactRequestResponseTransfer</code> with the <code>isSuccessful</code> flag</p>
+<p>The Facade’s <code>deleteContactRequest()</code> is provided and reaches the Deleter through <code>$this-&gt;getService(ContactRequestDeleter::class)</code> — the same pattern again.</p>
 <p>Clear cache after adding new controller actions:</p>
 <div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console propel:model:build</span></code></pre></div>
