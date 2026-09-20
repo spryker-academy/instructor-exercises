@@ -270,6 +270,7 @@
 <p><strong>Coding time:</strong></p>
 <p>Open <code>src/SprykerAcademy/Zed/ContactRequest/Business/ContactRequestFacade.php</code>. Implement <code>createContactRequest()</code> and <code>findContactRequest()</code> by delegating to the <code>ContactRequestWriter</code> and <code>ContactRequestReader</code> services through <code>$this-&gt;getService(ClassName::class)</code>.</p>
 <p><strong>Hint:</strong> The Writer returns a <code>ContactRequestTransfer</code>; the Reader returns a <code>ContactRequestResponseTransfer</code>. No Business Factory is needed — the container injects <code>ContactRequestEntityManagerInterface</code> into the Writer and <code>ContactRequestRepositoryInterface</code> into the Reader automatically.</p>
+<p><code>ContactRequestFacadeTest</code> checks this step: it mocks the Writer and the Reader and asserts the Facade hands their result back, so leaving either method empty fails the suite.</p>
 <hr />
 <h3 id="visual-in-the-back-office">3. Visual in the Back Office</h3>
 <h4 id="controller-for-the-back-office">3.1 Controller for the Back Office</h4>
@@ -288,7 +289,7 @@
 <h2 id="verify-your-work">Verify Your Work</h2>
 <p>Run the automated tests for this exercise:</p>
 <div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/ContactRequest/ Exercise4</span></code></pre></div>
-<p>This tests the ContactRequestReader and ContactRequestWriter business logic. All tests should pass if your implementation is correct.</p>
+<p>This tests the ContactRequestReader, the ContactRequestWriter and the ContactRequestFacade. All tests should pass if your implementation is correct.</p>
 <hr />
 <h2 id="solution">Solution</h2>
 <div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/module-layers/complete</span></code></pre></div>

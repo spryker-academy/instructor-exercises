@@ -134,6 +134,8 @@ Open `src/SprykerAcademy/Zed/ContactRequest/Business/ContactRequestFacade.php`. 
 
 **Hint:** The Writer returns a `ContactRequestTransfer`; the Reader returns a `ContactRequestResponseTransfer`. No Business Factory is needed — the container injects `ContactRequestEntityManagerInterface` into the Writer and `ContactRequestRepositoryInterface` into the Reader automatically.
 
+`ContactRequestFacadeTest` checks this step: it mocks the Writer and the Reader and asserts the Facade hands their result back, so leaving either method empty fails the suite.
+
 ---
 
 ### 3. Visual in the Back Office
@@ -177,7 +179,7 @@ Run the automated tests for this exercise:
 docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/ContactRequest/ Exercise4
 ```
 
-This tests the ContactRequestReader and ContactRequestWriter business logic. All tests should pass if your implementation is correct.
+This tests the ContactRequestReader, the ContactRequestWriter and the ContactRequestFacade. All tests should pass if your implementation is correct.
 
 ---
 

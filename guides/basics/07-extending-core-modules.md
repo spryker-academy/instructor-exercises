@@ -36,9 +36,10 @@ Currently the `pyz_contact_request` table stores contact requests without any li
 **Coding time:**
 
 Open `src/SprykerAcademy/Zed/ContactRequest/Persistence/Propel/Schema/pyz_contact_request.schema.xml` and:
-1. Add a new column `fk_customer` of type `INTEGER` (not required, since existing messages have no customer)
-2. Add a `<foreign-key>` element that references the `spy_customer` table, mapping `fk_customer` to `id_customer` with `onDelete="CASCADE"`
-3. Add `<behavior name="timestampable"/>` — Propel will auto-add `created_at` and `updated_at` TIMESTAMP columns
+1. Add a new column `fk_customer` of type `INTEGER` (not required, since existing contact requests have no customer)
+2. Add `fk_customer` to the existing `pyz_contact_request-message` unique index, so two customers can send the same text
+3. Add a `<foreign-key>` element that references the `spy_customer` table, mapping `fk_customer` to `id_customer` with `onDelete="CASCADE"`
+4. Add `<behavior name="timestampable"/>` — Propel will auto-add `created_at` and `updated_at` TIMESTAMP columns
 
 After modifying the schema, run:
 
@@ -261,7 +262,9 @@ Open `src/SprykerAcademy/Yves/CustomerPage/Plugin/Router/CustomerPageRouteProvid
 The following files are already provided by the exercise skeleton:
 
 - **`src/SprykerAcademy/Yves/Router/RouterDependencyProvider.php`** — Extends the project's `Pyz\Yves\Router\RouterDependencyProvider` and swaps the core `CustomerPageRouteProviderPlugin` for your extended version. Because `SprykerAcademy` is resolved before `Pyz`, no project file is edited.
-- **`src/SprykerAcademy/Yves/CustomerPage/Theme/.../views/contact-request/list.twig`** — The Twig template showing the message table with delete buttons and the add form
+- **`src/SprykerAcademy/Yves/CustomerPage/Theme/.../views/contact-request/list.twig`** — The Twig template showing the contact request table with delete buttons and the add form
+- **`src/SprykerAcademy/Zed/ContactRequest/Business/Deleter/ContactRequestDeleter.php`** and the Facade's `deleteContactRequest()` — the delete business model, so Part 4 has something to call
+- **`ContactRequestController::castId()`** — the numeric-id guard described in 6.4
 
 Take a moment to review these files to understand:
 - How Spryker's **template override** mechanism works (project-level Twig overrides vendor templates by matching the file path)
