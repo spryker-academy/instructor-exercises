@@ -216,7 +216,7 @@
 <h1 class="title">Exercise 4: Module Layers - Back Office Step</h1>
 </header>
 <h1 id="exercise-4-module-layers---back-office-step">Exercise 4: Module Layers - Back Office Step</h1>
-<p>In this exercise, you will create a message through a Back Office controller and persist it in the database. You will learn how to work with the Persistence, Business, and Communication layers in Zed.</p>
+<p>In this exercise, you will create a contact request through a Back Office controller and persist it in the database. You will learn how to work with the Persistence, Business, and Communication layers in Zed.</p>
 <p><strong>Part 1 of 2</strong> - This guide focuses on the Zed layer.</p>
 <h2 id="loading-the-exercise">Loading the Exercise</h2>
 <div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/module-layers/skeleton</span>
@@ -226,10 +226,13 @@
 <hr />
 <h2 id="working-on-the-exercise">Working on the Exercise</h2>
 <h3 id="create-the-persistence-layer">1. Create the Persistence Layer</h3>
-<h4 id="add-a-messagecriteriatransfer-definition">1.1 Add a ContactRequestCriteriaTransfer Definition</h4>
+<h4 id="add-a-contactrequestcriteriatransfer-definition">1.1 Add a ContactRequestCriteriaTransfer Definition</h4>
 <p>It is good practice to not use simple types directly for requesting data from the Persistence Layer. Instead, create a <code>*CriteriaTransfer</code>.</p>
 <p><strong>Coding time:</strong></p>
-<p>Open <code>src/SprykerAcademy/Shared/ContactRequest/Transfer/contact_request.transfer.xml</code> and add a DTO named <strong>ContactRequestCriteria</strong> with: - Property <code>idContactRequest</code> of type <code>int</code> - Property <code>message</code> of type <code>string</code></p>
+<p>Open <code>src/SprykerAcademy/Shared/ContactRequest/Transfer/contact_request.transfer.xml</code> and add a DTO named <strong>ContactRequestCriteria</strong> with <code>strict="true"</code> and: - Property <code>idContactRequest</code> of type <code>int</code> - Property <code>message</code> of type <code>string</code></p>
+<blockquote>
+<p>Every transfer in this module carries <code>strict="true"</code> so the generated accessors are natively typed - see <a href="02-data-transfer-object.md#11-always-add-stricttrue">Exercise 2</a>. It pays off right here: <code>getIdContactRequest(): ?int</code> means the Repository can branch on the criteria without wondering whether it holds an <code>int</code>, a numeric string or something else entirely.</p>
+</blockquote>
 <p>Regenerate transfers:</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span></code></pre></div>
 <h4 id="create-the-persistence-layer-factory">1.2 Create the Persistence Layer Factory</h4>
@@ -240,43 +243,46 @@
 <p>The Repository reads data. Use <code>getFactory()</code> to access the Persistence Factory (provided by <code>AbstractRepository</code>).</p>
 <p>Key patterns: - Propel query objects provide magic <code>findOneBy&lt;ColumnName&gt;()</code> methods for exact lookups - For partial matching, use <code>filterBy&lt;ColumnName&gt;()</code> with <code>Criteria::LIKE</code> as the second parameter, then call <code>findOne()</code>. You will need to import <code>Propel\Runtime\ActiveQuery\Criteria</code> - Convert entities to DTOs using the Mapper (available via the factory)</p>
 <p><strong>Coding time:</strong></p>
-<p>Open <code>src/SprykerAcademy/Zed/ContactRequest/Persistence/ContactRequestRepository.php</code>. In the <code>findContactRequest()</code> method: 1. Get the message query from the factory 2. If the criteria has an <code>idContactRequest</code>, find by ID and return the result 3. If the criteria has a <code>message</code> string, use LIKE filtering to find a partial match and return only one result 4. Return <code>null</code> if no entity was found 5. Map the entity to a DTO using the ContactRequestMapper and return it</p>
+<p>Open <code>src/SprykerAcademy/Zed/ContactRequest/Persistence/ContactRequestRepository.php</code>. In the <code>findContactRequest()</code> method: 1. Get the ContactRequest query from the factory 2. If the criteria has an <code>idContactRequest</code>, find by ID and return the result 3. If the criteria has a <code>message</code> string, use LIKE filtering to find a partial match and return only one result 4. Return <code>null</code> if no entity was found 5. Map the entity to a DTO using the ContactRequestMapper and return it</p>
 <h4 id="create-the-entitymanager">1.4 Create the EntityManager</h4>
 <p>The EntityManager handles writes. Transform the DTO to an entity, save it, and transform it back.</p>
 <p><strong>Coding time:</strong></p>
 <p>Open <code>src/SprykerAcademy/Zed/ContactRequest/Persistence/ContactRequestEntityManager.php</code>. In the <code>createContactRequest()</code> method: 1. Map the DTO to an entity using the ContactRequestMapper 2. Call <code>$contactRequestEntity-&gt;save()</code> 3. Map the entity back to a DTO and return it</p>
 <hr />
 <h3 id="build-the-business-logic">2. Build the Business Logic</h3>
-<h4 id="add-messageresponsetransfer-definition">2.1 Add ContactRequestResponseTransfer Definition</h4>
+<h4 id="add-contactrequestresponsetransfer-definition">2.1 Add ContactRequestResponseTransfer Definition</h4>
 <p>Wrap the DTO in a <code>*ResponseTransfer</code> to include success/error information.</p>
 <p><strong>Coding time:</strong></p>
-<p>Open <code>src/SprykerAcademy/Shared/ContactRequest/Transfer/contact_request.transfer.xml</code> and add a DTO named <strong>ContactRequestResponse</strong> with: - Property <code>contactRequest</code> of type <code>ContactRequest</code> - Property <code>isSuccessful</code> of type <code>bool</code></p>
+<p>Open <code>src/SprykerAcademy/Shared/ContactRequest/Transfer/contact_request.transfer.xml</code> and add a DTO named <strong>ContactRequestResponse</strong> with <code>strict="true"</code> and: - Property <code>contactRequest</code> of type <code>ContactRequest</code> - Property <code>isSuccessful</code> of type <code>bool</code></p>
+<p>Strict mode gives you <code>getContactRequest(): ?ContactRequestTransfer</code> and <code>getContactRequestOrFail(): ContactRequestTransfer</code>. Use the second one once <code>isSuccessful</code> told you the request was found - it throws a clear <code>NullValueException</code> instead of handing you a null that fails somewhere in a template.</p>
 <p>Regenerate:</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span></code></pre></div>
 <h4 id="the-writer">2.2 The Writer</h4>
 <p>Separate reading from writing. The Writer uses the EntityManager.</p>
 <p><strong>Coding time:</strong></p>
-<p>Open <code>src/SprykerAcademy/Zed/ContactRequest/Business/Writer/ContactRequestWriter.php</code>: - Inject <code>ContactRequestEntityManagerInterface</code> through the constructor - In the <code>create()</code> method, use the EntityManager to create and return the message</p>
+<p>Open <code>src/SprykerAcademy/Zed/ContactRequest/Business/Writer/ContactRequestWriter.php</code>: - Inject <code>ContactRequestEntityManagerInterface</code> through the constructor - In the <code>create()</code> method, use the EntityManager to create and return the contact request</p>
 <h4 id="the-reader">2.3 The Reader</h4>
 <p>The Reader uses the Repository and prepares the response.</p>
 <p><strong>Coding time:</strong></p>
-<p>Open <code>src/SprykerAcademy/Zed/ContactRequest/Business/Reader/ContactRequestReader.php</code>: - Inject <code>ContactRequestRepositoryInterface</code> through the constructor - In the <code>findContactRequest()</code> method, use the Repository to find a message by criteria - Create a <code>ContactRequestResponseTransfer</code> and set <code>message</code> and <code>isSuccessful</code> based on the result - Return the response</p>
+<p>Open <code>src/SprykerAcademy/Zed/ContactRequest/Business/Reader/ContactRequestReader.php</code>: - Inject <code>ContactRequestRepositoryInterface</code> through the constructor - In the <code>findContactRequest()</code> method, use the Repository to find a contact request by criteria - Create a <code>ContactRequestResponseTransfer</code> and set <code>contactRequest</code> and <code>isSuccessful</code> based on the result - Return the response</p>
 <h4 id="expose-functionality-through-the-facade">2.4 Expose Functionality through the Facade</h4>
-<p>The Facade is the module’s public API. Since Spryker 202602.0, you can use <code>$this->getService(ClassName::class)</code> directly in the Facade — no Business Factory needed. Spryker’s DI container automatically wires the dependencies of the service class.</p>
+<p>The Facade is the module’s public API. Since Spryker 202602.0, you can use <code>$this-&gt;getService(ClassName::class)</code> directly in the Facade instead of going through a Business Factory. Spryker’s DI container automatically wires the dependencies of the service class.</p>
 <p><strong>Coding time:</strong></p>
-<p>Open <code>src/SprykerAcademy/Zed/ContactRequest/Business/ContactRequestFacade.php</code>. Implement <code>createContactRequest()</code> and <code>findContactRequest()</code> using <code>$this->getService(ContactRequestWriter::class)</code> and <code>$this->getService(ContactRequestReader::class)</code>.</p>
+<p>Open <code>src/SprykerAcademy/Zed/ContactRequest/Business/ContactRequestFacade.php</code>. Implement <code>createContactRequest()</code> and <code>findContactRequest()</code> by delegating to the <code>ContactRequestWriter</code> and <code>ContactRequestReader</code> services through <code>$this-&gt;getService(ClassName::class)</code>.</p>
+<p><strong>Hint:</strong> The Writer returns a <code>ContactRequestTransfer</code>; the Reader returns a <code>ContactRequestResponseTransfer</code>. No Business Factory is needed — the container injects <code>ContactRequestEntityManagerInterface</code> into the Writer and <code>ContactRequestRepositoryInterface</code> into the Reader automatically.</p>
 <hr />
 <h3 id="visual-in-the-back-office">3. Visual in the Back Office</h3>
 <h4 id="controller-for-the-back-office">3.1 Controller for the Back Office</h4>
-<p>Since Spryker 202602.0, controllers support constructor dependency injection. The facade is injected directly — no need for <code>$this->getFacade()</code>.</p>
+<p>Since Spryker 202602.0, controllers support <strong>constructor dependency injection</strong>. You can inject the Facade directly instead of using <code>$this-&gt;getFacade()</code>.</p>
 <p><strong>Coding time:</strong></p>
-<p>Open <code>src/SprykerAcademy/Zed/ContactRequest/Communication/Controller/IndexController.php</code>. The facade is already injected via the constructor as <code>$this->contactRequestFacade</code>. Complete <code>addAction()</code>: 1. Instantiate <code>ContactRequestCriteriaTransfer</code> and set the message from the query parameter 2. Call <code>$this->contactRequestFacade->findContactRequest()</code> to look it up 3. If not found, create a new <code>ContactRequestTransfer</code> with the message and persist it via <code>$this->contactRequestFacade->createContactRequest()</code></p>
+<p>Open <code>src/SprykerAcademy/Zed/ContactRequest/Communication/Controller/IndexController.php</code>. The facade is already injected via the constructor — use <code>$this-&gt;contactRequestFacade</code>. Complete <code>addAction()</code>: 1. Instantiate <code>ContactRequestCriteriaTransfer</code> and set the message from the query parameter 2. Call <code>$this-&gt;contactRequestFacade-&gt;findContactRequest()</code> to look it up 3. If not found, create a new <code>ContactRequestTransfer</code> with the message and persist it via <code>$this-&gt;contactRequestFacade-&gt;createContactRequest()</code></p>
 <h4 id="template-for-the-back-office">3.2 Template for the Back Office</h4>
 <p>The controller passes <code>contactRequest</code> (a <code>ContactRequestTransfer</code>) to the template. Access object properties with dot notation: <code>objectName.objectProperty</code>.</p>
 <p><strong>Coding time:</strong></p>
 <p>Open <code>src/SprykerAcademy/Zed/ContactRequest/Presentation/Index/add.twig</code>. Replace the placeholder <code>'show-contact-request-message-here'</code> with the message of the contact request using dot notation (<code>contactRequest.message</code>).</p>
 <p>Clear cache:</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console propel:model:build</span></code></pre></div>
 <p>Visit: http://backoffice.eu.spryker.local/contact-request/index/add Use query parameter <code>?message=YourName</code> to create a contact request with a custom message.</p>
 <hr />
 <h2 id="verify-your-work">Verify Your Work</h2>

@@ -25,9 +25,14 @@ It is good practice to not use simple types directly for requesting data from th
 
 **Coding time:**
 
-Open `src/SprykerAcademy/Shared/ContactRequest/Transfer/contact_request.transfer.xml` and add a DTO named **ContactRequestCriteria** with:
+Open `src/SprykerAcademy/Shared/ContactRequest/Transfer/contact_request.transfer.xml` and add a DTO named **ContactRequestCriteria** with `strict="true"` and:
 - Property `idContactRequest` of type `int`
 - Property `message` of type `string`
+
+> Every transfer in this module carries `strict="true"` so the generated accessors are natively
+> typed - see [Exercise 2](02-data-transfer-object.md#11-always-add-stricttrue). It pays off right
+> here: `getIdContactRequest(): ?int` means the Repository can branch on the criteria without
+> wondering whether it holds an `int`, a numeric string or something else entirely.
 
 Regenerate transfers:
 
@@ -82,9 +87,14 @@ Wrap the DTO in a `*ResponseTransfer` to include success/error information.
 
 **Coding time:**
 
-Open `src/SprykerAcademy/Shared/ContactRequest/Transfer/contact_request.transfer.xml` and add a DTO named **ContactRequestResponse** with:
+Open `src/SprykerAcademy/Shared/ContactRequest/Transfer/contact_request.transfer.xml` and add a DTO named **ContactRequestResponse** with `strict="true"` and:
 - Property `contactRequest` of type `ContactRequest`
 - Property `isSuccessful` of type `bool`
+
+Strict mode gives you `getContactRequest(): ?ContactRequestTransfer` and
+`getContactRequestOrFail(): ContactRequestTransfer`. Use the second one once `isSuccessful` told
+you the request was found - it throws a clear `NullValueException` instead of handing you a null
+that fails somewhere in a template.
 
 Regenerate:
 

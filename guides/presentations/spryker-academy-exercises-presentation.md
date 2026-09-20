@@ -130,20 +130,20 @@ Route: `/contact-request/hello/index`
 ```xml
 <!-- src/SprykerAcademy/Shared/ContactRequest/Transfer/contact_request.transfer.xml -->
 <transfers>
-    <transfer name="ContactRequest">
+    <transfer name="ContactRequest" strict="true">
         <property name="idContactRequest" type="int"/>
         <property name="message" type="string"/>
         <property name="fkCustomer" type="int"/>
         <property name="createdAt" type="string"/>
     </transfer>
 
-    <transfer name="ContactRequestCriteria">
+    <transfer name="ContactRequestCriteria" strict="true">
         <property name="idContactRequest" type="int"/>
         <property name="fkCustomer" type="int"/>
     </transfer>
 
-    <transfer name="ContactRequestCollection">
-        <property name="contactRequests" type="ContactRequest[]"/>
+    <transfer name="ContactRequestCollection" strict="true">
+        <property name="contactRequests" type="ContactRequest[]" singular="contactRequest"/>
     </transfer>
 </transfers>
 ```
@@ -158,13 +158,13 @@ docker/sdk console transfer:generate
 
 Generates `Generated\Shared\Transfer\ContactRequestTransfer` with:
 
--   Typed getters/setters: `getMessage()`, `setMessage(string $message)`
--   Strict variants: `getMessageOrFail()`, `setFkCustomerOrFail()`
+-   Natively typed getters/setters (that is what `strict="true"` buys): `getMessage(): ?string`, `setMessage(?string $message)`
+-   Non-nullable variants: `getMessageOrFail(): string`, `setFkCustomerOrFail(int $fkCustomer)`
 -   Array conversion: `toArray()`, `fromArray()`, `modifiedToArray()`
--   Collection adders: `addContactRequests(ContactRequestTransfer $contactRequest)`
+-   Collection adders: `addContactRequest(ContactRequestTransfer $contactRequest)`
 -   Implements `ArrayAccess` — works with Symfony forms
 
-> **Convention:** Collection property `contactRequests` (plural) generates adder `addContactRequests()` matching the property name.
+> **Always set `strict="true"`:** without it the generated accessors are untyped and a wrong value only fails layers later. And name the adder with `singular="contactRequest"` — the property name alone would give you the plural `addContactRequests()`.
 
 ---
 

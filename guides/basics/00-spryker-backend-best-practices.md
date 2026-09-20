@@ -227,21 +227,26 @@ Transfers live in `Shared/{Module}/Transfer/*.transfer.xml` and are generated in
            xsi:schemaLocation="spryker:transfer-01 http://static.spryker.com/transfer-01.xsd">
 
     <!-- Core entity transfer -->
-    <transfer name="ContactRequest">
+    <transfer name="ContactRequest" strict="true">
         <property name="idContactRequest" type="int"/>
         <property name="message" type="string"/>
     </transfer>
 
     <!-- Criteria transfer: used for search/filter parameters -->
-    <transfer name="ContactRequestCriteria">
+    <transfer name="ContactRequestCriteria" strict="true">
         <property name="idContactRequest" type="int"/>
         <property name="message" type="string"/>
     </transfer>
 
     <!-- Response transfer: wraps results with success flag -->
-    <transfer name="ContactRequestResponse">
+    <transfer name="ContactRequestResponse" strict="true">
         <property name="contactRequest" type="ContactRequest"/>
         <property name="isSuccessful" type="bool"/>
+    </transfer>
+
+    <!-- Collection transfer: singular names the adder -->
+    <transfer name="ContactRequestCollection" strict="true">
+        <property name="contactRequests" type="ContactRequest[]" singular="contactRequest"/>
     </transfer>
 </transfers>
 ```
@@ -249,12 +254,40 @@ Transfers live in `Shared/{Module}/Transfer/*.transfer.xml` and are generated in
 For collections of IDs, use the `singular` attribute:
 
 ```xml
-<transfer name="SupplierCriteria">
+<transfer name="SupplierCriteria" strict="true">
     <property name="idsSupplier" singular="idSupplier" type="array"/>
     <property name="idSupplier" type="int"/>
     <property name="name" type="string"/>
 </transfer>
 ```
+
+### 3.1.1 `strict="true"`: Always Set It on New Transfers
+
+`strict` controls whether the generator puts **native PHP types** on the accessors it writes.
+Compare the same property with strict off and on:
+
+| | `strict` off | `strict="true"` |
+|---|---|---|
+| Setter | `setMessage($message)` | `setMessage(?string $message = null)` |
+| Getter | `getMessage()` | `getMessage(): ?string` |
+| OrFail getter | `getMessageOrFail()` | `getMessageOrFail(): string` |
+| Collection getter | `getContactRequests()` may return `null` | `getContactRequests(): ArrayObject`, never null |
+| Collection adder | `addContactRequest($item)` | `addContactRequest(ContactRequestTransfer $item)` |
+
+Without types, a wrong value is accepted at the setter and only fails much later - inside a
+Propel query, in a Twig template, or not at all, because it was silently written to the database.
+With types PHP throws a `TypeError` on the exact line that is wrong. The `*OrFail()` methods also
+become genuinely non-nullable, which is what lets PHPStan and the IDE drop the `?? ''` guards.
+
+Rules of thumb:
+
+- Put `strict="true"` on the `<transfer>` element - it applies to every property of that transfer.
+  It also works on a single `<property>` when migrating an old transfer gradually.
+- It is opt-in per transfer because enabling it on an existing transfer can break callers that
+  were passing a loose type. New transfers have no such legacy, so switch it on from the start.
+- A strict **associative** array property **requires** `singular`; without it `transfer:generate`
+  aborts with `InvalidSingularPropertyNameException`. For ordinary collections `singular` is
+  optional but nearly always wanted, otherwise the adder is plural (`addContactRequests()`).
 
 ### 3.2 Naming Conventions
 

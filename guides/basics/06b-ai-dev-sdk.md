@@ -108,7 +108,8 @@ Scope, in this order:
    Twig template in Presentation/Index/index.twig. The navigation entry already exists.
 2. Transfer definition src/SprykerAcademy/Shared/ContactRequest/Transfer/contact_request.transfer.xml
    with the ContactRequest transfer (idContactRequest, message) plus ContactRequestCriteria and
-   ContactRequestResponse (isSuccessful, contactRequest). Run docker/sdk console transfer:generate.
+   ContactRequestResponse (isSuccessful, contactRequest). Every transfer carries strict="true".
+   Run docker/sdk console transfer:generate.
 3. Propel schema src/SprykerAcademy/Zed/ContactRequest/Persistence/Propel/Schema/pyz_contact_request.schema.xml
    (table pyz_contact_request, namespace Orm\Zed\ContactRequest\Persistence). Run docker/sdk console propel:install.
 4. Persistence layer (PersistenceFactory, Repository + interface, EntityManager + interface, Mapper),
@@ -167,6 +168,7 @@ Now review the code the way you would review a colleague's pull request. Compare
 - Are all dependencies provided through the DependencyProvider and created in factories?
 - Does any entity leave the Persistence layer?
 - Are return types interfaces?
+- Did it put `strict="true"` on the transfers, or did it fall back to untyped accessors?
 - Did the assistant add anything you did not ask for (extra methods, comments, helper classes)? Would you keep it?
 
 The best result of this exercise is a list of differences, not a perfect module.

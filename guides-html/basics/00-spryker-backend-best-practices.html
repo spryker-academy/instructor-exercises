@@ -313,9 +313,9 @@
 <h3 id="repository-vs-entitymanager">2.1 Repository vs EntityManager</h3>
 <p><strong>Repository = reads only. EntityManager = writes only.</strong> This separation ensures clean architecture and testability.</p>
 <p><strong>Repository</strong> (reads):</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="cn">H</span>elloWorldRepository <span class="kw">extends</span> <span class="cn">A</span>bstractRepository <span class="kw">implements</span> <span class="cn">H</span>elloWorldRepositoryInterface</span>
+<div class="sourceCode" id="cb3"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="cn">C</span>ontactRequestRepository <span class="kw">extends</span> <span class="cn">A</span>bstractRepository <span class="kw">implements</span> <span class="cn">C</span>ontactRequestRepositoryInterface</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>{</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">function</span> findContactRequest(<span class="cn">M</span>essageCriteriaTransfer <span class="va">$contactRequestCriteria</span>)<span class="ot">:</span> <span class="ot">?</span><span class="cn">M</span>essageTransfer</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">function</span> findContactRequest(<span class="cn">C</span>ontactRequestCriteriaTransfer <span class="va">$contactRequestCriteria</span>)<span class="ot">:</span> <span class="ot">?</span><span class="cn">C</span>ontactRequestTransfer</span>
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    {</span>
 <span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>        <span class="va">$query</span> <span class="op">=</span> <span class="va">$this</span>-&gt;getFactory()-&gt;createContactRequestQuery()<span class="ot">;</span></span>
 <span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>        <span class="va">$contactRequestEntity</span> <span class="op">=</span> <span class="kw">null</span><span class="ot">;</span></span>
@@ -335,13 +335,13 @@
 <span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">$this</span>-&gt;getFactory()</span>
 <span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>            -&gt;createContactRequestMapper()</span>
-<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>            -&gt;mapEntityToContactRequestTransfer(<span class="va">$contactRequestEntity</span><span class="ot">,</span> <span class="kw">new</span> <span class="cn">M</span>essageTransfer())<span class="ot">;</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>            -&gt;mapEntityToContactRequestTransfer(<span class="va">$contactRequestEntity</span><span class="ot">,</span> <span class="kw">new</span> <span class="cn">C</span>ontactRequestTransfer())<span class="ot">;</span></span>
 <span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>    }</span>
 <span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 <p><strong>EntityManager</strong> (writes):</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="cn">H</span>elloWorldEntityManager <span class="kw">extends</span> <span class="cn">A</span>bstractEntityManager <span class="kw">implements</span> <span class="cn">H</span>elloWorldEntityManagerInterface</span>
+<div class="sourceCode" id="cb4"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="cn">C</span>ontactRequestEntityManager <span class="kw">extends</span> <span class="cn">A</span>bstractEntityManager <span class="kw">implements</span> <span class="cn">C</span>ontactRequestEntityManagerInterface</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>{</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">function</span> createContactRequest(<span class="cn">M</span>essageTransfer <span class="va">$contactRequestTransfer</span>)<span class="ot">:</span> <span class="cn">M</span>essageTransfer</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">function</span> createContactRequest(<span class="cn">C</span>ontactRequestTransfer <span class="va">$contactRequestTransfer</span>)<span class="ot">:</span> <span class="cn">C</span>ontactRequestTransfer</span>
 <span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    {</span>
 <span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>        <span class="va">$contactRequestEntity</span> <span class="op">=</span> <span class="va">$this</span>-&gt;getFactory()</span>
 <span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>            -&gt;createContactRequestMapper()</span>
@@ -351,21 +351,21 @@
 <span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">$this</span>-&gt;getFactory()</span>
 <span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>            -&gt;createContactRequestMapper()</span>
-<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>            -&gt;mapEntityToContactRequestTransfer(<span class="va">$contactRequestEntity</span><span class="ot">,</span> <span class="kw">new</span> <span class="cn">M</span>essageTransfer())<span class="ot">;</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>            -&gt;mapEntityToContactRequestTransfer(<span class="va">$contactRequestEntity</span><span class="ot">,</span> <span class="kw">new</span> <span class="cn">C</span>ontactRequestTransfer())<span class="ot">;</span></span>
 <span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    }</span>
 <span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 <h3 id="persistencefactory">2.2 PersistenceFactory</h3>
 <p>All Propel query objects and mappers are created through the PersistenceFactory. Never instantiate them directly.</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="cn">H</span>elloWorldPersistenceFactory <span class="kw">extends</span> <span class="cn">A</span>bstractPersistenceFactory</span>
+<div class="sourceCode" id="cb5"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="cn">C</span>ontactRequestPersistenceFactory <span class="kw">extends</span> <span class="cn">A</span>bstractPersistenceFactory</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>{</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">function</span> createContactRequestQuery()<span class="ot">:</span> <span class="cn">P</span>yzMessageQuery</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">function</span> createContactRequestQuery()<span class="ot">:</span> <span class="cn">P</span>yzContactRequestQuery</span>
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    {</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="cn">P</span>yzMessageQuery::create()<span class="ot">;</span> <span class="co">// Always use ::create(), never new</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="cn">P</span>yzContactRequestQuery::create()<span class="ot">;</span> <span class="co">// Always use ::create(), never new</span></span>
 <span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    }</span>
 <span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">function</span> createContactRequestMapper()<span class="ot">:</span> <span class="cn">M</span>essageMapper</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">function</span> createContactRequestMapper()<span class="ot">:</span> <span class="cn">C</span>ontactRequestMapper</span>
 <span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    {</span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="kw">new</span> <span class="cn">M</span>essageMapper()<span class="ot">;</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="kw">new</span> <span class="cn">C</span>ontactRequestMapper()<span class="ot">;</span></span>
 <span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    }</span>
 <span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 <p>When providing queries to the Communication layer (e.g., for GUI tables), use <code>$container-&gt;factory()</code> to get a fresh instance each time:</p>
@@ -418,31 +418,91 @@
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="ot">           xsi:schemaLocation=</span><span class="st">&quot;spryker:transfer-01 http://static.spryker.com/transfer-01.xsd&quot;</span><span class="kw">&gt;</span></span>
 <span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">&lt;!-- Core entity transfer --&gt;</span></span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">&lt;transfer</span><span class="ot"> name=</span><span class="st">&quot;ContactRequest&quot;</span><span class="kw">&gt;</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">&lt;transfer</span><span class="ot"> name=</span><span class="st">&quot;ContactRequest&quot;</span><span class="ot"> strict=</span><span class="st">&quot;true&quot;</span><span class="kw">&gt;</span></span>
 <span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>        <span class="kw">&lt;property</span><span class="ot"> name=</span><span class="st">&quot;idContactRequest&quot;</span><span class="ot"> type=</span><span class="st">&quot;int&quot;</span><span class="kw">/&gt;</span></span>
 <span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>        <span class="kw">&lt;property</span><span class="ot"> name=</span><span class="st">&quot;message&quot;</span><span class="ot"> type=</span><span class="st">&quot;string&quot;</span><span class="kw">/&gt;</span></span>
 <span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">&lt;/transfer&gt;</span></span>
 <span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>    <span class="co">&lt;!-- Criteria transfer: used for search/filter parameters --&gt;</span></span>
-<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">&lt;transfer</span><span class="ot"> name=</span><span class="st">&quot;ContactRequestCriteria&quot;</span><span class="kw">&gt;</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">&lt;transfer</span><span class="ot"> name=</span><span class="st">&quot;ContactRequestCriteria&quot;</span><span class="ot"> strict=</span><span class="st">&quot;true&quot;</span><span class="kw">&gt;</span></span>
 <span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>        <span class="kw">&lt;property</span><span class="ot"> name=</span><span class="st">&quot;idContactRequest&quot;</span><span class="ot"> type=</span><span class="st">&quot;int&quot;</span><span class="kw">/&gt;</span></span>
 <span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>        <span class="kw">&lt;property</span><span class="ot"> name=</span><span class="st">&quot;message&quot;</span><span class="ot"> type=</span><span class="st">&quot;string&quot;</span><span class="kw">/&gt;</span></span>
 <span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">&lt;/transfer&gt;</span></span>
 <span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>    <span class="co">&lt;!-- Response transfer: wraps results with success flag --&gt;</span></span>
-<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>    <span class="kw">&lt;transfer</span><span class="ot"> name=</span><span class="st">&quot;ContactRequestResponse&quot;</span><span class="kw">&gt;</span></span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>    <span class="kw">&lt;transfer</span><span class="ot"> name=</span><span class="st">&quot;ContactRequestResponse&quot;</span><span class="ot"> strict=</span><span class="st">&quot;true&quot;</span><span class="kw">&gt;</span></span>
 <span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>        <span class="kw">&lt;property</span><span class="ot"> name=</span><span class="st">&quot;contactRequest&quot;</span><span class="ot"> type=</span><span class="st">&quot;ContactRequest&quot;</span><span class="kw">/&gt;</span></span>
 <span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>        <span class="kw">&lt;property</span><span class="ot"> name=</span><span class="st">&quot;isSuccessful&quot;</span><span class="ot"> type=</span><span class="st">&quot;bool&quot;</span><span class="kw">/&gt;</span></span>
 <span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a>    <span class="kw">&lt;/transfer&gt;</span></span>
-<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;/transfers&gt;</span></span></code></pre></div>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a>    <span class="co">&lt;!-- Collection transfer: singular names the adder --&gt;</span></span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a>    <span class="kw">&lt;transfer</span><span class="ot"> name=</span><span class="st">&quot;ContactRequestCollection&quot;</span><span class="ot"> strict=</span><span class="st">&quot;true&quot;</span><span class="kw">&gt;</span></span>
+<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a>        <span class="kw">&lt;property</span><span class="ot"> name=</span><span class="st">&quot;contactRequests&quot;</span><span class="ot"> type=</span><span class="st">&quot;ContactRequest[]&quot;</span><span class="ot"> singular=</span><span class="st">&quot;contactRequest&quot;</span><span class="kw">/&gt;</span></span>
+<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a>    <span class="kw">&lt;/transfer&gt;</span></span>
+<span id="cb9-27"><a href="#cb9-27" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;/transfers&gt;</span></span></code></pre></div>
 <p>For collections of IDs, use the <code>singular</code> attribute:</p>
-<div class="sourceCode" id="cb10"><pre class="sourceCode xml"><code class="sourceCode xml"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;transfer</span><span class="ot"> name=</span><span class="st">&quot;SupplierCriteria&quot;</span><span class="kw">&gt;</span></span>
+<div class="sourceCode" id="cb10"><pre class="sourceCode xml"><code class="sourceCode xml"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;transfer</span><span class="ot"> name=</span><span class="st">&quot;SupplierCriteria&quot;</span><span class="ot"> strict=</span><span class="st">&quot;true&quot;</span><span class="kw">&gt;</span></span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">&lt;property</span><span class="ot"> name=</span><span class="st">&quot;idsSupplier&quot;</span><span class="ot"> singular=</span><span class="st">&quot;idSupplier&quot;</span><span class="ot"> type=</span><span class="st">&quot;array&quot;</span><span class="kw">/&gt;</span></span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">&lt;property</span><span class="ot"> name=</span><span class="st">&quot;idSupplier&quot;</span><span class="ot"> type=</span><span class="st">&quot;int&quot;</span><span class="kw">/&gt;</span></span>
 <span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">&lt;property</span><span class="ot"> name=</span><span class="st">&quot;name&quot;</span><span class="ot"> type=</span><span class="st">&quot;string&quot;</span><span class="kw">/&gt;</span></span>
 <span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;/transfer&gt;</span></span></code></pre></div>
+<h3 id="stricttrue-always-set-it-on-new-transfers">3.1.1 <code>strict="true"</code>: Always Set It on New Transfers</h3>
+<p><code>strict</code> controls whether the generator puts <strong>native PHP types</strong> on the accessors it writes. Compare the same property with strict off and on:</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th><code>strict</code> off</th>
+<th><code>strict="true"</code></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Setter</td>
+<td><code>setMessage($message)</code></td>
+<td><code>setMessage(?string $message = null)</code></td>
+</tr>
+<tr class="even">
+<td>Getter</td>
+<td><code>getMessage()</code></td>
+<td><code>getMessage(): ?string</code></td>
+</tr>
+<tr class="odd">
+<td>OrFail getter</td>
+<td><code>getMessageOrFail()</code></td>
+<td><code>getMessageOrFail(): string</code></td>
+</tr>
+<tr class="even">
+<td>Collection getter</td>
+<td><code>getContactRequests()</code> may return <code>null</code></td>
+<td><code>getContactRequests(): ArrayObject</code>, never null</td>
+</tr>
+<tr class="odd">
+<td>Collection adder</td>
+<td><code>addContactRequest($item)</code></td>
+<td><code>addContactRequest(ContactRequestTransfer $item)</code></td>
+</tr>
+</tbody>
+</table>
+<p>Without types, a wrong value is accepted at the setter and only fails much later - inside a Propel query, in a Twig template, or not at all, because it was silently written to the database. With types PHP throws a <code>TypeError</code> on the exact line that is wrong. The <code>*OrFail()</code> methods also become genuinely non-nullable, which is what lets PHPStan and the IDE drop the <code>?? ''</code> guards.</p>
+<p>Rules of thumb:</p>
+<ul>
+<li>Put <code>strict="true"</code> on the <code>&lt;transfer&gt;</code> element - it applies to every property of that transfer. It also works on a single <code>&lt;property&gt;</code> when migrating an old transfer gradually.</li>
+<li>It is opt-in per transfer because enabling it on an existing transfer can break callers that were passing a loose type. New transfers have no such legacy, so switch it on from the start.</li>
+<li>A strict <strong>associative</strong> array property <strong>requires</strong> <code>singular</code>; without it <code>transfer:generate</code> aborts with <code>InvalidSingularPropertyNameException</code>. For ordinary collections <code>singular</code> is optional but nearly always wanted, otherwise the adder is plural (<code>addContactRequests()</code>).</li>
+</ul>
 <h3 id="naming-conventions">3.2 Naming Conventions</h3>
 <table>
+<colgroup>
+<col style="width: 31%" />
+<col style="width: 37%" />
+<col style="width: 31%" />
+</colgroup>
 <thead>
 <tr class="header">
 <th>Purpose</th>
@@ -602,11 +662,11 @@
 <hr />
 <h2 id="communication-between-yves-and-zed">5. Communication Between Yves and Zed</h2>
 <h3 id="step-1-yves-controller-calls-the-client">Step 1: Yves Controller calls the Client</h3>
-<div class="sourceCode" id="cb15"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="cn">M</span>essageController <span class="kw">extends</span> <span class="cn">A</span>bstractController</span>
+<div class="sourceCode" id="cb15"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="cn">C</span>ontactRequestController <span class="kw">extends</span> <span class="cn">A</span>bstractController</span>
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>{</span>
 <span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">function</span> getAction(<span class="dt">int</span> <span class="va">$idContactRequest</span>)<span class="ot">:</span> <span class="cn">V</span>iew</span>
 <span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    {</span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>        <span class="va">$contactRequestCriteriaTransfer</span> <span class="op">=</span> <span class="kw">new</span> <span class="cn">M</span>essageCriteriaTransfer()<span class="ot">;</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>        <span class="va">$contactRequestCriteriaTransfer</span> <span class="op">=</span> <span class="kw">new</span> <span class="cn">C</span>ontactRequestCriteriaTransfer()<span class="ot">;</span></span>
 <span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>        <span class="va">$contactRequestCriteriaTransfer</span>-&gt;setIdContactRequest(<span class="va">$idContactRequest</span>)<span class="ot">;</span></span>
 <span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>        <span class="va">$contactRequestResponseTransfer</span> <span class="op">=</span> <span class="va">$this</span>-&gt;getFactory()</span>
@@ -614,28 +674,28 @@
 <span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>            -&gt;findContactRequest(<span class="va">$contactRequestCriteriaTransfer</span>)<span class="ot">;</span></span>
 <span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">$this</span>-&gt;view(</span>
-<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>            [<span class="st">&#39;message&#39;</span> =&gt; <span class="va">$contactRequestResponseTransfer</span>-&gt;getMessage()]<span class="ot">,</span></span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>            [<span class="st">&#39;contactRequest&#39;</span> =&gt; <span class="va">$contactRequestResponseTransfer</span>-&gt;getContactRequest()]<span class="ot">,</span></span>
 <span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>            []<span class="ot">,</span></span>
 <span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;@ContactRequestPage/views/contact-request/get.twig&#39;</span><span class="ot">,</span></span>
 <span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>        )<span class="ot">;</span></span>
 <span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a>    }</span>
 <span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 <h3 id="step-2-client-delegates-to-the-stub">Step 2: Client delegates to the Stub</h3>
-<div class="sourceCode" id="cb16"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="cn">H</span>elloWorldClient <span class="kw">extends</span> <span class="cn">A</span>bstractClient <span class="kw">implements</span> <span class="cn">H</span>elloWorldClientInterface</span>
+<div class="sourceCode" id="cb16"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="cn">C</span>ontactRequestClient <span class="kw">extends</span> <span class="cn">A</span>bstractClient <span class="kw">implements</span> <span class="cn">C</span>ontactRequestClientInterface</span>
 <span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>{</span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">function</span> findContactRequest(<span class="cn">M</span>essageCriteriaTransfer <span class="va">$contactRequestCriteria</span>)<span class="ot">:</span> <span class="cn">M</span>essageResponseTransfer</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">function</span> findContactRequest(<span class="cn">C</span>ontactRequestCriteriaTransfer <span class="va">$contactRequestCriteria</span>)<span class="ot">:</span> <span class="cn">C</span>ontactRequestResponseTransfer</span>
 <span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    {</span>
 <span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">$this</span>-&gt;getFactory()-&gt;createContactRequestStub()-&gt;findContactRequest(<span class="va">$contactRequestCriteria</span>)<span class="ot">;</span></span>
 <span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>    }</span>
 <span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 <h3 id="step-3-stub-makes-the-http-call">Step 3: Stub makes the HTTP call</h3>
-<div class="sourceCode" id="cb17"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="cn">H</span>elloWorldStub</span>
+<div class="sourceCode" id="cb17"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="cn">C</span>ontactRequestStub</span>
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>{</span>
 <span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">function</span> <span class="bu">__construct</span>(<span class="kw">protected</span> <span class="cn">Z</span>edRequestClientInterface <span class="va">$zedRequestClient</span>)</span>
 <span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>    {</span>
 <span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>    }</span>
 <span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">function</span> findContactRequest(<span class="cn">M</span>essageCriteriaTransfer <span class="va">$contactRequestCriteria</span>)<span class="ot">:</span> <span class="cn">M</span>essageResponseTransfer</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">function</span> findContactRequest(<span class="cn">C</span>ontactRequestCriteriaTransfer <span class="va">$contactRequestCriteria</span>)<span class="ot">:</span> <span class="cn">C</span>ontactRequestResponseTransfer</span>
 <span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>    {</span>
 <span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>        <span class="co">// URL convention: /{module-name}/gateway/{action-name}</span></span>
 <span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">$this</span>-&gt;zedRequestClient-&gt;call(</span>
@@ -647,7 +707,7 @@
 <h3 id="step-4-gatewaycontroller-receives-the-call-in-zed">Step 4: GatewayController receives the call in Zed</h3>
 <div class="sourceCode" id="cb18"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="cn">G</span>atewayController <span class="kw">extends</span> <span class="cn">A</span>bstractGatewayController</span>
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>{</span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">function</span> findContactRequestAction(<span class="cn">M</span>essageCriteriaTransfer <span class="va">$contactRequestCriteria</span>)<span class="ot">:</span> <span class="cn">M</span>essageResponseTransfer</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">function</span> findContactRequestAction(<span class="cn">C</span>ontactRequestCriteriaTransfer <span class="va">$contactRequestCriteria</span>)<span class="ot">:</span> <span class="cn">C</span>ontactRequestResponseTransfer</span>
 <span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>    {</span>
 <span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">$this</span>-&gt;getFacade()-&gt;findContactRequest(<span class="va">$contactRequestCriteria</span>)<span class="ot">;</span></span>
 <span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>    }</span>
@@ -657,7 +717,7 @@
 <h2 id="dependencyprovider-patterns">6. DependencyProvider Patterns</h2>
 <p>DependencyProviders wire external dependencies (facades, clients, services) into a module’s container.</p>
 <h3 id="client-layer">Client Layer</h3>
-<div class="sourceCode" id="cb19"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="cn">H</span>elloWorldDependencyProvider <span class="kw">extends</span> <span class="cn">A</span>bstractDependencyProvider</span>
+<div class="sourceCode" id="cb19"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="cn">C</span>ontactRequestDependencyProvider <span class="kw">extends</span> <span class="cn">A</span>bstractDependencyProvider</span>
 <span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>{</span>
 <span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">const</span> <span class="dt">string</span> <span class="cn">CLIENT_ZED_REQUEST</span> <span class="op">=</span> <span class="st">&#39;CLIENT_ZED_REQUEST&#39;</span><span class="ot">;</span></span>
 <span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a></span>
@@ -677,7 +737,7 @@
 <span id="cb19-18"><a href="#cb19-18" aria-hidden="true" tabindex="-1"></a>    }</span>
 <span id="cb19-19"><a href="#cb19-19" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 <h3 id="yves-layer">Yves Layer</h3>
-<div class="sourceCode" id="cb20"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="cn">H</span>elloWorldPageDependencyProvider <span class="kw">extends</span> <span class="cn">A</span>bstractBundleDependencyProvider</span>
+<div class="sourceCode" id="cb20"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="cn">C</span>ontactRequestPageDependencyProvider <span class="kw">extends</span> <span class="cn">A</span>bstractBundleDependencyProvider</span>
 <span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>{</span>
 <span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">const</span> <span class="dt">string</span> <span class="cn">CLIENT_CONTACT_REQUEST</span> <span class="op">=</span> <span class="st">&#39;CLIENT_CONTACT_REQUEST&#39;</span><span class="ot">;</span></span>
 <span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a></span>
@@ -738,7 +798,7 @@
 <span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a>    }</span>
 <span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 <h3 id="router-plugin-yves-routing">Router Plugin (Yves Routing)</h3>
-<div class="sourceCode" id="cb22"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="cn">H</span>elloWorldPageRouteProviderPlugin <span class="kw">extends</span> <span class="cn">A</span>bstractRouteProviderPlugin</span>
+<div class="sourceCode" id="cb22"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="cn">C</span>ontactRequestPageRouteProviderPlugin <span class="kw">extends</span> <span class="cn">A</span>bstractRouteProviderPlugin</span>
 <span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>{</span>
 <span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">function</span> addRoutes(<span class="cn">R</span>outeCollection <span class="va">$routeCollection</span>)<span class="ot">:</span> <span class="cn">R</span>outeCollection</span>
 <span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>    {</span>
@@ -890,7 +950,7 @@
 <h3 id="criteria-pattern-for-complex-queries">8.6 Criteria Pattern for Complex Queries</h3>
 <p>Instead of adding many method parameters, use a CriteriaTransfer to encapsulate search conditions:</p>
 <div class="sourceCode" id="cb27"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Repository applies conditions based on what&#39;s set in criteria</span></span>
-<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span> <span class="kw">function</span> findContactRequest(<span class="cn">M</span>essageCriteriaTransfer <span class="va">$criteria</span>)<span class="ot">:</span> <span class="ot">?</span><span class="cn">M</span>essageTransfer</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span> <span class="kw">function</span> findContactRequest(<span class="cn">C</span>ontactRequestCriteriaTransfer <span class="va">$criteria</span>)<span class="ot">:</span> <span class="ot">?</span><span class="cn">C</span>ontactRequestTransfer</span>
 <span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>{</span>
 <span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>    <span class="va">$query</span> <span class="op">=</span> <span class="va">$this</span>-&gt;getFactory()-&gt;createContactRequestQuery()<span class="ot">;</span></span>
 <span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a></span>
@@ -996,7 +1056,7 @@
 <tbody>
 <tr class="odd">
 <td><code>docker/sdk cli composer dump-autoload</code></td>
-<td>After loading a new exercise</td>
+<td>After adding a class in a namespace PHP does not know yet (the loader runs it for you)</td>
 </tr>
 <tr class="even">
 <td><code>docker/sdk console transfer:generate</code></td>
@@ -1036,11 +1096,15 @@
 </tr>
 <tr class="odd">
 <td><code>docker/sdk console cache:empty-all</code></td>
-<td>When experiencing cache issues</td>
+<td>When experiencing cache issues. It also deletes the Propel table map, so follow it with <code>propel:model:build</code></td>
 </tr>
 <tr class="even">
 <td><code>docker/sdk console c:e</code></td>
 <td>Shortcut for cache:empty-all</td>
+</tr>
+<tr class="odd">
+<td><code>docker/sdk console propel:model:build</code></td>
+<td>After <code>cache:empty-all</code>: rebuilds the ORM classes and the table map in <code>data/cache/propel</code></td>
 </tr>
 </tbody>
 </table>

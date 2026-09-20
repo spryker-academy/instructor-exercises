@@ -236,18 +236,18 @@
 <p>Create <code>src/SprykerAcademy/Shared/ContactRequest/ContactRequestConstants.php</code>:</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;?php</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">namespace</span> <span class="cn">S</span>prykerAcademy\<span class="cn">S</span>hared\<span class="cn">H</span>elloWorld<span class="ot">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">namespace</span> <span class="cn">S</span>prykerAcademy\<span class="cn">S</span>hared\<span class="cn">C</span>ontactRequest<span class="ot">;</span></span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> <span class="cn">H</span>elloWorldConstants</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> <span class="cn">C</span>ontactRequestConstants</span>
 <span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>{</span>
 <span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">const</span> <span class="dt">string</span> <span class="cn">MY_CONFIG_VALUE</span> <span class="op">=</span> <span class="st">&#39;CONTACT_REQUEST:MY_CONFIG_VALUE&#39;</span><span class="ot">;</span></span>
 <span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 <p>The string <code>'CONTACT_REQUEST:MY_CONFIG_VALUE'</code> is the key used in config files. The convention is <code>MODULE_NAME:CONFIG_KEY</code>.</p>
 <h3 id="set-the-config-value">2. Set the Config Value</h3>
 <p>Open <code>config/Shared/config_default.php</code> and add your config value at the end of the file (before the closing <code>?&gt;</code> or end of file):</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="cn">S</span>prykerAcademy\<span class="cn">S</span>hared\<span class="cn">H</span>elloWorld\<span class="cn">H</span>elloWorldConstants<span class="ot">;</span></span>
+<div class="sourceCode" id="cb3"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="cn">S</span>prykerAcademy\<span class="cn">S</span>hared\<span class="cn">C</span>ontactRequest\<span class="cn">C</span>ontactRequestConstants<span class="ot">;</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="va">$config</span>[<span class="cn">H</span>elloWorldConstants::<span class="cn">MY_CONFIG_VALUE</span>] <span class="op">=</span> <span class="st">&#39;Hello from config!&#39;</span><span class="ot">;</span></span></code></pre></div>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="va">$config</span>[<span class="cn">C</span>ontactRequestConstants::<span class="cn">MY_CONFIG_VALUE</span>] <span class="op">=</span> <span class="st">&#39;Hello from config!&#39;</span><span class="ot">;</span></span></code></pre></div>
 <p>You can use any string you like as the value.</p>
 <h3 id="create-the-config-class">3. Create the Config Class</h3>
 <p>Each module can have a Config class that provides typed access to global config values. The naming convention is <code>&lt;Module&gt;Config.php</code> at the module root.</p>
@@ -292,11 +292,11 @@
 </ol></li>
 </ul>
 <p>Starting with Spryker <strong>202512.0</strong>, Zed controllers support <strong>constructor dependency injection</strong>. This means you can inject the Config class directly into the controller instead of going through the factory chain:</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="cn">S</span>prykerAcademy\<span class="cn">Z</span>ed\<span class="cn">H</span>elloWorld\<span class="cn">H</span>elloWorldConfig<span class="ot">;</span></span>
+<div class="sourceCode" id="cb6"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="cn">S</span>prykerAcademy\<span class="cn">Z</span>ed\<span class="cn">C</span>ontactRequest\<span class="cn">C</span>ontactRequestConfig<span class="ot">;</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="cn">C</span>onfigController <span class="kw">extends</span> <span class="cn">A</span>bstractController</span>
 <span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>{</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">function</span> <span class="bu">__construct</span>(<span class="kw">private</span> readonly <span class="cn">H</span>elloWorldConfig <span class="va">$config</span>)</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">function</span> <span class="bu">__construct</span>(<span class="kw">private</span> readonly <span class="cn">C</span>ontactRequestConfig <span class="va">$config</span>)</span>
 <span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    {</span>
 <span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    }</span>
 <span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a></span>
@@ -326,7 +326,8 @@
 <span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 <p>Choose either approach for your implementation.</p>
 <p>Clear the cache:</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console propel:model:build</span></code></pre></div>
 <p>Visit: http://backoffice.eu.spryker.local/contact-request/config/index (Credentials: <code>admin@spryker.com</code> / <code>change123</code>)</p>
 <p>You should see your config value displayed on the page.</p>
 <hr />

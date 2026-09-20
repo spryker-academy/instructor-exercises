@@ -232,27 +232,51 @@
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="ot">    xmlns:xsi=</span><span class="st">&quot;http://www.w3.org/2001/XMLSchema-instance&quot;</span></span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="ot">    xsi:schemaLocation=</span><span class="st">&quot;spryker:transfer-01 http://static.spryker.com/transfer-01.xsd&quot;</span><span class="kw">&gt;</span></span>
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">&lt;transfer</span><span class="ot"> name=</span><span class="st">&quot;Human&quot;</span><span class="kw">&gt;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">&lt;transfer</span><span class="ot"> name=</span><span class="st">&quot;Human&quot;</span><span class="ot"> strict=</span><span class="st">&quot;true&quot;</span><span class="kw">&gt;</span></span>
 <span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>        <span class="kw">&lt;property</span><span class="ot"> name=</span><span class="st">&quot;height&quot;</span><span class="ot"> type=</span><span class="st">&quot;int&quot;</span> <span class="kw">/&gt;</span></span>
 <span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">&lt;/transfer&gt;</span></span>
 <span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;/transfers&gt;</span></span></code></pre></div>
 <p>This generates a <code>HumanTransfer</code> class with a <code>height</code> property of type <code>int</code>.</p>
+<h3 id="always-add-stricttrue">1.1 Always Add <code>strict="true"</code></h3>
+<p>The <code>strict</code> attribute decides whether the generated accessors carry <strong>native PHP types</strong>. Without it the generator emits methods that accept and return anything:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// strict is off - the type only lives in a docblock</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span> <span class="kw">function</span> setMessage(<span class="va">$message</span>) { ... }</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co">/** </span><span class="an">@return</span><span class="co"> string|null */</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span> <span class="kw">function</span> getMessage() { ... }</span></code></pre></div>
+<p>With <code>strict="true"</code> on the <code>&lt;transfer&gt;</code> element, every property of that transfer gets typed accessors:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span> <span class="kw">function</span> setMessage(<span class="ot">?</span><span class="dt">string</span> <span class="va">$message</span> <span class="op">=</span> <span class="kw">null</span>) { ... }</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span> <span class="kw">function</span> getMessage()<span class="ot">:</span> <span class="ot">?</span><span class="dt">string</span> { ... }</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span> <span class="kw">function</span> setMessageOrFail(<span class="dt">string</span> <span class="va">$message</span>) { ... }</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span> <span class="kw">function</span> getMessageOrFail()<span class="ot">:</span> <span class="dt">string</span> { ... }</span></code></pre></div>
+<p><strong>Why this matters:</strong></p>
+<ul>
+<li><strong>Errors surface where they are caused.</strong> A transfer travels from a controller through the Client, over the BackendGateway, into a Repository and finally into Propel. Without types, <code>setMessage($someArray)</code> is accepted silently and blows up five layers later - or worse, gets written to the database. With types, PHP throws a <code>TypeError</code> on the line that is actually wrong.</li>
+<li><strong><code>*OrFail()</code> becomes genuinely non-nullable.</strong> <code>getMessageOrFail(): string</code> tells PHPStan and your IDE that the value is there, so the <code>?? ''</code> fallbacks disappear from your code.</li>
+<li><strong>Collections are never null.</strong> A strict collection property returns <code>ArrayObject</code> instead of <code>ArrayObject|null</code>, so you can <code>foreach</code> it without a null check, and its adder only accepts the right transfer type.</li>
+<li><strong>It is what Spryker core does.</strong> Look at any recent core transfer definition, for example <code>vendor/spryker/acl-entity/src/Spryker/Shared/AclEntity/Transfer/acl_entity.transfer.xml</code> - the newer transfers all carry <code>strict="true"</code>.</li>
+</ul>
+<p>Strict mode is opt-in per transfer, not a global switch, because turning it on can break existing callers that were passing a loose type. On a new transfer there is no such legacy, so turn it on from the start.</p>
+<blockquote>
+<p><code>strict="true"</code> also works on a single <code>&lt;property&gt;</code> if you ever need to migrate an old transfer one property at a time.</p>
+</blockquote>
 <p><strong>Coding time:</strong></p>
-<p>Open <code>src/SprykerAcademy/Shared/ContactRequest/Transfer/contact_request.transfer.xml</code> and add a DTO named <strong>ContactRequest</strong> with: - Property <code>idContactRequest</code> of type <code>int</code> - Property <code>message</code> of type <code>string</code></p>
+<p>Open <code>src/SprykerAcademy/Shared/ContactRequest/Transfer/contact_request.transfer.xml</code> and add a DTO named <strong>ContactRequest</strong> with <code>strict="true"</code> and: - Property <code>idContactRequest</code> of type <code>int</code> - Property <code>message</code> of type <code>string</code></p>
 <p>Then generate the transfers:</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span></code></pre></div>
-<p>Check the auto-generated file at <code>src/Generated/Shared/Transfer/ContactRequestTransfer.php</code> and review the helper methods.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span></code></pre></div>
+<p>Check the auto-generated file at <code>src/Generated/Shared/Transfer/ContactRequestTransfer.php</code> and review the helper methods. Note the native types on <code>setMessage()</code> and <code>getMessage()</code> - remove <code>strict="true"</code>, regenerate and compare if you want to see the difference.</p>
 <h3 id="the-controller">2. The Controller</h3>
 <p>You instantiate DTOs like normal objects:</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="va">$myTransfer</span> <span class="op">=</span> <span class="kw">new</span> <span class="cn">M</span>yTransfer()<span class="ot">;</span></span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="va">$myTransfer</span> <span class="op">=</span> <span class="kw">new</span> <span class="cn">M</span>yTransfer()<span class="ot">;</span></span></code></pre></div>
 <p><strong>Coding time:</strong></p>
 <p>Open <code>src/SprykerAcademy/Zed/ContactRequest/Communication/Controller/IndexController.php</code>. Initialize a <code>Generated\Shared\Transfer\ContactRequestTransfer</code> object, set <code>idContactRequest</code> to <code>1</code> and <code>message</code> to <code>'Contact Request!'</code>, and pass the object to the template under the key <code>contactRequest</code>.</p>
 <h3 id="the-template">3. The Template</h3>
 <p>Access object properties in Twig using dot notation:</p>
 <pre class="twig"><code>{{ myVar.property }}</code></pre>
 <p><strong>Coding time:</strong></p>
-<p>Open <code>src/SprykerAcademy/Zed/ContactRequest/Presentation/Index/index.twig</code> and display the transfer's <code>message</code> property using dot notation.</p>
+<p>Open <code>src/SprykerAcademy/Zed/ContactRequest/Presentation/Index/index.twig</code> and display the transfer’s <code>message</code> property using dot notation.</p>
 <p>Visit: http://backoffice.eu.spryker.local/contact-request/index/index (Credentials: <code>admin@spryker.com</code> / <code>change123</code>)</p>
 <blockquote>
 <p><strong>Tip:</strong> <code>http://backoffice.eu.spryker.local/contact-request</code> resolves to the same page.</p>
@@ -260,10 +284,10 @@
 <hr />
 <h2 id="verify-your-work">Verify Your Work</h2>
 <p>Run the automated tests for this exercise:</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/ContactRequest/ Exercise2</span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/ContactRequest/ Exercise2</span></code></pre></div>
 <p>All tests should pass if your transfer definition is correct.</p>
 <hr />
 <h2 id="solution">Solution</h2>
-<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/data-transfer-object/complete</span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/data-transfer-object/complete</span></code></pre></div>
 </body>
 </html>

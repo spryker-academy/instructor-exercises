@@ -31,7 +31,7 @@ docker/sdk console propel:install
 
 ### Part 1: Adjust the Database Schema
 
-Currently the `pyz_contact_request` table stores messages without any link to who created them. We need to add a foreign key to the `spy_customer` table so each message can belong to a customer. We also add the `timestampable` behavior so Propel automatically manages `created_at` and `updated_at` columns.
+Currently the `pyz_contact_request` table stores contact requests without any link to who created them. We need to add a foreign key to the `spy_customer` table so each contact request can belong to a customer. We also add the `timestampable` behavior so Propel automatically manages `created_at` and `updated_at` columns.
 
 **Coding time:**
 
@@ -60,7 +60,14 @@ Open `src/SprykerAcademy/Shared/ContactRequest/Transfer/contact_request.transfer
 1. Add a `fkCustomer` property of type `int` to the **ContactRequest** transfer
 2. Add a `createdAt` property of type `string` to the **ContactRequest** transfer
 3. Add a `fkCustomer` property of type `int` to the **ContactRequestCriteria** transfer
-4. Add a new transfer named **ContactRequestCollection** with a property `contactRequests` of type `ContactRequest[]`
+4. Add a new transfer named **ContactRequestCollection** with `strict="true"` and a property
+   `contactRequests` of type `ContactRequest[]` and `singular="contactRequest"`
+
+```xml
+<transfer name="ContactRequestCollection" strict="true">
+    <property name="contactRequests" type="ContactRequest[]" singular="contactRequest"/>
+</transfer>
+```
 
 Regenerate transfers:
 
@@ -68,7 +75,24 @@ Regenerate transfers:
 docker/sdk console transfer:generate
 ```
 
-> **Note:** The generated `ContactRequestCollectionTransfer` will have an `addContactRequests()` method (plural, matching the property name). This is a Spryker convention — the adder method name matches the property name.
+> **Why `singular` on a collection?** The generator builds the adder from the property name, so
+> `contactRequests` alone would produce the plural `addContactRequests()` — a method that adds
+> one element but reads as if it added many. `singular="contactRequest"` names it
+> `addContactRequest()` instead.
+>
+> Combined with `strict="true"` (see [Exercise 2](02-data-transfer-object.md#11-always-add-stricttrue))
+> the collection API becomes:
+>
+> ```php
+> public function addContactRequest(ContactRequestTransfer $contactRequest)
+> public function getContactRequests(): ArrayObject
+> ```
+>
+> The adder only accepts a `ContactRequestTransfer`, and the getter never returns null — a
+> strict collection is initialised to an empty `ArrayObject`, so the account template can loop
+> over it even when the customer has no contact requests yet. On a strict **associative** array
+> property `singular` is not optional at all: leave it out and `transfer:generate` aborts with
+> `InvalidSingularPropertyNameException`.
 
 ---
 
@@ -76,12 +100,12 @@ docker/sdk console transfer:generate
 
 #### 3.1 Add a Repository Method
 
-We need a way to fetch all messages belonging to a specific customer.
+We need a way to fetch all contact requests belonging to a specific customer.
 
 **Coding time:**
 
 Open `src/SprykerAcademy/Zed/ContactRequest/Persistence/ContactRequestRepository.php`. Implement `findContactRequestsByCustomer()`:
-1. Get the message query from the factory
+1. Get the contact request query from the factory
 2. Filter by `fk_customer` if the criteria has a `fkCustomer` set
 3. Execute the query with `find()` to get all matching entities
 4. Map each entity to a `ContactRequestTransfer` using the ContactRequestMapper
@@ -94,8 +118,8 @@ Propel provides magic `filterBy<ColumnName>()` methods on query objects.
 **Coding time:**
 
 Open `src/SprykerAcademy/Zed/ContactRequest/Business/Reader/ContactRequestReader.php`. Implement `findContactRequestsByCustomer()`:
-- Use the repository to get the messages
-- Create a `ContactRequestCollectionTransfer` and add each message to it using `addContactRequests()`
+- Use the repository to get the contact requests
+- Create a `ContactRequestCollectionTransfer` and add each one to it using `addContactRequest()`
 
 #### 3.3 Expose Through the Facade
 
@@ -330,7 +354,7 @@ docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/ContactRe
 
 The test suite covers:
 - **Schema XML:** `fk_customer` column, foreign key, timestampable behavior
-- **Transfer XML:** `fkCustomer`, `createdAt` properties, `ContactRequestCollection` transfer
+- **Transfer XML:** `fkCustomer`, `createdAt` properties, `ContactRequestCollection` transfer (`strict="true"`, `singular="contactRequest"`)
 - **Structural:** All classes and methods exist across the full stack
 - **Mock-based:** Stub calls the correct gateway paths for create, get, and delete
 - **Unit:** `ContactRequestDeleter` delegates to `EntityManager` correctly

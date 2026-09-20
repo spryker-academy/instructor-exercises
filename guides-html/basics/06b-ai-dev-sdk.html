@@ -212,23 +212,16 @@
   <![endif]-->
 </head>
 <body>
+<header id="title-block-header">
+<h1 class="title">Exercise 6b: Build the Contact Request Module with the AI Dev SDK</h1>
+</header>
 <h1 id="exercise-6b-build-the-contact-request-module-with-the-ai-dev-sdk">Exercise 6b: Build the Contact Request Module with the AI Dev SDK</h1>
-<p>In Exercises 1 to 6 you built the <strong>ContactRequest</strong> module by hand: a Back Office page, a transfer object, a Propel table, the Persistence, Business and Communication layers, the Client, a Yves page and a module config. In this exercise you build the same module again, this time by giving one prompt to your AI coding assistant. The Spryker AI Dev SDK provides the assistant with Spryker's architecture rules, skills and agents, and the automated tests of Exercises 1 to 6 are the acceptance criteria.</p>
-<p>You will learn how to:</p>
-<ul>
-<li>Set up the <strong>AI Dev SDK</strong> in a project with <code>ai-dev:setup</code></li>
-<li>Read what the SDK generates: the agents file, the rules, the skills and the agents</li>
-<li>Write a prompt that uses <strong>existing tests as the specification</strong></li>
-<li>Review AI-generated Spryker code against the rules you learned in Exercises 1 to 6</li>
-</ul>
-<p><strong>Official documentation:</strong></p>
-<ul>
-<li><a href="https://docs.spryker.com/docs/dg/dev/ai/ai-dev/ai-dev">AI Dev SDK</a></li>
-<li><a href="https://docs.spryker.com/docs/dg/dev/ai/ai-dev/ai-dev-installation">Install AI Dev</a></li>
-</ul>
+<p>In Exercises 1 to 6 you built the <strong>ContactRequest</strong> module by hand: a Back Office page, a transfer object, a Propel table, the Persistence, Business and Communication layers, the Client, a Yves page and a module config. In this exercise you build the same module again, this time by giving one prompt to your AI coding assistant. The Spryker AI Dev SDK provides the assistant with Spryker’s architecture rules, skills and agents, and the automated tests of Exercises 1 to 6 are the acceptance criteria.</p>
+<p>You will learn how to: - Set up the <strong>AI Dev SDK</strong> in a project with <code>ai-dev:setup</code> - Read what the SDK generates: the agents file, the rules, the skills and the agents - Write a prompt that uses <strong>existing tests as the specification</strong> - Review AI-generated Spryker code against the rules you learned in Exercises 1 to 6</p>
+<p><strong>Official documentation:</strong> - <a href="https://docs.spryker.com/docs/dg/dev/ai/ai-dev/ai-dev">AI Dev SDK</a> - <a href="https://docs.spryker.com/docs/dg/dev/ai/ai-dev/ai-dev-installation">Install AI Dev</a></p>
 <h2 id="prerequisites">Prerequisites</h2>
 <ul>
-<li>Exercises 1 to 6 completed, so you know what "correct" looks like.</li>
+<li>Exercises 1 to 6 completed, so you know what “correct” looks like.</li>
 <li>An AI coding assistant installed on your machine: Claude Code, Cursor, GitHub Copilot, Windsurf, OpenCode or Codex. The SDK generates files for all of them.</li>
 <li>The <code>spryker-sdk/ai-dev</code> package. The B2B Marketplace demo shop ships it out of the box (see <code>composer.json</code>).</li>
 </ul>
@@ -238,12 +231,19 @@
 <div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console ai-dev:setup</span></code></pre></div>
 <p>The command is interactive:</p>
 <ol type="1">
-<li>It detects your AI tool from the folders in the project (<code>.claude</code>, <code>.cursor</code>, <code>.github</code>, ...) and asks you to confirm, or lets you pick one.</li>
-<li>It asks whether to generate the files <strong>ready to use</strong> or as <strong>examples</strong> (<code>example.CLAUDE.md</code>, <code>.claude/skills/propel-schema-example</code>, ...). Choose <em>ready to use</em> for this training.</li>
+<li>It detects your AI tool from the folders in the project (<code>.claude</code>, <code>.cursor</code>, <code>.github</code>, …) and asks you to confirm, or lets you pick one.</li>
+<li>It asks whether to generate the files <strong>ready to use</strong> or as <strong>examples</strong> (<code>example.CLAUDE.md</code>, <code>.claude/skills/propel-schema-example</code>, …). Choose <em>ready to use</em> for this training.</li>
 <li>For each step it asks for confirmation: <strong>Generate rules</strong>, <strong>Generate agents/context file</strong>, <strong>Generate skills</strong>, <strong>Generate agents</strong>. Say yes to all. Existing files are never overwritten unless you agree.</li>
 </ol>
 <p>What lands in the project depends on the tool:</p>
 <table>
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 30%" />
+<col style="width: 16%" />
+<col style="width: 19%" />
+<col style="width: 19%" />
+</colgroup>
 <thead>
 <tr class="header">
 <th>Tool</th>
@@ -336,7 +336,8 @@ Scope, in this order:
    Twig template in Presentation/Index/index.twig. The navigation entry already exists.
 2. Transfer definition src/SprykerAcademy/Shared/ContactRequest/Transfer/contact_request.transfer.xml
    with the ContactRequest transfer (idContactRequest, message) plus ContactRequestCriteria and
-   ContactRequestResponse (isSuccessful, contactRequest). Run docker/sdk console transfer:generate.
+   ContactRequestResponse (isSuccessful, contactRequest). Every transfer carries strict=&quot;true&quot;.
+   Run docker/sdk console transfer:generate.
 3. Propel schema src/SprykerAcademy/Zed/ContactRequest/Persistence/Propel/Schema/pyz_contact_request.schema.xml
    (table pyz_contact_request, namespace Orm\Zed\ContactRequest\Persistence). Run docker/sdk console propel:install.
 4. Persistence layer (PersistenceFactory, Repository + interface, EntityManager + interface, Mapper),
@@ -373,16 +374,17 @@ and fix failures before continuing. Finish when every test passes and report wha
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console propel:model:build</span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console navigation:build-cache</span></code></pre></div>
 <ul>
-<li><a href="http://backoffice.eu.spryker.local/contact-request/index/index">http://backoffice.eu.spryker.local/contact-request/index/index</a> shows the greeting.</li>
-<li><a href="http://backoffice.eu.spryker.local/contact-request/contact-request/add">http://backoffice.eu.spryker.local/contact-request/contact-request/add</a> creates a contact request.</li>
-<li><a href="http://backoffice.eu.spryker.local/contact-request/config/index">http://backoffice.eu.spryker.local/contact-request/config/index</a> shows <em>Hello from config!</em>.</li>
-<li><a href="http://yves.eu.spryker.local/en/contact-request/1">http://yves.eu.spryker.local/en/contact-request/1</a> shows the first contact request.</li>
+<li>http://backoffice.eu.spryker.local/contact-request/index/index shows the greeting.</li>
+<li>http://backoffice.eu.spryker.local/contact-request/contact-request/add creates a contact request.</li>
+<li>http://backoffice.eu.spryker.local/contact-request/config/index shows <em>Hello from config!</em>.</li>
+<li>http://yves.eu.spryker.local/en/contact-request/1 shows the first contact request.</li>
 </ul>
-<p>Now review the code the way you would review a colleague's pull request. Compare it with what you wrote by hand in Exercises 4 to 6:</p>
+<p>Now review the code the way you would review a colleague’s pull request. Compare it with what you wrote by hand in Exercises 4 to 6:</p>
 <ul>
 <li>Are all dependencies provided through the DependencyProvider and created in factories?</li>
 <li>Does any entity leave the Persistence layer?</li>
 <li>Are return types interfaces?</li>
+<li>Did it put <code>strict="true"</code> on the transfers, or did it fall back to untyped accessors?</li>
 <li>Did the assistant add anything you did not ask for (extra methods, comments, helper classes)? Would you keep it?</li>
 </ul>
 <p>The best result of this exercise is a list of differences, not a perfect module.</p>

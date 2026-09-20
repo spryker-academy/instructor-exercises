@@ -183,20 +183,20 @@ class IndexController extends AbstractController
     <h3>Transfer XML Definition</h3>
     <pre><code class="language-xml">&lt;!-- src/SprykerAcademy/Shared/ContactRequest/Transfer/contact_request.transfer.xml --&gt;
 &lt;transfers&gt;
-    &lt;transfer name="ContactRequest"&gt;
+    &lt;transfer name="ContactRequest" strict="true"&gt;
         &lt;property name="idContactRequest" type="int"/&gt;
         &lt;property name="message" type="string"/&gt;
         &lt;property name="fkCustomer" type="int"/&gt;
         &lt;property name="createdAt" type="string"/&gt;
     &lt;/transfer&gt;
 
-    &lt;transfer name="ContactRequestCriteria"&gt;
+    &lt;transfer name="ContactRequestCriteria" strict="true"&gt;
         &lt;property name="idContactRequest" type="int"/&gt;
         &lt;property name="fkCustomer" type="int"/&gt;
     &lt;/transfer&gt;
 
-    &lt;transfer name="ContactRequestCollection"&gt;
-        &lt;property name="contactRequests" type="ContactRequest[]"/&gt;
+    &lt;transfer name="ContactRequestCollection" strict="true"&gt;
+        &lt;property name="contactRequests" type="ContactRequest[]" singular="contactRequest"/&gt;
     &lt;/transfer&gt;
 &lt;/transfers&gt;</code></pre>
   </section>
@@ -205,14 +205,14 @@ class IndexController extends AbstractController
     <pre><code class="language-bash">docker/sdk console transfer:generate</code></pre>
     <p>Generates <code>Generated\Shared\Transfer\ContactRequestTransfer</code> with:</p>
     <ul>
-      <li>Typed getters/setters: <code>getMessage()</code>, <code>setMessage(string $message)</code></li>
-      <li>Strict variants: <code>getMessageOrFail()</code>, <code>setFkCustomerOrFail()</code></li>
+      <li>Natively typed getters/setters (that is what <code>strict="true"</code> buys): <code>getMessage(): ?string</code>, <code>setMessage(?string $message)</code></li>
+      <li>Non-nullable variants: <code>getMessageOrFail(): string</code>, <code>setFkCustomerOrFail(int $fkCustomer)</code></li>
       <li>Array conversion: <code>toArray()</code>, <code>fromArray()</code>, <code>modifiedToArray()</code></li>
-      <li>Collection adders: <code>addContactRequests(ContactRequestTransfer $message)</code></li>
+      <li>Collection adders: <code>addContactRequest(ContactRequestTransfer $contactRequest)</code></li>
       <li>Implements <code>ArrayAccess</code> — works with Symfony forms</li>
     </ul>
     <div class="box box-accent">
-      <strong>Convention:</strong> Collection property <code>messages</code> (plural) generates adder <code>addContactRequests()</code> matching the property name.
+      <strong>Always set <code>strict="true"</code>:</strong> without it the generated accessors are untyped and a wrong value only fails layers later. And name the adder with <code>singular="contactRequest"</code> &mdash; the property name alone would give you the plural <code>addContactRequests()</code>.
     </div>
   </section>
 </section>

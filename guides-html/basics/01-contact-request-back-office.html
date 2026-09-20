@@ -224,8 +224,16 @@
 </ul>
 <h2 id="loading-the-exercise">Loading the Exercise</h2>
 <div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/contact-request-back-office/skeleton</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli composer dump-autoload</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span></code></pre></div>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span></code></pre></div>
+<p>The loader registers the <code>SprykerAcademy</code> namespace in two places - <code>autoload.psr-4</code> in <code>composer.json</code> and <code>PROJECT_NAMESPACES</code> in <code>config/Shared/config_default.php</code> - and then runs <code>composer dump-autoload</code> itself. If it cannot reach the container it says so and prints the command for you to run.</p>
+<blockquote>
+<p><strong>If the page fails with <code>Expected class "SprykerAcademy\Zed\ContactRequest\Communication\Controller\IndexController" not found!</code></strong></p>
+<p>The file is there and the <code>namespace</code> line is correct. PHP simply has no rule for loading it.</p>
+<p>The Zed router scans the project namespace folders for <code>*Controller.php</code>, builds the class name from the file path and calls <code>class_exists()</code> on it. That lookup goes through the <strong>generated</strong> map in <code>vendor/composer/autoload_psr4.php</code>, not through <code>composer.json</code>. Adding <code>"SprykerAcademy\\": "src/SprykerAcademy/"</code> to <code>composer.json</code> changes nothing until the map is rebuilt:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli composer dump-autoload</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span></code></pre></div>
+<p>One-line diagnosis: <code>grep SprykerAcademy vendor/composer/autoload_psr4.php</code> - no output means the autoloader is stale, whatever <code>composer.json</code> says.</p>
+</blockquote>
 <hr />
 <h2 id="working-on-the-exercise">Working on the Exercise</h2>
 <p>Back Office is the product name for the administration interface. From the code perspective, we refer to the <strong>Zed</strong> namespace. Code related to the Back Office is placed inside <code>src/Pyz/Zed/*</code> or <code>src/SprykerAcademy/Zed/</code>.</p>
@@ -233,25 +241,25 @@
 <h3 id="the-controller">1. The Controller</h3>
 <p>The Controller class is in the <strong>Communication</strong> layer inside the <code>Controller</code> subdirectory:</p>
 <p><code>src/SprykerAcademy/Zed/ContactRequest/Communication/Controller/IndexController.php</code></p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;?php</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">namespace</span> <span class="cn">S</span>prykerAcademy\<span class="cn">Z</span>ed\<span class="cn">H</span>elloWorld\<span class="cn">C</span>ommunication\<span class="cn">C</span>ontroller<span class="ot">;</span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="cn">S</span>pryker\<span class="cn">Z</span>ed\<span class="cn">K</span>ernel\<span class="cn">C</span>ommunication\<span class="cn">C</span>ontroller\<span class="cn">A</span>bstractController<span class="ot">;</span></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="cn">H</span>elloController <span class="kw">extends</span> <span class="cn">A</span>bstractController</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>{</span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">function</span> indexAction()<span class="ot">:</span> <span class="dt">array</span></span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    {</span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>        <span class="co">// </span><span class="al">TODO</span></span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    }</span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;?php</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">namespace</span> <span class="cn">S</span>prykerAcademy\<span class="cn">Z</span>ed\<span class="cn">C</span>ontactRequest\<span class="cn">C</span>ommunication\<span class="cn">C</span>ontroller<span class="ot">;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="cn">S</span>pryker\<span class="cn">Z</span>ed\<span class="cn">K</span>ernel\<span class="cn">C</span>ommunication\<span class="cn">C</span>ontroller\<span class="cn">A</span>bstractController<span class="ot">;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="cn">I</span>ndexController <span class="kw">extends</span> <span class="cn">A</span>bstractController</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">function</span> indexAction()<span class="ot">:</span> <span class="dt">array</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    {</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>        <span class="co">// </span><span class="al">TODO</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 <p>We extend from Spryker’s <code>AbstractController</code> which provides helper methods, and implement a basic <code>indexAction()</code> that returns an array passed to the template.</p>
 <p><strong>Coding time:</strong></p>
 <p>Use <code>$this-&gt;viewResponse()</code> and return the result. Pass a key-value array where the key will be the variable name accessible in the template. The value should be the string <code>'Contact Request!'</code>.</p>
 <h3 id="the-template">2. The Template</h3>
-<p>In the module folder <code>ContactRequest</code>, the <strong>Presentation</strong> layer follows the same naming as the Controller prefix. Create a folder called <code>Hello</code> and inside it a twig file named <code>index.twig</code> (matching the action name without the <code>Action</code> suffix).</p>
-<p><code>src/SprykerAcademy/Zed/ContactRequest/Presentation/Hello/index.twig</code></p>
+<p>In the module folder <code>ContactRequest</code>, the <strong>Presentation</strong> layer follows the same naming as the Controller prefix. Create a folder called <code>Index</code> and inside it a twig file named <code>index.twig</code> (matching the action name without the <code>Action</code> suffix).</p>
+<p><code>src/SprykerAcademy/Zed/ContactRequest/Presentation/Index/index.twig</code></p>
 <pre class="twig"><code>{% extends &#39;@Gui/Layout/layout.twig&#39; %}
 
 {% block content %}
@@ -260,8 +268,10 @@
 <p><strong>Coding time:</strong></p>
 <p>Use the string you returned in the Controller action inside the template. The syntax is <code>{{ yourKeyFromTheArray }}</code>.</p>
 <p>After editing, run:</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console propel:model:build</span></code></pre></div>
 <p>Visit: http://backoffice.eu.spryker.local/contact-request/index/index (Credentials: <code>admin@spryker.com</code> / <code>change123</code>)</p>
+<p>If the page answers with <em>Expected class … not found!</em>, see the note in <a href="#loading-the-exercise">Loading the Exercise</a> - the class is fine, the composer autoloader is stale.</p>
 <p>Note the URL pattern: <strong>module</strong> / <strong>controller</strong> / <strong>action</strong> (<code>contact-request/index/index</code>). Back Office routing is resolved automatically from these names.</p>
 <blockquote>
 <p><strong>Tip:</strong> When both the controller and action are named <code>index</code>, Spryker allows you to omit them from the URL. So <code>http://backoffice.eu.spryker.local/contact-request</code> resolves to the same page.</p>
@@ -271,15 +281,15 @@
 <p><strong>Coding time:</strong></p>
 <p>Open <code>config/Zed/navigation.xml</code>. Copy an existing navigation entry and adjust it to point to your Contact Request page. The keyword <code>bundle</code> refers to the module name.</p>
 <p>Rebuild the navigation cache:</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console application:build-navigation-cache</span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console application:build-navigation-cache</span></code></pre></div>
 <p>Validate the result in the Back Office.</p>
 <hr />
 <h2 id="verify-your-work">Verify Your Work</h2>
 <p>Run the automated tests for this exercise:</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/ContactRequest/ Exercise1</span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/ContactRequest/ Exercise1</span></code></pre></div>
 <p>All tests should pass if your implementation is correct.</p>
 <hr />
 <h2 id="solution">Solution</h2>
-<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/contact-request-back-office/complete</span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/contact-request-back-office/complete</span></code></pre></div>
 </body>
 </html>

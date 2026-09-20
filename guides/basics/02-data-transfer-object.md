@@ -29,7 +29,7 @@ A DTO is defined by the `<transfer>` element with a `name` attribute. For exampl
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="spryker:transfer-01 http://static.spryker.com/transfer-01.xsd">
 
-    <transfer name="Human">
+    <transfer name="Human" strict="true">
         <property name="height" type="int" />
     </transfer>
 
@@ -38,9 +38,56 @@ A DTO is defined by the `<transfer>` element with a `name` attribute. For exampl
 
 This generates a `HumanTransfer` class with a `height` property of type `int`.
 
+### 1.1 Always Add `strict="true"`
+
+The `strict` attribute decides whether the generated accessors carry **native PHP types**.
+Without it the generator emits methods that accept and return anything:
+
+```php
+// strict is off - the type only lives in a docblock
+public function setMessage($message) { ... }
+
+/** @return string|null */
+public function getMessage() { ... }
+```
+
+With `strict="true"` on the `<transfer>` element, every property of that transfer gets typed
+accessors:
+
+```php
+public function setMessage(?string $message = null) { ... }
+public function getMessage(): ?string { ... }
+
+public function setMessageOrFail(string $message) { ... }
+public function getMessageOrFail(): string { ... }
+```
+
+**Why this matters:**
+
+- **Errors surface where they are caused.** A transfer travels from a controller through the
+  Client, over the BackendGateway, into a Repository and finally into Propel. Without types,
+  `setMessage($someArray)` is accepted silently and blows up five layers later - or worse, gets
+  written to the database. With types, PHP throws a `TypeError` on the line that is actually
+  wrong.
+- **`*OrFail()` becomes genuinely non-nullable.** `getMessageOrFail(): string` tells PHPStan and
+  your IDE that the value is there, so the `?? ''` fallbacks disappear from your code.
+- **Collections are never null.** A strict collection property returns `ArrayObject` instead of
+  `ArrayObject|null`, so you can `foreach` it without a null check, and its adder only accepts
+  the right transfer type.
+- **It is what Spryker core does.** Look at any recent core transfer definition, for example
+  `vendor/spryker/acl-entity/src/Spryker/Shared/AclEntity/Transfer/acl_entity.transfer.xml` -
+  the newer transfers all carry `strict="true"`.
+
+Strict mode is opt-in per transfer, not a global switch, because turning it on can break existing
+callers that were passing a loose type. On a new transfer there is no such legacy, so turn it on
+from the start.
+
+> `strict="true"` also works on a single `<property>` if you ever need to migrate an old transfer
+> one property at a time.
+
 **Coding time:**
 
-Open `src/SprykerAcademy/Shared/ContactRequest/Transfer/contact_request.transfer.xml` and add a DTO named **ContactRequest** with:
+Open `src/SprykerAcademy/Shared/ContactRequest/Transfer/contact_request.transfer.xml` and add a DTO named **ContactRequest** with `strict="true"` and:
 - Property `idContactRequest` of type `int`
 - Property `message` of type `string`
 
@@ -50,7 +97,7 @@ Then generate the transfers:
 docker/sdk console transfer:generate
 ```
 
-Check the auto-generated file at `src/Generated/Shared/Transfer/ContactRequestTransfer.php` and review the helper methods.
+Check the auto-generated file at `src/Generated/Shared/Transfer/ContactRequestTransfer.php` and review the helper methods. Note the native types on `setMessage()` and `getMessage()` - remove `strict="true"`, regenerate and compare if you want to see the difference.
 
 ### 2. The Controller
 

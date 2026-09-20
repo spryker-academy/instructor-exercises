@@ -216,7 +216,7 @@
 <h1 class="title">Exercise 5: Module Layers - Storefront Step</h1>
 </header>
 <h1 id="exercise-5-module-layers---storefront-step">Exercise 5: Module Layers - Storefront Step</h1>
-<p>In this exercise, you will display a persisted message in Yves (the Storefront). You will learn how to communicate between Yves and Zed using the Client layer and the BackendGateway.</p>
+<p>In this exercise, you will display a persisted contact request in Yves (the Storefront). You will learn how to communicate between Yves and Zed using the Client layer and the BackendGateway.</p>
 <p><strong>Part 2 of 2</strong> - This guide focuses on showing the contact request in Yves.</p>
 <h2 id="prerequisites">Prerequisites</h2>
 <ul>
@@ -225,13 +225,14 @@
 <p>We continue on the code from Part 1.</p>
 <hr />
 <h2 id="working-on-the-exercise">Working on the Exercise</h2>
-<h3 id="expose-message-to-storefronts">1. Expose Message to Storefronts</h3>
+<h3 id="expose-contact-requests-to-storefronts">1. Expose Contact Requests to Storefronts</h3>
 <h4 id="gatewaycontroller-for-communication-with-yves">1.1 GatewayController for Communication with Yves</h4>
 <p>The <code>GatewayController</code> exposes an endpoint from Zed to Yves via the BackendGateway.</p>
 <p><strong>Coding time:</strong></p>
-<p>Open <code>src/SprykerAcademy/Zed/ContactRequest/Communication/Controller/GatewayController.php</code>. Complete <code>findContactRequestAction()</code> by finding a message through the Facade using the <code>ContactRequestCriteriaTransfer</code>.</p>
+<p>Open <code>src/SprykerAcademy/Zed/ContactRequest/Communication/Controller/GatewayController.php</code>. Complete <code>findContactRequestAction()</code> by finding a contact request through the Facade using the <code>ContactRequestCriteriaTransfer</code>.</p>
 <p>Clear cache:</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console propel:model:build</span></code></pre></div>
 <hr />
 <h3 id="build-the-client">2. Build the Client</h3>
 <h4 id="create-a-stub-for-calling-backendgateway">2.1 Create a Stub for Calling BackendGateway</h4>
@@ -252,7 +253,7 @@
 <p>The locator works as: <code>$container-&gt;getLocator()-&gt;&lt;moduleName&gt;()-&gt;&lt;what&gt;()</code>.</p>
 <p><strong>Coding time:</strong></p>
 <p>Open <code>src/SprykerAcademy/Client/ContactRequest/ContactRequestDependencyProvider.php</code>. In the <code>addZedRequestClient()</code> method, make the <code>ZedRequestClient</code> available using the locator and the constant <code>CLIENT_ZED_REQUEST</code>.</p>
-<h4 id="instantiate-the-contact_requeststub">2.3 Instantiate the ContactRequestStub</h4>
+<h4 id="instantiate-the-contactrequeststub">2.3 Instantiate the ContactRequestStub</h4>
 <p>Note the naming conventions: <code>create*()</code> for instantiation (using <code>new</code>), <code>get*()</code> for retrieving provided dependencies.</p>
 <p><strong>Coding time:</strong></p>
 <p>Open <code>src/SprykerAcademy/Client/ContactRequest/ContactRequestFactory.php</code>. In <code>createContactRequestStub()</code>, instantiate and return a <code>ContactRequestStub</code> with the correct dependency injected.</p>
@@ -279,14 +280,17 @@
 <p><strong>Coding time:</strong></p>
 <p>Open <code>src/SprykerAcademy/Yves/ContactRequestPage/Plugin/Router/ContactRequestPageRouteProviderPlugin.php</code>. In <code>addContactRequestGetRoute()</code>, fill in the correct <strong>module name</strong> and <strong>controller name</strong> for the placeholders.</p>
 <p><strong>Coding time:</strong></p>
-<p>Open <code>src/SprykerAcademy/Yves/Router/RouterDependencyProvider.php</code>. Add an instance of <code>ContactRequestPageRouteProviderPlugin</code> at the end of the router plugins in <code>getRouteProvider()</code>.</p>
-<hr />
+<p>Open <code>src/SprykerAcademy/Yves/Router/RouterDependencyProvider.php</code>. It extends the project’s <code>Pyz\Yves\Router\RouterDependencyProvider</code>; in <code>getRouteProvider()</code>, add a new <code>ContactRequestPageRouteProviderPlugin</code> to the plugins returned by the parent.</p>
+<blockquote>
+<p><strong>Why does this work without editing Pyz?</strong> <code>SprykerAcademy</code> is listed before <code>Pyz</code> in <code>KernelConstants::PROJECT_NAMESPACES</code> (the loader adds it), so the kernel resolves <code>SprykerAcademy\Yves\Router\RouterDependencyProvider</code> instead of the Pyz class. The parent call keeps all project routes.</p>
+</blockquote>
 <blockquote>
 <p><strong>If Yves answers <code>Route 'x' not found</code> for a route you just added</strong></p>
 <p>Yves keeps its route collection in <code>src/Generated/Yves/Router</code>, and <code>cache:empty-all</code> does not clear that folder - it only clears the Zed router and the Twig cache. The collection is built on the first request and then reused, so a route added afterwards is invisible while the pages of the previous state still work. Delete the folder and let the next request rebuild it:</p>
-<pre class="bash"><code>rm -rf src/Generated/Yves/Router</code></pre>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span> <span class="at">-rf</span> src/Generated/Yves/Router</span></code></pre></div>
 <p><code>./exercises/load.sh</code> does this for you on every load.</p>
 </blockquote>
+<hr />
 <h2 id="testing">Testing</h2>
 <ol type="1">
 <li>Create a contact request via Back Office: http://backoffice.eu.spryker.local/contact-request/index/add</li>
@@ -295,12 +299,12 @@
 <hr />
 <h2 id="verify-your-work">Verify Your Work</h2>
 <p>Run the automated tests for this exercise:</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/ContactRequest/ Exercise5</span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/ContactRequest/ Exercise5</span></code></pre></div>
 <p>Or run all exercise tests at once:</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/ContactRequest/</span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/ContactRequest/</span></code></pre></div>
 <p>All tests should pass if your implementation is correct.</p>
 <hr />
 <h2 id="solution">Solution</h2>
-<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/module-layers/complete</span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/module-layers/complete</span></code></pre></div>
 </body>
 </html>
