@@ -472,12 +472,18 @@ if [ -f "$YVES_ROUTER" ] && grep -q "// $CR_WIRING_MARKER" "$YVES_ROUTER"; then
     ' "$YVES_ROUTER" "$CR_WIRING_MARKER"
     log_success "Removed the Contact Request routes from src/Pyz/Yves/Router/RouterDependencyProvider.php"
 fi
-if [ -f "$SIDEBAR_TWIG" ] && grep -q "{# >>> $CR_WIRING_MARKER #}" "$SIDEBAR_TWIG"; then
+# The item sits inside the {% define data = { items: [...] } %} tag of the sidebar, and a Twig
+# expression has no comments: {# ... #} in there is lexed as an unclosed "{" and every account
+# page dies with a SyntaxError. So the item carries no markers and is recognised by its own name.
+if [ -f "$SIDEBAR_TWIG" ] && grep -q "name: 'contact-requests'\|{# >>> $CR_WIRING_MARKER #}" "$SIDEBAR_TWIG"; then
     php -r '
         $file = $argv[1];
         $marker = preg_quote($argv[2], "/");
         $content = file_get_contents($file);
+        // the marked form an earlier loader version wrote, including the broken Twig comments
         $content = preg_replace("/\n[ \t]*\{# >>> " . $marker . " #\}.*?\{# <<< " . $marker . " #\}[^\n]*/s", "", $content);
+        // the item itself
+        $content = preg_replace("/\n[ \t]*\{[^{}]*name: \x27contact-requests\x27,[^{}]*\},/s", "", $content);
         file_put_contents($file, $content);
     ' "$SIDEBAR_TWIG" "$CR_WIRING_MARKER"
     log_success "Removed the Contact Request menu item from navigation-sidebar.twig"
@@ -494,14 +500,12 @@ if [ "$PACKAGE" = "contact-request" ]; then
                 $file = $argv[1];
                 $marker = $argv[2];
                 $content = file_get_contents($file);
-                $item = "        {# >>> " . $marker . " #}\n"
-                    . "        {\n"
+                $item = "        {\n"
                     . "            name: \x27contact-requests\x27,\n"
                     . "            url: path(\x27customer/contact-requests\x27),\n"
                     . "            label: \x27My Contact Requests\x27,\n"
                     . "            icon: \x27envelopes\x27,\n"
-                    . "        },\n"
-                    . "        {# <<< " . $marker . " #}";
+                    . "        },";
                 // last element of the items array in the data definition
                 $content = preg_replace_callback(
                     "/(items:\s*\[.*?)(\n[ \t]*\]\s*\n\s*\}\s*%\})/s",
@@ -752,6 +756,19 @@ fi
 
 # Make the namespaces registered above known to PHP (see dump_autoload)
 dump_autoload
+
+# Drop the cached Yves route collection.
+#
+# console cache:empty-all clears src/Generated/Zed/Router and src/Generated/Yves/Twig, but not
+# src/Generated/Yves/Router. That collection is built on the first request and never invalidated,
+# so after switching to a branch that adds Yves routes every path() to a new route dies with
+#   None of the chained routers were able to generate route: Route 'customer/...' not found
+# while the pages of the previous branch still work. Deleting it costs nothing - the next request
+# rebuilds it.
+if [ -d "$PROJECT_DIR/src/Generated/Yves/Router" ]; then
+    rm -rf "$PROJECT_DIR/src/Generated/Yves/Router"
+    log_success "Dropped the cached Yves route collection (src/Generated/Yves/Router)"
+fi
 
 # Count files
 FILE_COUNT=$(find "$PROJECT_DIR/src/SprykerAcademy" -type f 2>/dev/null | wc -l | tr -d ' ')

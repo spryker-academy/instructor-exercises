@@ -129,6 +129,19 @@ Open `src/SprykerAcademy/Yves/Router/RouterDependencyProvider.php`. It extends t
 
 > **Why does this work without editing Pyz?** `SprykerAcademy` is listed before `Pyz` in `KernelConstants::PROJECT_NAMESPACES` (the loader adds it), so the kernel resolves `SprykerAcademy\Yves\Router\RouterDependencyProvider` instead of the Pyz class. The parent call keeps all project routes.
 
+> **If Yves answers `Route 'x' not found` for a route you just added**
+>
+> Yves keeps its route collection in `src/Generated/Yves/Router`, and `cache:empty-all` does not
+> clear that folder - it only clears the Zed router and the Twig cache. The collection is built on
+> the first request and then reused, so a route added afterwards is invisible while the pages of
+> the previous state still work. Delete the folder and let the next request rebuild it:
+>
+> ```bash
+> rm -rf src/Generated/Yves/Router
+> ```
+>
+> `./exercises/load.sh` does this for you on every load.
+
 ---
 
 ## Testing

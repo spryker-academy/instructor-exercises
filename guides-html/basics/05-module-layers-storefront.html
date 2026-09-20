@@ -281,6 +281,12 @@
 <p><strong>Coding time:</strong></p>
 <p>Open <code>src/SprykerAcademy/Yves/Router/RouterDependencyProvider.php</code>. Add an instance of <code>ContactRequestPageRouteProviderPlugin</code> at the end of the router plugins in <code>getRouteProvider()</code>.</p>
 <hr />
+<blockquote>
+<p><strong>If Yves answers <code>Route 'x' not found</code> for a route you just added</strong></p>
+<p>Yves keeps its route collection in <code>src/Generated/Yves/Router</code>, and <code>cache:empty-all</code> does not clear that folder - it only clears the Zed router and the Twig cache. The collection is built on the first request and then reused, so a route added afterwards is invisible while the pages of the previous state still work. Delete the folder and let the next request rebuild it:</p>
+<pre class="bash"><code>rm -rf src/Generated/Yves/Router</code></pre>
+<p><code>./exercises/load.sh</code> does this for you on every load.</p>
+</blockquote>
 <h2 id="testing">Testing</h2>
 <ol type="1">
 <li>Create a contact request via Back Office: http://backoffice.eu.spryker.local/contact-request/index/add</li>

@@ -250,14 +250,14 @@ Once the route exists, add a "My Contact Requests" entry to the customer account
 
 ```twig
         {
-            name: 'messages',
+            name: 'contact-requests',
             url: path('customer/contact-requests'),
             label: 'My Contact Requests',
             icon: 'envelopes',
         },
 ```
 
-> `customer/contact-requests` is the route **name** (`ContactRequestController::ROUTE_CUSTOMER_CONTACT_REQUESTS`), not the path. Add the item only after the route is registered, otherwise `path()` fails on every account page. When you load the `complete` branch, the loader adds this item for you (between `{# >>> contact-request exercise #}` markers) and removes it again when you load another branch.
+> `customer/contact-requests` is the route **name** (`ContactRequestController::ROUTE_CUSTOMER_CONTACT_REQUESTS`), not the path. Add the item only after the route is registered, otherwise `path()` fails on every account page. `name` is what the sidebar compares against the `activePage` the list page sets, so it has to read `contact-requests` for the entry to be highlighted. Do not wrap the entry in a Twig comment: the whole `items` array lives inside one `{% define data = {...} %}` tag, and a `{# ... #}` in there is read as an unclosed `{`, which kills every account page with a `SyntaxError`. When you load the `complete` branch, the loader adds this item for you and removes it again when you load another branch.
 
 Clear cache:
 
