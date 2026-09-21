@@ -230,47 +230,56 @@
 <h2 id="part-1-get-to-a-clean-branch">Part 1: Get to a Clean Branch</h2>
 <p>Everything you built in Exercises 1 to 6 has to go: the module in <code>src/SprykerAcademy</code>, the tests in <code>tests/SprykerAcademyTest</code>, and the wiring the loader added (the navigation entry, the config value, the Yves router plugin). If any of it stays, you are not testing the assistant, you are testing your own scaffolding.</p>
 <p>Work in the <strong>project root</strong> (the <code>b2b-demo-marketplace</code> clone), not in the <code>exercises</code> folder.</p>
-<p><strong>1. Keep your handmade work.</strong> Commit it and give it a name, so you can come back to it and compare later:</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="bu">printf</span> <span class="st">&#39;exercises/\n&#39;</span> <span class="op">&gt;&gt;</span> .git/info/exclude   <span class="co"># the exercises clone is a repo of its own</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> add <span class="at">-A</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> commit <span class="at">-m</span> <span class="st">&quot;Exercises 1-6: ContactRequest by hand&quot;</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> branch exercises-1-6</span></code></pre></div>
+<p><strong>1. Mark where the shop started.</strong> The clone sits on a release tag rather than on a branch, so <code>git status</code> opens with <em>HEAD detached at 202608.0</em>. Put a name on that commit before you touch anything:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> describe <span class="at">--tags</span>     <span class="co"># the release you cloned, for example 202608.0</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> branch pristine-shop</span></code></pre></div>
+<blockquote>
+<p><code>git branch</code> here only writes a label at the current commit, it does not switch anything. From now on <code>pristine-shop</code> means “the demo shop exactly as I cloned it”, whichever release that is.</p>
+</blockquote>
+<p><strong>2. Keep your handmade work.</strong> Move onto a branch of your own and commit, so you can come back to it and compare later:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="bu">printf</span> <span class="st">&#39;exercises/\n&#39;</span> <span class="op">&gt;&gt;</span> .git/info/exclude   <span class="co"># the exercises clone is a repo of its own</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> checkout <span class="at">-b</span> exercises-1-6</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> add <span class="at">-A</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> commit <span class="at">-m</span> <span class="st">&quot;Exercises 1-6: ContactRequest by hand&quot;</span></span></code></pre></div>
 <blockquote>
 <p>Without the first line, <code>git add -A</code> warns <code>adding embedded git repository: exercises</code> and records the folder as a broken submodule reference. <code>.git/info/exclude</code> is a personal <code>.gitignore</code> that is not part of the repository, which is exactly right for a folder only you have.</p>
 </blockquote>
-<p><strong>2. Branch off the pristine demo shop.</strong> <code>origin/HEAD</code> is the shop as you cloned it, before any exercise touched it:</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> checkout <span class="at">-B</span> ai-dev-exercise <span class="st">&quot;</span><span class="va">$(</span><span class="fu">git</span> rev-parse <span class="at">--abbrev-ref</span> origin/HEAD<span class="va">)</span><span class="st">&quot;</span></span></code></pre></div>
+<p><strong>3. Branch off the pristine shop:</strong></p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> checkout <span class="at">-B</span> ai-dev-exercise pristine-shop</span></code></pre></div>
 <p>Switching branches removes every file you just committed, so <code>src/SprykerAcademy</code> and <code>tests/SprykerAcademyTest</code> are gone, and <code>composer.json</code>, <code>config/Shared/config_default.php</code> and the navigation are back to their original content.</p>
-<p><strong>3. Sweep up what was never committed.</strong> Look first, delete second:</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clean <span class="at">-nd</span>        <span class="co"># dry run: prints what would be removed</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clean <span class="at">-df</span>        <span class="co"># remove it</span></span></code></pre></div>
+<blockquote>
+<p><strong>Not <code>origin/master</code>.</strong> The master branch has moved on since your release tag. Your <code>vendor/</code> was installed from the <code>composer.lock</code> of the tag, so branching off master would give you a lock file that does not match what is actually installed, and the first <code>composer</code> command would start rewriting your environment. Branch off the tag you cloned - that is what <code>pristine-shop</code> points at.</p>
+</blockquote>
+<p><strong>4. Sweep up what was never committed.</strong> Look first, delete second:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clean <span class="at">-nd</span>        <span class="co"># dry run: prints what would be removed</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clean <span class="at">-df</span>        <span class="co"># remove it</span></span></code></pre></div>
 <blockquote>
 <p>Your environment survives this, for three different reasons. <code>vendor/</code>, <code>src/Generated/</code> and <code>docker/</code> are listed in the shop’s <code>.gitignore</code>, and <code>git clean</code> leaves ignored files alone. <code>exercises/</code> is a Git repository of its own, and <code>git clean</code> refuses to delete those. <code>.env</code> is a tracked file of the demo shop, so it was never a candidate - the branch switch restored it. Do <strong>not</strong> add <code>-x</code> or <code>-ff</code>: that would wipe your installed dependencies, the Docker SDK and the exercises clone, and you would be reinstalling the shop instead of doing the exercise.</p>
 </blockquote>
-<p><strong>4. Register the <code>SprykerAcademy</code> namespace again.</strong> The reset reverted it, and the assistant needs a project namespace to write into. This is Step 4 of the Student Setup Guide:</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="er">&quot;autoload&quot;:</span> <span class="fu">{</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;psr-4&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;Pyz</span><span class="ch">\\</span><span class="dt">&quot;</span><span class="fu">:</span> <span class="st">&quot;src/Pyz/&quot;</span><span class="fu">,</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;SprykerAcademy</span><span class="ch">\\</span><span class="dt">&quot;</span><span class="fu">:</span> <span class="st">&quot;src/SprykerAcademy/&quot;</span></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
-<div class="sourceCode" id="cb5"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="va">$config</span>[<span class="cn">K</span>ernelConstants::<span class="cn">PROJECT_NAMESPACES</span>] <span class="op">=</span> [</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;Pyz&#39;</span><span class="ot">,</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;SprykerAcademy&#39;</span><span class="ot">,</span></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>]<span class="ot">;</span></span></code></pre></div>
-<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli composer dump-autoload</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console propel:install</span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span></code></pre></div>
+<p><strong>5. Register the <code>SprykerAcademy</code> namespace again.</strong> The reset reverted it, and the assistant needs a project namespace to write into. This is Step 4 of the Student Setup Guide:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="er">&quot;autoload&quot;:</span> <span class="fu">{</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;psr-4&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;Pyz</span><span class="ch">\\</span><span class="dt">&quot;</span><span class="fu">:</span> <span class="st">&quot;src/Pyz/&quot;</span><span class="fu">,</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;SprykerAcademy</span><span class="ch">\\</span><span class="dt">&quot;</span><span class="fu">:</span> <span class="st">&quot;src/SprykerAcademy/&quot;</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="va">$config</span>[<span class="cn">K</span>ernelConstants::<span class="cn">PROJECT_NAMESPACES</span>] <span class="op">=</span> [</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;Pyz&#39;</span><span class="ot">,</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;SprykerAcademy&#39;</span><span class="ot">,</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>]<span class="ot">;</span></span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli composer dump-autoload</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console propel:install</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span></code></pre></div>
 <blockquote>
 <p>Keep that order. <code>cache:empty-all</code> deletes the generated Propel configuration, so every console command fails with <em>Database map was not initialized</em> until <code>propel:install</code> rebuilds it. Clear the cache first, never last.</p>
 </blockquote>
-<p><strong>5. Check that the page really is blank:</strong></p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> src/SprykerAcademy <span class="dv">2</span><span class="op">&gt;</span>/dev/null        <span class="co"># must not exist</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="at">-rn</span> ContactRequest config/ src/Pyz/ <span class="co"># must find nothing</span></span></code></pre></div>
+<p><strong>6. Check that the page really is blank:</strong></p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> src/SprykerAcademy <span class="dv">2</span><span class="op">&gt;</span>/dev/null        <span class="co"># must not exist</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="at">-rn</span> ContactRequest config/ src/Pyz/ <span class="co"># must find nothing</span></span></code></pre></div>
 <p>The Back Office has no <em>Contact Request</em> entry in the navigation any more, and <code>http://backoffice.eu.spryker.local/contact-request/index/index</code> is a 404. That is the starting point.</p>
 <blockquote>
-<p><strong>One leftover you cannot see.</strong> The <code>pyz_contact_request</code> table from Exercise 3 is still in the database - a <code>git reset</code> does not touch data. Leave it there. If the assistant designs a different table and <code>propel:install</code> complains, that is a real migration conflict and a good thing to hand to the <code>spryker-issue-diagnoser</code> agent.</p>
+<p><strong>One leftover you cannot see.</strong> The <code>pyz_contact_request</code> table from Exercise 3 is still in the database - a branch switch does not touch data. Leave it there. If the assistant designs a different table and <code>propel:install</code> complains, that is a real migration conflict and a good thing to hand to the <code>spryker-issue-diagnoser</code> agent.</p>
 </blockquote>
 <hr />
 <h2 id="part-2-set-up-the-ai-dev-sdk">Part 2: Set Up the AI Dev SDK</h2>
@@ -278,7 +287,7 @@
 <p>Do this <strong>after</strong> Part 1. The SDK writes untracked files (<code>CLAUDE.md</code>, <code>.claude/</code>, …), and <code>git clean -df</code> would have deleted them.</p>
 </blockquote>
 <p>The SDK is a Composer package with console commands. Run the setup once per project:</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console ai-dev:setup</span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console ai-dev:setup</span></code></pre></div>
 <p>The command is interactive:</p>
 <ol type="1">
 <li>It detects your AI tool from the folders in the project (<code>.claude</code>, <code>.cursor</code>, <code>.github</code>, …) and asks you to confirm, or lets you pick one.</li>
@@ -424,10 +433,10 @@ Build it the way this project does things.</code></pre>
 <hr />
 <h2 id="part-4-verify-it-actually-works">Part 4: Verify It Actually Works</h2>
 <p>There is no test suite this time. You verify the way you would verify a colleague’s branch: by running it.</p>
-<div class="sourceCode" id="cb11"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console propel:install</span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console navigation:build-cache</span></code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console propel:install</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console navigation:build-cache</span></code></pre></div>
 <p>Then walk the two flows:</p>
 <ol type="1">
 <li><strong>Storefront.</strong> Log in at http://yves.eu.spryker.local/en/login as <code>sonia@acme.com</code> / <code>change123</code>, open the customer account area, send a message.</li>
@@ -437,9 +446,9 @@ Build it the way this project does things.</code></pre>
 <hr />
 <h2 id="part-5-review-it-like-a-pull-request">Part 5: Review It Like a Pull Request</h2>
 <p>Commit the result first, so you can diff it against your own work:</p>
-<div class="sourceCode" id="cb12"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> add <span class="at">-A</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> commit <span class="at">-m</span> <span class="st">&quot;ContactRequest built by the AI Dev SDK&quot;</span></span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> diff exercises-1-6 <span class="at">--stat</span> <span class="at">--</span> src/SprykerAcademy</span></code></pre></div>
+<div class="sourceCode" id="cb13"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> add <span class="at">-A</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> commit <span class="at">-m</span> <span class="st">&quot;ContactRequest built by the AI Dev SDK&quot;</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> diff exercises-1-6 <span class="at">--stat</span> <span class="at">--</span> src/SprykerAcademy</span></code></pre></div>
 <p>Now go through the code with the rules of Exercises 1 to 6 in hand:</p>
 <ul>
 <li><strong>Persistence.</strong> Is <code>fk_customer</code> a real Propel foreign key to <code>spy_customer</code>, or just an integer column? Is there an index? Does any Propel entity leave the Persistence layer, or does everything cross the boundary as a transfer?</li>
@@ -455,16 +464,16 @@ Build it the way this project does things.</code></pre>
 <hr />
 <h2 id="cleanup">Cleanup</h2>
 <p>Exercise 7 continues from the handmade module, so switch back and load its skeleton:</p>
-<div class="sourceCode" id="cb14"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> checkout exercises-1-6</span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/extending-core-modules/skeleton</span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console c:e</span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli composer dump-autoload</span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console propel:install</span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span></code></pre></div>
+<div class="sourceCode" id="cb15"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> checkout exercises-1-6</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/extending-core-modules/skeleton</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console c:e</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli composer dump-autoload</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console propel:install</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span></code></pre></div>
 <p>The <code>ai-dev-exercise</code> branch stays in your repository. Keep it - it is worth rereading after Exercise 7, when you know what the core-module extension actually costs.</p>
 <h2 id="going-further">Going Further</h2>
 <ul>
-<li>Give the exact same five sentences to a second assistant or a second model, on a second branch off <code>origin/HEAD</code>, and diff the two modules. The differences between two AI runs are as instructive as the differences from your own code.</li>
+<li>Give the exact same five sentences to a second assistant or a second model, on a second branch off <code>pristine-shop</code>, and diff the two modules. The differences between two AI runs are as instructive as the differences from your own code.</li>
 <li>Add one sentence to the requirement - “the admin can reply to a message and the customer sees the reply” - and watch whether it extends the existing design or bolts on a parallel one.</li>
 <li>Start the MCP server (<code>docker/sdk console ai-dev:mcp-server -q</code>), connect it to your tool, and ask the assistant which transfers exist for <code>ContactRequest</code>.</li>
 </ul>

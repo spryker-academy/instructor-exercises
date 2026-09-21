@@ -29,26 +29,37 @@ Everything you built in Exercises 1 to 6 has to go: the module in `src/SprykerAc
 
 Work in the **project root** (the `b2b-demo-marketplace` clone), not in the `exercises` folder.
 
-**1. Keep your handmade work.** Commit it and give it a name, so you can come back to it and compare later:
+**1. Mark where the shop started.** The clone sits on a release tag rather than on a branch, so `git status` opens with *HEAD detached at 202608.0*. Put a name on that commit before you touch anything:
+
+```bash
+git describe --tags     # the release you cloned, for example 202608.0
+git branch pristine-shop
+```
+
+> `git branch` here only writes a label at the current commit, it does not switch anything. From now on `pristine-shop` means "the demo shop exactly as I cloned it", whichever release that is.
+
+**2. Keep your handmade work.** Move onto a branch of your own and commit, so you can come back to it and compare later:
 
 ```bash
 printf 'exercises/\n' >> .git/info/exclude   # the exercises clone is a repo of its own
+git checkout -b exercises-1-6
 git add -A
 git commit -m "Exercises 1-6: ContactRequest by hand"
-git branch exercises-1-6
 ```
 
 > Without the first line, `git add -A` warns `adding embedded git repository: exercises` and records the folder as a broken submodule reference. `.git/info/exclude` is a personal `.gitignore` that is not part of the repository, which is exactly right for a folder only you have.
 
-**2. Branch off the pristine demo shop.** `origin/HEAD` is the shop as you cloned it, before any exercise touched it:
+**3. Branch off the pristine shop:**
 
 ```bash
-git checkout -B ai-dev-exercise "$(git rev-parse --abbrev-ref origin/HEAD)"
+git checkout -B ai-dev-exercise pristine-shop
 ```
 
 Switching branches removes every file you just committed, so `src/SprykerAcademy` and `tests/SprykerAcademyTest` are gone, and `composer.json`, `config/Shared/config_default.php` and the navigation are back to their original content.
 
-**3. Sweep up what was never committed.** Look first, delete second:
+> **Not `origin/master`.** The master branch has moved on since your release tag. Your `vendor/` was installed from the `composer.lock` of the tag, so branching off master would give you a lock file that does not match what is actually installed, and the first `composer` command would start rewriting your environment. Branch off the tag you cloned - that is what `pristine-shop` points at.
+
+**4. Sweep up what was never committed.** Look first, delete second:
 
 ```bash
 git clean -nd        # dry run: prints what would be removed
@@ -57,7 +68,7 @@ git clean -df        # remove it
 
 > Your environment survives this, for three different reasons. `vendor/`, `src/Generated/` and `docker/` are listed in the shop's `.gitignore`, and `git clean` leaves ignored files alone. `exercises/` is a Git repository of its own, and `git clean` refuses to delete those. `.env` is a tracked file of the demo shop, so it was never a candidate - the branch switch restored it. Do **not** add `-x` or `-ff`: that would wipe your installed dependencies, the Docker SDK and the exercises clone, and you would be reinstalling the shop instead of doing the exercise.
 
-**4. Register the `SprykerAcademy` namespace again.** The reset reverted it, and the assistant needs a project namespace to write into. This is Step 4 of the Student Setup Guide:
+**5. Register the `SprykerAcademy` namespace again.** The reset reverted it, and the assistant needs a project namespace to write into. This is Step 4 of the Student Setup Guide:
 
 ```json
 "autoload": {
@@ -84,7 +95,7 @@ docker/sdk console transfer:generate
 
 > Keep that order. `cache:empty-all` deletes the generated Propel configuration, so every console command fails with *Database map was not initialized* until `propel:install` rebuilds it. Clear the cache first, never last.
 
-**5. Check that the page really is blank:**
+**6. Check that the page really is blank:**
 
 ```bash
 ls src/SprykerAcademy 2>/dev/null        # must not exist
@@ -93,7 +104,7 @@ grep -rn ContactRequest config/ src/Pyz/ # must find nothing
 
 The Back Office has no *Contact Request* entry in the navigation any more, and `http://backoffice.eu.spryker.local/contact-request/index/index` is a 404. That is the starting point.
 
-> **One leftover you cannot see.** The `pyz_contact_request` table from Exercise 3 is still in the database - a `git reset` does not touch data. Leave it there. If the assistant designs a different table and `propel:install` complains, that is a real migration conflict and a good thing to hand to the `spryker-issue-diagnoser` agent.
+> **One leftover you cannot see.** The `pyz_contact_request` table from Exercise 3 is still in the database - a branch switch does not touch data. Leave it there. If the assistant designs a different table and `propel:install` complains, that is a real migration conflict and a good thing to hand to the `spryker-issue-diagnoser` agent.
 
 ---
 
@@ -254,6 +265,6 @@ The `ai-dev-exercise` branch stays in your repository. Keep it - it is worth rer
 
 ## Going Further
 
-- Give the exact same five sentences to a second assistant or a second model, on a second branch off `origin/HEAD`, and diff the two modules. The differences between two AI runs are as instructive as the differences from your own code.
+- Give the exact same five sentences to a second assistant or a second model, on a second branch off `pristine-shop`, and diff the two modules. The differences between two AI runs are as instructive as the differences from your own code.
 - Add one sentence to the requirement - "the admin can reply to a message and the customer sees the reply" - and watch whether it extends the existing design or bolts on a parallel one.
 - Start the MCP server (`docker/sdk console ai-dev:mcp-server -q`), connect it to your tool, and ask the assistant which transfers exist for `ContactRequest`.
