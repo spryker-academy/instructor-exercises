@@ -134,6 +134,15 @@ What lands in the project depends on the tool:
 | Windsurf | `.windsurfrules` | `.windsurf/rules/` | `.windsurf/skills/` | - |
 | OpenCode / Codex | `AGENTS.md` | `.opencode/rules/` | `.agents/skills/` | - |
 
+> **GitHub Copilot on Docker sync.** The shop's `.dockersyncignore` starts with `.git*`, and that pattern catches `.github` along with `.gitignore` and `.gitattributes`. The files the SDK generates for Copilot then never cross between the host and the container. Add an exception right after that entry:
+>
+> ```text
+> .git*
+> !/.github
+> ```
+>
+> Only Copilot is affected - `.claude`, `.cursor` and `.windsurf` do not match `.git*`. See [Generated files per AI tool](https://docs.spryker.com/docs/dg/dev/ai/ai-dev/ai-dev-installation#generated-files-per-ai-tool).
+
 The other commands of the module generate single artifacts (`ai-dev:generate-agents-file`, `ai-dev:generate-skills`) and start the MCP server (`ai-dev:mcp-server`) that lets the assistant query transfers, interfaces and OMS information of the running application. You do not need them for this exercise.
 
 ### What to look at (5 minutes, no coding)
