@@ -1,6 +1,6 @@
 # Exercise 6b: Build the Contact Request Module with the AI Dev SDK
 
-In Exercises 1 to 6 you built the **ContactRequest** module by hand, step by step, from a guide that told you every class name and every file path. In this exercise you throw all of that away - the code, the wiring and the tests - and start from the pristine demo shop on a fresh branch. Then you describe the feature the way a product owner would, in five sentences, and let your AI coding assistant design and build it.
+In Exercises 1 to 6 you built the **ContactRequest** module by hand, step by step, from a guide that told you every class name and every file path. In this exercise you throw all of that away - the code, the wiring and the tests - and start from the pristine demo shop on a fresh branch. Then you describe the feature the way a product owner would, in six sentences, and let your AI coding assistant design and build it.
 
 That is the point of the exercise. The Spryker AI Dev SDK gives the assistant Spryker's architecture rules, skills and agents. Your job is to state *what* you want and to judge *what comes back* - because this time there is no test suite to hide behind.
 
@@ -152,7 +152,7 @@ Project code goes into the `SprykerAcademy` namespace (`src/SprykerAcademy`), wh
 registered in composer.json and before `Pyz` in `PROJECT_NAMESPACES`.
 ```
 
-> Put project facts in the **context file**, never in the prompt. The prompt describes the feature and changes every time; the context file describes the project and stays. Mixing the two is the most common reason an assistant "forgets" a convention on the next task.
+> Project facts belong in the **context file**, because it describes the project and stays, while the prompt describes one feature and changes every time. The prompt in Part 3 names the namespace anyway - belt and braces for the one fact everything else hangs off - but it is the context file that makes the assistant remember it on the task after this one.
 
 ---
 
@@ -172,12 +172,15 @@ account area.
 In the Back Office, an administrator opens a page that lists the contact requests in a table
 they can read, sort, filter and page through.
 
-Build it the way this project does things.
+Put the code in the SprykerAcademy namespace (src/SprykerAcademy) and build it the way this
+project does things.
 ```
 
-That is the whole specification. Notice what is **not** in it: no class names, no namespaces, no file paths, no layer list, no routes, no console commands, no tests. Deriving all of that from a requirement is the assistant's job, and the rules and skills the SDK installed are where it gets the conventions from. You spent Exercises 1 to 6 learning those conventions so you can tell whether it got them right.
+That is the whole specification. Notice what is **not** in it: no class names, no file paths, no layer list, no routes, no console commands, no tests. Deriving all of that from a requirement is the assistant's job, and the rules and skills the SDK installed are where it gets the conventions from. You spent Exercises 1 to 6 learning those conventions so you can tell whether it got them right.
 
-> You are asking, in five sentences, for roughly what Exercises 1 to 7 build by hand: a Propel table with a foreign key to `spy_customer`, transfers, the three Zed layers, a Back Office page with a table, a Client with a Zed stub, and a customer account page in Yves.
+The namespace is the one exception, and it is worth understanding why. `SprykerAcademy` is not a design decision the assistant could derive from the requirement - it is a fact about this project, and every file it creates depends on it. Guess `Pyz` and the module works but lands in the wrong place; guess a vendor namespace and nothing resolves at all. State it, and state it in the context file as well, so the next task does not need the reminder.
+
+> You are asking, in six sentences, for roughly what Exercises 1 to 7 build by hand: a Propel table with a foreign key to `spy_customer`, transfers, the three Zed layers, a Back Office page with a table, a Client with a Zed stub, and a customer account page in Yves.
 
 ### Answer its questions
 
@@ -265,6 +268,6 @@ The `ai-dev-exercise` branch stays in your repository. Keep it - it is worth rer
 
 ## Going Further
 
-- Give the exact same five sentences to a second assistant or a second model, on a second branch off `pristine-shop`, and diff the two modules. The differences between two AI runs are as instructive as the differences from your own code.
+- Give the exact same six sentences to a second assistant or a second model, on a second branch off `pristine-shop`, and diff the two modules. The differences between two AI runs are as instructive as the differences from your own code.
 - Add one sentence to the requirement - "the admin can reply to a message and the customer sees the reply" - and watch whether it extends the existing design or bolts on a parallel one.
 - Start the MCP server (`docker/sdk console ai-dev:mcp-server -q`), connect it to your tool, and ask the assistant which transfers exist for `ContactRequest`.
