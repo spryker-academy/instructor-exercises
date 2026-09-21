@@ -341,7 +341,7 @@ $idContactRequest = $this->castId($request->request->get('idContactRequest'));
 
 ## Testing
 
-1. Log in to Yves: http://yves.eu.spryker.local/en/login (use `sonia@spryker.com` / `change123`)
+1. Log in to Yves: http://yves.eu.spryker.local/en/login (use `sonia@acme.com` / `change123`)
 2. Visit: http://yves.eu.spryker.local/en/customer/contact-requests
 3. You should see a message list (empty initially) and a form to add messages
 4. Add a message and verify it appears in the list with a created timestamp
