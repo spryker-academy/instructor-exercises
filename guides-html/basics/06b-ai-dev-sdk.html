@@ -216,8 +216,9 @@
 <h1 class="title">Exercise 6b: Build the Contact Request Module with the AI Dev SDK</h1>
 </header>
 <h1 id="exercise-6b-build-the-contact-request-module-with-the-ai-dev-sdk">Exercise 6b: Build the Contact Request Module with the AI Dev SDK</h1>
-<p>In Exercises 1 to 6 you built the <strong>ContactRequest</strong> module by hand: a Back Office page, a transfer object, a Propel table, the Persistence, Business and Communication layers, the Client, a Yves page and a module config. In this exercise you build the same module again, this time by giving one prompt to your AI coding assistant. The Spryker AI Dev SDK provides the assistant with Spryker’s architecture rules, skills and agents, and the automated tests of Exercises 1 to 6 are the acceptance criteria.</p>
-<p>You will learn how to: - Set up the <strong>AI Dev SDK</strong> in a project with <code>ai-dev:setup</code> - Read what the SDK generates: the agents file, the rules, the skills and the agents - Write a prompt that uses <strong>existing tests as the specification</strong> - Review AI-generated Spryker code against the rules you learned in Exercises 1 to 6</p>
+<p>In Exercises 1 to 6 you built the <strong>ContactRequest</strong> module by hand, step by step, from a guide that told you every class name and every file path. In this exercise you throw all of that away - the code, the wiring and the tests - and start from the pristine demo shop on a fresh branch. Then you describe the feature the way a product owner would, in five sentences, and let your AI coding assistant design and build it.</p>
+<p>That is the point of the exercise. The Spryker AI Dev SDK gives the assistant Spryker’s architecture rules, skills and agents. Your job is to state <em>what</em> you want and to judge <em>what comes back</em> - because this time there is no test suite to hide behind.</p>
+<p>You will learn how to: - Get to a genuinely clean branch before you let an assistant loose on a project - Set up the <strong>AI Dev SDK</strong> in a project with <code>ai-dev:setup</code> - Read what the SDK generates: the context file, the rules, the skills and the agents - Write a <strong>requirement-level prompt</strong> and let the assistant derive schema, layers and routes - Review AI-generated Spryker code against the rules you learned in Exercises 1 to 6</p>
 <p><strong>Official documentation:</strong> - <a href="https://docs.spryker.com/docs/dg/dev/ai/ai-dev/ai-dev">AI Dev SDK</a> - <a href="https://docs.spryker.com/docs/dg/dev/ai/ai-dev/ai-dev-installation">Install AI Dev</a></p>
 <h2 id="prerequisites">Prerequisites</h2>
 <ul>
@@ -226,9 +227,58 @@
 <li>The <code>spryker-sdk/ai-dev</code> package. The B2B Marketplace demo shop ships it out of the box (see <code>composer.json</code>).</li>
 </ul>
 <hr />
-<h2 id="part-1-set-up-the-ai-dev-sdk">Part 1: Set Up the AI Dev SDK</h2>
+<h2 id="part-1-get-to-a-clean-branch">Part 1: Get to a Clean Branch</h2>
+<p>Everything you built in Exercises 1 to 6 has to go: the module in <code>src/SprykerAcademy</code>, the tests in <code>tests/SprykerAcademyTest</code>, and the wiring the loader added (the navigation entry, the config value, the Yves router plugin). If any of it stays, you are not testing the assistant, you are testing your own scaffolding.</p>
+<p>Work in the <strong>project root</strong> (the <code>b2b-demo-marketplace</code> clone), not in the <code>exercises</code> folder.</p>
+<p><strong>1. Keep your handmade work.</strong> Commit it and give it a name, so you can come back to it and compare later:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="bu">printf</span> <span class="st">&#39;exercises/\n&#39;</span> <span class="op">&gt;&gt;</span> .git/info/exclude   <span class="co"># the exercises clone is a repo of its own</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> add <span class="at">-A</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> commit <span class="at">-m</span> <span class="st">&quot;Exercises 1-6: ContactRequest by hand&quot;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> branch exercises-1-6</span></code></pre></div>
+<blockquote>
+<p>Without the first line, <code>git add -A</code> warns <code>adding embedded git repository: exercises</code> and records the folder as a broken submodule reference. <code>.git/info/exclude</code> is a personal <code>.gitignore</code> that is not part of the repository, which is exactly right for a folder only you have.</p>
+</blockquote>
+<p><strong>2. Branch off the pristine demo shop.</strong> <code>origin/HEAD</code> is the shop as you cloned it, before any exercise touched it:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> checkout <span class="at">-B</span> ai-dev-exercise <span class="st">&quot;</span><span class="va">$(</span><span class="fu">git</span> rev-parse <span class="at">--abbrev-ref</span> origin/HEAD<span class="va">)</span><span class="st">&quot;</span></span></code></pre></div>
+<p>Switching branches removes every file you just committed, so <code>src/SprykerAcademy</code> and <code>tests/SprykerAcademyTest</code> are gone, and <code>composer.json</code>, <code>config/Shared/config_default.php</code> and the navigation are back to their original content.</p>
+<p><strong>3. Sweep up what was never committed.</strong> Look first, delete second:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clean <span class="at">-nd</span>        <span class="co"># dry run: prints what would be removed</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clean <span class="at">-df</span>        <span class="co"># remove it</span></span></code></pre></div>
+<blockquote>
+<p>Your environment survives this, for three different reasons. <code>vendor/</code>, <code>src/Generated/</code> and <code>docker/</code> are listed in the shop’s <code>.gitignore</code>, and <code>git clean</code> leaves ignored files alone. <code>exercises/</code> is a Git repository of its own, and <code>git clean</code> refuses to delete those. <code>.env</code> is a tracked file of the demo shop, so it was never a candidate - the branch switch restored it. Do <strong>not</strong> add <code>-x</code> or <code>-ff</code>: that would wipe your installed dependencies, the Docker SDK and the exercises clone, and you would be reinstalling the shop instead of doing the exercise.</p>
+</blockquote>
+<p><strong>4. Register the <code>SprykerAcademy</code> namespace again.</strong> The reset reverted it, and the assistant needs a project namespace to write into. This is Step 4 of the Student Setup Guide:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="er">&quot;autoload&quot;:</span> <span class="fu">{</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;psr-4&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;Pyz</span><span class="ch">\\</span><span class="dt">&quot;</span><span class="fu">:</span> <span class="st">&quot;src/Pyz/&quot;</span><span class="fu">,</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;SprykerAcademy</span><span class="ch">\\</span><span class="dt">&quot;</span><span class="fu">:</span> <span class="st">&quot;src/SprykerAcademy/&quot;</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="va">$config</span>[<span class="cn">K</span>ernelConstants::<span class="cn">PROJECT_NAMESPACES</span>] <span class="op">=</span> [</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;Pyz&#39;</span><span class="ot">,</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;SprykerAcademy&#39;</span><span class="ot">,</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>]<span class="ot">;</span></span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli composer dump-autoload</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console propel:install</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span></code></pre></div>
+<blockquote>
+<p>Keep that order. <code>cache:empty-all</code> deletes the generated Propel configuration, so every console command fails with <em>Database map was not initialized</em> until <code>propel:install</code> rebuilds it. Clear the cache first, never last.</p>
+</blockquote>
+<p><strong>5. Check that the page really is blank:</strong></p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> src/SprykerAcademy <span class="dv">2</span><span class="op">&gt;</span>/dev/null        <span class="co"># must not exist</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="at">-rn</span> ContactRequest config/ src/Pyz/ <span class="co"># must find nothing</span></span></code></pre></div>
+<p>The Back Office has no <em>Contact Request</em> entry in the navigation any more, and <code>http://backoffice.eu.spryker.local/contact-request/index/index</code> is a 404. That is the starting point.</p>
+<blockquote>
+<p><strong>One leftover you cannot see.</strong> The <code>pyz_contact_request</code> table from Exercise 3 is still in the database - a <code>git reset</code> does not touch data. Leave it there. If the assistant designs a different table and <code>propel:install</code> complains, that is a real migration conflict and a good thing to hand to the <code>spryker-issue-diagnoser</code> agent.</p>
+</blockquote>
+<hr />
+<h2 id="part-2-set-up-the-ai-dev-sdk">Part 2: Set Up the AI Dev SDK</h2>
+<blockquote>
+<p>Do this <strong>after</strong> Part 1. The SDK writes untracked files (<code>CLAUDE.md</code>, <code>.claude/</code>, …), and <code>git clean -df</code> would have deleted them.</p>
+</blockquote>
 <p>The SDK is a Composer package with console commands. Run the setup once per project:</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console ai-dev:setup</span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console ai-dev:setup</span></code></pre></div>
 <p>The command is interactive:</p>
 <ol type="1">
 <li>It detects your AI tool from the folders in the project (<code>.claude</code>, <code>.cursor</code>, <code>.github</code>, …) and asks you to confirm, or lets you pick one.</li>
@@ -280,127 +330,143 @@
 <td><code>.windsurfrules</code></td>
 <td><code>.windsurf/rules/</code></td>
 <td><code>.windsurf/skills/</code></td>
-<td>—</td>
+<td>-</td>
 </tr>
 <tr class="odd">
 <td>OpenCode / Codex</td>
 <td><code>AGENTS.md</code></td>
 <td><code>.opencode/rules/</code></td>
 <td><code>.agents/skills/</code></td>
-<td>—</td>
+<td>-</td>
 </tr>
 </tbody>
 </table>
 <p>The other commands of the module generate single artifacts (<code>ai-dev:generate-agents-file</code>, <code>ai-dev:generate-skills</code>) and start the MCP server (<code>ai-dev:mcp-server</code>) that lets the assistant query transfers, interfaces and OMS information of the running application. You do not need them for this exercise.</p>
 <h3 id="what-to-look-at-5-minutes-no-coding">What to look at (5 minutes, no coding)</h3>
 <ul>
-<li><strong>The context file</strong> (<code>CLAUDE.md</code> or <code>AGENTS.md</code>). It is the architecture brief for the assistant: the console commands, the architectural rules (single responsibility, dependencies through the constructor, no <code>new</code> in business logic, transfers are never modified in place), and the project organization. Note the rule about the custom namespace: the assistant must write into <code>src/SprykerAcademy</code>, because that namespace is registered before <code>Pyz</code> in <code>PROJECT_NAMESPACES</code>.</li>
+<li><strong>The context file</strong> (<code>CLAUDE.md</code> or <code>AGENTS.md</code>). It is the architecture brief for the assistant: the console commands, the architectural rules (single responsibility, dependencies through the constructor, no <code>new</code> in business logic, transfers are never modified in place), and the project organization.</li>
 <li><strong>The rules folder</strong>: one Markdown file per convention. Open <code>dependency-provider.md</code>, <code>factory-pattern.md</code>, <code>layer-communication.md</code>, <code>transfer-object.md</code>, <code>persistence.md</code>, <code>controller.md</code> and <code>naming-conventions.md</code>. These are the same rules you applied by hand in Exercises 4 to 6.</li>
 <li><strong>The skills folder</strong>: task recipes the assistant follows, for example <code>propel-schema</code>, <code>data-import</code>, <code>spryker-customization</code>, <code>codecept-functional</code>, <code>code-review</code>, <code>static-validation</code>, <code>spryker-docs-research</code>, <code>spryker-runtime</code>.</li>
 <li><strong>The agents folder</strong>: specialised roles such as <code>spryker-feature-expert</code>, <code>spryker-code-reviewer</code>, <code>spryker-verifier</code>, <code>spryker-issue-diagnoser</code> and <code>spryker-data-seeder</code>.</li>
 </ul>
+<h3 id="add-the-one-project-fact-the-sdk-cannot-know">Add the one project fact the SDK cannot know</h3>
+<p>Check whether the context file names the project namespace. If it only talks about <code>Pyz</code>, add a line to it:</p>
+<pre class="text"><code>Project code goes into the `SprykerAcademy` namespace (`src/SprykerAcademy`), which is
+registered in composer.json and before `Pyz` in `PROJECT_NAMESPACES`.</code></pre>
 <blockquote>
-<p>Do not study every file now. The point is to know that the assistant reads the same conventions you learned, and where to look when it produces something odd.</p>
+<p>Put project facts in the <strong>context file</strong>, never in the prompt. The prompt describes the feature and changes every time; the context file describes the project and stays. Mixing the two is the most common reason an assistant “forgets” a convention on the next task.</p>
 </blockquote>
 <hr />
-<h2 id="part-2-prepare-a-clean-start">Part 2: Prepare a Clean Start</h2>
-<p>Load the reference solution of Exercise 6. This installs the wiring the loader manages (navigation entry, the config value in <code>config_default.php</code>, the Yves router) and the automated tests of Exercises 1 to 6:</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/configuration/complete</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli composer dump-autoload</span></code></pre></div>
-<p>Now delete the module code and keep the wiring and the tests. This is your empty page:</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span> <span class="at">-rf</span> src/SprykerAcademy/Zed/ContactRequest <span class="dt">\</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>       src/SprykerAcademy/Client/ContactRequest <span class="dt">\</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>       src/SprykerAcademy/Shared/ContactRequest/Transfer <span class="dt">\</span></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>       src/SprykerAcademy/Yves/ContactRequestPage</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span></code></pre></div>
-<p>Two files stay on purpose, because the wiring references them:</p>
-<ul>
-<li><code>src/SprykerAcademy/Shared/ContactRequest/ContactRequestConstants.php</code>: <code>config/Shared/config_default.php</code> reads <code>ContactRequestConstants::MY_CONFIG_VALUE</code>. Without the class every console command fails.</li>
-<li><code>src/SprykerAcademy/Yves/Router/RouterDependencyProvider.php</code>: it registers <code>ContactRequestPageRouteProviderPlugin</code>, a class the assistant has to create with exactly that name. Until it exists, the Yves storefront answers with an error. That is expected.</li>
-</ul>
-<p>Both are part of the specification the assistant gets.</p>
-<p>Confirm that the tests fail now:</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/ContactRequest/</span></code></pre></div>
-<hr />
 <h2 id="part-3-the-prompt">Part 3: The Prompt</h2>
-<p>Open your AI tool in the project root and give it this prompt. Adjust nothing except, if you like, the wording.</p>
-<pre class="text"><code>Build the ContactRequest module in the SprykerAcademy namespace of this Spryker project.
+<p>Open your AI tool in the project root and give it this - and nothing else:</p>
+<pre class="text"><code>I need a Contact Request module for this shop.
 
-The specification is the test suite in tests/SprykerAcademyTest/Zed/ContactRequest/
-(folders Exercise1 to Exercise6 plus codeception.yml). Read every test first and derive
-the class names, namespaces, file paths, method names, routes and values from them.
-Do not modify the tests.
+Customers can send a message to the shop owner. A contact request stores the message and
+belongs to a customer, so the customer is a foreign key on the contact request.
 
-Scope, in this order:
-1. Zed Back Office page: IndexController with indexAction() at /contact-request/index/index,
-   Twig template in Presentation/Index/index.twig. The navigation entry already exists.
-2. Transfer definition src/SprykerAcademy/Shared/ContactRequest/Transfer/contact_request.transfer.xml
-   with the ContactRequest transfer (idContactRequest, message) plus ContactRequestCriteria and
-   ContactRequestResponse (isSuccessful, contactRequest). Every transfer carries strict=&quot;true&quot;.
-   Run docker/sdk console transfer:generate.
-3. Propel schema src/SprykerAcademy/Zed/ContactRequest/Persistence/Propel/Schema/pyz_contact_request.schema.xml
-   (table pyz_contact_request, namespace Orm\Zed\ContactRequest\Persistence). Run docker/sdk console propel:install.
-4. Persistence layer (PersistenceFactory, Repository + interface, EntityManager + interface, Mapper),
-   Business layer (Facade + interface, BusinessFactory, Reader/ContactRequestReader, Writer/ContactRequestWriter)
-   and Communication layer (CommunicationFactory, IndexController with indexAction() and an
-   addAction() add form page at /contact-request/index/add, GatewayController).
-5. Client layer src/SprykerAcademy/Client/ContactRequest (Client + interface, Factory, DependencyProvider,
-   Stub/ContactRequestStub using the ZedRequestClient and the gateway path
-   /contact-request/gateway/find-contact-request).
-6. Yves module src/SprykerAcademy/Yves/ContactRequestPage with a ContactRequestController, a
-   ContactRequestPageRouteProviderPlugin (already registered in
-   src/SprykerAcademy/Yves/Router/RouterDependencyProvider.php) and the template
-   Theme/default/views/contact-request/get.twig that shows one contact request by id at
-   /contact-request/{idContactRequest} (route parameter `idContactRequest`).
-7. Module config: ContactRequestConfig with getMyConfigValue() reading
-   SprykerAcademy\Shared\ContactRequest\ContactRequestConstants::MY_CONFIG_VALUE (the constants interface
-   exists and the value is set in config/Shared/config_default.php) and a ConfigController at /contact-request/config/index that
-   renders the value.
+In the storefront, a logged-in customer writes and sends the message from their customer
+account area.
 
-Follow the Spryker rules and skills of the AI Dev SDK in this project: all dependencies through
-DependencyProvider and factories, no `new` in business logic, entities never leave the
-Persistence layer, transfers between layers, interfaces for every business model.
+In the Back Office, an administrator opens a page that lists the contact requests in a table
+they can read, sort, filter and page through.
 
-After each step run docker/sdk console cache:empty-all, docker/sdk console propel:model:build and
-docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/ContactRequest/
-and fix failures before continuing. Finish when every test passes and report what you built.</code></pre>
-<p>While the assistant works, watch <strong>which rules and skills it picks up</strong> (for example <code>propel-schema</code> for step 3) and whether it runs the console commands itself.</p>
+Build it the way this project does things.</code></pre>
+<p>That is the whole specification. Notice what is <strong>not</strong> in it: no class names, no namespaces, no file paths, no layer list, no routes, no console commands, no tests. Deriving all of that from a requirement is the assistant’s job, and the rules and skills the SDK installed are where it gets the conventions from. You spent Exercises 1 to 6 learning those conventions so you can tell whether it got them right.</p>
+<blockquote>
+<p>You are asking, in five sentences, for roughly what Exercises 1 to 7 build by hand: a Propel table with a foreign key to <code>spy_customer</code>, transfers, the three Zed layers, a Back Office page with a table, a Client with a Zed stub, and a customer account page in Yves.</p>
+</blockquote>
+<h3 id="answer-its-questions">Answer its questions</h3>
+<p>A good assistant will come back with questions before it writes code. Answer them; do not let it guess. Decisions that are yours to make for this exercise:</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Question you are likely to get</th>
+<th>Answer for this exercise</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Guests too, or only logged-in customers?</td>
+<td>Only logged-in customers.</td>
+</tr>
+<tr class="even">
+<td>Should the customer see the messages they already sent?</td>
+<td>Yes, list them on the same account page.</td>
+</tr>
+<tr class="odd">
+<td>Can the customer edit or delete a message?</td>
+<td>No. Sending is enough.</td>
+</tr>
+<tr class="even">
+<td>Does the admin reply, or is there a status / read flag?</td>
+<td>No. Reading is enough.</td>
+</tr>
+<tr class="odd">
+<td>Email notification to the shop owner?</td>
+<td>No.</td>
+</tr>
+<tr class="even">
+<td>Extra fields (subject, category, created date)?</td>
+<td>A creation timestamp is fine, nothing else.</td>
+</tr>
+<tr class="odd">
+<td>Should it write tests?</td>
+<td>Yes, if it offers - but you review the code yourself either way.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="while-it-works">While it works</h3>
+<p>Watch <strong>which rules and skills it picks up</strong> (<code>propel-schema</code> for the schema, <code>yves-atomic-frontend</code> for the storefront template, <code>static-validation</code> before it declares victory) and whether it runs the console commands itself: <code>transfer:generate</code>, <code>propel:install</code>, <code>cache:empty-all</code>, <code>navigation:build-cache</code>. An assistant that writes a schema file and never runs <code>propel:install</code> has not finished, whatever it says.</p>
 <hr />
-<h2 id="part-4-verify">Part 4: Verify</h2>
-<p>Automated:</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/ContactRequest/</span></code></pre></div>
-<p>All tests of Exercises 1 to 6 must pass. Then check the application:</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console propel:model:build</span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console navigation:build-cache</span></code></pre></div>
+<h2 id="part-4-verify-it-actually-works">Part 4: Verify It Actually Works</h2>
+<p>There is no test suite this time. You verify the way you would verify a colleague’s branch: by running it.</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console propel:install</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console navigation:build-cache</span></code></pre></div>
+<p>Then walk the two flows:</p>
+<ol type="1">
+<li><strong>Storefront.</strong> Log in at http://yves.eu.spryker.local/en/login as <code>sonia@acme.com</code> / <code>change123</code>, open the customer account area, send a message.</li>
+<li><strong>Back Office.</strong> Log in at http://backoffice.eu.spryker.local as <code>admin@spryker.com</code> / <code>change123</code>, find the new navigation entry, and check that the message you just sent is in the table - with the right customer next to it. Sort a column, type something in the filter, page through.</li>
+</ol>
+<p>If a page errors, do not fix it yourself yet. Hand the error to the assistant (the <code>spryker-issue-diagnoser</code> agent is built for this) and watch how it diagnoses. That is also part of the exercise.</p>
+<hr />
+<h2 id="part-5-review-it-like-a-pull-request">Part 5: Review It Like a Pull Request</h2>
+<p>Commit the result first, so you can diff it against your own work:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> add <span class="at">-A</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> commit <span class="at">-m</span> <span class="st">&quot;ContactRequest built by the AI Dev SDK&quot;</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> diff exercises-1-6 <span class="at">--stat</span> <span class="at">--</span> src/SprykerAcademy</span></code></pre></div>
+<p>Now go through the code with the rules of Exercises 1 to 6 in hand:</p>
 <ul>
-<li>http://backoffice.eu.spryker.local/contact-request/index/index shows the greeting.</li>
-<li>http://backoffice.eu.spryker.local/contact-request/index/add creates a contact request.</li>
-<li>http://backoffice.eu.spryker.local/contact-request/config/index shows <em>Hello from config!</em>.</li>
-<li>http://yves.eu.spryker.local/en/contact-request/1 shows the first contact request.</li>
+<li><strong>Persistence.</strong> Is <code>fk_customer</code> a real Propel foreign key to <code>spy_customer</code>, or just an integer column? Is there an index? Does any Propel entity leave the Persistence layer, or does everything cross the boundary as a transfer?</li>
+<li><strong>Business.</strong> Is there a Facade with an interface? Are Reader and Writer separate classes with interfaces? Any <code>new</code> inside business logic instead of a factory?</li>
+<li><strong>Communication.</strong> Did it use Spryker’s Back Office table (<code>AbstractTable</code> from the <code>Gui</code> module, with <code>configure()</code> and <code>prepareData()</code>), or did it hand-roll a Twig loop and call it a table? Sorting, filtering and paging come for free with the first and not at all with the second.</li>
+<li><strong>Yves.</strong> Does the storefront go through the Client and the Zed gateway, or does it query the database directly from Yves? Does the page only ever show the messages of the logged-in customer - or can you change an ID in the URL and read someone else’s?</li>
+<li><strong>Transfers.</strong> <code>strict="true"</code>, or untyped accessors?</li>
+<li><strong>Everything else.</strong> Dependencies through the <code>DependencyProvider</code> and created in factories? Return types as interfaces? Did it add things you never asked for - extra fields, helper classes, commented-out code? Would you keep them?</li>
 </ul>
-<p>Now review the code the way you would review a colleague’s pull request. Compare it with what you wrote by hand in Exercises 4 to 6:</p>
-<ul>
-<li>Are all dependencies provided through the DependencyProvider and created in factories?</li>
-<li>Does any entity leave the Persistence layer?</li>
-<li>Are return types interfaces?</li>
-<li>Did it put <code>strict="true"</code> on the transfers, or did it fall back to untyped accessors?</li>
-<li>Did the assistant add anything you did not ask for (extra methods, comments, helper classes)? Would you keep it?</li>
-</ul>
-<p>The best result of this exercise is a list of differences, not a perfect module.</p>
+<p>Then ask the SDK’s own reviewer and compare:</p>
+<pre class="text"><code>Use the spryker-code-reviewer agent to review the ContactRequest module you just built.</code></pre>
+<p><strong>The best result of this exercise is a list of differences, not a perfect module.</strong> Write the list down - it is the thing you take home about working with an assistant on a Spryker project.</p>
 <hr />
 <h2 id="cleanup">Cleanup</h2>
-<p>Before Exercise 7, restore the reference module so everyone starts from the same code:</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/extending-core-modules/skeleton</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console c:e</span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli composer dump-autoload</span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console propel:install</span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span></code></pre></div>
+<p>Exercise 7 continues from the handmade module, so switch back and load its skeleton:</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> checkout exercises-1-6</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/extending-core-modules/skeleton</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console c:e</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli composer dump-autoload</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console propel:install</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span></code></pre></div>
+<p>The <code>ai-dev-exercise</code> branch stays in your repository. Keep it - it is worth rereading after Exercise 7, when you know what the core-module extension actually costs.</p>
 <h2 id="going-further">Going Further</h2>
 <ul>
-<li>Ask the <code>spryker-code-reviewer</code> agent to review the generated module and compare its findings with yours.</li>
-<li>Give the assistant a smaller prompt: only step 6, and see whether it finds the Client and the gateway path on its own.</li>
-<li>Start the MCP server (<code>docker/sdk console ai-dev:mcp-server -q</code>) and connect it to your tool, then ask the assistant which transfers exist for <code>ContactRequest</code>.</li>
+<li>Give the exact same five sentences to a second assistant or a second model, on a second branch off <code>origin/HEAD</code>, and diff the two modules. The differences between two AI runs are as instructive as the differences from your own code.</li>
+<li>Add one sentence to the requirement - “the admin can reply to a message and the customer sees the reply” - and watch whether it extends the existing design or bolts on a parallel one.</li>
+<li>Start the MCP server (<code>docker/sdk console ai-dev:mcp-server -q</code>), connect it to your tool, and ask the assistant which transfers exist for <code>ContactRequest</code>.</li>
 </ul>
 </body>
 </html>
