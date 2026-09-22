@@ -353,8 +353,11 @@ if grep -q "ContactRequest exercise config value\|contact-request exercise" "$CO
     ' "$CONFIG_FILE"
     log_success "Removed the ContactRequest config value from config_default.php"
 fi
-if [ ! -f "$PROJECT_DIR/src/SprykerAcademy/Shared/ContactRequest/ContactRequestConstants.php" ] && grep -q "ContactRequestConstants" "$CONFIG_FILE" 2>/dev/null; then
-    log_error "Warning: config/Shared/config_default.php still references ContactRequestConstants, which this branch does not contain (manual wiring from Exercise 6)."
+# Only a live statement breaks the application: `use X;` alone autoloads nothing, and a commented
+# line does nothing at all. Match an uncommented `ContactRequestConstants::` instead of the bare name.
+if [ ! -f "$PROJECT_DIR/src/SprykerAcademy/Shared/ContactRequest/ContactRequestConstants.php" ] \
+    && grep -qE '^[[:space:]]*[^/#*[:space:]].*ContactRequestConstants::' "$CONFIG_FILE" 2>/dev/null; then
+    log_error "Warning: config/Shared/config_default.php still uses ContactRequestConstants, which this branch does not contain (manual wiring from Exercise 6)."
     log_error "         Remove those lines, or every console command will fail with a class not found error."
 fi
 if [ "$PACKAGE" = "contact-request" ] && [ -f "$PROJECT_DIR/src/SprykerAcademy/Shared/ContactRequest/ContactRequestConstants.php" ]; then
@@ -748,14 +751,17 @@ CONFIGEOF
 fi
 
 # Safety net: warn about project files that still reference SprykerAcademy classes this branch does not contain (manual wiring from another exercise)
-MISSING_REFS=$(grep -rhoE "SprykerAcademy(\\\\[A-Za-z0-9_]+)+" "$PROJECT_DIR/src/Pyz" "$PROJECT_DIR/config" --include="*.php" 2>/dev/null | sort -u | while read -r class; do
+MISSING_REFS=$(grep -rhE "SprykerAcademy(\\\\[A-Za-z0-9_]+)+" "$PROJECT_DIR/src/Pyz" "$PROJECT_DIR/config" --include="*.php" 2>/dev/null \
+    | grep -vE '^[[:space:]]*(//|#|\*|/\*)' \
+    | grep -oE "SprykerAcademy(\\\\[A-Za-z0-9_]+)+" | sort -u | while read -r class; do
     rel=$(echo "${class#SprykerAcademy\\}" | tr '\\' '/')
     [ -f "$PROJECT_DIR/src/SprykerAcademy/$rel.php" ] || echo "$class"
 done)
 if [ -n "$MISSING_REFS" ]; then
     log_error "Warning: src/Pyz or config still references classes this branch does not contain:"
     echo "$MISSING_REFS" | sed 's/^/           /'
-    log_error "         Remove those references (manual wiring from another exercise), or the application will fail."
+    log_error "         Leftover wiring from another exercise. A bare \`use\` import of them is harmless; any line that actually"
+    log_error "         calls one will fatal with a class not found error. Check those files before you carry on."
 fi
 
 # Copy exercise tests if present
