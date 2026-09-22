@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Exercise 6c: Let an Admin Change the Value in the Back Office</title>
+  <style>
+    html {
+      line-height: 1.5;
+      font-family: Georgia, serif;
+      font-size: 20px;
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      word-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 1em;
+      }
+    }
+    @media print {
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, 'Lucida Console', Consolas, monospace;
+      font-size: 85%;
+      margin: 0;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Exercise 6c: Let an Admin Change the Value in the Back Office</h1>
+</header>
+<h1 id="exercise-6c-let-an-admin-change-the-value-in-the-back-office">Exercise 6c: Let an Admin Change the Value in the Back Office</h1>
+<p>In <a href="06-configuration.html">Exercise 6</a> you put a value in <code>config/Shared/config_default.php</code> and read it through a module config class. That value is part of the code: changing the greeting means editing a PHP file, committing it and deploying.</p>
+<p>The <strong>Configuration</strong> module is the other half of the story. You describe settings in a YAML schema, Spryker renders a Back Office page from it, stores the values in the database and hands them to your code at runtime. Same page, same greeting - but now a shop administrator changes it, and nobody deploys anything.</p>
+<p>You will learn how to: - Write a <strong>configuration schema</strong>: <code>feature &gt; tab &gt; group &gt; setting</code> - Publish it with <code>configuration:sync</code> and find it in <strong>Back Office &gt; Configuration</strong> - Read a value in Zed through the <strong>Configuration facade</strong> - Know which settings reach the storefront, and what has to happen first - Tell the two mechanisms apart, and choose the right one</p>
+<p><strong>Official documentation:</strong> - <a href="https://docs.spryker.com/docs/dg/dev/backend-development/configuration/configuration-module.html">Configuration module</a></p>
+<h2 id="prerequisites">Prerequisites</h2>
+<ul>
+<li>Exercise 6 completed: the <code>ConfigController</code> at <code>/contact-request/config/index</code> renders a value.</li>
+</ul>
+<p>No exercise branch. You continue in the module you already have.</p>
+<hr />
+<h2 id="part-1-two-ways-to-configure-a-shop">Part 1: Two Ways to Configure a Shop</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th><code>config_default.php</code> (Exercise 6)</th>
+<th>Configuration module (this exercise)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Who changes it</td>
+<td>a developer</td>
+<td>a shop administrator</td>
+</tr>
+<tr class="even">
+<td>How</td>
+<td>edit PHP, commit, deploy</td>
+<td>Back Office form, Save</td>
+</tr>
+<tr class="odd">
+<td>When it takes effect</td>
+<td>next deployment</td>
+<td>next request</td>
+</tr>
+<tr class="even">
+<td>Where the value lives</td>
+<td>in the repository</td>
+<td>in the database</td>
+</tr>
+<tr class="odd">
+<td>Good for</td>
+<td>infrastructure, endpoints, feature toggles tied to code</td>
+<td>texts, thresholds, keys, anything the business owns</td>
+</tr>
+</tbody>
+</table>
+<p>Both exist on purpose. A queue host belongs in <code>config_default.php</code>. A greeting on a page does not.</p>
+<p>A schema is a tree with four levels, and the <strong>key of a setting is its path through that tree</strong>:</p>
+<pre><code>feature        contact_request
+  tab          general
+    group      config_page
+      setting  greeting        -&gt;  contact_request:general:config_page:greeting</code></pre>
+<p>Schemas are plain YAML files, and Spryker looks for <code>*.configuration.yml</code> in two places:</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Location</th>
+<th>Owner</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>data/configuration/</code></td>
+<td>the project - this is where yours goes</td>
+</tr>
+<tr class="even">
+<td><code>&lt;module root&gt;/resources/configuration/</code></td>
+<td>modules, scanned under <code>vendor/*/*</code> and <code>src/*/*</code></td>
+</tr>
+</tbody>
+</table>
+<p>Look at what the demo shop already ships in <code>data/configuration/</code>: <code>ai_vendor</code>, <code>ai_commerce</code>, <code>shop_ui</code>, <code>availability_widget</code>. Every page under <strong>Back Office &gt; Configuration</strong> comes from one of these files or from a module’s own.</p>
+<hr />
+<h2 id="part-2-write-the-schema">Part 2: Write the Schema</h2>
+<p><strong>Coding time:</strong></p>
+<p>Create <code>data/configuration/contact_request.configuration.yml</code>:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># yaml-language-server: $schema=../../vendor/spryker/configuration/resources/configuration/configuration-schema-v1.json</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">features</span><span class="kw">:</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">key</span><span class="kw">:</span><span class="at"> contact_request</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Contact Request</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">description</span><span class="kw">:</span><span class="at"> Settings of the Contact Request module.</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">order</span><span class="kw">:</span><span class="at"> </span><span class="dv">10</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">tabs</span><span class="kw">:</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="kw">-</span><span class="at"> </span><span class="fu">key</span><span class="kw">:</span><span class="at"> general</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">name</span><span class="kw">:</span><span class="at"> General</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">description</span><span class="kw">:</span><span class="at"> General settings of the Contact Request pages.</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">order</span><span class="kw">:</span><span class="at"> </span><span class="dv">0</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">groups</span><span class="kw">:</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="at">                </span><span class="kw">-</span><span class="at"> </span><span class="fu">key</span><span class="kw">:</span><span class="at"> config_page</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="at">                  </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Config Page</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="at">                  </span><span class="fu">description</span><span class="kw">:</span><span class="at"> The page at /contact-request/config/index.</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="at">                  </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="at">                  </span><span class="fu">order</span><span class="kw">:</span><span class="at"> </span><span class="dv">0</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="at">                  </span><span class="fu">scopes</span><span class="kw">:</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="at">                      </span><span class="kw">-</span><span class="at"> global</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="at">                  </span><span class="fu">settings</span><span class="kw">:</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a><span class="at">                      </span><span class="kw">-</span><span class="at"> </span><span class="fu">key</span><span class="kw">:</span><span class="at"> greeting</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a><span class="at">                        </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Greeting</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a><span class="at">                        </span><span class="fu">description</span><span class="kw">:</span><span class="at"> The text shown on the Contact Request config page.</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a><span class="at">                        </span><span class="fu">type</span><span class="kw">:</span><span class="at"> string</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a><span class="at">                        </span><span class="fu">default_value</span><span class="kw">:</span><span class="at"> </span><span class="st">&#39;Hello from the Back Office!&#39;</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a><span class="at">                        </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a><span class="at">                        </span><span class="fu">secret</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a><span class="at">                        </span><span class="fu">storefront</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a><span class="at">                        </span><span class="fu">order</span><span class="kw">:</span><span class="at"> </span><span class="dv">0</span></span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a><span class="at">                        </span><span class="fu">scopes</span><span class="kw">:</span></span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a><span class="at">                            </span><span class="kw">-</span><span class="at"> global</span></span></code></pre></div>
+<p>Every level carries <code>key</code>, <code>name</code>, <code>description</code>, <code>enabled</code> and <code>order</code>; <code>key</code> is what code uses, <code>name</code> is what the administrator reads. On the setting itself:</p>
+<ul>
+<li><strong><code>type</code></strong> - <code>string</code>, <code>boolean</code>, <code>integer</code>, <code>radio</code>, <code>color</code>, <code>regex</code> and others. It decides which form field the Back Office renders and how the value is cast when you read it.</li>
+<li><strong><code>default_value</code></strong> - used until somebody saves something. A setting nobody has touched still answers.</li>
+<li><strong><code>secret</code></strong> - <code>true</code> encrypts the value and never shows it again. Use it for tokens, never for texts.</li>
+<li><strong><code>storefront</code></strong> - whether the value is published to Yves. See Part 5.</li>
+<li><strong><code>scopes</code></strong> - <code>global</code>, or <code>store</code>, <code>locale</code>, <code>customer_group</code>, <code>customer</code> for values that differ per store or per customer group. Start with <code>global</code>.</li>
+</ul>
+<p>The first line is not decoration: it points your editor at the JSON schema of this file format, so you get completion and an error on a typo instead of a silent miss.</p>
+<hr />
+<h2 id="part-3-publish-and-edit">Part 3: Publish and Edit</h2>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console configuration:sync</span></code></pre></div>
+<p>The command reads every <code>*.configuration.yml</code> of the project and of the modules, merges them and writes the result to <code>data/cache/configuration/</code>. It reports how many settings it processed - one more than the last run.</p>
+<p>Now open the Back Office at http://backoffice.eu.spryker.local/configuration/manage (<strong>Configuration</strong> in the main menu). In the left sidebar you find <strong>Contact Request</strong>, and under it the <strong>General</strong> tab. Hovering the entry shows the <code>description</code> you wrote.</p>
+<p>Open it, and there is your <strong>Config Page</strong> group with the <strong>Greeting</strong> field, filled with the default. Change it to something you will recognise, and Save.</p>
+<blockquote>
+<p><strong>After every <code>cache:empty-all</code>, run <code>configuration:sync</code> again.</strong> Clearing the cache deletes <code>data/cache/configuration</code>, and until you sync, the Back Office has no schema to render and reads fail with an unknown setting.</p>
+</blockquote>
+<hr />
+<h2 id="part-4-read-the-value-in-zed">Part 4: Read the Value in Zed</h2>
+<p>The Back Office now holds a value your code ignores. Wiring it in takes one constructor argument, because the core <code>Configuration</code> module registers its facade as a service in the Zed container. Check for yourself:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/console debug:container ConfigurationFacadeInterface</span></code></pre></div>
+<pre><code>Service ID   Spryker\Zed\Configuration\Business\ConfigurationFacadeInterface
+Class        Spryker\Zed\Configuration\Business\ConfigurationFacade
+Public       yes</code></pre>
+<p>That is the same mechanism you used in <a href="04-module-layers-back-office.html">Exercise 4</a> when the Back Office controller received its facade through the constructor - it works here without you registering anything, because the core module ships its own service definitions.</p>
+<p><strong>Coding time:</strong></p>
+<p>Open <code>src/SprykerAcademy/Zed/ContactRequest/Communication/Controller/ConfigController.php</code> and take the Configuration facade as a second constructor argument:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="cn">G</span>enerated\<span class="cn">S</span>hared\<span class="cn">T</span>ransfer\<span class="cn">C</span>onfigurationValueRequestTransfer<span class="ot">;</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="cn">S</span>pryker\<span class="cn">Z</span>ed\<span class="cn">C</span>onfiguration\<span class="cn">B</span>usiness\<span class="cn">C</span>onfigurationFacadeInterface<span class="ot">;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="cn">C</span>onfigController <span class="kw">extends</span> <span class="cn">A</span>bstractController</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">function</span> <span class="bu">__construct</span>(</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>        <span class="kw">private</span> readonly <span class="cn">C</span>ontactRequestConfig <span class="va">$config</span><span class="ot">,</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>        <span class="kw">private</span> readonly <span class="cn">C</span>onfigurationFacadeInterface <span class="va">$configurationFacade</span><span class="ot">,</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    ) {</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">function</span> indexAction()<span class="ot">:</span> <span class="dt">array</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>    {</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">$this</span>-&gt;viewResponse([</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;configValue&#39;</span> =&gt; <span class="va">$this</span>-&gt;config-&gt;getMyConfigValue()<span class="ot">,</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;greeting&#39;</span> =&gt; <span class="va">$this</span>-&gt;configurationFacade-&gt;getConfigurationValue(</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>                (<span class="kw">new</span> <span class="cn">C</span>onfigurationValueRequestTransfer())-&gt;setKey(<span class="st">&#39;contact_request:general:config_page:greeting&#39;</span>)<span class="ot">,</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>            )<span class="ot">,</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>        ])<span class="ot">;</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>Add the second value to <code>src/SprykerAcademy/Zed/ContactRequest/Presentation/Config/index.twig</code>:</p>
+<pre class="twig"><code>{{ configValue }}
+{{ greeting }}</code></pre>
+<p>Reload http://backoffice.eu.spryker.local/contact-request/config/index. Two values, two mechanisms: one you can only change by deploying, one you just changed in a form.</p>
+<p><code>getConfigurationValue()</code> resolves the scope, decrypts the value if the setting is <code>secret</code>, and casts it to the <code>type</code> from the schema - so a <code>boolean</code> setting comes back as a bool, not as the string <code>"true"</code>.</p>
+<p><strong>Now change the greeting in the Back Office again and reload the page.</strong> No cache clear, no deployment. That is the whole point of the exercise.</p>
+<blockquote>
+<p>If the page dies with *Too few arguments to function ConfigController::__construct()*, the controller is not coming out of the container - see the troubleshooting block in <a href="04-module-layers-back-office.html">Exercise 4</a>.</p>
+</blockquote>
+<hr />
+<h2 id="part-5-what-storefront-true-really-means">Part 5: What <code>storefront: true</code> Really Means</h2>
+<p>Yves does not read the database. A setting marked <code>storefront: true</code> travels the same road as products and prices - <strong>publish &amp; sync</strong> - and Yves reads the result from Redis through the Configuration <strong>client</strong>:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="cn">G</span>enerated\<span class="cn">S</span>hared\<span class="cn">T</span>ransfer\<span class="cn">C</span>onfigurationValueRequestTransfer<span class="ot">;</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="va">$greeting</span> <span class="op">=</span> <span class="va">$this</span>-&gt;getFactory()-&gt;getConfigurationClient()-&gt;getConfigurationValue(</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">new</span> <span class="cn">C</span>onfigurationValueRequestTransfer())-&gt;setKey(<span class="st">&#39;contact_request:general:config_page:greeting&#39;</span>)<span class="ot">,</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>)<span class="ot">;</span></span></code></pre></div>
+<p>The client is <code>Spryker\Client\Configuration\ConfigurationClientInterface</code>. In Yves you provide it through your module’s <code>DependencyProvider</code> and expose it on the factory, exactly like the <code>ContactRequestClient</code> in <a href="05-module-layers-storefront.html">Exercise 5</a> - Yves has no service container of its own, so there is no constructor injection here (see the note in Exercise 5).</p>
+<p>The part that surprises people is the delay. Pressing <strong>Save</strong> in the Back Office writes two things immediately: the value in <code>spy_configuration_value</code> and a published copy in <code>spy_configuration_storage</code>. That second table carries Spryker’s <code>synchronization</code> behavior, so its rows are queued to Redis under keys that start with <code>configuration:</code> - and until the queue workers have processed that queue, <strong>Yves still answers with the old value while the Back Office already shows the new one</strong>.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console queue:worker:start</span></code></pre></div>
+<p>If you want to see the mechanism rather than trust it, look at <code>spy_configuration_storage</code> right after a save, and at the <code>configuration:*</code> keys in the Redis GUI. <a href="../intermediate/03-publish-synchronize.html">Exercise 10</a> of the intermediate course is publish &amp; sync end to end.</p>
+<p>A setting with <code>storefront: false</code> never leaves Zed, which is what you want for anything an unauthenticated visitor should not be able to read.</p>
+<hr />
+<h2 id="testing">Testing</h2>
+<ol type="1">
+<li><code>docker/sdk console configuration:sync</code> reports one more setting than before your file existed.</li>
+<li><strong>Back Office &gt; Configuration</strong> has a <strong>Contact Request</strong> entry with a <strong>General</strong> tab.</li>
+<li>The <strong>Greeting</strong> field shows <code>Hello from the Back Office!</code> before you save anything - the <code>default_value</code> answers even with an empty database.</li>
+<li><code>/contact-request/config/index</code> shows the text you saved, and shows a new one after you save again, without any console command.</li>
+<li>Delete <code>data/cache/configuration</code> (or run <code>cache:empty-all</code>), reload the Back Office, watch it break, run <code>configuration:sync</code>, watch it work.</li>
+</ol>
+<h2 id="cleanup">Cleanup</h2>
+<p>Keep the schema and the wiring - the exercise leaves the module in a good state. If you want the page back to its Exercise 6 shape, drop the <code>greeting</code> variable from the controller and the template; the schema does no harm.</p>
+<h2 id="going-further">Going Further</h2>
+<ul>
+<li>Change <code>scopes</code> on the setting to <code>[global, store]</code>, sync, and watch the Back Office grow a per-store column. Read it with <code>-&gt;setScope('store')-&gt;setScopeIdentifier('DE')</code>.</li>
+<li>Add a second setting with <code>secret: true</code>, save a value, and reopen the form: the field is empty, because the value is encrypted and never sent back to the browser.</li>
+<li>A value can be referenced from other configuration with the <code>configuration::</code> prefix instead of being read in code. <a href="../intermediate/02b-ai-commerce-configuration.html">Exercise 9b</a> uses that to point the AI features at an API token an administrator manages.</li>
+<li>Ship the schema inside a module instead of the project: <code>resources/configuration/</code> in the module root, which is how <code>spryker/gui</code> and the other core modules do it.</li>
+</ul>
+</body>
+</html>
