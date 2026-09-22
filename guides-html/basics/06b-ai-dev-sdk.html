@@ -450,13 +450,17 @@ project does things.</code></pre>
 <li><strong>Storefront.</strong> Log in at http://yves.eu.spryker.local/en/login as <code>sonia@acme.com</code> / <code>change123</code>, open the customer account area, send a message.</li>
 <li><strong>Back Office.</strong> Log in at http://backoffice.eu.spryker.local as <code>admin@spryker.com</code> / <code>change123</code>, find the new navigation entry, and check that the message you just sent is in the table - with the right customer next to it. Sort a column, type something in the filter, page through.</li>
 </ol>
+<p>Then check the service container, which is where a Spryker assistant goes wrong quietly:</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/console lint:container</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/console debug:container SprykerAcademy</span></code></pre></div>
+<p>The lint must answer <em>The container was linted successfully</em>, and the listing shows every class of the new module that Symfony knows about. Autowiring resolves a constructor that asks for an interface only while exactly one class implements it, so if the assistant wrote two implementations of the same interface, the binding has to be explicit in <code>config/Zed/ApplicationServices.php</code> - see <a href="04-module-layers-back-office.html">Exercise 4, section 2.5</a>.</p>
 <p>If a page errors, do not fix it yourself yet. Hand the error to the assistant (the <code>spryker-issue-diagnoser</code> agent is built for this) and watch how it diagnoses. That is also part of the exercise.</p>
 <hr />
 <h2 id="part-5-review-it-like-a-pull-request">Part 5: Review It Like a Pull Request</h2>
 <p>Commit the result first, so you can diff it against your own work:</p>
-<div class="sourceCode" id="cb14"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> add <span class="at">-A</span></span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> commit <span class="at">-m</span> <span class="st">&quot;ContactRequest built by the AI Dev SDK&quot;</span></span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> diff exercises-1-6 <span class="at">--stat</span> <span class="at">--</span> src/SprykerAcademy</span></code></pre></div>
+<div class="sourceCode" id="cb15"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> add <span class="at">-A</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> commit <span class="at">-m</span> <span class="st">&quot;ContactRequest built by the AI Dev SDK&quot;</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> diff exercises-1-6 <span class="at">--stat</span> <span class="at">--</span> src/SprykerAcademy</span></code></pre></div>
 <p>Now go through the code with the rules of Exercises 1 to 6 in hand:</p>
 <ul>
 <li><strong>Persistence.</strong> Is <code>fk_customer</code> a real Propel foreign key to <code>spy_customer</code>, or just an integer column? Is there an index? Does any Propel entity leave the Persistence layer, or does everything cross the boundary as a transfer?</li>
@@ -464,6 +468,7 @@ project does things.</code></pre>
 <li><strong>Communication.</strong> Did it use Spryker’s Back Office table (<code>AbstractTable</code> from the <code>Gui</code> module, with <code>configure()</code> and <code>prepareData()</code>), or did it hand-roll a Twig loop and call it a table? Sorting, filtering and paging come for free with the first and not at all with the second.</li>
 <li><strong>Yves.</strong> Does the storefront go through the Client and the Zed gateway, or does it query the database directly from Yves? Does the page only ever show the messages of the logged-in customer - or can you change an ID in the URL and read someone else’s?</li>
 <li><strong>Transfers.</strong> <code>strict="true"</code>, or untyped accessors?</li>
+<li><strong>Service wiring.</strong> Did it register the interfaces it injects in <code>config/Zed/ApplicationServices.php</code>, or is the module standing on the single-implementation rule without knowing it? Ask the assistant which of its constructor arguments would stop resolving if you added a second implementation tomorrow.</li>
 <li><strong>Everything else.</strong> Dependencies through the <code>DependencyProvider</code> and created in factories? Return types as interfaces? Did it add things you never asked for - extra fields, helper classes, commented-out code? Would you keep them?</li>
 </ul>
 <p>Then ask the SDK’s own reviewer and compare:</p>
@@ -472,12 +477,12 @@ project does things.</code></pre>
 <hr />
 <h2 id="cleanup">Cleanup</h2>
 <p>Exercise 7 continues from the handmade module, so switch back and load its skeleton:</p>
-<div class="sourceCode" id="cb16"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> checkout exercises-1-6</span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/extending-core-modules/skeleton</span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console c:e</span>
-<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli composer dump-autoload</span>
-<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console propel:install</span>
-<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span></code></pre></div>
+<div class="sourceCode" id="cb17"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> checkout exercises-1-6</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/extending-core-modules/skeleton</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console c:e</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli composer dump-autoload</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console propel:install</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span></code></pre></div>
 <p>The <code>ai-dev-exercise</code> branch stays in your repository. Keep it - it is worth rereading after Exercise 7, when you know what the core-module extension actually costs.</p>
 <h2 id="going-further">Going Further</h2>
 <ul>

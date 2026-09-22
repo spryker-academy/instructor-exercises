@@ -136,6 +136,60 @@ Open `src/SprykerAcademy/Zed/ContactRequest/Business/ContactRequestFacade.php`. 
 
 `ContactRequestFacadeTest` checks this step: it mocks the Writer and the Reader and asserts the Facade hands their result back, so leaving either method empty fails the suite.
 
+#### 2.5 Register the Interface Bindings
+
+`config/Zed/ApplicationServices.php` loads every class of every project module into Symfony's DI container with autowiring switched on. That is what fills the Writer and the Reader without a Business Factory. Ask the container what it decided:
+
+```bash
+docker/sdk cli vendor/bin/console debug:container ContactRequestReader --show-arguments
+```
+
+```
+Service ID   SprykerAcademy\Zed\ContactRequest\Business\Reader\ContactRequestReader
+Arguments    Service(SprykerAcademy\Zed\ContactRequest\Persistence\ContactRequestRepository)
+```
+
+Your constructor asked for `ContactRequestRepositoryInterface` and the container answered with `ContactRequestRepository`. It can do that only while exactly one class implements the interface: autowiring matches a service by its class **and** by the interfaces that class implements. Add a second implementation - a caching repository, an archive repository, whatever - and there are two candidates and no rule for choosing.
+
+State the binding instead of relying on there being only one. Open `config/Zed/ApplicationServices.php` and add the imports at the top, next to the existing `use` statements:
+
+```php
+use SprykerAcademy\Zed\ContactRequest\Persistence\ContactRequestEntityManager;
+use SprykerAcademy\Zed\ContactRequest\Persistence\ContactRequestEntityManagerInterface;
+use SprykerAcademy\Zed\ContactRequest\Persistence\ContactRequestRepository;
+use SprykerAcademy\Zed\ContactRequest\Persistence\ContactRequestRepositoryInterface;
+```
+
+and the two bindings at the end of the returned closure, after the loop that loads the project modules:
+
+```php
+    $services->set(ContactRequestRepositoryInterface::class, ContactRequestRepository::class);
+    $services->set(ContactRequestEntityManagerInterface::class, ContactRequestEntityManager::class);
+};
+```
+
+`$services` already carries `->autowire()->public()->autoconfigure()` from the `defaults()` block at the top of the file, so each class you bind still gets its own constructor arguments injected.
+
+```bash
+docker/sdk console cache:empty-all
+docker/sdk console propel:install
+```
+
+Ask the container again. The interface is a service of its own now, and it resolves to the class you picked:
+
+```
+docker/sdk cli vendor/bin/console debug:container ContactRequestRepositoryInterface
+
+Service ID   SprykerAcademy\Zed\ContactRequest\Persistence\ContactRequestRepositoryInterface
+Class        SprykerAcademy\Zed\ContactRequest\Persistence\ContactRequestRepository
+```
+
+`docker/sdk cli vendor/bin/console lint:container` answers *The container was linted successfully* when every argument still resolves. Do the same for every interface you inject through a constructor from now on.
+
+> **Zed only.** `config/Yves/ApplicationServices.php` is an empty stub in the demo shop, so nothing of yours is in the Yves container - Yves keeps using the Factory and the DependencyProvider, which is what Exercise 5 builds.
+
+> **When the container cannot find your class at all.** `Expected to find class "SprykerAcademy\..." in file "..." while importing services from resource "...", but it was not found! Check the namespace prefix used with the resource in config/Zed/ApplicationServices.php` is not a namespace-prefix problem, whatever it says. It means PHP cannot autoload the class: `SprykerAcademy` is missing from `vendor/composer/autoload_psr4.php`. Run `docker/sdk cli composer dump-autoload` and check with `grep SprykerAcademy vendor/composer/autoload_psr4.php`.
+
 ---
 
 ### 3. Visual in the Back Office

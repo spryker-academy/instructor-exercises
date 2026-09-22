@@ -227,6 +227,15 @@ Then walk the two flows:
 1. **Storefront.** Log in at http://yves.eu.spryker.local/en/login as `sonia@acme.com` / `change123`, open the customer account area, send a message.
 2. **Back Office.** Log in at http://backoffice.eu.spryker.local as `admin@spryker.com` / `change123`, find the new navigation entry, and check that the message you just sent is in the table - with the right customer next to it. Sort a column, type something in the filter, page through.
 
+Then check the service container, which is where a Spryker assistant goes wrong quietly:
+
+```bash
+docker/sdk cli vendor/bin/console lint:container
+docker/sdk cli vendor/bin/console debug:container SprykerAcademy
+```
+
+The lint must answer *The container was linted successfully*, and the listing shows every class of the new module that Symfony knows about. Autowiring resolves a constructor that asks for an interface only while exactly one class implements it, so if the assistant wrote two implementations of the same interface, the binding has to be explicit in `config/Zed/ApplicationServices.php` - see [Exercise 4, section 2.5](04-module-layers-back-office.md).
+
 If a page errors, do not fix it yourself yet. Hand the error to the assistant (the `spryker-issue-diagnoser` agent is built for this) and watch how it diagnoses. That is also part of the exercise.
 
 ---
@@ -248,6 +257,7 @@ Now go through the code with the rules of Exercises 1 to 6 in hand:
 - **Communication.** Did it use Spryker's Back Office table (`AbstractTable` from the `Gui` module, with `configure()` and `prepareData()`), or did it hand-roll a Twig loop and call it a table? Sorting, filtering and paging come for free with the first and not at all with the second.
 - **Yves.** Does the storefront go through the Client and the Zed gateway, or does it query the database directly from Yves? Does the page only ever show the messages of the logged-in customer - or can you change an ID in the URL and read someone else's?
 - **Transfers.** `strict="true"`, or untyped accessors?
+- **Service wiring.** Did it register the interfaces it injects in `config/Zed/ApplicationServices.php`, or is the module standing on the single-implementation rule without knowing it? Ask the assistant which of its constructor arguments would stop resolving if you added a second implementation tomorrow.
 - **Everything else.** Dependencies through the `DependencyProvider` and created in factories? Return types as interfaces? Did it add things you never asked for - extra fields, helper classes, commented-out code? Would you keep them?
 
 Then ask the SDK's own reviewer and compare:

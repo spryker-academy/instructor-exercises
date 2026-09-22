@@ -271,6 +271,36 @@
 <p>Open <code>src/SprykerAcademy/Zed/ContactRequest/Business/ContactRequestFacade.php</code>. Implement <code>createContactRequest()</code> and <code>findContactRequest()</code> by delegating to the <code>ContactRequestWriter</code> and <code>ContactRequestReader</code> services through <code>$this-&gt;getService(ClassName::class)</code>.</p>
 <p><strong>Hint:</strong> The Writer returns a <code>ContactRequestTransfer</code>; the Reader returns a <code>ContactRequestResponseTransfer</code>. No Business Factory is needed — the container injects <code>ContactRequestEntityManagerInterface</code> into the Writer and <code>ContactRequestRepositoryInterface</code> into the Reader automatically.</p>
 <p><code>ContactRequestFacadeTest</code> checks this step: it mocks the Writer and the Reader and asserts the Facade hands their result back, so leaving either method empty fails the suite.</p>
+<h4 id="register-the-interface-bindings">2.5 Register the Interface Bindings</h4>
+<p><code>config/Zed/ApplicationServices.php</code> loads every class of every project module into Symfony’s DI container with autowiring switched on. That is what fills the Writer and the Reader without a Business Factory. Ask the container what it decided:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/console debug:container ContactRequestReader <span class="at">--show-arguments</span></span></code></pre></div>
+<pre><code>Service ID   SprykerAcademy\Zed\ContactRequest\Business\Reader\ContactRequestReader
+Arguments    Service(SprykerAcademy\Zed\ContactRequest\Persistence\ContactRequestRepository)</code></pre>
+<p>Your constructor asked for <code>ContactRequestRepositoryInterface</code> and the container answered with <code>ContactRequestRepository</code>. It can do that only while exactly one class implements the interface: autowiring matches a service by its class <strong>and</strong> by the interfaces that class implements. Add a second implementation - a caching repository, an archive repository, whatever - and there are two candidates and no rule for choosing.</p>
+<p>State the binding instead of relying on there being only one. Open <code>config/Zed/ApplicationServices.php</code> and add the imports at the top, next to the existing <code>use</code> statements:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="cn">S</span>prykerAcademy\<span class="cn">Z</span>ed\<span class="cn">C</span>ontactRequest\<span class="cn">P</span>ersistence\<span class="cn">C</span>ontactRequestEntityManager<span class="ot">;</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="cn">S</span>prykerAcademy\<span class="cn">Z</span>ed\<span class="cn">C</span>ontactRequest\<span class="cn">P</span>ersistence\<span class="cn">C</span>ontactRequestEntityManagerInterface<span class="ot">;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="cn">S</span>prykerAcademy\<span class="cn">Z</span>ed\<span class="cn">C</span>ontactRequest\<span class="cn">P</span>ersistence\<span class="cn">C</span>ontactRequestRepository<span class="ot">;</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="cn">S</span>prykerAcademy\<span class="cn">Z</span>ed\<span class="cn">C</span>ontactRequest\<span class="cn">P</span>ersistence\<span class="cn">C</span>ontactRequestRepositoryInterface<span class="ot">;</span></span></code></pre></div>
+<p>and the two bindings at the end of the returned closure, after the loop that loads the project modules:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>    <span class="va">$services</span>-&gt;set(<span class="cn">C</span>ontactRequestRepositoryInterface::<span class="kw">class</span><span class="ot">,</span> <span class="cn">C</span>ontactRequestRepository::<span class="kw">class</span>)<span class="ot">;</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="va">$services</span>-&gt;set(<span class="cn">C</span>ontactRequestEntityManagerInterface::<span class="kw">class</span><span class="ot">,</span> <span class="cn">C</span>ontactRequestEntityManager::<span class="kw">class</span>)<span class="ot">;</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>}<span class="ot">;</span></span></code></pre></div>
+<p><code>$services</code> already carries <code>-&gt;autowire()-&gt;public()-&gt;autoconfigure()</code> from the <code>defaults()</code> block at the top of the file, so each class you bind still gets its own constructor arguments injected.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console propel:install</span></code></pre></div>
+<p>Ask the container again. The interface is a service of its own now, and it resolves to the class you picked:</p>
+<pre><code>docker/sdk cli vendor/bin/console debug:container ContactRequestRepositoryInterface
+
+Service ID   SprykerAcademy\Zed\ContactRequest\Persistence\ContactRequestRepositoryInterface
+Class        SprykerAcademy\Zed\ContactRequest\Persistence\ContactRequestRepository</code></pre>
+<p><code>docker/sdk cli vendor/bin/console lint:container</code> answers <em>The container was linted successfully</em> when every argument still resolves. Do the same for every interface you inject through a constructor from now on.</p>
+<blockquote>
+<p><strong>Zed only.</strong> <code>config/Yves/ApplicationServices.php</code> is an empty stub in the demo shop, so nothing of yours is in the Yves container - Yves keeps using the Factory and the DependencyProvider, which is what Exercise 5 builds.</p>
+</blockquote>
+<blockquote>
+<p><strong>When the container cannot find your class at all.</strong> <code>Expected to find class "SprykerAcademy\..." in file "..." while importing services from resource "...", but it was not found! Check the namespace prefix used with the resource in config/Zed/ApplicationServices.php</code> is not a namespace-prefix problem, whatever it says. It means PHP cannot autoload the class: <code>SprykerAcademy</code> is missing from <code>vendor/composer/autoload_psr4.php</code>. Run <code>docker/sdk cli composer dump-autoload</code> and check with <code>grep SprykerAcademy vendor/composer/autoload_psr4.php</code>.</p>
+</blockquote>
 <hr />
 <h3 id="visual-in-the-back-office">3. Visual in the Back Office</h3>
 <h4 id="controller-for-the-back-office">3.1 Controller for the Back Office</h4>
@@ -283,16 +313,16 @@
 <p>Open <code>src/SprykerAcademy/Zed/ContactRequest/Presentation/Index/add.twig</code>. Replace the placeholder <code>'show-contact-request-message-here'</code> with the message of the contact request using dot notation (<code>contactRequest.message</code>).</p>
 <p><code>AddTemplateTest</code> checks this step, and <code>IndexControllerAddActionTest</code> checks the controller above it.</p>
 <p>Clear cache:</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console propel:model:build</span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console propel:model:build</span></code></pre></div>
 <p>Visit: http://backoffice.eu.spryker.local/contact-request/index/add Use query parameter <code>?message=YourName</code> to create a contact request with a custom message.</p>
 <hr />
 <h2 id="verify-your-work">Verify Your Work</h2>
 <p>Run the automated tests for this exercise:</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/ContactRequest/ Exercise4</span></code></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/ContactRequest/ Exercise4</span></code></pre></div>
 <p>Every step of this exercise is covered: the two transfer definitions, the Persistence Factory, the Repository (including the <code>Criteria::LIKE</code> partial match), the EntityManager, the Writer, the Reader, the Facade, <code>addAction()</code> and <code>add.twig</code>. All tests should pass if your implementation is correct.</p>
 <hr />
 <h2 id="solution">Solution</h2>
-<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/module-layers/complete</span></code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/module-layers/complete</span></code></pre></div>
 </body>
 </html>
