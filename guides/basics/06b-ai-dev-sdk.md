@@ -1,6 +1,6 @@
 # Exercise 6b: Build the Contact Request Module with the AI Dev SDK
 
-In Exercises 1 to 6 you built the **ContactRequest** module by hand, step by step, from a guide that told you every class name and every file path. In this exercise you throw all of that away - the code, the wiring and the tests - and start from the pristine demo shop on a fresh branch. Then you describe the feature the way a product owner would, in six sentences, and let your AI coding assistant design and build it.
+In Exercises 1 to 6 you built the **ContactRequest** module by hand, step by step, from a guide that told you every class name and every file path. In this exercise you throw all of that away - the code, the wiring and the tests - and start from the pristine demo shop on a fresh branch. Then you describe the feature the way a product owner would, in seven sentences, and let your AI coding assistant design and build it.
 
 That is the point of the exercise. The Spryker AI Dev SDK gives the assistant Spryker's architecture rules, skills and agents. Your job is to state *what* you want and to judge *what comes back* - because this time there is no test suite to hide behind.
 
@@ -9,6 +9,7 @@ You will learn how to:
 - Set up the **AI Dev SDK** in a project with `ai-dev:setup`
 - Read what the SDK generates: the context file, the rules, the skills and the agents
 - Write a **requirement-level prompt** and let the assistant derive schema, layers and routes
+- Steer it to the **API Platform** for the Storefront API, and check the result in Swagger or Postman
 - Review AI-generated Spryker code against the rules you learned in Exercises 1 to 6
 
 **Official documentation:**
@@ -152,13 +153,25 @@ The other commands of the module generate single artifacts (`ai-dev:generate-age
 - **The skills folder**: task recipes the assistant follows, for example `propel-schema`, `data-import`, `spryker-customization`, `codecept-functional`, `code-review`, `static-validation`, `spryker-docs-research`, `spryker-runtime`.
 - **The agents folder**: specialised roles such as `spryker-feature-expert`, `spryker-code-reviewer`, `spryker-verifier`, `spryker-issue-diagnoser` and `spryker-data-seeder`.
 
-### Add the one project fact the SDK cannot know
+### Add the project facts the SDK cannot know
 
 Check whether the context file names the project namespace. If it only talks about `Pyz`, add a line to it:
 
 ```text
 Project code goes into the `SprykerAcademy` namespace (`src/SprykerAcademy`), which is
 registered in composer.json and before `Pyz` in `PROJECT_NAMESPACES`.
+```
+
+Add the API convention as well. Spryker has two ways to build a Storefront API, the older GlueApplication plugins and the **API Platform**, and both work - so an assistant trained on older material will happily pick the one you do not want:
+
+```text
+New APIs use the Spryker API Platform: a `*.resource.yml` under
+resources/api/storefront/ plus a Provider class implementing
+ApiPlatform\State\ProviderInterface. Do not use the legacy GlueApplication
+resource plugins. For resources in this namespace to be found, `src/SprykerAcademy`
+must be listed in config/GlueStorefront/packages/spryker_api_platform.php, and
+resources are generated with
+`GLUE_APPLICATION=GLUE_STOREFRONT glue api:generate`.
 ```
 
 > Project facts belong in the **context file**, because it describes the project and stays, while the prompt describes one feature and changes every time. The prompt in Part 3 names the namespace anyway - belt and braces for the one fact everything else hangs off - but it is the context file that makes the assistant remember it on the task after this one.
@@ -181,6 +194,9 @@ account area.
 In the Back Office, an administrator opens a page that lists the contact requests in a table
 they can read, sort, filter and page through.
 
+The same messages are reachable through the Storefront API, so a customer can send one and
+read their own without opening the storefront pages.
+
 Put the code in the SprykerAcademy namespace (src/SprykerAcademy) and build it the way this
 project does things.
 ```
@@ -189,7 +205,7 @@ That is the whole specification. Notice what is **not** in it: no class names, n
 
 The namespace is the one exception, and it is worth understanding why. `SprykerAcademy` is not a design decision the assistant could derive from the requirement - it is a fact about this project, and every file it creates depends on it. Guess `Pyz` and the module works but lands in the wrong place; guess a vendor namespace and nothing resolves at all. State it, and state it in the context file as well, so the next task does not need the reminder.
 
-> You are asking, in six sentences, for roughly what Exercises 1 to 7 build by hand: a Propel table with a foreign key to `spy_customer`, transfers, the three Zed layers, a Back Office page with a table, a Client with a Zed stub, and a customer account page in Yves.
+> You are asking, in seven sentences, for roughly what Exercises 1 to 7 build by hand, plus the kind of API resource [Exercise 12](../intermediate/05-glue-storefront-api.md) builds in the intermediate course: a Propel table with a foreign key to `spy_customer`, transfers, the three Zed layers, a Back Office page with a table, a Client with a Zed stub, and a customer account page in Yves.
 
 ### Answer its questions
 
@@ -203,6 +219,8 @@ A good assistant will come back with questions before it writes code. Answer the
 | Does the admin reply, or is there a status / read flag? | No. Reading is enough. |
 | Email notification to the shop owner? | No. |
 | Extra fields (subject, category, created date)? | A creation timestamp is fine, nothing else. |
+| Is the API public, or only for the logged-in customer? | Only the logged-in customer, authenticated like the rest of the Storefront API. |
+| Which operations on the API? | Send a message, and list the ones that customer sent. Nothing else. |
 | Should it write tests? | Yes, if it offers - but you review the code yourself either way. |
 
 ### While it works
@@ -220,12 +238,42 @@ docker/sdk console cache:empty-all
 docker/sdk console propel:install
 docker/sdk console transfer:generate
 docker/sdk console navigation:build-cache
+docker/sdk cli GLUE_APPLICATION=GLUE_STOREFRONT glue api:generate
 ```
 
-Then walk the two flows:
+> The last command is the one people forget. A `*.resource.yml` does nothing until `glue api:generate` has turned it into a generated resource class, and it needs `GLUE_APPLICATION` in the environment - every `glue` command does.
+
+Then walk the three flows:
 
 1. **Storefront.** Log in at http://yves.eu.spryker.local/en/login as `sonia@acme.com` / `change123`, open the customer account area, send a message.
 2. **Back Office.** Log in at http://backoffice.eu.spryker.local as `admin@spryker.com` / `change123`, find the new navigation entry, and check that the message you just sent is in the table - with the right customer next to it. Sort a column, type something in the filter, page through.
+3. **Storefront API.** Open http://glue.eu.spryker.local/docs. That page is API Platform's own documentation of the running API - Swagger UI and ReDoc over the live OpenAPI spec - and the contact request resource the assistant added has to be in it, with the operations you asked for. Send a request from the page and read the response.
+
+If you prefer Postman, import the spec instead of clicking:
+
+```bash
+curl -H 'Accept: application/vnd.openapi+json' http://glue.eu.spryker.local/docs -o glue-openapi.json
+```
+
+From a shell, remember that this API speaks JSON:API - without the `Accept` header every request answers `406 Not Acceptable`, which looks like a broken endpoint and is not:
+
+```bash
+curl -s -H 'Accept: application/vnd.api+json' http://glue.eu.spryker.local/contact-requests
+```
+
+The endpoint belongs to a logged-in customer, so you need a token. This is the whole handshake, and it is the same one Postman needs in its Authorization tab:
+
+```bash
+TOKEN=$(curl -s -X POST http://glue.eu.spryker.local/access-tokens \
+  -H 'Content-Type: application/vnd.api+json' -H 'Accept: application/vnd.api+json' \
+  -d '{"data":{"type":"access-tokens","attributes":{"username":"sonia@acme.com","password":"change123"}}}' \
+  | python3 -c 'import sys,json; print(json.load(sys.stdin)["data"]["attributes"]["accessToken"])')
+
+curl -s -H "Authorization: Bearer $TOKEN" -H 'Accept: application/vnd.api+json' \
+  http://glue.eu.spryker.local/contact-requests
+```
+
+**This is the route for anyone who does not want to touch Yves.** A token, a POST and a GET exercise the whole feature - schema, persistence, business layer and API - without opening the storefront once. It is also the honest test of the requirement you wrote: you asked for messages a customer can send *and read their own*, so the GET must return that customer's messages and nobody else's.
 
 Then check the service container, which is where a Spryker assistant goes wrong quietly:
 
@@ -257,6 +305,8 @@ Now go through the code with the rules of Exercises 1 to 6 in hand:
 - **Communication.** Did it use Spryker's Back Office table (`AbstractTable` from the `Gui` module, with `configure()` and `prepareData()`), or did it hand-roll a Twig loop and call it a table? Sorting, filtering and paging come for free with the first and not at all with the second.
 - **Yves.** Does the storefront go through the Client and the Zed gateway, or does it query the database directly from Yves? Does the page only ever show the messages of the logged-in customer - or can you change an ID in the URL and read someone else's?
 - **Transfers.** `strict="true"`, or untyped accessors?
+- **The API.** A `*.resource.yml` plus a Provider class, or the legacy GlueApplication plugin stack? Both run, and only one is what Spryker recommends for new APIs. Did it register `src/SprykerAcademy` in `config/GlueStorefront/packages/spryker_api_platform.php`, or did it quietly put the resource in `Pyz` where the default source directories already look?
+- **Who can read what.** Change the id in the API request to a contact request belonging to another customer. If you get it back, the Provider is not scoping by the authenticated customer - the single most common mistake in a generated API, and the one a passing test suite will not catch.
 - **Service wiring.** Did it register the interfaces it injects in `config/Zed/ApplicationServices.php`, or is the module standing on the single-implementation rule without knowing it? Ask the assistant which of its constructor arguments would stop resolving if you added a second implementation tomorrow.
 - **Everything else.** Dependencies through the `DependencyProvider` and created in factories? Return types as interfaces? Did it add things you never asked for - extra fields, helper classes, commented-out code? Would you keep them?
 
@@ -287,6 +337,6 @@ The `ai-dev-exercise` branch stays in your repository. Keep it - it is worth rer
 
 ## Going Further
 
-- Give the exact same six sentences to a second assistant or a second model, on a second branch off `pristine-shop`, and diff the two modules. The differences between two AI runs are as instructive as the differences from your own code.
+- Give the exact same seven sentences to a second assistant or a second model, on a second branch off `pristine-shop`, and diff the two modules. The differences between two AI runs are as instructive as the differences from your own code.
 - Add one sentence to the requirement - "the admin can reply to a message and the customer sees the reply" - and watch whether it extends the existing design or bolts on a parallel one.
 - Start the MCP server (`docker/sdk console ai-dev:mcp-server -q`), connect it to your tool, and ask the assistant which transfers exist for `ContactRequest`.
