@@ -275,6 +275,9 @@
 <p>The template is already provided at <code>src/SprykerAcademy/Yves/ContactRequestPage/Theme/default/views/contact-request/get.twig</code> and expects a variable named <code>contactRequest</code>.</p>
 <p><strong>Coding time:</strong></p>
 <p>Open <code>src/SprykerAcademy/Yves/ContactRequestPage/Controller/IndexController.php</code>. Complete <code>getAction()</code>: 1. Instantiate a <code>ContactRequestCriteriaTransfer</code> and set the contact request ID (<code>idContactRequest</code>) from the route parameter 2. Use <code>getFactory()</code> to access the <code>ContactRequestClient</code> 3. Find a contact request by the criteria and assign the result to <code>$contactRequestResponseTransfer</code></p>
+<blockquote>
+<p><strong>Not the constructor here.</strong> Exercise 4 injected the Facade into the Back Office controller through the constructor. That works because Zed’s controllers come out of the Symfony container. <code>config/Yves/ApplicationServices.php</code> is an empty stub, so nothing of yours is in the Yves container: Spryker builds a Yves controller with <code>new</code>, and a constructor with arguments fails with *Too few arguments to function …::__construct()*. In Yves you reach dependencies through <code>getFactory()</code>.</p>
+</blockquote>
 <h4 id="routing">3.3 Routing</h4>
 <p>Unlike the Back Office, Yves requires explicit route definitions via a <code>*RouteProviderPlugin</code>.</p>
 <p><strong>Coding time:</strong></p>

@@ -307,22 +307,45 @@ Class        SprykerAcademy\Zed\ContactRequest\Persistence\ContactRequestReposit
 <p>Since Spryker 202602.0, controllers support <strong>constructor dependency injection</strong>. You can inject the Facade directly instead of using <code>$this-&gt;getFacade()</code>.</p>
 <p><strong>Coding time:</strong></p>
 <p>Open <code>src/SprykerAcademy/Zed/ContactRequest/Communication/Controller/IndexController.php</code>. The facade is already injected via the constructor — use <code>$this-&gt;contactRequestFacade</code>. Complete <code>addAction()</code>: 1. Instantiate <code>ContactRequestCriteriaTransfer</code> and set the message from the query parameter 2. Call <code>$this-&gt;contactRequestFacade-&gt;findContactRequest()</code> to look it up 3. If not found, create a new <code>ContactRequestTransfer</code> with the message and persist it via <code>$this-&gt;contactRequestFacade-&gt;createContactRequest()</code></p>
+<h5 id="when-the-page-says-too-few-arguments">When the page says “Too few arguments”</h5>
+<pre><code>ArgumentCountError: Too few arguments to function
+SprykerAcademy\Zed\ContactRequest\Communication\Controller\IndexController::__construct(),
+0 passed and exactly 1 expected</code></pre>
+<p>Your constructor is fine. Read what Spryker does with a Zed route, in <code>Spryker\Shared\Router\Resolver\ControllerResolver::getControllerFromArray()</code>:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="va">$container</span> <span class="op">&amp;&amp;</span> <span class="fu">is_string</span>(<span class="va">$controller</span>[<span class="dv">0</span>]) <span class="op">&amp;&amp;</span> <span class="va">$container</span>-&gt;has(<span class="va">$controller</span>[<span class="dv">0</span>])) {</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    <span class="va">$controllerInstance</span> <span class="op">=</span> <span class="va">$container</span>-&gt;get(<span class="va">$controller</span>[<span class="dv">0</span>])<span class="ot">;</span>   <span class="co">// your constructor runs here</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>...</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="va">$controllerInstance</span> <span class="op">=</span> <span class="kw">new</span> <span class="va">$controller</span>[<span class="dv">0</span>]()<span class="ot">;</span>                  <span class="co">// fallback: no arguments</span></span></code></pre></div>
+<p>A Zed route carries <code>_controller =&gt; [IndexController::class, 'indexAction']</code>. The resolver asks the container for that class; if the container does not have it, it falls back to <code>new</code> with no arguments, and a constructor that expects a facade gets nothing. <strong>The message is always about the container, never about your constructor.</strong> Ask the container whether it knows your controller:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/console debug:container ContactRequest</span></code></pre></div>
+<p>If the controller is missing from that list, it is one of these, in order of likelihood:</p>
+<ol type="1">
+<li><strong>The autoloader is stale.</strong> <code>$services-&gt;load()</code> cannot register a class PHP cannot autoload. <code>docker/sdk cli composer dump-autoload</code>, then <code>grep SprykerAcademy vendor/composer/autoload_psr4.php</code>.</li>
+<li><strong>The compiled container is stale</strong> - you added the constructor after it was built. <code>docker/sdk console cache:empty-all</code>, then <code>docker/sdk console propel:install</code> (clearing the cache drops the Propel table map, so always rebuild after).</li>
+<li><strong>The class is not where the module finder looks.</strong> It has to be <code>src/SprykerAcademy/Zed/&lt;Module&gt;/Communication/Controller/&lt;Name&gt;Controller.php</code> - the container is built by walking that structure, so a controller one directory off is invisible to it.</li>
+<li><strong>The module is excluded</strong> in <code>$excludedModuleConfiguration</code> at the top of <code>config/Zed/ApplicationServices.php</code>.</li>
+</ol>
+<p>If you are stuck and want to keep moving, <code>$this-&gt;getFacade()</code> still works in any Zed controller: it goes through Spryker’s class resolver instead of the container, so it does not care whether the controller is a service. Constructor injection is the newer, nicer way, not the only way.</p>
+<blockquote>
+<p><strong>In Yves there is no fix for this.</strong> <code>config/Yves/ApplicationServices.php</code> is an empty stub, so no project class is ever in the Yves container and a Yves controller is never a service - a constructor with arguments there throws this error every time, no matter what you clear. Yves uses the Factory and the DependencyProvider, which is what <a href="05-module-layers-storefront.html">Exercise 5</a> builds.</p>
+</blockquote>
 <h4 id="template-for-the-back-office">3.2 Template for the Back Office</h4>
 <p>The controller passes <code>contactRequest</code> (a <code>ContactRequestTransfer</code>) to the template. Access object properties with dot notation: <code>objectName.objectProperty</code>.</p>
 <p><strong>Coding time:</strong></p>
 <p>Open <code>src/SprykerAcademy/Zed/ContactRequest/Presentation/Index/add.twig</code>. Replace the placeholder <code>'show-contact-request-message-here'</code> with the message of the contact request using dot notation (<code>contactRequest.message</code>).</p>
 <p><code>AddTemplateTest</code> checks this step, and <code>IndexControllerAddActionTest</code> checks the controller above it.</p>
 <p>Clear cache:</p>
-<div class="sourceCode" id="cb10"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console propel:model:build</span></code></pre></div>
+<div class="sourceCode" id="cb13"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console propel:model:build</span></code></pre></div>
 <p>Visit: http://backoffice.eu.spryker.local/contact-request/index/add Use query parameter <code>?message=YourName</code> to create a contact request with a custom message.</p>
 <hr />
 <h2 id="verify-your-work">Verify Your Work</h2>
 <p>Run the automated tests for this exercise:</p>
-<div class="sourceCode" id="cb11"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/ContactRequest/ Exercise4</span></code></pre></div>
+<div class="sourceCode" id="cb14"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/ContactRequest/ Exercise4</span></code></pre></div>
 <p>Every step of this exercise is covered: the two transfer definitions, the Persistence Factory, the Repository (including the <code>Criteria::LIKE</code> partial match), the EntityManager, the Writer, the Reader, the Facade, <code>addAction()</code> and <code>add.twig</code>. All tests should pass if your implementation is correct.</p>
 <hr />
 <h2 id="solution">Solution</h2>
-<div class="sourceCode" id="cb12"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/module-layers/complete</span></code></pre></div>
+<div class="sourceCode" id="cb15"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/module-layers/complete</span></code></pre></div>
 </body>
 </html>

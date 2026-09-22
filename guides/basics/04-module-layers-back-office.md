@@ -205,6 +205,56 @@ Open `src/SprykerAcademy/Zed/ContactRequest/Communication/Controller/IndexContro
 2. Call `$this->contactRequestFacade->findContactRequest()` to look it up
 3. If not found, create a new `ContactRequestTransfer` with the message and persist it via `$this->contactRequestFacade->createContactRequest()`
 
+##### When the page says "Too few arguments"
+
+```
+ArgumentCountError: Too few arguments to function
+SprykerAcademy\Zed\ContactRequest\Communication\Controller\IndexController::__construct(),
+0 passed and exactly 1 expected
+```
+
+Your constructor is fine. Read what Spryker does with a Zed route, in
+`Spryker\Shared\Router\Resolver\ControllerResolver::getControllerFromArray()`:
+
+```php
+if ($container && is_string($controller[0]) && $container->has($controller[0])) {
+    $controllerInstance = $container->get($controller[0]);   // your constructor runs here
+}
+...
+$controllerInstance = new $controller[0]();                  // fallback: no arguments
+```
+
+A Zed route carries `_controller => [IndexController::class, 'indexAction']`. The resolver asks the
+container for that class; if the container does not have it, it falls back to `new` with no
+arguments, and a constructor that expects a facade gets nothing. **The message is always about the
+container, never about your constructor.** Ask the container whether it knows your controller:
+
+```bash
+docker/sdk cli vendor/bin/console debug:container ContactRequest
+```
+
+If the controller is missing from that list, it is one of these, in order of likelihood:
+
+1. **The autoloader is stale.** `$services->load()` cannot register a class PHP cannot autoload.
+   `docker/sdk cli composer dump-autoload`, then `grep SprykerAcademy vendor/composer/autoload_psr4.php`.
+2. **The compiled container is stale** - you added the constructor after it was built.
+   `docker/sdk console cache:empty-all`, then `docker/sdk console propel:install` (clearing the cache
+   drops the Propel table map, so always rebuild after).
+3. **The class is not where the module finder looks.** It has to be
+   `src/SprykerAcademy/Zed/<Module>/Communication/Controller/<Name>Controller.php` - the container is
+   built by walking that structure, so a controller one directory off is invisible to it.
+4. **The module is excluded** in `$excludedModuleConfiguration` at the top of
+   `config/Zed/ApplicationServices.php`.
+
+If you are stuck and want to keep moving, `$this->getFacade()` still works in any Zed controller: it
+goes through Spryker's class resolver instead of the container, so it does not care whether the
+controller is a service. Constructor injection is the newer, nicer way, not the only way.
+
+> **In Yves there is no fix for this.** `config/Yves/ApplicationServices.php` is an empty stub, so no
+> project class is ever in the Yves container and a Yves controller is never a service - a constructor
+> with arguments there throws this error every time, no matter what you clear. Yves uses the Factory
+> and the DependencyProvider, which is what [Exercise 5](05-module-layers-storefront.md) builds.
+
 #### 3.2 Template for the Back Office
 
 The controller passes `contactRequest` (a `ContactRequestTransfer`) to the template. Access object properties with dot notation: `objectName.objectProperty`.
