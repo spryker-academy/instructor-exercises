@@ -216,7 +216,7 @@
 <h1 class="title">Exercise 6c: Build the Same Feature Again, with the AI Dev SDK</h1>
 </header>
 <h1 id="exercise-6c-build-the-same-feature-again-with-the-ai-dev-sdk">Exercise 6c: Build the Same Feature Again, with the AI Dev SDK</h1>
-<p>In Exercises 1 to 6b you built the <strong>ContactRequest</strong> module by hand, step by step, from a guide that told you every class name and every file path. In this exercise you describe the same feature the way a product owner would, in seven sentences, and let your AI coding assistant design and build it - under a different name, <strong>CustomerRequest</strong>, right next to yours.</p>
+<p>In Exercises 1 to 6b you built the <strong>ContactRequest</strong> module by hand, step by step, from a guide that told you every class name and every file path. In this exercise you describe the same feature the way a product owner would - six sentences, plus a short list of how this project builds things - and let your AI coding assistant design and build it - under a different name, <strong>CustomerRequest</strong>, right next to yours.</p>
 <p>Nothing is reset and nothing is deleted. When you are done, <code>src/SprykerAcademy</code> holds two modules that do the same job, one written by you and one written by a machine, both running in the same shop. The exercise ends with a diff.</p>
 <p>That is the point. The Spryker AI Dev SDK gives the assistant Spryker’s architecture rules, skills and agents. Your job is to state <em>what</em> you want and to judge <em>what comes back</em> - and this time you have the perfect yardstick, because you wrote the other implementation yourself.</p>
 <p>You will learn how to: - Set up the <strong>AI Dev SDK</strong> in a project with <code>ai-dev:setup</code> - Read what the SDK generates: the context file, the rules, the skills and the agents - Write a <strong>requirement-level prompt</strong> and let the assistant derive schema, layers and routes - Steer it to the <strong>API Platform</strong> for the Storefront API, and check the result in Swagger or Postman - Review AI-generated Spryker code by diffing it, file by file, against your own</p>
@@ -359,8 +359,21 @@ resource plugins. For resources in this namespace to be found, `src/SprykerAcade
 must be listed in config/GlueStorefront/packages/spryker_api_platform.php, and
 resources are generated with
 `GLUE_APPLICATION=GLUE_STOREFRONT glue api:generate`.</code></pre>
+<p>And the wiring conventions, which are the ones an assistant gets wrong most often because the older Spryker style is what it has read most of:</p>
+<pre class="text"><code>Zed wires dependencies with Symfony constructor injection. config/Zed/ApplicationServices.php
+loads every project module into the container, so a project class type-hints what it needs
+instead of being assembled in a factory. In a Zed facade, reach the business classes with
+$this-&gt;getService(MyReader::class) - AbstractFacade uses
+Spryker\Service\Container\ContainerTrait. Do not write a business factory or a dependency
+provider for something the container already provides.
+
+Two exceptions. config/Yves/ApplicationServices.php is an empty stub, so Yves keeps the
+factory and the dependency provider. And a project-namespace Client used from Glue must be
+registered by hand in config/GlueStorefront/ApplicationServices.php with
+$services-&gt;set(Interface::class, Class::class), because SprykerDefaultsPass only
+auto-registers core namespaces.</code></pre>
 <blockquote>
-<p>Project facts belong in the <strong>context file</strong>, because it describes the project and stays, while the prompt describes one feature and changes every time. The prompt in Part 3 names the namespace anyway - belt and braces for the one fact everything else hangs off - but it is the context file that makes the assistant remember it on the task after this one.</p>
+<p>Project facts belong in the <strong>context file</strong>, because it describes the project and stays, while the prompt describes one feature and changes every time. The prompt in Part 3 repeats them anyway - belt and braces for the facts everything else hangs off - but it is the context file that makes the assistant remember them on the task after this one.</p>
 </blockquote>
 <hr />
 <h2 id="part-3-the-prompt">Part 3: The Prompt</h2>
@@ -370,21 +383,77 @@ resources are generated with
 Customers can send a message to the shop owner. A customer request stores the message and
 belongs to a customer, so the customer is a foreign key on the customer request.
 
-In the storefront, a logged-in customer writes and sends the message from their customer
-account area.
-
 In the Back Office, an administrator opens a page that lists the customer requests in a table
 they can read, sort, filter and page through.
 
 The same messages are reachable through the Storefront API, so a customer can send one and
 read their own without opening the storefront pages.
 
-Put the code in the SprykerAcademy namespace (src/SprykerAcademy) and build it the way this
-project does things.</code></pre>
-<p>That is the whole specification. Notice what is <strong>not</strong> in it: no class names, no file paths, no layer list, no routes, no console commands, no tests. Deriving all of that from a requirement is the assistant’s job, and the rules and skills the SDK installed are where it gets the conventions from. You spent Exercises 1 to 6b learning those conventions so you can tell whether it got them right.</p>
-<p>The namespace is the one exception, and it is worth understanding why. <code>SprykerAcademy</code> is not a design decision the assistant could derive from the requirement - it is a fact about this project, and every file it creates depends on it. Guess <code>Pyz</code> and the module works but lands in the wrong place; guess a vendor namespace and nothing resolves at all. State it, and state it in the context file as well, so the next task does not need the reminder.</p>
+A logged-in customer can also write and send the message from the customer account area in
+the storefront - but ask me whether I want that part before you build it.
+
+How we build things in this project:
+
+- Put the code in the SprykerAcademy namespace (src/SprykerAcademy).
+- Build the API with the Spryker API Platform: a *.resource.yml plus a state provider and a
+  processor. Do not use the legacy GlueApplication resource plugins.
+- In Zed, wire dependencies with Symfony constructor injection. Project classes are already
+  in the container, so a class type-hints what it needs. Do not add a business factory or a
+  dependency provider for something the container can give you.
+- In the facade, reach your business classes with $this-&gt;getService(CustomerRequestReader::class).
+  AbstractFacade has the container trait, so no getFactory() and no business factory at all.
+- Yves is the exception: its container is empty, so a Yves page keeps the usual factory and
+  dependency provider.
+- A project Client that an API Platform provider injects has to be registered by hand in
+  config/GlueStorefront/ApplicationServices.php with $services-&gt;set(Interface::class, Class::class).
+
+Ask me whatever you need before you start.</code></pre>
+<p>The first half is the specification, and notice what is <strong>not</strong> in it: no class names, no file paths, no layer list, no routes, no console commands, no tests. Deriving all of that from a requirement is the assistant’s job, and the rules and skills the SDK installed are where it gets the conventions from. You spent Exercises 1 to 6b learning those conventions so you can tell whether it got them right.</p>
+<p>The second half is different in kind. Those are not design decisions the assistant could derive from the requirement - they are <strong>facts about this project</strong>, and it has no way to know any of them:</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>House rule</th>
+<th>Why it has to be said</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Ask before building Yves</td>
+<td>The storefront is the largest part of the job and the part many students skip - they test in Swagger or Postman instead. An assistant that asks first can save you half the run, but only if you tell it that the question is open.</td>
+</tr>
+<tr class="even">
+<td>API Platform, not GlueApplication plugins</td>
+<td>Both exist in this Spryker version and both work. Most training material out there is about the older one, so that is what an assistant reaches for.</td>
+</tr>
+<tr class="odd">
+<td>Symfony DI in Zed</td>
+<td><code>config/Zed/ApplicationServices.php</code> loads every project module into the container, so a class like <code>ContactRequestReader</code> is a public, autowired service (<a href="04-module-layers-back-office.html">Exercise 4, section 2.6</a>). An assistant that does not know this writes the older stack instead: a business factory, a dependency provider, and <code>getFactory()</code> everywhere.</td>
+</tr>
+<tr class="even">
+<td><code>getService()</code> in the facade</td>
+<td><code>AbstractFacade</code> uses <code>Spryker\Service\Container\ContainerTrait</code>, so <code>$this-&gt;getService(CustomerRequestReader::class)</code> reads straight from the container - the style you wrote yourself in <a href="04-module-layers-back-office.html">Exercise 4, section 2.4</a>. The second argument of <code>getService()</code> is a factory method name to fall back on, which is how a legacy module migrates gradually; a new module does not need it.</td>
+</tr>
+<tr class="odd">
+<td>Yves keeps the factory</td>
+<td><code>config/Yves/ApplicationServices.php</code> is an empty stub in the demo shop, so nothing of yours is in the Yves container. The rule above would be wrong there, and an assistant applying it consistently would break the storefront.</td>
+</tr>
+<tr class="even">
+<td>The Glue Storefront client registration</td>
+<td><code>SprykerDefaultsPass</code> auto-registers Spryker’s conventional entry points, but <code>findResolvableClassForInterface()</code> returns <code>null</code> for anything outside the core namespaces. A project-namespace Client therefore falls through to a proxy that fails at runtime with <em>Could not find … in any of the attached containers</em>, and the only fix is the explicit <code>$services-&gt;set()</code>.</td>
+</tr>
+</tbody>
+</table>
 <blockquote>
-<p>You are asking, in seven sentences, for roughly what Exercises 1 to 6b build by hand, plus the kind of API resource <a href="../intermediate/05-glue-storefront-api.html">Exercise 12</a> builds in the intermediate course: a Propel table with a foreign key to <code>spy_customer</code>, transfers, the three Zed layers, a Back Office page with a table, a Client with a Zed stub, and a customer account page in Yves.</p>
+<p><strong>This list is the difference between a module and <em>your</em> module.</strong> Without it, a real run of this exercise produced <code>CustomerRequestBusinessFactory</code>, <code>CustomerRequestDependencyProvider</code>, a Client factory and dependency provider of its own, and a facade calling <code>$this-&gt;getFactory()-&gt;createCustomerRequestReader()</code>. Perfectly ordinary Spryker code - just not the style you spent Exercises 4 to 6 teaching, and a diff full of noise rather than of decisions.</p>
+</blockquote>
+<p>The same facts belong in the <strong>context file</strong> from Part 2, because it describes the project and stays, while the prompt describes one feature and changes every time. Repeat them here anyway: a context file is one more thing an assistant can skim past, and these are the facts everything else hangs off.</p>
+<blockquote>
+<p>You are asking, in a page, for roughly what Exercises 1 to 6b build by hand, plus the kind of API resource <a href="../intermediate/05-glue-storefront-api.html">Exercise 12</a> builds in the intermediate course: a Propel table with a foreign key to <code>spy_customer</code>, transfers, the three Zed layers, a Back Office page with a table, a Client with a Zed stub, and - if you say yes - a customer account page in Yves.</p>
 </blockquote>
 <h3 id="why-customer-request-and-not-contact-request">Why “Customer Request” and not “Contact Request”</h3>
 <p>The name is the only thing that separates the assistant’s module from yours, and it has to separate it everywhere:</p>
@@ -452,42 +521,46 @@ this requirement alone.</code></pre>
 </thead>
 <tbody>
 <tr class="odd">
+<td>Do you want the storefront pages in Yves?</td>
+<td>Your call, and the prompt tells it to ask. Say no if you are testing in Swagger or Postman - the Back Office and the API already exercise the whole stack, and you halve the run. Say yes if you want to compare its Yves code with yours.</td>
+</tr>
+<tr class="even">
 <td>Guests too, or only logged-in customers?</td>
 <td>Only logged-in customers.</td>
 </tr>
-<tr class="even">
-<td>Should the customer see the messages they already sent?</td>
-<td>Yes, list them on the same account page.</td>
-</tr>
 <tr class="odd">
+<td>Should the customer see the messages they already sent?</td>
+<td>Yes - on the account page if you asked for Yves, through the API either way.</td>
+</tr>
+<tr class="even">
 <td>Can the customer edit or delete a message?</td>
 <td>No. Sending is enough.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>Does the admin reply, or is there a status / read flag?</td>
 <td>No. Reading is enough.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>Email notification to the shop owner?</td>
 <td>No.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>Extra fields (subject, category, created date)?</td>
 <td>A creation timestamp is fine, nothing else.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>Is the API public, or only for the logged-in customer?</td>
 <td>Only the logged-in customer, authenticated like the rest of the Storefront API.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>Which operations on the API?</td>
 <td>Send a message, and list the ones that customer sent. Nothing else.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>Should it write tests?</td>
 <td>Yes, if it offers - but you review the code yourself either way.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>Should it reuse / extend the existing ContactRequest module?</td>
 <td>No. A separate module, its own table, its own transfers.</td>
 </tr>
@@ -498,37 +571,37 @@ this requirement alone.</code></pre>
 <hr />
 <h2 id="part-4-verify-it-actually-works">Part 4: Verify It Actually Works</h2>
 <p>There is no test suite this time. You verify the way you would verify a colleague’s branch: by running it.</p>
-<div class="sourceCode" id="cb12"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console propel:install</span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console navigation:build-cache</span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli GLUE_APPLICATION=GLUE_STOREFRONT glue api:generate</span></code></pre></div>
+<div class="sourceCode" id="cb13"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console propel:install</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console navigation:build-cache</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli GLUE_APPLICATION=GLUE_STOREFRONT glue api:generate</span></code></pre></div>
 <blockquote>
 <p>The last command is the one people forget. A <code>*.resource.yml</code> does nothing until <code>glue api:generate</code> has turned it into a generated resource class, and it needs <code>GLUE_APPLICATION</code> in the environment - every <code>glue</code> command does.</p>
 </blockquote>
 <p>Then walk the three flows:</p>
 <ol type="1">
-<li><strong>Storefront.</strong> Log in at http://yves.eu.spryker.local/en/login as <code>sonia@acme.com</code> / <code>change123</code>, open the customer account area, send a message.</li>
+<li><strong>Storefront</strong> - only if you said yes to Yves. Log in at http://yves.eu.spryker.local/en/login as <code>sonia@acme.com</code> / <code>change123</code>, open the customer account area, send a message. If you said no, start at the API in step 3 and use it to create the message the Back Office table has to show.</li>
 <li><strong>Back Office.</strong> Log in at http://backoffice.eu.spryker.local as <code>admin@spryker.com</code> / <code>change123</code>, find the new navigation entry, and check that the message you just sent is in the table - with the right customer next to it. Sort a column, type something in the filter, page through.</li>
 <li><strong>Storefront API.</strong> Open http://glue.eu.spryker.local/docs. That page is API Platform’s own documentation of the running API - Swagger UI and ReDoc over the live OpenAPI spec - and the customer request resource the assistant added has to be in it, with the operations you asked for. Send a request from the page and read the response.</li>
 </ol>
 <p>If you prefer Postman, import the spec instead of clicking:</p>
-<div class="sourceCode" id="cb13"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-H</span> <span class="st">&#39;Accept: application/vnd.openapi+json&#39;</span> http://glue.eu.spryker.local/docs <span class="at">-o</span> glue-openapi.json</span></code></pre></div>
+<div class="sourceCode" id="cb14"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-H</span> <span class="st">&#39;Accept: application/vnd.openapi+json&#39;</span> http://glue.eu.spryker.local/docs <span class="at">-o</span> glue-openapi.json</span></code></pre></div>
 <p>From a shell, remember that this API speaks JSON:API - without the <code>Accept</code> header every request answers <code>406 Not Acceptable</code>, which looks like a broken endpoint and is not:</p>
-<div class="sourceCode" id="cb14"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-s</span> <span class="at">-H</span> <span class="st">&#39;Accept: application/vnd.api+json&#39;</span> http://glue.eu.spryker.local/customer-requests</span></code></pre></div>
+<div class="sourceCode" id="cb15"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-s</span> <span class="at">-H</span> <span class="st">&#39;Accept: application/vnd.api+json&#39;</span> http://glue.eu.spryker.local/customer-requests</span></code></pre></div>
 <p>The endpoint belongs to a logged-in customer, so you need a token. This is the whole handshake, and it is the same one Postman needs in its Authorization tab:</p>
-<div class="sourceCode" id="cb15"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="va">TOKEN</span><span class="op">=</span><span class="va">$(</span><span class="ex">curl</span> <span class="at">-s</span> <span class="at">-X</span> POST http://glue.eu.spryker.local/access-tokens <span class="dt">\</span></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-H</span> <span class="st">&#39;Content-Type: application/vnd.api+json&#39;</span> <span class="at">-H</span> <span class="st">&#39;Accept: application/vnd.api+json&#39;</span> <span class="dt">\</span></span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">-d</span> <span class="st">&#39;{&quot;data&quot;:{&quot;type&quot;:&quot;access-tokens&quot;,&quot;attributes&quot;:{&quot;username&quot;:&quot;sonia@acme.com&quot;,&quot;password&quot;:&quot;change123&quot;}}}&#39;</span> <span class="dt">\</span></span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">|</span> <span class="ex">python3</span> <span class="at">-c</span> <span class="st">&#39;import sys,json; print(json.load(sys.stdin)[&quot;data&quot;][&quot;attributes&quot;][&quot;accessToken&quot;])&#39;</span><span class="va">)</span></span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-s</span> <span class="at">-H</span> <span class="st">&quot;Authorization: Bearer </span><span class="va">$TOKEN</span><span class="st">&quot;</span> <span class="at">-H</span> <span class="st">&#39;Accept: application/vnd.api+json&#39;</span> <span class="dt">\</span></span>
-<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>  http://glue.eu.spryker.local/customer-requests</span></code></pre></div>
+<div class="sourceCode" id="cb16"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="va">TOKEN</span><span class="op">=</span><span class="va">$(</span><span class="ex">curl</span> <span class="at">-s</span> <span class="at">-X</span> POST http://glue.eu.spryker.local/access-tokens <span class="dt">\</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-H</span> <span class="st">&#39;Content-Type: application/vnd.api+json&#39;</span> <span class="at">-H</span> <span class="st">&#39;Accept: application/vnd.api+json&#39;</span> <span class="dt">\</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">-d</span> <span class="st">&#39;{&quot;data&quot;:{&quot;type&quot;:&quot;access-tokens&quot;,&quot;attributes&quot;:{&quot;username&quot;:&quot;sonia@acme.com&quot;,&quot;password&quot;:&quot;change123&quot;}}}&#39;</span> <span class="dt">\</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">|</span> <span class="ex">python3</span> <span class="at">-c</span> <span class="st">&#39;import sys,json; print(json.load(sys.stdin)[&quot;data&quot;][&quot;attributes&quot;][&quot;accessToken&quot;])&#39;</span><span class="va">)</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-s</span> <span class="at">-H</span> <span class="st">&quot;Authorization: Bearer </span><span class="va">$TOKEN</span><span class="st">&quot;</span> <span class="at">-H</span> <span class="st">&#39;Accept: application/vnd.api+json&#39;</span> <span class="dt">\</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>  http://glue.eu.spryker.local/customer-requests</span></code></pre></div>
 <p><strong>This is the route for anyone who does not want to touch Yves.</strong> A token, a POST and a GET exercise the whole feature - schema, persistence, business layer and API - without opening the storefront once. It is also the honest test of the requirement you wrote: you asked for messages a customer can send <em>and read their own</em>, so the GET must return that customer’s messages and nobody else’s.</p>
 <h3 id="check-that-your-module-still-works">Check that your module still works</h3>
 <p>This is the part a reset version of the exercise cannot test. The assistant worked in a project that already had a feature in it, and the shared files are where it can quietly break somebody else’s work:</p>
-<div class="sourceCode" id="cb16"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> status <span class="at">--short</span>     <span class="co"># everything it wrote, since you committed in Part 1</span></span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> diff <span class="at">--stat</span>        <span class="co"># which tracked files it edited</span></span></code></pre></div>
+<div class="sourceCode" id="cb17"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> status <span class="at">--short</span>     <span class="co"># everything it wrote, since you committed in Part 1</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> diff <span class="at">--stat</span>        <span class="co"># which tracked files it edited</span></span></code></pre></div>
 <p>Anything <strong>outside</strong> <code>src/SprykerAcademy/**/CustomerRequest*</code> is a shared file. Expect to see some of these, and read every one of them:</p>
 <table>
 <colgroup>
@@ -564,26 +637,26 @@ this requirement alone.</code></pre>
 </tr>
 <tr class="even">
 <td><code>src/Pyz/Yves/CustomerPage/...navigation-sidebar.twig</code></td>
-<td>Both account links, or only its own?</td>
+<td>If you asked for Yves: both account links, or only its own?</td>
 </tr>
 </tbody>
 </table>
 <p>Then open <strong>your</strong> pages again: <code>/contact-request/index/index</code> in the Back Office and your customer account page in Yves. An assistant that made its own feature work by breaking yours has failed the exercise, and you would never have noticed on an empty branch.</p>
 <h3 id="check-the-service-container">Check the service container</h3>
 <p>This is where a Spryker assistant goes wrong quietly:</p>
-<div class="sourceCode" id="cb17"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/console lint:container</span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/console debug:container SprykerAcademy</span></code></pre></div>
+<div class="sourceCode" id="cb18"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/console lint:container</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/console debug:container SprykerAcademy</span></code></pre></div>
 <p>The lint must answer <em>The container was linted successfully</em>, and the listing shows every class of both modules that Symfony knows about. If a class the assistant just wrote is missing from the listing, rebuild the container before believing it - <code>docker/sdk console cache:clear</code> (<a href="04-module-layers-back-office.html">Exercise 4, section 2.7</a>). Autowiring resolves a constructor that asks for an interface only while exactly one class implements it, so if the assistant wrote two implementations of the same interface, the binding has to be explicit in <code>config/Zed/ApplicationServices.php</code> - see <a href="04-module-layers-back-office.html">Exercise 4, section 2.5</a>.</p>
 <p>If a page errors, do not fix it yourself yet. Hand the error to the assistant (the <code>spryker-issue-diagnoser</code> agent is built for this) and watch how it diagnoses. That is also part of the exercise.</p>
 <hr />
 <h2 id="part-5-review-it-like-a-pull-request">Part 5: Review It Like a Pull Request</h2>
 <p>Commit the result first, so the assistant’s work is one reviewable change:</p>
-<div class="sourceCode" id="cb18"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> add <span class="at">-A</span></span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> commit <span class="at">-m</span> <span class="st">&quot;CustomerRequest built by the AI Dev SDK&quot;</span></span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> show <span class="at">--stat</span> HEAD</span></code></pre></div>
+<div class="sourceCode" id="cb19"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> add <span class="at">-A</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> commit <span class="at">-m</span> <span class="st">&quot;CustomerRequest built by the AI Dev SDK&quot;</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> show <span class="at">--stat</span> HEAD</span></code></pre></div>
 <h3 id="diff-the-two-modules">Diff the two modules</h3>
 <p>The two implementations are in the same working tree, so you can compare them directly - once you take the module name out of the way. This script does that: it maps every file of your module onto the matching file of the assistant’s (<code>ContactRequest</code> -&gt; <code>CustomerRequest</code>, <code>contact_request</code> -&gt; <code>customer_request</code>, <code>contact-request</code> -&gt; <code>customer-request</code>), normalises the name inside the files as well, and reports what is missing, what is extra and what genuinely differs:</p>
-<div class="sourceCode" id="cb19"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/tools/compare-modules.sh</span></span></code></pre></div>
+<div class="sourceCode" id="cb20"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/tools/compare-modules.sh</span></span></code></pre></div>
 <pre class="text"><code>Comparing ContactRequest (yours) with CustomerRequest
 
 differs: ./Zed/ContactRequest/Business/ContactRequestFacade.php
@@ -603,19 +676,20 @@ differs: 17   only in ContactRequest: 3   only in CustomerRequest: 2</code></pre
 <li><strong><code>identical after renaming</code></strong> - files it copied from you. A handful is unremarkable: a <code>DependencyProvider</code> has one shape, and so does a <code>Factory</code>. If most of the module comes back identical the script says so, because then you did not ask an assistant to design - you asked it to run a find-and-replace, which is worth knowing and worth saying to it.</li>
 </ul>
 <p>To read one pair in full:</p>
-<div class="sourceCode" id="cb21"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> diff <span class="at">--no-index</span> <span class="dt">\</span></span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  src/SprykerAcademy/Zed/ContactRequest/Business/ContactRequestFacade.php <span class="dt">\</span></span>
-<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  src/SprykerAcademy/Zed/CustomerRequest/Business/CustomerRequestFacade.php</span></code></pre></div>
+<div class="sourceCode" id="cb22"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> diff <span class="at">--no-index</span> <span class="dt">\</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  src/SprykerAcademy/Zed/ContactRequest/Business/ContactRequestFacade.php <span class="dt">\</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  src/SprykerAcademy/Zed/CustomerRequest/Business/CustomerRequestFacade.php</span></code></pre></div>
 <h3 id="then-go-through-the-code-with-the-rules-of-exercises-1-to-6b-in-hand">Then go through the code with the rules of Exercises 1 to 6b in hand</h3>
 <ul>
 <li><strong>Persistence.</strong> Is <code>fk_customer</code> a real Propel foreign key to <code>spy_customer</code>, or just an integer column? Is there an index? Does any Propel entity leave the Persistence layer, or does everything cross the boundary as a transfer?</li>
 <li><strong>Business.</strong> Is there a Facade with an interface? Are Reader and Writer separate classes with interfaces? Any <code>new</code> inside business logic instead of a factory?</li>
 <li><strong>Communication.</strong> Did it use Spryker’s Back Office table (<code>AbstractTable</code> from the <code>Gui</code> module, with <code>configure()</code> and <code>prepareData()</code>), or did it hand-roll a Twig loop and call it a table? Sorting, filtering and paging come for free with the first and not at all with the second.</li>
-<li><strong>Yves.</strong> Does the storefront go through the Client and the Zed gateway, or does it query the database directly from Yves? Does the page only ever show the messages of the logged-in customer - or can you change an ID in the URL and read someone else’s?</li>
+<li><strong>Wiring.</strong> Count the classes that exist only to assemble other classes. A <code>CustomerRequestBusinessFactory</code>, a Zed <code>DependencyProvider</code> and a facade full of <code>$this-&gt;getFactory()-&gt;create...()</code> mean it ignored the house rules and wrote the older Spryker style - which runs, and is exactly the noise that makes the diff against your module unreadable. In Yves it is the other way round: a factory and a dependency provider are correct there, and constructor injection is not.</li>
+<li><strong>Yves</strong> - if you asked for it. Does the storefront go through the Client and the Zed gateway, or does it query the database directly from Yves? Does the page only ever show the messages of the logged-in customer - or can you change an ID in the URL and read someone else’s?</li>
 <li><strong>Transfers.</strong> <code>strict="true"</code>, or untyped accessors?</li>
 <li><strong>The API.</strong> A <code>*.resource.yml</code> plus a Provider class, or the legacy GlueApplication plugin stack? Both run, and only one is what Spryker recommends for new APIs. Did it register <code>src/SprykerAcademy</code> in <code>config/GlueStorefront/packages/spryker_api_platform.php</code>, or did it quietly put the resource in <code>Pyz</code> where the default source directories already look?</li>
 <li><strong>Who can read what.</strong> Change the id in the API request to a customer request belonging to another customer. If you get it back, the Provider is not scoping by the authenticated customer - the single most common mistake in a generated API, and the one a passing test suite will not catch.</li>
-<li><strong>Service wiring.</strong> Did it register the interfaces it injects in <code>config/Zed/ApplicationServices.php</code>, or is the module standing on the single-implementation rule without knowing it? Ask the assistant which of its constructor arguments would stop resolving if you added a second implementation tomorrow.</li>
+<li><strong>Service wiring.</strong> Did it register the interfaces it injects in <code>config/Zed/ApplicationServices.php</code>, or is the module standing on the single-implementation rule without knowing it? Ask the assistant which of its constructor arguments would stop resolving if you added a second implementation tomorrow. And if an API Platform provider injects its Client, is that Client registered in <code>config/GlueStorefront/ApplicationServices.php</code> - or did it only work because you told it to put the line there?</li>
 <li><strong>Everything else.</strong> Dependencies through the <code>DependencyProvider</code> and created in factories? Return types as interfaces? Did it add things you never asked for - extra fields, helper classes, commented-out code? Would you keep them?</li>
 </ul>
 <p>Then ask the SDK’s own reviewer and compare its list with yours:</p>
@@ -626,22 +700,22 @@ differs: 17   only in ContactRequest: 3   only in CustomerRequest: 2</code></pre
 <p>Exercise 7 continues from your handmade module, and its loader starts by deleting the whole namespace folder - this line is in <code>load.sh</code>:</p>
 <pre class="text"><code>rm -rf &quot;$PROJECT_DIR/src/SprykerAcademy&quot;</code></pre>
 <p>So <strong>both</strong> modules go when you run it. You committed in Part 5, so nothing is lost - but be deliberate about it:</p>
-<div class="sourceCode" id="cb24"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/extending-core-modules/skeleton</span>
-<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console c:e</span>
-<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli composer dump-autoload</span>
-<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console propel:install</span>
-<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span></code></pre></div>
+<div class="sourceCode" id="cb25"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/extending-core-modules/skeleton</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console c:e</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli composer dump-autoload</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console propel:install</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span></code></pre></div>
 <p>Two things the loader does <strong>not</strong> clean up after the assistant, because it only ever adds to those files:</p>
 <ul>
 <li><strong>The navigation entry.</strong> If <code>config/Zed/navigation.xml</code> still has a <code>customer-request</code> entry, the Back Office menu keeps a link to a controller that no longer exists. Remove the entry and run <code>docker/sdk console navigation:build-cache</code>.</li>
 <li><strong>Anything it wrote in <code>src/Pyz</code> or <code>config/</code>.</strong> <code>git diff</code> after the load shows what survived. The table <code>pyz_customer_request</code> stays in the database too; it is harmless, so leave it unless you want a tidy schema.</li>
 </ul>
 <p>To bring the assistant’s module back later:</p>
-<div class="sourceCode" id="cb25"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> log <span class="at">--oneline</span> <span class="at">--</span> src/SprykerAcademy      <span class="co"># find the &quot;CustomerRequest built by...&quot; commit</span></span>
-<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> checkout <span class="op">&lt;</span>commit<span class="op">&gt;</span> -- src/SprykerAcademy/Zed/CustomerRequest</span></code></pre></div>
+<div class="sourceCode" id="cb26"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> log <span class="at">--oneline</span> <span class="at">--</span> src/SprykerAcademy      <span class="co"># find the &quot;CustomerRequest built by...&quot; commit</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> checkout <span class="op">&lt;</span>commit<span class="op">&gt;</span> -- src/SprykerAcademy/Zed/CustomerRequest</span></code></pre></div>
 <h2 id="going-further">Going Further</h2>
 <ul>
-<li>Give the exact same seven sentences to a second assistant or a second model, asking this time for a <strong>MessageRequest</strong> module. Three implementations of one requirement in one shop, and <code>compare-modules.sh</code> diffs any pair of them. The differences between two AI runs are as instructive as the differences from your own code.</li>
+<li>Give the exact same prompt to a second assistant or a second model, asking this time for a <strong>MessageRequest</strong> module. Three implementations of one requirement in one shop, and <code>compare-modules.sh</code> diffs any pair of them. The differences between two AI runs are as instructive as the differences from your own code.</li>
 <li>Run the <strong>cold-start variant</strong>: the same prompt plus the “do not read ContactRequest” line, on a fourth name. Then diff the cold-start module against the one that could see yours, and you have measured what having a reference implementation in the project is actually worth.</li>
 <li>Add one sentence to the requirement - “the admin can reply to a message and the customer sees the reply” - and watch whether it extends the existing design or bolts on a parallel one.</li>
 <li>Start the MCP server (<code>docker/sdk console ai-dev:mcp-server -q</code>), connect it to your tool, and ask the assistant which transfers exist for <code>CustomerRequest</code>.</li>

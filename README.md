@@ -125,7 +125,7 @@ See [STUDENT_SETUP_GUIDE.md](STUDENT_SETUP_GUIDE.md) for detailed setup instruct
 
 - `guides/` - Markdown format guides
 - `guides/basics/06b-configuration-module.md` - Exercise 6b: move the Exercise 6 value into the Back Office with the Configuration module (schema YAML, `configuration:sync`, Configuration facade; no exercise branch)
-- `guides/basics/06c-ai-dev-sdk.md` - Exercise 6c: build a second module, `CustomerRequest`, from a seven-sentence requirement with the Spryker AI Dev SDK - Back Office table, Yves page and Storefront API (no exercise branch and no reset: it is built next to the handmade ContactRequest, runs alongside it, and is diffed against it with `tools/compare-modules.sh`)
+- `guides/basics/06c-ai-dev-sdk.md` - Exercise 6c: build a second module, `CustomerRequest`, from a short business requirement with the Spryker AI Dev SDK - Back Office table, Storefront API and an optional Yves page (no exercise branch and no reset: it is built next to the handmade ContactRequest, runs alongside it, and is diffed against it with `tools/compare-modules.sh`)
 - `guides/intermediate/02b-ai-commerce-configuration.md` - Exercise 9b: configure AI Commerce in the Back Office (Configuration module, AI Vendor token, Smart PIM; no exercise branch)
 - `guides-html/` - HTML format guides and the reveal.js presentations (fundamentals, intermediate, AI Foundation)
 - `guides/advanced/` - Back Office Assistant setup and the AI Foundation exercises

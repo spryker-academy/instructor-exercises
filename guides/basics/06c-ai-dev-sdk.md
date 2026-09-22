@@ -1,6 +1,6 @@
 # Exercise 6c: Build the Same Feature Again, with the AI Dev SDK
 
-In Exercises 1 to 6b you built the **ContactRequest** module by hand, step by step, from a guide that told you every class name and every file path. In this exercise you describe the same feature the way a product owner would, in seven sentences, and let your AI coding assistant design and build it - under a different name, **CustomerRequest**, right next to yours.
+In Exercises 1 to 6b you built the **ContactRequest** module by hand, step by step, from a guide that told you every class name and every file path. In this exercise you describe the same feature the way a product owner would - six sentences, plus a short list of how this project builds things - and let your AI coding assistant design and build it - under a different name, **CustomerRequest**, right next to yours.
 
 Nothing is reset and nothing is deleted. When you are done, `src/SprykerAcademy` holds two modules that do the same job, one written by you and one written by a machine, both running in the same shop. The exercise ends with a diff.
 
@@ -152,7 +152,24 @@ resources are generated with
 `GLUE_APPLICATION=GLUE_STOREFRONT glue api:generate`.
 ```
 
-> Project facts belong in the **context file**, because it describes the project and stays, while the prompt describes one feature and changes every time. The prompt in Part 3 names the namespace anyway - belt and braces for the one fact everything else hangs off - but it is the context file that makes the assistant remember it on the task after this one.
+And the wiring conventions, which are the ones an assistant gets wrong most often because the older Spryker style is what it has read most of:
+
+```text
+Zed wires dependencies with Symfony constructor injection. config/Zed/ApplicationServices.php
+loads every project module into the container, so a project class type-hints what it needs
+instead of being assembled in a factory. In a Zed facade, reach the business classes with
+$this->getService(MyReader::class) - AbstractFacade uses
+Spryker\Service\Container\ContainerTrait. Do not write a business factory or a dependency
+provider for something the container already provides.
+
+Two exceptions. config/Yves/ApplicationServices.php is an empty stub, so Yves keeps the
+factory and the dependency provider. And a project-namespace Client used from Glue must be
+registered by hand in config/GlueStorefront/ApplicationServices.php with
+$services->set(Interface::class, Class::class), because SprykerDefaultsPass only
+auto-registers core namespaces.
+```
+
+> Project facts belong in the **context file**, because it describes the project and stays, while the prompt describes one feature and changes every time. The prompt in Part 3 repeats them anyway - belt and braces for the facts everything else hangs off - but it is the context file that makes the assistant remember them on the task after this one.
 
 ---
 
@@ -166,24 +183,51 @@ I need a Customer Request module for this shop.
 Customers can send a message to the shop owner. A customer request stores the message and
 belongs to a customer, so the customer is a foreign key on the customer request.
 
-In the storefront, a logged-in customer writes and sends the message from their customer
-account area.
-
 In the Back Office, an administrator opens a page that lists the customer requests in a table
 they can read, sort, filter and page through.
 
 The same messages are reachable through the Storefront API, so a customer can send one and
 read their own without opening the storefront pages.
 
-Put the code in the SprykerAcademy namespace (src/SprykerAcademy) and build it the way this
-project does things.
+A logged-in customer can also write and send the message from the customer account area in
+the storefront - but ask me whether I want that part before you build it.
+
+How we build things in this project:
+
+- Put the code in the SprykerAcademy namespace (src/SprykerAcademy).
+- Build the API with the Spryker API Platform: a *.resource.yml plus a state provider and a
+  processor. Do not use the legacy GlueApplication resource plugins.
+- In Zed, wire dependencies with Symfony constructor injection. Project classes are already
+  in the container, so a class type-hints what it needs. Do not add a business factory or a
+  dependency provider for something the container can give you.
+- In the facade, reach your business classes with $this->getService(CustomerRequestReader::class).
+  AbstractFacade has the container trait, so no getFactory() and no business factory at all.
+- Yves is the exception: its container is empty, so a Yves page keeps the usual factory and
+  dependency provider.
+- A project Client that an API Platform provider injects has to be registered by hand in
+  config/GlueStorefront/ApplicationServices.php with $services->set(Interface::class, Class::class).
+
+Ask me whatever you need before you start.
 ```
 
-That is the whole specification. Notice what is **not** in it: no class names, no file paths, no layer list, no routes, no console commands, no tests. Deriving all of that from a requirement is the assistant's job, and the rules and skills the SDK installed are where it gets the conventions from. You spent Exercises 1 to 6b learning those conventions so you can tell whether it got them right.
+The first half is the specification, and notice what is **not** in it: no class names, no file paths, no layer list, no routes, no console commands, no tests. Deriving all of that from a requirement is the assistant's job, and the rules and skills the SDK installed are where it gets the conventions from. You spent Exercises 1 to 6b learning those conventions so you can tell whether it got them right.
 
-The namespace is the one exception, and it is worth understanding why. `SprykerAcademy` is not a design decision the assistant could derive from the requirement - it is a fact about this project, and every file it creates depends on it. Guess `Pyz` and the module works but lands in the wrong place; guess a vendor namespace and nothing resolves at all. State it, and state it in the context file as well, so the next task does not need the reminder.
+The second half is different in kind. Those are not design decisions the assistant could derive from the requirement - they are **facts about this project**, and it has no way to know any of them:
 
-> You are asking, in seven sentences, for roughly what Exercises 1 to 6b build by hand, plus the kind of API resource [Exercise 12](../intermediate/05-glue-storefront-api.md) builds in the intermediate course: a Propel table with a foreign key to `spy_customer`, transfers, the three Zed layers, a Back Office page with a table, a Client with a Zed stub, and a customer account page in Yves.
+| House rule | Why it has to be said |
+|---|---|
+| Ask before building Yves | The storefront is the largest part of the job and the part many students skip - they test in Swagger or Postman instead. An assistant that asks first can save you half the run, but only if you tell it that the question is open. |
+| API Platform, not GlueApplication plugins | Both exist in this Spryker version and both work. Most training material out there is about the older one, so that is what an assistant reaches for. |
+| Symfony DI in Zed | `config/Zed/ApplicationServices.php` loads every project module into the container, so a class like `ContactRequestReader` is a public, autowired service ([Exercise 4, section 2.6](04-module-layers-back-office.md)). An assistant that does not know this writes the older stack instead: a business factory, a dependency provider, and `getFactory()` everywhere. |
+| `getService()` in the facade | `AbstractFacade` uses `Spryker\Service\Container\ContainerTrait`, so `$this->getService(CustomerRequestReader::class)` reads straight from the container - the style you wrote yourself in [Exercise 4, section 2.4](04-module-layers-back-office.md). The second argument of `getService()` is a factory method name to fall back on, which is how a legacy module migrates gradually; a new module does not need it. |
+| Yves keeps the factory | `config/Yves/ApplicationServices.php` is an empty stub in the demo shop, so nothing of yours is in the Yves container. The rule above would be wrong there, and an assistant applying it consistently would break the storefront. |
+| The Glue Storefront client registration | `SprykerDefaultsPass` auto-registers Spryker's conventional entry points, but `findResolvableClassForInterface()` returns `null` for anything outside the core namespaces. A project-namespace Client therefore falls through to a proxy that fails at runtime with *Could not find ... in any of the attached containers*, and the only fix is the explicit `$services->set()`. |
+
+> **This list is the difference between a module and *your* module.** Without it, a real run of this exercise produced `CustomerRequestBusinessFactory`, `CustomerRequestDependencyProvider`, a Client factory and dependency provider of its own, and a facade calling `$this->getFactory()->createCustomerRequestReader()`. Perfectly ordinary Spryker code - just not the style you spent Exercises 4 to 6 teaching, and a diff full of noise rather than of decisions.
+
+The same facts belong in the **context file** from Part 2, because it describes the project and stays, while the prompt describes one feature and changes every time. Repeat them here anyway: a context file is one more thing an assistant can skim past, and these are the facts everything else hangs off.
+
+> You are asking, in a page, for roughly what Exercises 1 to 6b build by hand, plus the kind of API resource [Exercise 12](../intermediate/05-glue-storefront-api.md) builds in the intermediate course: a Propel table with a foreign key to `spy_customer`, transfers, the three Zed layers, a Back Office page with a table, a Client with a Zed stub, and - if you say yes - a customer account page in Yves.
 
 ### Why "Customer Request" and not "Contact Request"
 
@@ -220,8 +264,9 @@ A good assistant will come back with questions before it writes code. Answer the
 
 | Question you are likely to get | Answer for this exercise |
 |---|---|
+| Do you want the storefront pages in Yves? | Your call, and the prompt tells it to ask. Say no if you are testing in Swagger or Postman - the Back Office and the API already exercise the whole stack, and you halve the run. Say yes if you want to compare its Yves code with yours. |
 | Guests too, or only logged-in customers? | Only logged-in customers. |
-| Should the customer see the messages they already sent? | Yes, list them on the same account page. |
+| Should the customer see the messages they already sent? | Yes - on the account page if you asked for Yves, through the API either way. |
 | Can the customer edit or delete a message? | No. Sending is enough. |
 | Does the admin reply, or is there a status / read flag? | No. Reading is enough. |
 | Email notification to the shop owner? | No. |
@@ -253,7 +298,7 @@ docker/sdk cli GLUE_APPLICATION=GLUE_STOREFRONT glue api:generate
 
 Then walk the three flows:
 
-1. **Storefront.** Log in at http://yves.eu.spryker.local/en/login as `sonia@acme.com` / `change123`, open the customer account area, send a message.
+1. **Storefront** - only if you said yes to Yves. Log in at http://yves.eu.spryker.local/en/login as `sonia@acme.com` / `change123`, open the customer account area, send a message. If you said no, start at the API in step 3 and use it to create the message the Back Office table has to show.
 2. **Back Office.** Log in at http://backoffice.eu.spryker.local as `admin@spryker.com` / `change123`, find the new navigation entry, and check that the message you just sent is in the table - with the right customer next to it. Sort a column, type something in the filter, page through.
 3. **Storefront API.** Open http://glue.eu.spryker.local/docs. That page is API Platform's own documentation of the running API - Swagger UI and ReDoc over the live OpenAPI spec - and the customer request resource the assistant added has to be in it, with the operations you asked for. Send a request from the page and read the response.
 
@@ -301,7 +346,7 @@ Anything **outside** `src/SprykerAcademy/**/CustomerRequest*` is a shared file. 
 | `config/Zed/ApplicationServices.php` | New bindings added next to yours? |
 | `config/GlueStorefront/packages/spryker_api_platform.php` | `src/SprykerAcademy` registered? |
 | `src/SprykerAcademy/Yves/Router/RouterDependencyProvider.php` | Both route providers, or only its own? |
-| `src/Pyz/Yves/CustomerPage/...navigation-sidebar.twig` | Both account links, or only its own? |
+| `src/Pyz/Yves/CustomerPage/...navigation-sidebar.twig` | If you asked for Yves: both account links, or only its own? |
 
 Then open **your** pages again: `/contact-request/index/index` in the Back Office and your customer account page in Yves. An assistant that made its own feature work by breaking yours has failed the exercise, and you would never have noticed on an empty branch.
 
@@ -373,11 +418,12 @@ git diff --no-index \
 - **Persistence.** Is `fk_customer` a real Propel foreign key to `spy_customer`, or just an integer column? Is there an index? Does any Propel entity leave the Persistence layer, or does everything cross the boundary as a transfer?
 - **Business.** Is there a Facade with an interface? Are Reader and Writer separate classes with interfaces? Any `new` inside business logic instead of a factory?
 - **Communication.** Did it use Spryker's Back Office table (`AbstractTable` from the `Gui` module, with `configure()` and `prepareData()`), or did it hand-roll a Twig loop and call it a table? Sorting, filtering and paging come for free with the first and not at all with the second.
-- **Yves.** Does the storefront go through the Client and the Zed gateway, or does it query the database directly from Yves? Does the page only ever show the messages of the logged-in customer - or can you change an ID in the URL and read someone else's?
+- **Wiring.** Count the classes that exist only to assemble other classes. A `CustomerRequestBusinessFactory`, a Zed `DependencyProvider` and a facade full of `$this->getFactory()->create...()` mean it ignored the house rules and wrote the older Spryker style - which runs, and is exactly the noise that makes the diff against your module unreadable. In Yves it is the other way round: a factory and a dependency provider are correct there, and constructor injection is not.
+- **Yves** - if you asked for it. Does the storefront go through the Client and the Zed gateway, or does it query the database directly from Yves? Does the page only ever show the messages of the logged-in customer - or can you change an ID in the URL and read someone else's?
 - **Transfers.** `strict="true"`, or untyped accessors?
 - **The API.** A `*.resource.yml` plus a Provider class, or the legacy GlueApplication plugin stack? Both run, and only one is what Spryker recommends for new APIs. Did it register `src/SprykerAcademy` in `config/GlueStorefront/packages/spryker_api_platform.php`, or did it quietly put the resource in `Pyz` where the default source directories already look?
 - **Who can read what.** Change the id in the API request to a customer request belonging to another customer. If you get it back, the Provider is not scoping by the authenticated customer - the single most common mistake in a generated API, and the one a passing test suite will not catch.
-- **Service wiring.** Did it register the interfaces it injects in `config/Zed/ApplicationServices.php`, or is the module standing on the single-implementation rule without knowing it? Ask the assistant which of its constructor arguments would stop resolving if you added a second implementation tomorrow.
+- **Service wiring.** Did it register the interfaces it injects in `config/Zed/ApplicationServices.php`, or is the module standing on the single-implementation rule without knowing it? Ask the assistant which of its constructor arguments would stop resolving if you added a second implementation tomorrow. And if an API Platform provider injects its Client, is that Client registered in `config/GlueStorefront/ApplicationServices.php` - or did it only work because you told it to put the line there?
 - **Everything else.** Dependencies through the `DependencyProvider` and created in factories? Return types as interfaces? Did it add things you never asked for - extra fields, helper classes, commented-out code? Would you keep them?
 
 Then ask the SDK's own reviewer and compare its list with yours:
@@ -422,7 +468,7 @@ git checkout <commit> -- src/SprykerAcademy/Zed/CustomerRequest
 
 ## Going Further
 
-- Give the exact same seven sentences to a second assistant or a second model, asking this time for a **MessageRequest** module. Three implementations of one requirement in one shop, and `compare-modules.sh` diffs any pair of them. The differences between two AI runs are as instructive as the differences from your own code.
+- Give the exact same prompt to a second assistant or a second model, asking this time for a **MessageRequest** module. Three implementations of one requirement in one shop, and `compare-modules.sh` diffs any pair of them. The differences between two AI runs are as instructive as the differences from your own code.
 - Run the **cold-start variant**: the same prompt plus the "do not read ContactRequest" line, on a fourth name. Then diff the cold-start module against the one that could see yours, and you have measured what having a reference implementation in the project is actually worth.
 - Add one sentence to the requirement - "the admin can reply to a message and the customer sees the reply" - and watch whether it extends the existing design or bolts on a parallel one.
 - Start the MCP server (`docker/sdk console ai-dev:mcp-server -q`), connect it to your tool, and ask the assistant which transfers exist for `CustomerRequest`.
