@@ -190,6 +190,79 @@ Class        SprykerAcademy\Zed\ContactRequest\Persistence\ContactRequestReposit
 
 > **When the container cannot find your class at all.** `Expected to find class "SprykerAcademy\..." in file "..." while importing services from resource "...", but it was not found! Check the namespace prefix used with the resource in config/Zed/ApplicationServices.php` is not a namespace-prefix problem, whatever it says. It means PHP cannot autoload the class: `SprykerAcademy` is missing from `vendor/composer/autoload_psr4.php`. Run `docker/sdk cli composer dump-autoload` and check with `grep SprykerAcademy vendor/composer/autoload_psr4.php`.
 
+#### 2.6 What You Can Type-Hint, and What You Cannot
+
+Two different mechanisms fill the Zed container, and they cover different things.
+
+`config/Zed/ApplicationServices.php` loads **project modules only** - every class under
+`src/SprykerAcademy/<App>/<Module>/` becomes a service. That is why your Reader, Writer,
+Repository and EntityManager are injectable at all.
+
+Core modules are never scanned by that file. Instead a Symfony compiler pass
+(`Spryker\Service\Container\Pass\SprykerDefaultsPass`, added in
+`Spryker\Shared\Application\Kernel::build()`) walks **every** module the module finder sees, core
+included, and registers each module's conventional entry points:
+
+| You can type-hint | Example |
+|---|---|
+| a Zed facade, **by its interface** | `Spryker\Zed\Configuration\Business\ConfigurationFacadeInterface` |
+| a client, **by its interface** | `Spryker\Client\Storage\StorageClientInterface` |
+| a service, **by its interface** | `Spryker\Service\UtilEncoding\UtilEncodingServiceInterface` |
+| a module config, by its class | `Spryker\Zed\Customer\CustomerConfig` |
+
+| You cannot type-hint | Why |
+|---|---|
+| a **core** factory, repository, entity manager, reader, mapper | not a conventional entry point - `debug:container Business\CustomerBusinessFactory` answers *No services found* |
+| a facade by its **concrete** class | the registered id is the interface; `ConfigurationFacade` is not a service |
+
+Check any of it yourself - `debug:container` takes a fragment of the name:
+
+```bash
+docker/sdk cli vendor/bin/console debug:container 'Spryker\Zed\Configuration'
+```
+
+The whole core `Configuration` module contributes exactly two services, the facade interface and the
+module config. Nothing behind the front door is reachable, which is the point: a module's internals
+stay its own business.
+
+> **You never bypass the class resolver.** The pass looks for a project override before the core
+> class, so type-hinting the core name gives you the project class when one exists. On this shop
+> `Spryker\Zed\Customer\CustomerConfig` resolves to `Class Pyz\Zed\Customer\CustomerConfig`.
+
+Your own modules are the generous case: because `ApplicationServices.php` loads the whole directory,
+even `ContactRequestPersistenceFactory` is a service. Injecting a factory still goes around Spryker's
+pattern - the kernel creates factories and you reach dependencies through them - so do not, just
+because you can.
+
+#### 2.7 Clearing the Container Cache
+
+The compiled container is generated PHP under `data/cache/<Application>/<environment>/Container*/`.
+When a constructor change, a new service or a new `$services->set()` line seems to have no effect,
+that directory is the first suspect.
+
+```bash
+docker/sdk console cache:clear
+```
+
+That is Symfony's own command, and it is the one that rebuilds the container.
+
+> **`cache:empty-all` is not the command for this.** It clears `data/cache` broadly - the Propel
+> table map, the configuration schema, generated Twig and navigation - but leaves the compiled
+> container in place. Running it and seeing no change is what sends people looking for a bug in
+> their code that is not there. It also means you have to run `propel:install` afterwards to get
+> the table map back.
+
+If the container is broken badly enough that the console itself will not boot, no command can help
+you. Delete the directory and rebuild it:
+
+```bash
+rm -rf data/cache/Zed
+docker/sdk console container:build
+```
+
+`container:build` compiles the container explicitly and answers *Container built successfully*.
+Use `data/cache/Yves`, `data/cache/GlueStorefront` and so on for the other applications.
+
 ---
 
 ### 3. Visual in the Back Office
@@ -238,8 +311,8 @@ If the controller is missing from that list, it is one of these, in order of lik
 1. **The autoloader is stale.** `$services->load()` cannot register a class PHP cannot autoload.
    `docker/sdk cli composer dump-autoload`, then `grep SprykerAcademy vendor/composer/autoload_psr4.php`.
 2. **The compiled container is stale** - you added the constructor after it was built.
-   `docker/sdk console cache:empty-all`, then `docker/sdk console propel:install` (clearing the cache
-   drops the Propel table map, so always rebuild after).
+   `docker/sdk console cache:clear`, and see *Clearing the container cache* below. Note that
+   `cache:empty-all` does **not** help here; it leaves the compiled container untouched.
 3. **The class is not where the module finder looks.** It has to be
    `src/SprykerAcademy/Zed/<Module>/Communication/Controller/<Name>Controller.php` - the container is
    built by walking that structure, so a controller one directory off is invisible to it.

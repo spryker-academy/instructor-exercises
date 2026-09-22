@@ -301,6 +301,80 @@ Class        SprykerAcademy\Zed\ContactRequest\Persistence\ContactRequestReposit
 <blockquote>
 <p><strong>When the container cannot find your class at all.</strong> <code>Expected to find class "SprykerAcademy\..." in file "..." while importing services from resource "...", but it was not found! Check the namespace prefix used with the resource in config/Zed/ApplicationServices.php</code> is not a namespace-prefix problem, whatever it says. It means PHP cannot autoload the class: <code>SprykerAcademy</code> is missing from <code>vendor/composer/autoload_psr4.php</code>. Run <code>docker/sdk cli composer dump-autoload</code> and check with <code>grep SprykerAcademy vendor/composer/autoload_psr4.php</code>.</p>
 </blockquote>
+<h4 id="what-you-can-type-hint-and-what-you-cannot">2.6 What You Can Type-Hint, and What You Cannot</h4>
+<p>Two different mechanisms fill the Zed container, and they cover different things.</p>
+<p><code>config/Zed/ApplicationServices.php</code> loads <strong>project modules only</strong> - every class under <code>src/SprykerAcademy/&lt;App&gt;/&lt;Module&gt;/</code> becomes a service. That is why your Reader, Writer, Repository and EntityManager are injectable at all.</p>
+<p>Core modules are never scanned by that file. Instead a Symfony compiler pass (<code>Spryker\Service\Container\Pass\SprykerDefaultsPass</code>, added in <code>Spryker\Shared\Application\Kernel::build()</code>) walks <strong>every</strong> module the module finder sees, core included, and registers each module’s conventional entry points:</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>You can type-hint</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>a Zed facade, <strong>by its interface</strong></td>
+<td><code>Spryker\Zed\Configuration\Business\ConfigurationFacadeInterface</code></td>
+</tr>
+<tr class="even">
+<td>a client, <strong>by its interface</strong></td>
+<td><code>Spryker\Client\Storage\StorageClientInterface</code></td>
+</tr>
+<tr class="odd">
+<td>a service, <strong>by its interface</strong></td>
+<td><code>Spryker\Service\UtilEncoding\UtilEncodingServiceInterface</code></td>
+</tr>
+<tr class="even">
+<td>a module config, by its class</td>
+<td><code>Spryker\Zed\Customer\CustomerConfig</code></td>
+</tr>
+</tbody>
+</table>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>You cannot type-hint</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>a <strong>core</strong> factory, repository, entity manager, reader, mapper</td>
+<td>not a conventional entry point - <code>debug:container Business\CustomerBusinessFactory</code> answers <em>No services found</em></td>
+</tr>
+<tr class="even">
+<td>a facade by its <strong>concrete</strong> class</td>
+<td>the registered id is the interface; <code>ConfigurationFacade</code> is not a service</td>
+</tr>
+</tbody>
+</table>
+<p>Check any of it yourself - <code>debug:container</code> takes a fragment of the name:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/console debug:container <span class="st">&#39;Spryker\Zed\Configuration&#39;</span></span></code></pre></div>
+<p>The whole core <code>Configuration</code> module contributes exactly two services, the facade interface and the module config. Nothing behind the front door is reachable, which is the point: a module’s internals stay its own business.</p>
+<blockquote>
+<p><strong>You never bypass the class resolver.</strong> The pass looks for a project override before the core class, so type-hinting the core name gives you the project class when one exists. On this shop <code>Spryker\Zed\Customer\CustomerConfig</code> resolves to <code>Class Pyz\Zed\Customer\CustomerConfig</code>.</p>
+</blockquote>
+<p>Your own modules are the generous case: because <code>ApplicationServices.php</code> loads the whole directory, even <code>ContactRequestPersistenceFactory</code> is a service. Injecting a factory still goes around Spryker’s pattern - the kernel creates factories and you reach dependencies through them - so do not, just because you can.</p>
+<h4 id="clearing-the-container-cache">2.7 Clearing the Container Cache</h4>
+<p>The compiled container is generated PHP under <code>data/cache/&lt;Application&gt;/&lt;environment&gt;/Container*/</code>. When a constructor change, a new service or a new <code>$services-&gt;set()</code> line seems to have no effect, that directory is the first suspect.</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:clear</span></code></pre></div>
+<p>That is Symfony’s own command, and it is the one that rebuilds the container.</p>
+<blockquote>
+<p><strong><code>cache:empty-all</code> is not the command for this.</strong> It clears <code>data/cache</code> broadly - the Propel table map, the configuration schema, generated Twig and navigation - but leaves the compiled container in place. Running it and seeing no change is what sends people looking for a bug in their code that is not there. It also means you have to run <code>propel:install</code> afterwards to get the table map back.</p>
+</blockquote>
+<p>If the container is broken badly enough that the console itself will not boot, no command can help you. Delete the directory and rebuild it:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span> <span class="at">-rf</span> data/cache/Zed</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console container:build</span></code></pre></div>
+<p><code>container:build</code> compiles the container explicitly and answers <em>Container built successfully</em>. Use <code>data/cache/Yves</code>, <code>data/cache/GlueStorefront</code> and so on for the other applications.</p>
 <hr />
 <h3 id="visual-in-the-back-office">3. Visual in the Back Office</h3>
 <h4 id="controller-for-the-back-office">3.1 Controller for the Back Office</h4>
@@ -312,17 +386,17 @@ Class        SprykerAcademy\Zed\ContactRequest\Persistence\ContactRequestReposit
 SprykerAcademy\Zed\ContactRequest\Communication\Controller\IndexController::__construct(),
 0 passed and exactly 1 expected</code></pre>
 <p>Your constructor is fine. Read what Spryker does with a Zed route, in <code>Spryker\Shared\Router\Resolver\ControllerResolver::getControllerFromArray()</code>:</p>
-<div class="sourceCode" id="cb11"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="va">$container</span> <span class="op">&amp;&amp;</span> <span class="fu">is_string</span>(<span class="va">$controller</span>[<span class="dv">0</span>]) <span class="op">&amp;&amp;</span> <span class="va">$container</span>-&gt;has(<span class="va">$controller</span>[<span class="dv">0</span>])) {</span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    <span class="va">$controllerInstance</span> <span class="op">=</span> <span class="va">$container</span>-&gt;get(<span class="va">$controller</span>[<span class="dv">0</span>])<span class="ot">;</span>   <span class="co">// your constructor runs here</span></span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>...</span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="va">$controllerInstance</span> <span class="op">=</span> <span class="kw">new</span> <span class="va">$controller</span>[<span class="dv">0</span>]()<span class="ot">;</span>                  <span class="co">// fallback: no arguments</span></span></code></pre></div>
+<div class="sourceCode" id="cb14"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="va">$container</span> <span class="op">&amp;&amp;</span> <span class="fu">is_string</span>(<span class="va">$controller</span>[<span class="dv">0</span>]) <span class="op">&amp;&amp;</span> <span class="va">$container</span>-&gt;has(<span class="va">$controller</span>[<span class="dv">0</span>])) {</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    <span class="va">$controllerInstance</span> <span class="op">=</span> <span class="va">$container</span>-&gt;get(<span class="va">$controller</span>[<span class="dv">0</span>])<span class="ot">;</span>   <span class="co">// your constructor runs here</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>...</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="va">$controllerInstance</span> <span class="op">=</span> <span class="kw">new</span> <span class="va">$controller</span>[<span class="dv">0</span>]()<span class="ot">;</span>                  <span class="co">// fallback: no arguments</span></span></code></pre></div>
 <p>A Zed route carries <code>_controller =&gt; [IndexController::class, 'indexAction']</code>. The resolver asks the container for that class; if the container does not have it, it falls back to <code>new</code> with no arguments, and a constructor that expects a facade gets nothing. <strong>The message is always about the container, never about your constructor.</strong> Ask the container whether it knows your controller:</p>
-<div class="sourceCode" id="cb12"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/console debug:container ContactRequest</span></code></pre></div>
+<div class="sourceCode" id="cb15"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/console debug:container ContactRequest</span></code></pre></div>
 <p>If the controller is missing from that list, it is one of these, in order of likelihood:</p>
 <ol type="1">
 <li><strong>The autoloader is stale.</strong> <code>$services-&gt;load()</code> cannot register a class PHP cannot autoload. <code>docker/sdk cli composer dump-autoload</code>, then <code>grep SprykerAcademy vendor/composer/autoload_psr4.php</code>.</li>
-<li><strong>The compiled container is stale</strong> - you added the constructor after it was built. <code>docker/sdk console cache:empty-all</code>, then <code>docker/sdk console propel:install</code> (clearing the cache drops the Propel table map, so always rebuild after).</li>
+<li><strong>The compiled container is stale</strong> - you added the constructor after it was built. <code>docker/sdk console cache:clear</code>, and see <em>Clearing the container cache</em> below. Note that <code>cache:empty-all</code> does <strong>not</strong> help here; it leaves the compiled container untouched.</li>
 <li><strong>The class is not where the module finder looks.</strong> It has to be <code>src/SprykerAcademy/Zed/&lt;Module&gt;/Communication/Controller/&lt;Name&gt;Controller.php</code> - the container is built by walking that structure, so a controller one directory off is invisible to it.</li>
 <li><strong>The module is excluded</strong> in <code>$excludedModuleConfiguration</code> at the top of <code>config/Zed/ApplicationServices.php</code>.</li>
 </ol>
@@ -336,16 +410,16 @@ SprykerAcademy\Zed\ContactRequest\Communication\Controller\IndexController::__co
 <p>Open <code>src/SprykerAcademy/Zed/ContactRequest/Presentation/Index/add.twig</code>. Replace the placeholder <code>'show-contact-request-message-here'</code> with the message of the contact request using dot notation (<code>contactRequest.message</code>).</p>
 <p><code>AddTemplateTest</code> checks this step, and <code>IndexControllerAddActionTest</code> checks the controller above it.</p>
 <p>Clear cache:</p>
-<div class="sourceCode" id="cb13"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console propel:model:build</span></code></pre></div>
+<div class="sourceCode" id="cb16"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console propel:model:build</span></code></pre></div>
 <p>Visit: http://backoffice.eu.spryker.local/contact-request/index/add Use query parameter <code>?message=YourName</code> to create a contact request with a custom message.</p>
 <hr />
 <h2 id="verify-your-work">Verify Your Work</h2>
 <p>Run the automated tests for this exercise:</p>
-<div class="sourceCode" id="cb14"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/ContactRequest/ Exercise4</span></code></pre></div>
+<div class="sourceCode" id="cb17"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/ContactRequest/ Exercise4</span></code></pre></div>
 <p>Every step of this exercise is covered: the two transfer definitions, the Persistence Factory, the Repository (including the <code>Criteria::LIKE</code> partial match), the EntityManager, the Writer, the Reader, the Facade, <code>addAction()</code> and <code>add.twig</code>. All tests should pass if your implementation is correct.</p>
 <hr />
 <h2 id="solution">Solution</h2>
-<div class="sourceCode" id="cb15"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/module-layers/complete</span></code></pre></div>
+<div class="sourceCode" id="cb18"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/module-layers/complete</span></code></pre></div>
 </body>
 </html>

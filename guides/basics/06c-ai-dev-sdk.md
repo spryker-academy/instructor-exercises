@@ -282,7 +282,7 @@ docker/sdk cli vendor/bin/console lint:container
 docker/sdk cli vendor/bin/console debug:container SprykerAcademy
 ```
 
-The lint must answer *The container was linted successfully*, and the listing shows every class of the new module that Symfony knows about. Autowiring resolves a constructor that asks for an interface only while exactly one class implements it, so if the assistant wrote two implementations of the same interface, the binding has to be explicit in `config/Zed/ApplicationServices.php` - see [Exercise 4, section 2.5](04-module-layers-back-office.md).
+The lint must answer *The container was linted successfully*, and the listing shows every class of the new module that Symfony knows about. If a class the assistant just wrote is missing from the listing, rebuild the container before believing it - `docker/sdk console cache:clear` ([Exercise 4, section 2.7](04-module-layers-back-office.md)). Autowiring resolves a constructor that asks for an interface only while exactly one class implements it, so if the assistant wrote two implementations of the same interface, the binding has to be explicit in `config/Zed/ApplicationServices.php` - see [Exercise 4, section 2.5](04-module-layers-back-office.md).
 
 If a page errors, do not fix it yourself yet. Hand the error to the assistant (the `spryker-issue-diagnoser` agent is built for this) and watch how it diagnoses. That is also part of the exercise.
 

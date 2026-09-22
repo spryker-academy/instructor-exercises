@@ -155,7 +155,7 @@ Only those. Ask the container what it has from the core `Configuration` module a
 docker/sdk cli vendor/bin/console debug:container 'Spryker\Zed\Configuration'
 ```
 
-So you can constructor-inject the **front door** of any module, core or project, and nothing behind it. And because the pass looks for a project override before the core class, a `ContactRequestFacade` of your own in `SprykerAcademy` would be injected in place of a core one with the same name - the same precedence the class resolver uses everywhere else in Spryker.
+So you can constructor-inject the **front door** of any module, core or project, and nothing behind it - facades, clients and services by their interface, module configs by their class, and no factories or repositories of a core module. [Exercise 4, section 2.6](04-module-layers-back-office.md) has the full table, and section 2.7 next to it is what to run when a change to a constructor does not seem to take effect. And because the pass looks for a project override before the core class, a `ContactRequestFacade` of your own in `SprykerAcademy` would be injected in place of a core one with the same name - the same precedence the class resolver uses everywhere else in Spryker.
 
 **Coding time:**
 
