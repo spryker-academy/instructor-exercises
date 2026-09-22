@@ -37,6 +37,7 @@ The `load.sh` script automates the process of loading exercise code into a Spryk
 - `basics/extending-core-modules/skeleton`
 - `basics/extending-core-modules/complete`
 - `basics/extending-core-modules/complete-ajax`
+- `basics/configuration/skeleton`
 - `basics/configuration/complete`
 
 #### Supplier

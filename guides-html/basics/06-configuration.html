@@ -222,8 +222,11 @@
 <li>You must have completed all previous exercises (1 through 5)</li>
 </ul>
 <h2 id="loading-the-exercise">Loading the Exercise</h2>
-<p>There is <strong>no skeleton</strong> for this exercise. You will create all files by hand using what you have learned so far.</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli composer dump-autoload</span></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/configuration/skeleton</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli composer dump-autoload</span></code></pre></div>
+<p>The branch brings <strong>no new source files</strong> - you write all four classes by hand with what you have learned so far. What it does bring is the Exercise 6 test suite, so you can check your own work before you look at the solution:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/ContactRequest/ Exercise6</span></code></pre></div>
+<p>It is red until you finish the exercise. That is the point.</p>
 <hr />
 <h2 id="working-on-the-exercise">Working on the Exercise</h2>
 <p>Your task is to create a Back Office page accessible at:</p>
@@ -234,20 +237,20 @@
 <p>Constants interfaces live in the <strong>Shared</strong> namespace so they can be used across all application layers (Zed, Yves, Client).</p>
 <p><strong>Coding time:</strong></p>
 <p>Create <code>src/SprykerAcademy/Shared/ContactRequest/ContactRequestConstants.php</code>:</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;?php</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">namespace</span> <span class="cn">S</span>prykerAcademy\<span class="cn">S</span>hared\<span class="cn">C</span>ontactRequest<span class="ot">;</span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> <span class="cn">C</span>ontactRequestConstants</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>{</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">const</span> <span class="dt">string</span> <span class="cn">MY_CONFIG_VALUE</span> <span class="op">=</span> <span class="st">&#39;CONTACT_REQUEST:MY_CONFIG_VALUE&#39;</span><span class="ot">;</span></span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;?php</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">namespace</span> <span class="cn">S</span>prykerAcademy\<span class="cn">S</span>hared\<span class="cn">C</span>ontactRequest<span class="ot">;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> <span class="cn">C</span>ontactRequestConstants</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">const</span> <span class="dt">string</span> <span class="cn">MY_CONFIG_VALUE</span> <span class="op">=</span> <span class="st">&#39;CONTACT_REQUEST:MY_CONFIG_VALUE&#39;</span><span class="ot">;</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 <p>The string <code>'CONTACT_REQUEST:MY_CONFIG_VALUE'</code> is the key used in config files. The convention is <code>MODULE_NAME:CONFIG_KEY</code>.</p>
 <h3 id="set-the-config-value">2. Set the Config Value</h3>
 <p>Open <code>config/Shared/config_default.php</code> and add your config value at the end of the file (before the closing <code>?&gt;</code> or end of file):</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="cn">S</span>prykerAcademy\<span class="cn">S</span>hared\<span class="cn">C</span>ontactRequest\<span class="cn">C</span>ontactRequestConstants<span class="ot">;</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="va">$config</span>[<span class="cn">C</span>ontactRequestConstants::<span class="cn">MY_CONFIG_VALUE</span>] <span class="op">=</span> <span class="st">&#39;Hello from config!&#39;</span><span class="ot">;</span></span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="cn">S</span>prykerAcademy\<span class="cn">S</span>hared\<span class="cn">C</span>ontactRequest\<span class="cn">C</span>ontactRequestConstants<span class="ot">;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="va">$config</span>[<span class="cn">C</span>ontactRequestConstants::<span class="cn">MY_CONFIG_VALUE</span>] <span class="op">=</span> <span class="st">&#39;Hello from config!&#39;</span><span class="ot">;</span></span></code></pre></div>
 <p>You can use any string you like as the value.</p>
 <h3 id="create-the-config-class">3. Create the Config Class</h3>
 <p>Each module can have a Config class that provides typed access to global config values. The naming convention is <code>&lt;Module&gt;Config.php</code> at the module root.</p>
@@ -268,9 +271,9 @@
 <li>The class body can be empty — the <code>getConfig()</code> method is inherited</li>
 <li>Add the following annotation for IDE support:</li>
 </ul>
-<div class="sourceCode" id="cb4"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">/**</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co"> * </span><span class="an">@method</span><span class="co"> </span><span class="an">\SprykerAcademy\Zed\ContactRequest\ContactRequestConfig</span><span class="co"> getConfig()</span></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co"> */</span></span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">/**</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="co"> * </span><span class="an">@method</span><span class="co"> </span><span class="an">\SprykerAcademy\Zed\ContactRequest\ContactRequestConfig</span><span class="co"> getConfig()</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co"> */</span></span></code></pre></div>
 <h3 id="create-the-template">5. Create the Template</h3>
 <p><strong>Coding time:</strong></p>
 <p>Create <code>src/SprykerAcademy/Zed/ContactRequest/Presentation/Config/index.twig</code>:</p>
@@ -292,51 +295,54 @@
 </ol></li>
 </ul>
 <p>Starting with Spryker <strong>202512.0</strong>, Zed controllers support <strong>constructor dependency injection</strong>. This means you can inject the Config class directly into the controller instead of going through the factory chain:</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="cn">S</span>prykerAcademy\<span class="cn">Z</span>ed\<span class="cn">C</span>ontactRequest\<span class="cn">C</span>ontactRequestConfig<span class="ot">;</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="cn">C</span>onfigController <span class="kw">extends</span> <span class="cn">A</span>bstractController</span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>{</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">function</span> <span class="bu">__construct</span>(<span class="kw">private</span> readonly <span class="cn">C</span>ontactRequestConfig <span class="va">$config</span>)</span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    {</span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    }</span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">function</span> indexAction()<span class="ot">:</span> <span class="dt">array</span></span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    {</span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>        <span class="va">$configValue</span> <span class="op">=</span> <span class="va">$this</span>-&gt;config-&gt;getMyConfigValue()<span class="ot">;</span></span>
-<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">$this</span>-&gt;viewResponse([</span>
-<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;configValue&#39;</span> =&gt; <span class="va">$configValue</span><span class="ot">,</span></span>
-<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>        ])<span class="ot">;</span></span>
-<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>    }</span>
-<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="cn">S</span>prykerAcademy\<span class="cn">Z</span>ed\<span class="cn">C</span>ontactRequest\<span class="cn">C</span>ontactRequestConfig<span class="ot">;</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="cn">C</span>onfigController <span class="kw">extends</span> <span class="cn">A</span>bstractController</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">function</span> <span class="bu">__construct</span>(<span class="kw">private</span> readonly <span class="cn">C</span>ontactRequestConfig <span class="va">$config</span>)</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    {</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">function</span> indexAction()<span class="ot">:</span> <span class="dt">array</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>    {</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>        <span class="va">$configValue</span> <span class="op">=</span> <span class="va">$this</span>-&gt;config-&gt;getMyConfigValue()<span class="ot">;</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">$this</span>-&gt;viewResponse([</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;configValue&#39;</span> =&gt; <span class="va">$configValue</span><span class="ot">,</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>        ])<span class="ot">;</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 <p>Alternatively, you can use the traditional factory approach (which still works and is the pattern you will find in older codebases):</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">/**</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="co"> * </span><span class="an">@method</span><span class="co"> </span><span class="an">\SprykerAcademy\Zed\ContactRequest\Communication\ContactRequestCommunicationFactory</span><span class="co"> getFactory()</span></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co"> */</span></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="cn">C</span>onfigController <span class="kw">extends</span> <span class="cn">A</span>bstractController</span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>{</span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">function</span> indexAction()<span class="ot">:</span> <span class="dt">array</span></span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    {</span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>        <span class="va">$configValue</span> <span class="op">=</span> <span class="va">$this</span>-&gt;getFactory()-&gt;getConfig()-&gt;getMyConfigValue()<span class="ot">;</span></span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">$this</span>-&gt;viewResponse([</span>
-<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;configValue&#39;</span> =&gt; <span class="va">$configValue</span><span class="ot">,</span></span>
-<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>        ])<span class="ot">;</span></span>
-<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>    }</span>
-<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">/**</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="co"> * </span><span class="an">@method</span><span class="co"> </span><span class="an">\SprykerAcademy\Zed\ContactRequest\Communication\ContactRequestCommunicationFactory</span><span class="co"> getFactory()</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="co"> */</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="cn">C</span>onfigController <span class="kw">extends</span> <span class="cn">A</span>bstractController</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">function</span> indexAction()<span class="ot">:</span> <span class="dt">array</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    {</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>        <span class="va">$configValue</span> <span class="op">=</span> <span class="va">$this</span>-&gt;getFactory()-&gt;getConfig()-&gt;getMyConfigValue()<span class="ot">;</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">$this</span>-&gt;viewResponse([</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;configValue&#39;</span> =&gt; <span class="va">$configValue</span><span class="ot">,</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>        ])<span class="ot">;</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 <p>Choose either approach for your implementation.</p>
 <p>Clear the cache:</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console propel:model:build</span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console propel:model:build</span></code></pre></div>
 <p>Visit: http://backoffice.eu.spryker.local/contact-request/config/index (Credentials: <code>admin@spryker.com</code> / <code>change123</code>)</p>
 <p>You should see your config value displayed on the page.</p>
 <hr />
 <h2 id="verify-your-work">Verify Your Work</h2>
 <p>Run the automated tests for this exercise:</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/ContactRequest/ Exercise6</span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/ContactRequest/ Exercise6</span></code></pre></div>
 <p>All tests should pass if your implementation is correct.</p>
+<blockquote>
+<p><strong><code>Cannot redeclare class ContactRequestConfig</code> and the whole suite dies.</strong> Not a test problem: one of your new files is missing its <code>namespace</code> line. Composer maps <code>SprykerAcademy\Zed\ContactRequest\ContactRequestConfig</code> to the file, includes it, does not find that class in it (the file declared a class in the global namespace instead), and on the next lookup includes the same file again - which is a redeclaration. A PHP file under <code>src/SprykerAcademy/</code> always starts with its <code>namespace</code>. One file without it takes down every test in the run, not just its own.</p>
+</blockquote>
 <hr />
 <h2 id="solution">Solution</h2>
-<div class="sourceCode" id="cb10"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/configuration/complete</span></code></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/configuration/complete</span></code></pre></div>
 </body>
 </html>

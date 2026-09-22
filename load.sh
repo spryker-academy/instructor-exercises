@@ -112,6 +112,7 @@ usage() {
     echo "  basics/extending-core-modules/skeleton"
     echo "  basics/extending-core-modules/complete"
     echo "  basics/extending-core-modules/complete-ajax"
+    echo "  basics/configuration/skeleton"
     echo "  basics/configuration/complete"
     echo ""
     echo "Supplier branches:"

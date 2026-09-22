@@ -8,11 +8,18 @@ In this exercise you will define a config value in the default config file and c
 
 ## Loading the Exercise
 
-There is **no skeleton** for this exercise. You will create all files by hand using what you have learned so far.
-
 ```bash
+./exercises/load.sh contact-request basics/configuration/skeleton
 docker/sdk cli composer dump-autoload
 ```
+
+The branch brings **no new source files** - you write all four classes by hand with what you have learned so far. What it does bring is the Exercise 6 test suite, so you can check your own work before you look at the solution:
+
+```bash
+docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/ContactRequest/ Exercise6
+```
+
+It is red until you finish the exercise. That is the point.
 
 ---
 
@@ -184,6 +191,8 @@ docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/ContactRe
 ```
 
 All tests should pass if your implementation is correct.
+
+> **`Cannot redeclare class ContactRequestConfig` and the whole suite dies.** Not a test problem: one of your new files is missing its `namespace` line. Composer maps `SprykerAcademy\Zed\ContactRequest\ContactRequestConfig` to the file, includes it, does not find that class in it (the file declared a class in the global namespace instead), and on the next lookup includes the same file again - which is a redeclaration. A PHP file under `src/SprykerAcademy/` always starts with its `namespace`. One file without it takes down every test in the run, not just its own.
 
 ---
 
