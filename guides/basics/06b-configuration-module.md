@@ -1,4 +1,4 @@
-# Exercise 6c: Let an Admin Change the Value in the Back Office
+# Exercise 6b: Let an Admin Change the Value in the Back Office
 
 In [Exercise 6](06-configuration.md) you put a value in `config/Shared/config_default.php` and read it through a module config class. That value is part of the code: changing the greeting means editing a PHP file, committing it and deploying.
 

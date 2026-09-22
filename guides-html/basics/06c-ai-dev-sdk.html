@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>Exercise 6b: Build the Contact Request Module with the AI Dev SDK</title>
+  <title>Exercise 6c: Build the Contact Request Module with the AI Dev SDK</title>
   <style>
     html {
       line-height: 1.5;
@@ -213,22 +213,22 @@
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">Exercise 6b: Build the Contact Request Module with the AI Dev SDK</h1>
+<h1 class="title">Exercise 6c: Build the Contact Request Module with the AI Dev SDK</h1>
 </header>
-<h1 id="exercise-6b-build-the-contact-request-module-with-the-ai-dev-sdk">Exercise 6b: Build the Contact Request Module with the AI Dev SDK</h1>
-<p>In Exercises 1 to 6 you built the <strong>ContactRequest</strong> module by hand, step by step, from a guide that told you every class name and every file path. In this exercise you throw all of that away - the code, the wiring and the tests - and start from the pristine demo shop on a fresh branch. Then you describe the feature the way a product owner would, in seven sentences, and let your AI coding assistant design and build it.</p>
+<h1 id="exercise-6c-build-the-contact-request-module-with-the-ai-dev-sdk">Exercise 6c: Build the Contact Request Module with the AI Dev SDK</h1>
+<p>In Exercises 1 to 6b you built the <strong>ContactRequest</strong> module by hand, step by step, from a guide that told you every class name and every file path. In this exercise you throw all of that away - the code, the wiring and the tests - and start from the pristine demo shop on a fresh branch. Then you describe the feature the way a product owner would, in seven sentences, and let your AI coding assistant design and build it.</p>
 <p>That is the point of the exercise. The Spryker AI Dev SDK gives the assistant Spryker’s architecture rules, skills and agents. Your job is to state <em>what</em> you want and to judge <em>what comes back</em> - because this time there is no test suite to hide behind.</p>
-<p>You will learn how to: - Get to a genuinely clean branch before you let an assistant loose on a project - Set up the <strong>AI Dev SDK</strong> in a project with <code>ai-dev:setup</code> - Read what the SDK generates: the context file, the rules, the skills and the agents - Write a <strong>requirement-level prompt</strong> and let the assistant derive schema, layers and routes - Steer it to the <strong>API Platform</strong> for the Storefront API, and check the result in Swagger or Postman - Review AI-generated Spryker code against the rules you learned in Exercises 1 to 6</p>
+<p>You will learn how to: - Get to a genuinely clean branch before you let an assistant loose on a project - Set up the <strong>AI Dev SDK</strong> in a project with <code>ai-dev:setup</code> - Read what the SDK generates: the context file, the rules, the skills and the agents - Write a <strong>requirement-level prompt</strong> and let the assistant derive schema, layers and routes - Steer it to the <strong>API Platform</strong> for the Storefront API, and check the result in Swagger or Postman - Review AI-generated Spryker code against the rules you learned in Exercises 1 to 6b</p>
 <p><strong>Official documentation:</strong> - <a href="https://docs.spryker.com/docs/dg/dev/ai/ai-dev/ai-dev">AI Dev SDK</a> - <a href="https://docs.spryker.com/docs/dg/dev/ai/ai-dev/ai-dev-installation">Install AI Dev</a></p>
 <h2 id="prerequisites">Prerequisites</h2>
 <ul>
-<li>Exercises 1 to 6 completed, so you know what “correct” looks like.</li>
+<li>Exercises 1 to 6b completed, so you know what “correct” looks like.</li>
 <li>An AI coding assistant installed on your machine: Claude Code, Cursor, GitHub Copilot, Windsurf, OpenCode or Codex. The SDK generates files for all of them.</li>
 <li>The <code>spryker-sdk/ai-dev</code> package. The B2B Marketplace demo shop ships it out of the box (see <code>composer.json</code>).</li>
 </ul>
 <hr />
 <h2 id="part-1-get-to-a-clean-branch">Part 1: Get to a Clean Branch</h2>
-<p>Everything you built in Exercises 1 to 6 has to go: the module in <code>src/SprykerAcademy</code>, the tests in <code>tests/SprykerAcademyTest</code>, and the wiring the loader added (the navigation entry, the config value, the Yves router plugin). If any of it stays, you are not testing the assistant, you are testing your own scaffolding.</p>
+<p>Everything you built in Exercises 1 to 6b has to go: the module in <code>src/SprykerAcademy</code>, the tests in <code>tests/SprykerAcademyTest</code>, the configuration schema in <code>data/configuration/</code>, and the wiring the loader added (the navigation entry, the config value, the Yves router plugin). If any of it stays, you are not testing the assistant, you are testing your own scaffolding.</p>
 <p>Work in the <strong>project root</strong> (the <code>b2b-demo-marketplace</code> clone), not in the <code>exercises</code> folder.</p>
 <p><strong>1. Mark where the shop started.</strong> The clone sits on a release tag rather than on a branch, so <code>git status</code> opens with <em>HEAD detached at 202608.0</em>. Put a name on that commit before you touch anything:</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> describe <span class="at">--tags</span>     <span class="co"># the release you cloned, for example 202608.0</span></span>
@@ -398,7 +398,7 @@ read their own without opening the storefront pages.
 
 Put the code in the SprykerAcademy namespace (src/SprykerAcademy) and build it the way this
 project does things.</code></pre>
-<p>That is the whole specification. Notice what is <strong>not</strong> in it: no class names, no file paths, no layer list, no routes, no console commands, no tests. Deriving all of that from a requirement is the assistant’s job, and the rules and skills the SDK installed are where it gets the conventions from. You spent Exercises 1 to 6 learning those conventions so you can tell whether it got them right.</p>
+<p>That is the whole specification. Notice what is <strong>not</strong> in it: no class names, no file paths, no layer list, no routes, no console commands, no tests. Deriving all of that from a requirement is the assistant’s job, and the rules and skills the SDK installed are where it gets the conventions from. You spent Exercises 1 to 6b learning those conventions so you can tell whether it got them right.</p>
 <p>The namespace is the one exception, and it is worth understanding why. <code>SprykerAcademy</code> is not a design decision the assistant could derive from the requirement - it is a fact about this project, and every file it creates depends on it. Guess <code>Pyz</code> and the module works but lands in the wrong place; guess a vendor namespace and nothing resolves at all. State it, and state it in the context file as well, so the next task does not need the reminder.</p>
 <blockquote>
 <p>You are asking, in seven sentences, for roughly what Exercises 1 to 7 build by hand, plus the kind of API resource <a href="../intermediate/05-glue-storefront-api.html">Exercise 12</a> builds in the intermediate course: a Propel table with a foreign key to <code>spy_customer</code>, transfers, the three Zed layers, a Back Office page with a table, a Client with a Zed stub, and a customer account page in Yves.</p>
@@ -498,7 +498,7 @@ project does things.</code></pre>
 <div class="sourceCode" id="cb19"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> add <span class="at">-A</span></span>
 <span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> commit <span class="at">-m</span> <span class="st">&quot;ContactRequest built by the AI Dev SDK&quot;</span></span>
 <span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> diff exercises-1-6 <span class="at">--stat</span> <span class="at">--</span> src/SprykerAcademy</span></code></pre></div>
-<p>Now go through the code with the rules of Exercises 1 to 6 in hand:</p>
+<p>Now go through the code with the rules of Exercises 1 to 6b in hand:</p>
 <ul>
 <li><strong>Persistence.</strong> Is <code>fk_customer</code> a real Propel foreign key to <code>spy_customer</code>, or just an integer column? Is there an index? Does any Propel entity leave the Persistence layer, or does everything cross the boundary as a transfer?</li>
 <li><strong>Business.</strong> Is there a Facade with an interface? Are Reader and Writer separate classes with interfaces? Any <code>new</code> inside business logic instead of a factory?</li>

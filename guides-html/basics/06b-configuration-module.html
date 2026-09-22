@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>Exercise 6c: Let an Admin Change the Value in the Back Office</title>
+  <title>Exercise 6b: Let an Admin Change the Value in the Back Office</title>
   <style>
     html {
       line-height: 1.5;
@@ -213,9 +213,9 @@
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">Exercise 6c: Let an Admin Change the Value in the Back Office</h1>
+<h1 class="title">Exercise 6b: Let an Admin Change the Value in the Back Office</h1>
 </header>
-<h1 id="exercise-6c-let-an-admin-change-the-value-in-the-back-office">Exercise 6c: Let an Admin Change the Value in the Back Office</h1>
+<h1 id="exercise-6b-let-an-admin-change-the-value-in-the-back-office">Exercise 6b: Let an Admin Change the Value in the Back Office</h1>
 <p>In <a href="06-configuration.html">Exercise 6</a> you put a value in <code>config/Shared/config_default.php</code> and read it through a module config class. That value is part of the code: changing the greeting means editing a PHP file, committing it and deploying.</p>
 <p>The <strong>Configuration</strong> module is the other half of the story. You describe settings in a YAML schema, Spryker renders a Back Office page from it, stores the values in the database and hands them to your code at runtime. Same page, same greeting - but now a shop administrator changes it, and nobody deploys anything.</p>
 <p>You will learn how to: - Write a <strong>configuration schema</strong>: <code>feature &gt; tab &gt; group &gt; setting</code> - Publish it with <code>configuration:sync</code> and find it in <strong>Back Office &gt; Configuration</strong> - Read a value in Zed through the <strong>Configuration facade</strong> - Know which settings reach the storefront, and what has to happen first - Tell the two mechanisms apart, and choose the right one</p>

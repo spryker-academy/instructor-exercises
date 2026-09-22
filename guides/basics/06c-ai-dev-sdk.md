@@ -1,6 +1,6 @@
-# Exercise 6b: Build the Contact Request Module with the AI Dev SDK
+# Exercise 6c: Build the Contact Request Module with the AI Dev SDK
 
-In Exercises 1 to 6 you built the **ContactRequest** module by hand, step by step, from a guide that told you every class name and every file path. In this exercise you throw all of that away - the code, the wiring and the tests - and start from the pristine demo shop on a fresh branch. Then you describe the feature the way a product owner would, in seven sentences, and let your AI coding assistant design and build it.
+In Exercises 1 to 6b you built the **ContactRequest** module by hand, step by step, from a guide that told you every class name and every file path. In this exercise you throw all of that away - the code, the wiring and the tests - and start from the pristine demo shop on a fresh branch. Then you describe the feature the way a product owner would, in seven sentences, and let your AI coding assistant design and build it.
 
 That is the point of the exercise. The Spryker AI Dev SDK gives the assistant Spryker's architecture rules, skills and agents. Your job is to state *what* you want and to judge *what comes back* - because this time there is no test suite to hide behind.
 
@@ -10,7 +10,7 @@ You will learn how to:
 - Read what the SDK generates: the context file, the rules, the skills and the agents
 - Write a **requirement-level prompt** and let the assistant derive schema, layers and routes
 - Steer it to the **API Platform** for the Storefront API, and check the result in Swagger or Postman
-- Review AI-generated Spryker code against the rules you learned in Exercises 1 to 6
+- Review AI-generated Spryker code against the rules you learned in Exercises 1 to 6b
 
 **Official documentation:**
 - [AI Dev SDK](https://docs.spryker.com/docs/dg/dev/ai/ai-dev/ai-dev)
@@ -18,7 +18,7 @@ You will learn how to:
 
 ## Prerequisites
 
-- Exercises 1 to 6 completed, so you know what "correct" looks like.
+- Exercises 1 to 6b completed, so you know what "correct" looks like.
 - An AI coding assistant installed on your machine: Claude Code, Cursor, GitHub Copilot, Windsurf, OpenCode or Codex. The SDK generates files for all of them.
 - The `spryker-sdk/ai-dev` package. The B2B Marketplace demo shop ships it out of the box (see `composer.json`).
 
@@ -26,7 +26,7 @@ You will learn how to:
 
 ## Part 1: Get to a Clean Branch
 
-Everything you built in Exercises 1 to 6 has to go: the module in `src/SprykerAcademy`, the tests in `tests/SprykerAcademyTest`, and the wiring the loader added (the navigation entry, the config value, the Yves router plugin). If any of it stays, you are not testing the assistant, you are testing your own scaffolding.
+Everything you built in Exercises 1 to 6b has to go: the module in `src/SprykerAcademy`, the tests in `tests/SprykerAcademyTest`, the configuration schema in `data/configuration/`, and the wiring the loader added (the navigation entry, the config value, the Yves router plugin). If any of it stays, you are not testing the assistant, you are testing your own scaffolding.
 
 Work in the **project root** (the `b2b-demo-marketplace` clone), not in the `exercises` folder.
 
@@ -201,7 +201,7 @@ Put the code in the SprykerAcademy namespace (src/SprykerAcademy) and build it t
 project does things.
 ```
 
-That is the whole specification. Notice what is **not** in it: no class names, no file paths, no layer list, no routes, no console commands, no tests. Deriving all of that from a requirement is the assistant's job, and the rules and skills the SDK installed are where it gets the conventions from. You spent Exercises 1 to 6 learning those conventions so you can tell whether it got them right.
+That is the whole specification. Notice what is **not** in it: no class names, no file paths, no layer list, no routes, no console commands, no tests. Deriving all of that from a requirement is the assistant's job, and the rules and skills the SDK installed are where it gets the conventions from. You spent Exercises 1 to 6b learning those conventions so you can tell whether it got them right.
 
 The namespace is the one exception, and it is worth understanding why. `SprykerAcademy` is not a design decision the assistant could derive from the requirement - it is a fact about this project, and every file it creates depends on it. Guess `Pyz` and the module works but lands in the wrong place; guess a vendor namespace and nothing resolves at all. State it, and state it in the context file as well, so the next task does not need the reminder.
 
@@ -298,7 +298,7 @@ git commit -m "ContactRequest built by the AI Dev SDK"
 git diff exercises-1-6 --stat -- src/SprykerAcademy
 ```
 
-Now go through the code with the rules of Exercises 1 to 6 in hand:
+Now go through the code with the rules of Exercises 1 to 6b in hand:
 
 - **Persistence.** Is `fk_customer` a real Propel foreign key to `spy_customer`, or just an integer column? Is there an index? Does any Propel entity leave the Persistence layer, or does everything cross the boundary as a transfer?
 - **Business.** Is there a Facade with an interface? Are Reader and Writer separate classes with interfaces? Any `new` inside business logic instead of a factory?
