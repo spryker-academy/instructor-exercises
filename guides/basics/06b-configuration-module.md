@@ -138,7 +138,24 @@ Class        Spryker\Zed\Configuration\Business\ConfigurationFacade
 Public       yes
 ```
 
-That is the same mechanism you used in [Exercise 4](04-module-layers-back-office.md) when the Back Office controller received its facade through the constructor - it works here without you registering anything, because the core module ships its own service definitions.
+That is the same mechanism you used in [Exercise 4](04-module-layers-back-office.md) when the Back Office controller received its facade through the constructor, and it works for a **core** module too, which is worth understanding because `config/Zed/ApplicationServices.php` loads project modules only.
+
+A Symfony compiler pass does it. `Spryker\Shared\Application\Kernel::build()` adds `Spryker\Service\Container\Pass\SprykerDefaultsPass`, which walks **every** module the module finder can see - core and project - and registers each module's conventional entry points as public services:
+
+```
+<Org>\Zed\<Module>\Business\<Module>FacadeInterface
+<Org>\Zed\<Module>\<Module>Config
+<Org>\Client\<Module>\<Module>ClientInterface
+<Org>\Service\<Module>\<Module>ServiceInterface
+```
+
+Only those. Ask the container what it has from the core `Configuration` module and you get exactly two entries, the facade interface and the module config - no readers, no writers, no mappers:
+
+```bash
+docker/sdk cli vendor/bin/console debug:container 'Spryker\Zed\Configuration'
+```
+
+So you can constructor-inject the **front door** of any module, core or project, and nothing behind it. And because the pass looks for a project override before the core class, a `ContactRequestFacade` of your own in `SprykerAcademy` would be injected in place of a core one with the same name - the same precedence the class resolver uses everywhere else in Spryker.
 
 **Coding time:**
 

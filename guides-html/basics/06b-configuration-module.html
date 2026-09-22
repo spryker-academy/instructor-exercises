@@ -360,30 +360,38 @@
 <pre><code>Service ID   Spryker\Zed\Configuration\Business\ConfigurationFacadeInterface
 Class        Spryker\Zed\Configuration\Business\ConfigurationFacade
 Public       yes</code></pre>
-<p>That is the same mechanism you used in <a href="04-module-layers-back-office.html">Exercise 4</a> when the Back Office controller received its facade through the constructor - it works here without you registering anything, because the core module ships its own service definitions.</p>
+<p>That is the same mechanism you used in <a href="04-module-layers-back-office.html">Exercise 4</a> when the Back Office controller received its facade through the constructor, and it works for a <strong>core</strong> module too, which is worth understanding because <code>config/Zed/ApplicationServices.php</code> loads project modules only.</p>
+<p>A Symfony compiler pass does it. <code>Spryker\Shared\Application\Kernel::build()</code> adds <code>Spryker\Service\Container\Pass\SprykerDefaultsPass</code>, which walks <strong>every</strong> module the module finder can see - core and project - and registers each module’s conventional entry points as public services:</p>
+<pre><code>&lt;Org&gt;\Zed\&lt;Module&gt;\Business\&lt;Module&gt;FacadeInterface
+&lt;Org&gt;\Zed\&lt;Module&gt;\&lt;Module&gt;Config
+&lt;Org&gt;\Client\&lt;Module&gt;\&lt;Module&gt;ClientInterface
+&lt;Org&gt;\Service\&lt;Module&gt;\&lt;Module&gt;ServiceInterface</code></pre>
+<p>Only those. Ask the container what it has from the core <code>Configuration</code> module and you get exactly two entries, the facade interface and the module config - no readers, no writers, no mappers:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/console debug:container <span class="st">&#39;Spryker\Zed\Configuration&#39;</span></span></code></pre></div>
+<p>So you can constructor-inject the <strong>front door</strong> of any module, core or project, and nothing behind it. And because the pass looks for a project override before the core class, a <code>ContactRequestFacade</code> of your own in <code>SprykerAcademy</code> would be injected in place of a core one with the same name - the same precedence the class resolver uses everywhere else in Spryker.</p>
 <p><strong>Coding time:</strong></p>
 <p>Open <code>src/SprykerAcademy/Zed/ContactRequest/Communication/Controller/ConfigController.php</code> and take the Configuration facade as a second constructor argument:</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="cn">G</span>enerated\<span class="cn">S</span>hared\<span class="cn">T</span>ransfer\<span class="cn">C</span>onfigurationValueRequestTransfer<span class="ot">;</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="cn">S</span>pryker\<span class="cn">Z</span>ed\<span class="cn">C</span>onfiguration\<span class="cn">B</span>usiness\<span class="cn">C</span>onfigurationFacadeInterface<span class="ot">;</span></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="cn">C</span>onfigController <span class="kw">extends</span> <span class="cn">A</span>bstractController</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>{</span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">function</span> <span class="bu">__construct</span>(</span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>        <span class="kw">private</span> readonly <span class="cn">C</span>ontactRequestConfig <span class="va">$config</span><span class="ot">,</span></span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>        <span class="kw">private</span> readonly <span class="cn">C</span>onfigurationFacadeInterface <span class="va">$configurationFacade</span><span class="ot">,</span></span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    ) {</span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    }</span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">function</span> indexAction()<span class="ot">:</span> <span class="dt">array</span></span>
-<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>    {</span>
-<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">$this</span>-&gt;viewResponse([</span>
-<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;configValue&#39;</span> =&gt; <span class="va">$this</span>-&gt;config-&gt;getMyConfigValue()<span class="ot">,</span></span>
-<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;greeting&#39;</span> =&gt; <span class="va">$this</span>-&gt;configurationFacade-&gt;getConfigurationValue(</span>
-<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>                (<span class="kw">new</span> <span class="cn">C</span>onfigurationValueRequestTransfer())-&gt;setKey(<span class="st">&#39;contact_request:general:config_page:greeting&#39;</span>)<span class="ot">,</span></span>
-<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>            )<span class="ot">,</span></span>
-<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>        ])<span class="ot">;</span></span>
-<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>    }</span>
-<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="cn">G</span>enerated\<span class="cn">S</span>hared\<span class="cn">T</span>ransfer\<span class="cn">C</span>onfigurationValueRequestTransfer<span class="ot">;</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="cn">S</span>pryker\<span class="cn">Z</span>ed\<span class="cn">C</span>onfiguration\<span class="cn">B</span>usiness\<span class="cn">C</span>onfigurationFacadeInterface<span class="ot">;</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="cn">C</span>onfigController <span class="kw">extends</span> <span class="cn">A</span>bstractController</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">function</span> <span class="bu">__construct</span>(</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>        <span class="kw">private</span> readonly <span class="cn">C</span>ontactRequestConfig <span class="va">$config</span><span class="ot">,</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>        <span class="kw">private</span> readonly <span class="cn">C</span>onfigurationFacadeInterface <span class="va">$configurationFacade</span><span class="ot">,</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    ) {</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">function</span> indexAction()<span class="ot">:</span> <span class="dt">array</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>    {</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">$this</span>-&gt;viewResponse([</span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;configValue&#39;</span> =&gt; <span class="va">$this</span>-&gt;config-&gt;getMyConfigValue()<span class="ot">,</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;greeting&#39;</span> =&gt; <span class="va">$this</span>-&gt;configurationFacade-&gt;getConfigurationValue(</span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>                (<span class="kw">new</span> <span class="cn">C</span>onfigurationValueRequestTransfer())-&gt;setKey(<span class="st">&#39;contact_request:general:config_page:greeting&#39;</span>)<span class="ot">,</span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>            )<span class="ot">,</span></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>        ])<span class="ot">;</span></span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 <p>Add the second value to <code>src/SprykerAcademy/Zed/ContactRequest/Presentation/Config/index.twig</code>:</p>
 <pre class="twig"><code>{{ configValue }}
 {{ greeting }}</code></pre>
@@ -396,14 +404,14 @@ Public       yes</code></pre>
 <hr />
 <h2 id="part-5-what-storefront-true-really-means">Part 5: What <code>storefront: true</code> Really Means</h2>
 <p>Yves does not read the database. A setting marked <code>storefront: true</code> travels the same road as products and prices - <strong>publish &amp; sync</strong> - and Yves reads the result from Redis through the Configuration <strong>client</strong>:</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="cn">G</span>enerated\<span class="cn">S</span>hared\<span class="cn">T</span>ransfer\<span class="cn">C</span>onfigurationValueRequestTransfer<span class="ot">;</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="va">$greeting</span> <span class="op">=</span> <span class="va">$this</span>-&gt;getFactory()-&gt;getConfigurationClient()-&gt;getConfigurationValue(</span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">new</span> <span class="cn">C</span>onfigurationValueRequestTransfer())-&gt;setKey(<span class="st">&#39;contact_request:general:config_page:greeting&#39;</span>)<span class="ot">,</span></span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>)<span class="ot">;</span></span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="cn">G</span>enerated\<span class="cn">S</span>hared\<span class="cn">T</span>ransfer\<span class="cn">C</span>onfigurationValueRequestTransfer<span class="ot">;</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="va">$greeting</span> <span class="op">=</span> <span class="va">$this</span>-&gt;getFactory()-&gt;getConfigurationClient()-&gt;getConfigurationValue(</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">new</span> <span class="cn">C</span>onfigurationValueRequestTransfer())-&gt;setKey(<span class="st">&#39;contact_request:general:config_page:greeting&#39;</span>)<span class="ot">,</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>)<span class="ot">;</span></span></code></pre></div>
 <p>The client is <code>Spryker\Client\Configuration\ConfigurationClientInterface</code>. In Yves you provide it through your module’s <code>DependencyProvider</code> and expose it on the factory, exactly like the <code>ContactRequestClient</code> in <a href="05-module-layers-storefront.html">Exercise 5</a> - Yves has no service container of its own, so there is no constructor injection here (see the note in Exercise 5).</p>
 <p>The part that surprises people is the delay. Pressing <strong>Save</strong> in the Back Office writes two things immediately: the value in <code>spy_configuration_value</code> and a published copy in <code>spy_configuration_storage</code>. That second table carries Spryker’s <code>synchronization</code> behavior, so its rows are queued to Redis under keys that start with <code>configuration:</code> - and until the queue workers have processed that queue, <strong>Yves still answers with the old value while the Back Office already shows the new one</strong>.</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console queue:worker:start</span></code></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console queue:worker:start</span></code></pre></div>
 <p>If you want to see the mechanism rather than trust it, look at <code>spy_configuration_storage</code> right after a save, and at the <code>configuration:*</code> keys in the Redis GUI. <a href="../intermediate/03-publish-synchronize.html">Exercise 10</a> of the intermediate course is publish &amp; sync end to end.</p>
 <p>A setting with <code>storefront: false</code> never leaves Zed, which is what you want for anything an unauthenticated visitor should not be able to read.</p>
 <hr />
