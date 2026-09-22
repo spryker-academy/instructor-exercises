@@ -125,12 +125,13 @@ See [STUDENT_SETUP_GUIDE.md](STUDENT_SETUP_GUIDE.md) for detailed setup instruct
 
 - `guides/` - Markdown format guides
 - `guides/basics/06b-configuration-module.md` - Exercise 6b: move the Exercise 6 value into the Back Office with the Configuration module (schema YAML, `configuration:sync`, Configuration facade; no exercise branch)
-- `guides/basics/06c-ai-dev-sdk.md` - Exercise 6c: build the ContactRequest module from a seven-sentence requirement with the Spryker AI Dev SDK, Back Office table, Yves page and Storefront API (no exercise branch; students branch off the pristine shop with git and get no code, no wiring and no tests)
+- `guides/basics/06c-ai-dev-sdk.md` - Exercise 6c: build a second module, `CustomerRequest`, from a seven-sentence requirement with the Spryker AI Dev SDK - Back Office table, Yves page and Storefront API (no exercise branch and no reset: it is built next to the handmade ContactRequest, runs alongside it, and is diffed against it with `tools/compare-modules.sh`)
 - `guides/intermediate/02b-ai-commerce-configuration.md` - Exercise 9b: configure AI Commerce in the Back Office (Configuration module, AI Vendor token, Smart PIM; no exercise branch)
 - `guides-html/` - HTML format guides and the reveal.js presentations (fundamentals, intermediate, AI Foundation)
 - `guides/advanced/` - Back Office Assistant setup and the AI Foundation exercises
 - `guides/presentations/` - Markdown versions of the three instructor presentations, readable on GitHub (generated from the HTML with `tools/presentation_to_markdown.py`)
 - `guides-pptx/` - PowerPoint slides generated from the HTML presentations with `html_to_pptx.py`
+- `tools/compare-modules.sh` - diffs two SprykerAcademy modules that implement the same feature, normalising the module name in both paths and file contents (`./exercises/tools/compare-modules.sh ContactRequest CustomerRequest`, used in Exercise 6c)
 
 ## Requirements
 
