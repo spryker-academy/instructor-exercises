@@ -19,11 +19,10 @@ You will learn how to:
 ## Loading the Exercise
 
 ```bash
-./exercises/load.sh contact-request basics/extending-core-modules/skeleton
-docker/sdk cli composer dump-autoload
-docker/sdk console transfer:generate
-docker/sdk console propel:install
+./exercises/load.sh contact-request basics/extending-core-modules/skeleton --run
 ```
+
+`--run` also runs the commands the loader lists after loading (cache, Propel, transfers and whatever this exercise needs, such as queues or Glue resources) and stops at the first one that fails. Leave it out to run them yourself.
 
 ---
 
@@ -186,7 +185,9 @@ docker/sdk console dev:ide-auto-completion:generate
 
 Now we extend Spryker's core `CustomerPage` module to add our message functionality. This is the key part of the exercise that demonstrates how to extend core Spryker modules at project level.
 
-The pattern: extend the core class in your project namespace, and override or add the methods you need.
+The pattern: extend the class in your project namespace, and override or add the methods you need.
+
+> **Extend the Pyz class, not the core one.** `SprykerAcademy` is listed before `Pyz` in `KernelConstants::PROJECT_NAMESPACES`, so the kernel resolves `SprykerAcademy\Yves\CustomerPage\CustomerPageDependencyProvider` instead of the project's `Pyz\Yves\CustomerPage\CustomerPageDependencyProvider`. The demo shop already customises `CustomerPage` (a session client, after-login redirects, authentication handlers, a `Pyz` register controller that calls `getPyzSessionClient()`). Extending `SprykerShop\Yves\CustomerPage\...` would silently drop all of that and break login and registration; extending `Pyz\Yves\CustomerPage\...` keeps it. The skeleton classes already extend the `Pyz` ones.
 
 #### 6.1 DependencyProvider
 
@@ -275,7 +276,11 @@ Take a moment to review these files to understand:
 
 #### 6.7 Sidebar Menu Item
 
-Once the route exists, add a "My Contact Requests" entry to the customer account sidebar. The project overrides that molecule in `src/Pyz/Yves/CustomerPage/Theme/default/components/molecules/navigation-sidebar/navigation-sidebar.twig`; append one more entry to its `items` array:
+Once the route exists, add a "My Contact Requests" entry to the customer account sidebar. The project overrides that molecule in `src/Pyz/Yves/CustomerPage/Theme/default/components/molecules/navigation-sidebar/navigation-sidebar.twig`. Override it once more, in your module: Yves looks up templates in the project namespaces in order, so a template at the same path under `src/SprykerAcademy` wins over the `Pyz` one.
+
+**Coding time:**
+
+Copy `src/Pyz/Yves/CustomerPage/Theme/default/components/molecules/navigation-sidebar/navigation-sidebar.twig` to `src/SprykerAcademy/Yves/CustomerPage/Theme/default/components/molecules/navigation-sidebar/navigation-sidebar.twig` and append one more entry to its `items` array:
 
 ```twig
         {
@@ -286,7 +291,9 @@ Once the route exists, add a "My Contact Requests" entry to the customer account
         },
 ```
 
-> `customer/contact-requests` is the route **name** (`ContactRequestController::ROUTE_CUSTOMER_CONTACT_REQUESTS`), not the path. Add the item only after the route is registered, otherwise `path()` fails on every account page. `name` is what the sidebar compares against the `activePage` the list page sets, so it has to read `contact-requests` for the entry to be highlighted. Do not wrap the entry in a Twig comment: the whole `items` array lives inside one `{% define data = {...} %}` tag, and a `{# ... #}` in there is read as an unclosed `{`, which kills every account page with a `SyntaxError`. When you load the `complete` branch, the loader adds this item for you and removes it again when you load another branch.
+> A template cannot extend the one it replaces - that is why it is a copy.
+>
+> `customer/contact-requests` is the route **name** (`ContactRequestController::ROUTE_CUSTOMER_CONTACT_REQUESTS`), not the path. Add the item only after the route is registered, otherwise `path()` fails on every account page. `name` is what the sidebar compares against the `activePage` the list page sets, so it has to read `contact-requests` for the entry to be highlighted. Do not wrap the entry in a Twig comment: the whole `items` array lives inside one `{% define data = {...} %}` tag, and a `{# ... #}` in there is read as an unclosed `{`, which kills every account page with a `SyntaxError`. The `complete` branch contains this template.
 
 Clear cache:
 
@@ -376,7 +383,7 @@ docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/ContactRe
 ## Solution
 
 ```bash
-./exercises/load.sh contact-request basics/extending-core-modules/complete
+./exercises/load.sh contact-request basics/extending-core-modules/complete --run
 ```
 
 ---
@@ -441,5 +448,5 @@ Form buttons use `data-contact-request-ajax-submit` and `formaction` to point to
 - `list.twig` — Includes the AJAX component trio; uses `mount-after-render: true` so JS components in new content get re-initialized
 
 ```bash
-./exercises/load.sh contact-request basics/extending-core-modules/complete-ajax
+./exercises/load.sh contact-request basics/extending-core-modules/complete-ajax --run
 ```

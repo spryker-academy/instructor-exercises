@@ -1,3 +1,5 @@
 repos/
 __pycache__/
 *.pyc
+.loaded-files
+.last-step.log

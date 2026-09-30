@@ -16,12 +16,10 @@ You will learn how to:
 ## Loading the Exercise
 
 ```bash
-./exercises/load.sh supplier intermediate/merchant-portal-locations/skeleton
-docker/sdk cli composer dump-autoload
-docker/sdk console transfer:generate
-docker/sdk console cache:empty-all
-docker/sdk console propel:model:build
+./exercises/load.sh supplier intermediate/merchant-portal-locations/skeleton --run
 ```
+
+`--run` also runs the commands the loader lists after loading (cache, Propel, transfers and whatever this exercise needs, such as queues or Glue resources) and stops at the first one that fails. Leave it out to run them yourself.
 
 ---
 
@@ -38,10 +36,10 @@ Edit Supplier drawer
     └── Editable GuiTable
         ├── Existing location rows (editable)
         ├── "Add Location" button → new empty row
-        └── Hidden form inputs: supplierForm[locations][0][city], etc.
+        └── Hidden form input supplierForm[locations]: the added rows as JSON
 ```
 
-When the form is submitted, the table data is sent as nested form fields. A **data transformer** converts between the transfer objects and the array format the table uses.
+The saved locations are listed read-only (the table's inline data). The rows the merchant adds are written by the table into the hidden form input `supplierForm[locations]`, as a JSON array of objects keyed by the column ids. The form field `locations` (provided in `SupplierForm`) reads that input, and a **data transformer** converts between the JSON and `SupplierLocationTransfer` objects. On a valid submit, `UpdateSupplierController` (provided) stores the added rows with `SupplierLocationFacade::createSupplierLocation()`.
 
 ---
 
@@ -54,6 +52,8 @@ When the form is submitted, the table data is sent as nested form fields. A **da
 Open `src/SprykerAcademy/Zed/SupplierMerchantPortalGui/Communication/ConfigurationProvider/SupplierLocationGuiTableConfigurationProvider.php`:
 
 The five display columns (`addColumnText()` for city, country, address, zip code and default) are already there: a GuiTable must declare at least one regular column, otherwise `createConfiguration()` throws *Table must have at least one column*. The editable inputs you add now are rendered on top of those columns.
+
+The saved locations arrive as `$existingLocations` and are already set as the table's inline data.
 
 1. Add editable columns using `addEditableColumnInput()`:
    - `city` → text input
@@ -92,15 +92,15 @@ In `getData($idSupplier)`:
 
 ### Part 3: Location Form Transformer
 
-The transformer converts between `SupplierLocationTransfer[]` (PHP) and the array format (editable table rows).
+The transformer converts between `SupplierLocationTransfer[]` (PHP) and the JSON the editable table writes into the hidden field.
 
 **Coding time:**
 
 Open `src/SprykerAcademy/Zed/SupplierMerchantPortalGui/Communication/Form/Transformer/SupplierLocationTransformer.php`:
 
-1. `transform()` — convert `ArrayObject<SupplierLocationTransfer>` to array of arrays. Each array has: `idSupplierLocation`, `city`, `country`, `address`, `zipCode`, `isDefault`.
+1. `transform()` — convert the `ArrayObject<SupplierLocationTransfer>` (or `null`) to a list of arrays with the keys `city`, `country`, `address`, `zipCode`, `isDefault`, and return it as JSON (`json_encode()`) - the value of the hidden field.
 
-2. `reverseTransform()` — convert submitted array data back to `ArrayObject<SupplierLocationTransfer>`. Create a `SupplierLocationTransfer` for each row.
+2. `reverseTransform()` — decode the submitted JSON and return an `ArrayObject` with a `SupplierLocationTransfer` for each row. `isDefault` comes from a checkbox; `filter_var($row['isDefault'] ?? false, FILTER_VALIDATE_BOOLEAN)` makes it a boolean.
 
 > **DataTransformerInterface:** Symfony's form component calls `transform()` when rendering the form (PHP → view) and `reverseTransform()` when handling submission (view → PHP).
 
@@ -123,6 +123,12 @@ docker/sdk console cache:empty-all
 docker/sdk console propel:model:build
 ```
 
+Part 4 changed a component, so rebuild the frontend first:
+
+```bash
+docker/sdk console frontend:mp:build
+```
+
 1. Edit an existing supplier in the Merchant Portal
 2. The "Locations" card should appear with existing locations
 3. Click "Add Location" → a new editable row should appear
@@ -134,5 +140,5 @@ docker/sdk console propel:model:build
 ## Solution
 
 ```bash
-./exercises/load.sh supplier intermediate/merchant-portal-locations/complete
+./exercises/load.sh supplier intermediate/merchant-portal-locations/complete --run
 ```

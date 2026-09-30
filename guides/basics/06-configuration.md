@@ -9,9 +9,10 @@ In this exercise you will define a config value in the default config file and c
 ## Loading the Exercise
 
 ```bash
-./exercises/load.sh contact-request basics/configuration/skeleton
-docker/sdk cli composer dump-autoload
+./exercises/load.sh contact-request basics/configuration/skeleton --run
 ```
+
+`--run` also runs the commands the loader lists after loading (cache, Propel, transfers and whatever this exercise needs, such as queues or Glue resources) and stops at the first one that fails. Leave it out to run them yourself.
 
 The branch brings **no new source files** - you write all four classes by hand with what you have learned so far. What it does bring is the Exercise 6 test suite, so you can check your own work before you look at the solution:
 
@@ -65,6 +66,8 @@ $config[ContactRequestConstants::MY_CONFIG_VALUE] = 'Hello from config!';
 ```
 
 You can use any string you like as the value.
+
+> **This line stays yours.** `config_default.php` belongs to the project, and the exercise loader never edits it. The solution branch's `ContactRequestConfig::getMyConfigValue()` reads the key with a default (`$this->get(ContactRequestConstants::MY_CONFIG_VALUE, 'This is a default value')`), so the page works before you add the line and shows your value after. When you later load a branch without `ContactRequestConstants` (exercises 1-5), remove the line again: a `use` of a class that no longer exists is harmless, but `ContactRequestConstants::MY_CONFIG_VALUE` is not.
 
 ### 3. Create the Config Class
 
@@ -199,5 +202,5 @@ All tests should pass if your implementation is correct.
 ## Solution
 
 ```bash
-./exercises/load.sh contact-request basics/configuration/complete
+./exercises/load.sh contact-request basics/configuration/complete --run
 ```

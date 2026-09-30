@@ -17,12 +17,10 @@ You will learn how to:
 ## Loading the Exercise
 
 ```bash
-./exercises/load.sh supplier intermediate/search/skeleton
-docker/sdk cli composer dump-autoload
-docker/sdk console transfer:generate
-docker/sdk console propel:install
-docker/sdk console search:setup
+./exercises/load.sh supplier intermediate/search/skeleton --run
 ```
+
+`--run` also runs the commands the loader lists after loading (cache, Propel, transfers and whatever this exercise needs, such as queues or Glue resources) and stops at the first one that fails. Leave it out to run them yourself.
 
 ---
 
@@ -94,9 +92,9 @@ The exercise provides an Elasticsearch mapping schema at `src/SprykerAcademy/Sha
 
 The mapping type name (`supplier`) must match the `type` parameter in the synchronization behavior from `pyz_supplier_search.schema.xml`.
 
-After loading the exercise, run `docker/sdk console search:setup` to create the index in Elasticsearch.
+`load.sh --run` creates the index in Elasticsearch (`docker/sdk console search:setup:sources`). Run that command again after you changed the mapping.
 
-> **Index name whitelisting:** The schema filename (`supplier.json`) must be whitelisted in `SearchElasticsearchConfig` for auto-discovery. Check if this is configured in the project.
+> **Index name whitelisting:** Spryker only creates indexes for the schema files its `SearchElasticsearchConfig` lists as source identifiers. The exercise provides `src/SprykerAcademy/Shared/SearchElasticsearch/SearchElasticsearchConfig.php`, which extends the project's config and adds `supplier` - have a look.
 
 ---
 
@@ -224,6 +222,14 @@ The storefront page that lists the suppliers through this client is built in Exe
 
 2. Run the automated tests below
 
+> **Index empty after you recreated it?** Publish & Synchronize only sends a document to Elasticsearch when its `pyz_supplier_search` row is written. Republishing unchanged suppliers leaves the rows as they are, so a freshly created index stays empty. Delete the rows first, then republish and process the queues:
+>
+> ```bash
+> docker/sdk cli "mysql -h database -u spryker -psecret eu-docker -e 'DELETE FROM pyz_supplier_search'"
+> docker/sdk console publish:trigger-events -r supplier
+> docker/sdk console queue:worker:start --stop-when-empty
+> ```
+
 ---
 
 ## Run Automated Tests
@@ -237,5 +243,5 @@ docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/Supplier/
 ## Solution
 
 ```bash
-./exercises/load.sh supplier intermediate/search/complete
+./exercises/load.sh supplier intermediate/search/complete --run
 ```

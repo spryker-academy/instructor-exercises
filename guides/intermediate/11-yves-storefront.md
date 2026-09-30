@@ -17,11 +17,10 @@ You will learn how to:
 ## Loading the Exercise
 
 ```bash
-./exercises/load.sh supplier intermediate/yves-storefront/skeleton
-docker/sdk cli composer dump-autoload
-docker/sdk console cache:empty-all
-docker/sdk console propel:model:build
+./exercises/load.sh supplier intermediate/yves-storefront/skeleton --run
 ```
+
+`--run` also runs the commands the loader lists after loading (cache, Propel, transfers and whatever this exercise needs, such as queues or Glue resources) and stops at the first one that fails. Leave it out to run them yourself.
 
 ---
 
@@ -227,5 +226,5 @@ return $this->redirectResponseInternal('supplier-list');
 ## Solution
 
 ```bash
-./exercises/load.sh supplier intermediate/yves-storefront/complete
+./exercises/load.sh supplier intermediate/yves-storefront/complete --run
 ```

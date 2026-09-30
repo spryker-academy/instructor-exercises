@@ -218,9 +218,8 @@
 <h1 id="exercise-2-create-a-data-transfer-object">Exercise 2: Create a Data Transfer Object</h1>
 <p>In Spryker, data transfer objects (DTOs) are used to pass data across layers and services. In this exercise you will create a message DTO from scratch and use it in the Contact Request page.</p>
 <h2 id="loading-the-exercise">Loading the Exercise</h2>
-<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/data-transfer-object/skeleton</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli composer dump-autoload</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/data-transfer-object/skeleton <span class="at">--run</span></span></code></pre></div>
+<p><code>--run</code> also runs the commands the loader lists after loading (cache, Propel, transfers and whatever this exercise needs, such as queues or Glue resources) and stops at the first one that fails. Leave it out to run them yourself.</p>
 <hr />
 <h2 id="working-on-the-exercise">Working on the Exercise</h2>
 <p>DTOs are defined in XML files in the <strong>Shared</strong> namespace: <code>src/SprykerAcademy/Shared/&lt;Module&gt;/Transfer/&lt;module&gt;.transfer.xml</code></p>
@@ -288,6 +287,6 @@
 <p>All tests should pass if your transfer definition is correct.</p>
 <hr />
 <h2 id="solution">Solution</h2>
-<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/data-transfer-object/complete</span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/data-transfer-object/complete <span class="at">--run</span></span></code></pre></div>
 </body>
 </html>

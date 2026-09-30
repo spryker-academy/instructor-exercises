@@ -10,9 +10,10 @@ In this exercise you will create a simple Spryker Back Office page and add an en
 ## Loading the Exercise
 
 ```bash
-./exercises/load.sh contact-request basics/contact-request-back-office/skeleton
-docker/sdk console transfer:generate
+./exercises/load.sh contact-request basics/contact-request-back-office/skeleton --run
 ```
+
+`--run` also runs the commands the loader lists after loading (cache, Propel, transfers and whatever this exercise needs, such as queues or Glue resources) and stops at the first one that fails. Leave it out to run them yourself.
 
 The loader registers the `SprykerAcademy` namespace in two places - `autoload.psr-4` in `composer.json`
 and `PROJECT_NAMESPACES` in `config/Shared/config_default.php` - and then runs `composer dump-autoload`
@@ -112,12 +113,28 @@ Make your new page accessible through the Back Office navigation.
 
 **Coding time:**
 
-Open `config/Zed/navigation.xml`. Copy an existing navigation entry and adjust it to point to your Contact Request page. The keyword `bundle` refers to the module name.
+Create `src/SprykerAcademy/Zed/ContactRequest/Communication/navigation.xml`. A module ships its menu entries in its own `Communication/navigation.xml`, the same way the core modules in `vendor/spryker` do; Spryker merges all of them with the project's `config/Zed/navigation.xml`. Look at an entry in `config/Zed/navigation.xml` for the format and adjust it to point to your Contact Request page. The keyword `bundle` refers to the module name:
+
+```xml
+<?xml version="1.0"?>
+<config>
+    <contact-request>
+        <label>Contact Request</label>
+        <title>Contact Request</title>
+        <icon>mail</icon>
+        <bundle>contact-request</bundle>
+        <controller>index</controller>
+        <action>index</action>
+    </contact-request>
+</config>
+```
+
+> **Why not edit `config/Zed/navigation.xml`?** You could, and in a real project you often would. The exercise branches keep everything in `src/SprykerAcademy` so that loading a solution never has to change your project files. The demo shop merges module navigation with the *breadcrumb* strategy, which normally only adds pages below entries the project file already has; `src/SprykerAcademy/Zed/ZedNavigation` (training infrastructure, not part of the exercise) lets SprykerAcademy modules add their own top-level entry.
 
 Rebuild the navigation cache:
 
 ```bash
-docker/sdk console application:build-navigation-cache
+docker/sdk console navigation:build-cache
 ```
 
 Validate the result in the Back Office.
@@ -139,5 +156,5 @@ All tests should pass if your implementation is correct.
 ## Solution
 
 ```bash
-./exercises/load.sh contact-request basics/contact-request-back-office/complete
+./exercises/load.sh contact-request basics/contact-request-back-office/complete --run
 ```

@@ -7,11 +7,10 @@ In this exercise, you will create a contact request through a Back Office contro
 ## Loading the Exercise
 
 ```bash
-./exercises/load.sh contact-request basics/module-layers/skeleton
-docker/sdk cli composer dump-autoload
-docker/sdk console transfer:generate
-docker/sdk console propel:install
+./exercises/load.sh contact-request basics/module-layers/skeleton --run
 ```
+
+`--run` also runs the commands the loader lists after loading (cache, Propel, transfers and whatever this exercise needs, such as queues or Glue resources) and stops at the first one that fails. Leave it out to run them yourself.
 
 ---
 
@@ -185,6 +184,8 @@ Class        SprykerAcademy\Zed\ContactRequest\Persistence\ContactRequestReposit
 ```
 
 `docker/sdk cli vendor/bin/console lint:container` answers *The container was linted successfully* when every argument still resolves. Do the same for every interface you inject through a constructor from now on.
+
+> **These two lines are yours, not the exercise's.** `config/Zed/ApplicationServices.php` belongs to the project, and the exercise loader never edits it - the solution branches work without the bindings, because each interface still has one implementation. When you load a branch that has no `ContactRequest` persistence layer (exercises 1-3, or another package), remove the two `$services->set()` lines again: a binding to a class that is gone breaks the whole Zed container. The loader warns about leftover references like these.
 
 > **Zed only.** `config/Yves/ApplicationServices.php` is an empty stub in the demo shop, so nothing of yours is in the Yves container - Yves keeps using the Factory and the DependencyProvider, which is what Exercise 5 builds.
 
@@ -365,5 +366,5 @@ Every step of this exercise is covered: the two transfer definitions, the Persis
 ## Solution
 
 ```bash
-./exercises/load.sh contact-request basics/module-layers/complete
+./exercises/load.sh contact-request basics/module-layers/complete --run
 ```

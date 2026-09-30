@@ -3,14 +3,29 @@
 # Exercise Loader - Loads exercise code into the Spryker project
 #
 # Usage:
-#   ./exercises/load.sh <package> <branch>
+#   ./exercises/load.sh <package> <branch> [--run]
 #
 # Examples:
 #   ./exercises/load.sh contact-request basics/contact-request-back-office/skeleton
-#   ./exercises/load.sh supplier intermediate/back-office/skeleton
+#   ./exercises/load.sh supplier intermediate/back-office/complete --run
 #   ./exercises/load.sh ai-foundation advanced/ai-foundation-hello/skeleton
 #
-# First run will clone the repos and configure the project automatically.
+# What it does:
+#   1. Fetches the package and checks out the branch exactly as it is on GitHub.
+#   2. Prepares the project once for the SprykerAcademy namespace (composer autoload, kernel
+#      project namespaces, API Platform source directories, Glue service loading). None of this
+#      refers to a single exercise class, so it never has to be undone.
+#   3. Replaces src/SprykerAcademy and tests/SprykerAcademyTest with the branch's copy, and copies
+#      the branch's own data and config files (CSV files, import configuration, OMS process).
+#
+# The contact-request and supplier branches carry their complete wiring themselves: a dependency
+# provider or config class in src/SprykerAcademy that extends the Pyz one wins over it, because
+# SprykerAcademy is listed before Pyz in the kernel's project namespaces. Navigation comes from the
+# module's Communication/navigation.xml. The loader therefore never edits a file the shop owns
+# for those packages. (The ai-foundation package still wires its complete branches into the
+# project's AI configuration, see below.)
+#
+# --run  also runs the post-load commands (cache, Propel, transfers, Glue resources).
 #
 
 set -e
@@ -19,10 +34,16 @@ trap 'echo -e "\033[0;31mload.sh failed at line $LINENO: $BASH_COMMAND\033[0m" >
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 REPOS_DIR="$SCRIPT_DIR/repos"
+# Project-relative paths of the files the last load copied outside src/SprykerAcademy and tests/SprykerAcademyTest
+MANIFEST="$SCRIPT_DIR/.loaded-files"
 
-CONTACT_REQUEST_REPO="https://github.com/spryker-academy/contact-request.git"
-SUPPLIER_REPO="https://github.com/spryker-academy/supplier.git"
-AI_FOUNDATION_REPO="https://github.com/spryker-academy/ai-foundation.git"
+# Override a package source to try unpublished branches, e.g.
+#   ACADEMY_SUPPLIER_REPO=/path/to/supplier ./exercises/load.sh supplier intermediate/oms/complete
+CONTACT_REQUEST_REPO="${ACADEMY_CONTACT_REQUEST_REPO:-https://github.com/spryker-academy/contact-request.git}"
+SUPPLIER_REPO="${ACADEMY_SUPPLIER_REPO:-https://github.com/spryker-academy/supplier.git}"
+AI_FOUNDATION_REPO="${ACADEMY_AI_FOUNDATION_REPO:-https://github.com/spryker-academy/ai-foundation.git}"
+
+SETUP_MARKER="spryker-academy setup"
 
 # Colors
 RED='\033[0;31m'
@@ -45,60 +66,13 @@ file_needs_update() {
     [ "$count" = "0" ]
 }
 
-# Regenerate the composer autoloader.
-#
-# Registering the namespace in composer.json is only half the job: PHP resolves classes
-# through the generated map in vendor/composer/autoload_psr4.php. While the SprykerAcademy
-# prefix is missing there, every exercise class is invisible to PHP - the Zed router finds
-# src/SprykerAcademy/.../IndexController.php on disk, calls class_exists() on the name it
-# derived from the path, gets false and aborts the request with
-#   Expected class "SprykerAcademy\Zed\ContactRequest\Communication\Controller\IndexController" not found!
-# which reads as if the file were missing. Dump it here on every run: composer.json may
-# already carry the entry from an earlier load while the generated map is still stale.
-DUMP_AUTOLOAD_DONE=0
-dump_autoload() {
-    local map="$PROJECT_DIR/vendor/composer/autoload_psr4.php"
-
-    log_info "Regenerating the composer autoloader..."
-
-    if [ -x "$PROJECT_DIR/docker/sdk" ] \
-        && (cd "$PROJECT_DIR" && docker/sdk cli composer dump-autoload) </dev/null >/dev/null 2>&1; then
-        DUMP_AUTOLOAD_DONE=1
-    elif command -v composer >/dev/null 2>&1 \
-        && (cd "$PROJECT_DIR" && composer dump-autoload) </dev/null >/dev/null 2>&1; then
-        DUMP_AUTOLOAD_DONE=1
-    fi
-
-    if [ "$DUMP_AUTOLOAD_DONE" = "0" ]; then
-        log_error "Warning: could not run composer dump-autoload (is the shop up?)."
-        log_error "         Run it yourself before you open the Back Office, or PHP will not"
-        log_error "         know a single SprykerAcademy class:"
-        log_error "           docker/sdk cli composer dump-autoload"
-
-        return 0
-    fi
-
-    # composer wrote vendor/ inside the container, so the copy on the host can lag a moment
-    local attempt=0
-    while [ "$attempt" -lt 10 ] && file_needs_update "$map" "SprykerAcademy"; do
-        attempt=$((attempt + 1))
-        sleep 1
-    done
-
-    if [ -f "$map" ] && file_needs_update "$map" "SprykerAcademy"; then
-        log_error "Warning: vendor/composer/autoload_psr4.php still has no SprykerAcademy entry."
-        log_error "         Check the autoload.psr-4 section of composer.json."
-
-        return 0
-    fi
-
-    log_success "composer dump-autoload (SprykerAcademy is registered in vendor/composer/autoload_psr4.php)"
-}
+relpath() { echo "${1#"$PROJECT_DIR"/}"; }
 
 usage() {
-    echo "Usage: ./exercises/load.sh <package> <branch>"
+    echo "Usage: ./exercises/load.sh <package> <branch> [--run]"
     echo ""
     echo "Packages: contact-request, supplier, ai-foundation"
+    echo "  --run   also run the post-load commands (cache, Propel, transfers, Glue resources)"
     echo ""
     echo "Contact Request branches:"
     echo "  basics/contact-request-back-office/skeleton"
@@ -109,36 +83,36 @@ usage() {
     echo "  basics/contact-request-table-schema/complete"
     echo "  basics/module-layers/skeleton"
     echo "  basics/module-layers/complete"
+    echo "  basics/configuration/skeleton"
+    echo "  basics/configuration/complete"
     echo "  basics/extending-core-modules/skeleton"
     echo "  basics/extending-core-modules/complete"
     echo "  basics/extending-core-modules/complete-ajax"
-    echo "  basics/configuration/skeleton"
-    echo "  basics/configuration/complete"
     echo ""
     echo "Supplier branches:"
     echo "  basics/supplier-table-schema/skeleton"
-    echo "  intermediate/back-office/skeleton"
-    echo "  intermediate/back-office/complete"
     echo "  intermediate/data-import/skeleton"
     echo "  intermediate/data-import/complete"
+    echo "  intermediate/back-office/skeleton"
+    echo "  intermediate/back-office/complete"
     echo "  intermediate/publish-synchronize/skeleton"
     echo "  intermediate/publish-synchronize/complete"
     echo "  intermediate/search/skeleton"
     echo "  intermediate/search/complete"
-    echo "  intermediate/storage-client/skeleton"
-    echo "  intermediate/storage-client/complete"
-    echo "  intermediate/yves-storefront/skeleton"
-    echo "  intermediate/yves-storefront/complete"
     echo "  intermediate/glue-storefront/skeleton"
     echo "  intermediate/glue-storefront/complete"
     echo "  intermediate/oms/skeleton"
     echo "  intermediate/oms/complete"
+    echo "  intermediate/storage-client/skeleton"
+    echo "  intermediate/storage-client/complete"
     echo "  intermediate/merchant-portal-table/skeleton"
     echo "  intermediate/merchant-portal-table/complete"
     echo "  intermediate/merchant-portal-form/skeleton"
     echo "  intermediate/merchant-portal-form/complete"
     echo "  intermediate/merchant-portal-locations/skeleton"
     echo "  intermediate/merchant-portal-locations/complete"
+    echo "  intermediate/yves-storefront/skeleton"
+    echo "  intermediate/yves-storefront/complete"
     echo ""
     echo "AI Foundation branches (see guides/advanced/):"
     echo "  advanced/ai-foundation-hello/skeleton"
@@ -150,46 +124,51 @@ usage() {
     exit 1
 }
 
-# Validate arguments
-if [ $# -ne 2 ]; then
-    usage
-fi
+# ---------------------------------------------------------------------------
+# Arguments
+# ---------------------------------------------------------------------------
+RUN_STEPS=0
+ARGS=()
+for arg in "$@"; do
+    case "$arg" in
+        --run) RUN_STEPS=1 ;;
+        -h|--help) usage ;;
+        *) ARGS+=("$arg") ;;
+    esac
+done
+[ "${#ARGS[@]}" -eq 2 ] || usage
 
-PACKAGE="$1"
-BRANCH="$2"
+PACKAGE="${ARGS[0]}"
+BRANCH="${ARGS[1]}"
 
-if [ "$PACKAGE" != "contact-request" ] && [ "$PACKAGE" != "supplier" ] && [ "$PACKAGE" != "ai-foundation" ]; then
-    log_error "Error: Package must be 'contact-request', 'supplier' or 'ai-foundation'"
-    usage
-fi
+case "$PACKAGE" in
+    contact-request) REPO_URL="$CONTACT_REQUEST_REPO" ;;
+    supplier) REPO_URL="$SUPPLIER_REPO" ;;
+    ai-foundation) REPO_URL="$AI_FOUNDATION_REPO" ;;
+    *)
+        log_error "Error: Package must be 'contact-request', 'supplier' or 'ai-foundation'"
+        usage
+        ;;
+esac
 
-# Determine repo URL
-if [ "$PACKAGE" = "contact-request" ]; then
-    REPO_URL="$CONTACT_REQUEST_REPO"
-elif [ "$PACKAGE" = "ai-foundation" ]; then
-    REPO_URL="$AI_FOUNDATION_REPO"
-else
-    REPO_URL="$SUPPLIER_REPO"
-fi
-
+# ---------------------------------------------------------------------------
+# 1. Fetch the package and check out the branch exactly as it is on GitHub
+# ---------------------------------------------------------------------------
 REPO_DIR="$REPOS_DIR/$PACKAGE"
 
-# Clone repo if not present
 if [ ! -d "$REPO_DIR" ]; then
     log_info "Cloning $PACKAGE repository..."
     mkdir -p "$REPOS_DIR"
     git clone "$REPO_URL" "$REPO_DIR"
 fi
 
-# Fetch latest and checkout branch
 log_info "Switching to branch: $BRANCH"
 cd "$REPO_DIR"
-git fetch origin
+[ "$(git remote get-url origin)" = "$REPO_URL" ] || git remote set-url origin "$REPO_URL"
+git fetch --prune origin
 
-# Uncommitted edits in the exercise clone make the checkout below fail. The old code
-# hid that error with 2>/dev/null and fell through to "checkout -b", which then said
-# "a branch named ... already exists" - the wrong problem entirely. Park the work,
-# name it, and say how to get it back.
+# The clone is a cache, not a workspace. Work a student saved in it would otherwise come back
+# on the next load of the same branch instead of the published skeleton. Park it and say where.
 if [ -n "$(git status --porcelain)" ]; then
     log_error "Uncommitted changes in $REPO_DIR:"
     git --no-pager status --short | sed 's/^/    /'
@@ -197,191 +176,73 @@ if [ -n "$(git status --porcelain)" ]; then
     log_error "Stashed them. To get them back:  git -C \"$REPO_DIR\" stash pop"
 fi
 
-if git show-ref --verify --quiet "refs/heads/$BRANCH"; then
-    git checkout "$BRANCH"
-else
-    if ! git show-ref --verify --quiet "refs/remotes/origin/$BRANCH"; then
-        log_error "Branch '$BRANCH' does not exist in $REPO_URL."
-        log_error "Available branches:"
-        git for-each-ref --format='    %(refname:short)' refs/remotes/origin | grep -v 'origin/HEAD'
-        exit 1
-    fi
-    git checkout -b "$BRANCH" "origin/$BRANCH"
+if ! git show-ref --verify --quiet "refs/remotes/origin/$BRANCH"; then
+    log_error "Branch '$BRANCH' does not exist in $REPO_URL."
+    log_error "Available branches:"
+    git for-each-ref --format='    %(refname:short)' refs/remotes/origin | grep -v 'origin/HEAD' | sed 's#origin/##'
+    exit 1
 fi
-git pull origin "$BRANCH" 2>/dev/null || true
+# -B resets a local branch of the same name to the remote one: a force-pushed branch or a commit
+# made in the clone can never leave the student on an outdated copy.
+git checkout -q -B "$BRANCH" "origin/$BRANCH"
 cd "$PROJECT_DIR"
 
-# Verify the branch has src/SprykerAcademy
-if [ ! -d "$REPO_DIR/src/SprykerAcademy" ] && [ ! -d "$REPO_DIR/src/Pyz" ]; then
-    log_info "Note: This branch has no src/ files (empty skeleton)."
-fi
-
-# Clean previous exercise files
-log_info "Cleaning previous exercise files..."
-rm -rf "$PROJECT_DIR/src/SprykerAcademy"
-
-# Always create SprykerAcademy directory so skeleton exercises have a place to write code
-mkdir -p "$PROJECT_DIR/src/SprykerAcademy"
-
-# Copy SprykerAcademy source files if present in the exercise branch
-if [ -d "$REPO_DIR/src/SprykerAcademy" ]; then
-    cp -R "$REPO_DIR/src/SprykerAcademy/." "$PROJECT_DIR/src/SprykerAcademy/"
-fi
-
-# Always add SprykerAcademy namespace to composer.json autoload (skeleton exercises need it too)
-if file_needs_update "$PROJECT_DIR/composer.json" '"SprykerAcademy\\\\": "src/SprykerAcademy/"'; then
+# ---------------------------------------------------------------------------
+# 2. Project setup for the SprykerAcademy namespace (idempotent, exercise-agnostic)
+# ---------------------------------------------------------------------------
+setup_project() {
+    # composer autoload: the exercise classes and the exercise tests
     php -r '
         $file = $argv[1] . "/composer.json";
         $json = json_decode(file_get_contents($file), true);
+        $changed = false;
         if (!isset($json["autoload"]["psr-4"]["SprykerAcademy\\"])) {
             $json["autoload"]["psr-4"]["SprykerAcademy\\"] = "src/SprykerAcademy/";
-            file_put_contents($file, json_encode($json, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n");
+            $changed = true;
         }
-    ' "$PROJECT_DIR"
-    log_success "Added SprykerAcademy\\ to composer.json autoload"
-fi
+        if (!isset($json["autoload-dev"]["psr-4"]["SprykerAcademyTest\\"])) {
+            $json["autoload-dev"]["psr-4"]["SprykerAcademyTest\\"] = "tests/SprykerAcademyTest/";
+            $changed = true;
+        }
+        if ($changed) {
+            file_put_contents($file, json_encode($json, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n");
+            echo "updated";
+        }
+    ' "$PROJECT_DIR" | grep -q updated && log_success "Registered SprykerAcademy\\ and SprykerAcademyTest\\ in composer.json"
 
-# Always add SprykerAcademy to Spryker kernel PROJECT_NAMESPACES (skeleton exercises need it too)
-CONFIG_DEFAULT="$PROJECT_DIR/config/Shared/config_default.php"
-if file_needs_update "$CONFIG_DEFAULT" "'SprykerAcademy'"; then
-    php -r '
-        $file = $argv[1];
-        $content = file_get_contents($file);
-        $content = preg_replace(
-            "/(KernelConstants::PROJECT_NAMESPACES\s*\]\s*=\s*\[\s*\n\s*)('\''Pyz'\'')/",
-            "$1'\''SprykerAcademy'\'',\n    $2",
-            $content,
-            1,
-        );
-        file_put_contents($file, $content);
-    ' "$CONFIG_DEFAULT"
-    log_success "Added SprykerAcademy to PROJECT_NAMESPACES in config_default.php"
-fi
-
-# Copy Pyz overrides if present
-if [ -d "$REPO_DIR/src/Pyz" ]; then
-    cd "$REPO_DIR/src/Pyz" && find . -type f | while read -r file; do
-        mkdir -p "$PROJECT_DIR/src/Pyz/$(dirname "$file")"
-        cp "$file" "$PROJECT_DIR/src/Pyz/$file"
-    done
-    cd "$PROJECT_DIR"
-fi
-
-# Copy navigation XML if present in the exercise repo
-if [ -f "$REPO_DIR/config/Zed/navigation.xml" ]; then
-    # Extract first menu key from exercise navigation.xml for duplicate check
-    NAV_KEY=$(grep -oE '<[a-z-]+>' "$REPO_DIR/config/Zed/navigation.xml" | grep -v "<config>" | head -1 | sed 's/[<>]//g')
-    if [ -n "$NAV_KEY" ] && file_needs_update "$PROJECT_DIR/config/Zed/navigation.xml" "<$NAV_KEY>"; then
-        mkdir -p "$PROJECT_DIR/config/Zed"
+    # Kernel project namespaces: SprykerAcademy BEFORE Pyz, so an exercise class that extends a Pyz
+    # one (a dependency provider, a config) is the one the kernel resolves.
+    local config_default="$PROJECT_DIR/config/Shared/config_default.php"
+    if file_needs_update "$config_default" "'SprykerAcademy'"; then
         php -r '
-            $projectFile = $argv[1] . "/config/Zed/navigation.xml";
-            $exerciseFile = $argv[2] . "/config/Zed/navigation.xml";
-            
-            $projectDom = new DOMDocument();
-            $projectDom->preserveWhiteSpace = false;
-            $projectDom->formatOutput = true;
-            $projectDom->load($projectFile);
-            
-            $exerciseDom = new DOMDocument();
-            $exerciseDom->preserveWhiteSpace = false;
-            $exerciseDom->formatOutput = true;
-            $exerciseDom->load($exerciseFile);
-            
-            $projectConfig = $projectDom->getElementsByTagName("config")->item(0);
-            
-            $firstChild = $projectConfig->firstChild;
-            foreach ($exerciseDom->documentElement->childNodes as $child) {
-                if ($child->nodeType !== XML_ELEMENT_NODE) continue;
-                $name = $child->nodeName;
-                if ($projectConfig->getElementsByTagName($name)->item(0)) continue;
-                $importedNode = $projectDom->importNode($child, true);
-                $projectConfig->insertBefore($importedNode, $firstChild);
+            $file = $argv[1];
+            $content = file_get_contents($file);
+            $content = preg_replace(
+                "/(KernelConstants::PROJECT_NAMESPACES\s*\]\s*=\s*\[\s*\n\s*)(\x27Pyz\x27)/",
+                "$1\x27SprykerAcademy\x27,\n    $2",
+                $content,
+                1,
+                $count,
+            );
+            if ($count) {
+                file_put_contents($file, $content);
+                echo "updated";
             }
-            
-            $projectDom->save($projectFile);
-        ' "$PROJECT_DIR" "$REPO_DIR"
-        log_success "Merged navigation.xml entries"
+        ' "$config_default" | grep -q updated \
+            && log_success "Added SprykerAcademy to PROJECT_NAMESPACES in config/Shared/config_default.php" \
+            || log_error "Warning: could not add SprykerAcademy to KernelConstants::PROJECT_NAMESPACES in config/Shared/config_default.php - add it before 'Pyz' yourself."
     fi
-fi
 
-# Copy merchant portal navigation XML if present in the exercise repo
-if [ -f "$REPO_DIR/config/Zed/navigation-main-merchant-portal.xml" ]; then
-    NAV_KEY=$(grep -oE '<[a-z-]+>' "$REPO_DIR/config/Zed/navigation-main-merchant-portal.xml" | grep -v "<config>" | head -1 | sed 's/[<>]//g')
-    if [ -n "$NAV_KEY" ] && [ -f "$PROJECT_DIR/config/Zed/navigation-main-merchant-portal.xml" ] && file_needs_update "$PROJECT_DIR/config/Zed/navigation-main-merchant-portal.xml" "<$NAV_KEY>"; then
-        php -r '
-            $projectFile = $argv[1] . "/config/Zed/navigation-main-merchant-portal.xml";
-            $exerciseFile = $argv[2] . "/config/Zed/navigation-main-merchant-portal.xml";
-
-            $projectDom = new DOMDocument();
-            $projectDom->preserveWhiteSpace = false;
-            $projectDom->formatOutput = true;
-            $projectDom->load($projectFile);
-
-            $exerciseDom = new DOMDocument();
-            $exerciseDom->preserveWhiteSpace = false;
-            $exerciseDom->formatOutput = true;
-            $exerciseDom->load($exerciseFile);
-
-            $projectConfig = $projectDom->getElementsByTagName("config")->item(0);
-
-            foreach ($exerciseDom->documentElement->childNodes as $child) {
-                if ($child->nodeType !== XML_ELEMENT_NODE) continue;
-                $name = $child->nodeName;
-                if ($projectConfig->getElementsByTagName($name)->item(0)) continue;
-                $importedNode = $projectDom->importNode($child, true);
-                $projectConfig->appendChild($importedNode);
-            }
-
-            $projectDom->save($projectFile);
-        ' "$PROJECT_DIR" "$REPO_DIR"
-        log_success "Merged merchant portal navigation entries"
-    fi
-fi
-
-# ContactRequest config value in config_default.php (Exercise 6, Configuration).
-# Always removed first: the constant class lives in src/SprykerAcademy, which was just replaced. Added again below when the loaded branch ships it.
-CONFIG_FILE="$PROJECT_DIR/config/Shared/config_default.php"
-if grep -q "ContactRequest exercise config value\|contact-request exercise" "$CONFIG_FILE" 2>/dev/null; then
-    php -r '
-        $file = $argv[1];
-        $content = file_get_contents($file);
-        // block written by this loader version
-        $content = preg_replace("/\n[ \t]*\/\/ >>> contact-request exercise.*?\/\/ <<< contact-request exercise[^\n]*/s", "", $content);
-        // block written by an earlier loader version
-        $content = preg_replace("/\n*\/\/ ContactRequest exercise config value\nuse SprykerAcademy\\\\Shared\\\\ContactRequest\\\\ContactRequestConstants;\n\n\\\$config\[ContactRequestConstants::MY_CONFIG_VALUE\][^\n]*\n?/", "\n", $content);
-        file_put_contents($file, rtrim($content) . "\n");
-    ' "$CONFIG_FILE"
-    log_success "Removed the ContactRequest config value from config_default.php"
-fi
-# Only a live statement breaks the application: `use X;` alone autoloads nothing, and a commented
-# line does nothing at all. Match an uncommented `ContactRequestConstants::` instead of the bare name.
-if [ ! -f "$PROJECT_DIR/src/SprykerAcademy/Shared/ContactRequest/ContactRequestConstants.php" ] \
-    && grep -qE '^[[:space:]]*[^/#*[:space:]].*ContactRequestConstants::' "$CONFIG_FILE" 2>/dev/null; then
-    log_error "Warning: config/Shared/config_default.php still uses ContactRequestConstants, which this branch does not contain (manual wiring from Exercise 6)."
-    log_error "         Remove those lines, or every console command will fail with a class not found error."
-fi
-if [ "$PACKAGE" = "contact-request" ] && [ -f "$PROJECT_DIR/src/SprykerAcademy/Shared/ContactRequest/ContactRequestConstants.php" ]; then
-    cat >> "$CONFIG_FILE" << 'PHPEOF'
-
-// >>> contact-request exercise
-$config[\SprykerAcademy\Shared\ContactRequest\ContactRequestConstants::MY_CONFIG_VALUE] = 'Hello from config!';
-// <<< contact-request exercise
-PHPEOF
-    log_success "Added the ContactRequest config value to config_default.php"
-fi
-
-# Register the SprykerAcademy source directory in every API Platform application config and reset their kernel caches
-register_api_platform_sources() {
-    local updated=0
-    for API_CONFIG in "$PROJECT_DIR/config/Glue/packages/spryker_api_platform.php" "$PROJECT_DIR/config/GlueStorefront/packages/spryker_api_platform.php" "$PROJECT_DIR/config/GlueBackend/packages/spryker_api_platform.php"; do
-        [ -f "$API_CONFIG" ] || continue
+    # API Platform scans these directories for resources/api/<type>/*.resource.yml
+    local api_config
+    for api_config in "$PROJECT_DIR"/config/Glue/packages/spryker_api_platform.php "$PROJECT_DIR"/config/GlueStorefront/packages/spryker_api_platform.php "$PROJECT_DIR"/config/GlueBackend/packages/spryker_api_platform.php; do
+        [ -f "$api_config" ] || continue
         php -r '
             $file = $argv[1];
             $content = file_get_contents($file);
             if (preg_match("/[\x27\"]src\/SprykerAcademy[\x27\"]/", $content)) {
                 exit(0);
             }
-            // Insert right after the src/Pyz entry of sourceDirectories([...])
             $content = preg_replace(
                 "/(sourceDirectories\(\[[^\]]*?\n(\s*)[\x27\"]src\/Pyz[\x27\"],?)/",
                 "$1\n$2\x27src/SprykerAcademy\x27,",
@@ -393,159 +254,287 @@ register_api_platform_sources() {
                 file_put_contents($file, $content);
                 echo "updated";
             }
-        ' "$API_CONFIG" | grep -q "updated" && { log_success "Added SprykerAcademy to API Platform source directories in $(echo "$API_CONFIG" | sed "s#$PROJECT_DIR/##")"; updated=1; }
+        ' "$api_config" | grep -q updated && log_success "Added src/SprykerAcademy to the API Platform source directories in $(relpath "$api_config")"
     done
-    # The compiled Glue kernels cache the source directory list; cache:empty-all does not touch them
-    rm -rf "$PROJECT_DIR"/data/cache/Glue "$PROJECT_DIR"/data/cache/GlueStorefront "$PROJECT_DIR"/data/cache/GlueBackend 2>/dev/null
-    [ "$updated" = 1 ] && log_success "Reset the Glue kernel caches (data/cache/Glue*)"
+
+    # The Glue containers resolve the Clients and Facades an API Platform provider asks for. Core
+    # and Pyz ones are registered automatically; for any other namespace the automatic proxy fails
+    # with "Could not find ... in any of the attached containers". Load the SprykerAcademy Client
+    # and Zed Business layers. is_dir() keeps it harmless while a branch has no such layer.
+    local services_file
+    for services_file in "$PROJECT_DIR"/config/Glue/ApplicationServices.php "$PROJECT_DIR"/config/GlueStorefront/ApplicationServices.php "$PROJECT_DIR"/config/GlueBackend/ApplicationServices.php; do
+        [ -f "$services_file" ] || continue
+        grep -q ">>> $SETUP_MARKER" "$services_file" && continue
+        php -r '
+            $file = $argv[1];
+            $marker = $argv[2];
+            $content = file_get_contents($file);
+            $block = "\n    // >>> " . $marker . ": SprykerAcademy Clients and Facades for API Platform providers\n"
+                . "    \$academyServices = \$configurator->services()->defaults()->autowire()->public()->autoconfigure();\n"
+                . "    if (is_dir(__DIR__ . \x27/../../src/SprykerAcademy/Client\x27)) {\n"
+                . "        \$academyServices->load(\x27SprykerAcademy\\\\Client\\\\\x27, \x27../../src/SprykerAcademy/Client/\x27);\n"
+                . "    }\n"
+                . "    if (glob(__DIR__ . \x27/../../src/SprykerAcademy/Zed/*/Business\x27, GLOB_ONLYDIR)) {\n"
+                . "        \$academyServices->load(\x27SprykerAcademy\\\\Zed\\\\\x27, \x27../../src/SprykerAcademy/Zed/*/Business/\x27);\n"
+                . "    }\n"
+                . "    // <<< " . $marker . "\n";
+            $content = preg_replace_callback("/\n(};)\s*$/", fn ($m) => $block . $m[1] . "\n", $content, 1, $count);
+            if ($count) {
+                file_put_contents($file, $content);
+                echo "updated";
+            }
+        ' "$services_file" "$SETUP_MARKER" | grep -q updated && log_success "Registered the SprykerAcademy Client and Facade services in $(relpath "$services_file")"
+    done
+
+    # Merchant Portal frontend: the Angular build collects the component entry points of
+    # vendor/spryker and src/Pyz/Zed only. Add src/SprykerAcademy/Zed to the scan and to the
+    # TypeScript sources, so an exercise's Presentation/Components/entry.ts is built as well.
+    local mp_entry_points="$PROJECT_DIR/frontend/merchant-portal/entry-points.js"
+    if [ -f "$mp_entry_points" ] && ! grep -q "$SETUP_MARKER" "$mp_entry_points"; then
+        php -r '
+            $file = $argv[1];
+            $marker = $argv[2];
+            $content = file_get_contents($file);
+            $scan = "\n    // >>> " . $marker . ": Merchant Portal components of src/SprykerAcademy/Zed\n"
+                . "    const academyDir = path.join(ROOT_SPRYKER_PROJECT_DIR, \x27../../SprykerAcademy/Zed\x27);\n"
+                . "    const academy = require(\x27fs\x27).existsSync(academyDir) ? await entryPointsMap(academyDir, MP_PROJECT_ENTRY_POINT_FILE) : {};\n"
+                . "    // <<< " . $marker . "\n";
+            $content = preg_replace("/(\n\s*const project = await entryPointsMap\(ROOT_SPRYKER_PROJECT_DIR, MP_PROJECT_ENTRY_POINT_FILE\);\n)/", "$1" . $scan, $content, 1, $count);
+            $content = preg_replace("/return \{ \.\.\.core, \.\.\.project, /", "return { ...core, ...project, ...academy, ", $content, 1, $count2);
+            if ($count && $count2) {
+                file_put_contents($file, $content);
+                echo "updated";
+            }
+        ' "$mp_entry_points" "$SETUP_MARKER" | grep -q updated \
+            && log_success "Added src/SprykerAcademy/Zed to the Merchant Portal entry points (frontend/merchant-portal/entry-points.js)" \
+            || log_error "Warning: could not add src/SprykerAcademy/Zed to frontend/merchant-portal/entry-points.js - the merchant portal exercises need it."
+    fi
+    local mp_tsconfig="$PROJECT_DIR/tsconfig.mp.json"
+    if [ -f "$mp_tsconfig" ] && ! grep -q "src/SprykerAcademy/Zed" "$mp_tsconfig"; then
+        php -r '
+            $file = $argv[1];
+            $json = json_decode(file_get_contents($file), true);
+            if (!is_array($json) || !isset($json["include"])) {
+                exit(1);
+            }
+            $json["include"][] = "src/SprykerAcademy/Zed/*/Presentation/Components/entry.ts";
+            file_put_contents($file, json_encode($json, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n");
+            echo "updated";
+        ' "$mp_tsconfig" | grep -q updated && log_success "Added src/SprykerAcademy/Zed entry points to tsconfig.mp.json"
+    fi
+
     return 0
 }
 
-# Always remove the Glue service registration of a previous load (the registered directories may no longer exist)
-for SERVICES_FILE in "$PROJECT_DIR/config/Glue/ApplicationServices.php" "$PROJECT_DIR/config/GlueBackend/ApplicationServices.php" "$PROJECT_DIR/config/GlueStorefront/ApplicationServices.php"; do
-    [ -f "$SERVICES_FILE" ] || continue
-    if grep -q "supplier exercise\|services->load('SprykerAcademy" "$SERVICES_FILE"; then
+# ---------------------------------------------------------------------------
+# Removes what earlier loader versions wrote into project files. Those versions wired the
+# exercises into the shop's own files; the branches now carry that wiring themselves, and a
+# second copy would register every plugin twice. Safe to run on every load.
+# ---------------------------------------------------------------------------
+remove_legacy_wiring() {
+    local file
+
+    # Marked lines and blocks in PHP files: // >>> marker ... // <<< marker, and "... // marker" lines
+    strip_marked() {
+        # $1 file, $2..$n markers
+        local target="$1"
+        shift
+        [ -f "$target" ] || return 0
+        php -r '
+            $file = $argv[1];
+            $markers = array_slice($argv, 2);
+            $content = $original = file_get_contents($file);
+            foreach ($markers as $marker) {
+                $quoted = preg_quote($marker, "/");
+                $content = preg_replace("/\n[ \t]*\/\/ >>> " . $quoted . ".*?\/\/ <<< " . $quoted . "[^\n]*/s", "", $content);
+                // a line that replaced a core plugin gets the core plugin back
+                $content = preg_replace("/^([ \t]*)new [^\n]*\/\/ " . $quoted . " \(replaces ([A-Za-z]+)\)[^\n]*$/m", "$1new $2(),", $content);
+                $content = preg_replace("/\n[^\n]*\/\/ " . $quoted . "[^\n]*/", "", $content);
+            }
+            if ($content !== $original) {
+                $content = preg_replace("/\n{3,}/", "\n\n", $content);
+                file_put_contents($file, $content);
+                echo "updated";
+            }
+        ' "$target" "$@"
+    }
+
+    file="$PROJECT_DIR/src/Pyz/Zed/DataImport/DataImportDependencyProvider.php"
+    strip_marked "$file" "supplier data-import exercise TODO" "supplier data-import exercise" | grep -q updated \
+        && log_success "Removed the supplier importer wiring of an earlier loader from $(relpath "$file")"
+
+    file="$PROJECT_DIR/src/Pyz/Yves/Router/RouterDependencyProvider.php"
+    strip_marked "$file" "contact-request exercise" | grep -q updated \
+        && log_success "Removed the Contact Request routes of an earlier loader from $(relpath "$file")"
+
+    for file in "$PROJECT_DIR"/config/Glue/ApplicationServices.php "$PROJECT_DIR"/config/GlueBackend/ApplicationServices.php "$PROJECT_DIR"/config/GlueStorefront/ApplicationServices.php; do
+        [ -f "$file" ] || continue
+        php -r '
+            $file = $argv[1];
+            $content = $original = file_get_contents($file);
+            $content = preg_replace("/\n[ \t]*\/\/ >>> supplier exercise.*?\/\/ <<< supplier exercise[^\n]*/s", "", $content);
+            // line written by an even earlier loader version
+            $content = preg_replace("/\n[ \t]*\\\$services->load\(\x27SprykerAcademy[^\n]*/", "", $content);
+            if ($content !== $original) {
+                file_put_contents($file, $content);
+                echo "updated";
+            }
+        ' "$file" | grep -q updated && log_success "Removed the per-exercise service registration of an earlier loader from $(relpath "$file")"
+    done
+
+    # config_default.php: the ContactRequest config value (Exercise 6)
+    file="$PROJECT_DIR/config/Shared/config_default.php"
+    if grep -q "ContactRequest exercise config value\|>>> contact-request exercise" "$file" 2>/dev/null; then
         php -r '
             $file = $argv[1];
             $content = file_get_contents($file);
-            $content = preg_replace("/\n[ \t]*\/\/ >>> supplier exercise.*?\/\/ <<< supplier exercise[^\n]*/s", "", $content);
-            // line written by an earlier loader version
-            $content = preg_replace("/\n[ \t]*\\\$services->load\(\x27SprykerAcademy[^\n]*/", "", $content);
-            file_put_contents($file, preg_replace("/\n{2,}(};)\s*$/", "\n$1\n", $content));
-        ' "$SERVICES_FILE"
-        log_success "Removed the SprykerAcademy service registration from $(echo "$SERVICES_FILE" | sed "s#$PROJECT_DIR/##")"
-    fi
-done
-
-# Copy config and data files for supplier package
-if [ "$PACKAGE" = "supplier" ]; then
-    # Copy various config files
-    [ -f "$REPO_DIR/config/Zed/oms/Demo01.xml" ] && mkdir -p "$PROJECT_DIR/config/Zed/oms" && cp "$REPO_DIR/config/Zed/oms/Demo01.xml" "$PROJECT_DIR/config/Zed/oms/Demo01.xml"
-    [ -f "$REPO_DIR/data/import/supplier.csv" ] && mkdir -p "$PROJECT_DIR/data/import" && cp "$REPO_DIR/data/import/supplier.csv" "$PROJECT_DIR/data/import/supplier.csv"
-    [ -f "$REPO_DIR/data/import/supplier_location.csv" ] && cp "$REPO_DIR/data/import/supplier_location.csv" "$PROJECT_DIR/data/import/supplier_location.csv"
-
-    # Add supplier data import entries to full_EU.yml if not present
-    IMPORT_YAML="$PROJECT_DIR/data/import/local/full_EU.yml"
-    if file_needs_update "$IMPORT_YAML" 'data_entity: supplier$'; then
-        cat >> "$IMPORT_YAML" << 'YAMLEOF'
-
-  # Supplier Academy exercises
-  - data_entity: supplier
-    source: data/import/supplier.csv
-  - data_entity: supplier-location
-    source: data/import/supplier_location.csv
-YAMLEOF
-        log_success "Added supplier import entries to full_EU.yml"
+            $content = preg_replace("/\n[ \t]*\/\/ >>> contact-request exercise.*?\/\/ <<< contact-request exercise[^\n]*/s", "", $content);
+            $content = preg_replace("/\n*\/\/ ContactRequest exercise config value\nuse SprykerAcademy\\\\Shared\\\\ContactRequest\\\\ContactRequestConstants;\n\n\\\$config\[ContactRequestConstants::MY_CONFIG_VALUE\][^\n]*\n?/", "\n", $content);
+            file_put_contents($file, rtrim($content) . "\n");
+        ' "$file"
+        log_success "Removed the ContactRequest config value of an earlier loader from config/Shared/config_default.php"
     fi
 
-    # Create supplier queues in RabbitMQ via management API (for branches with pub/sync)
-    if [ -f "$REPO_DIR/src/SprykerAcademy/Shared/SupplierSearch/SupplierSearchConfig.php" ]; then
-        if command -v curl > /dev/null 2>&1; then
-            RMQ_API="http://queue.spryker.local/api"
-            RMQ_AUTH="spryker:secret"
-            for QUEUE in publish.search.supplier publish.storage.supplier sync.search.supplier sync.storage.supplier; do
-                curl -s -o /dev/null -u "$RMQ_AUTH" -X PUT "$RMQ_API/queues/eu-docker/$QUEUE" -H 'Content-Type: application/json' -d '{"durable":true,"auto_delete":false}' 2>/dev/null || true
-                curl -s -o /dev/null -u "$RMQ_AUTH" -X PUT "$RMQ_API/exchanges/eu-docker/$QUEUE" -H 'Content-Type: application/json' -d '{"type":"direct","durable":true}' 2>/dev/null || true
-                curl -s -o /dev/null -u "$RMQ_AUTH" -X POST "$RMQ_API/bindings/eu-docker/e/$QUEUE/q/$QUEUE" -H 'Content-Type: application/json' -d '{}' 2>/dev/null || true
-            done
-            log_success "Ensured supplier queues and exchanges exist in RabbitMQ"
-        fi
+    # The account menu item of Exercise 7. Twig expressions have no comments, so the item carries
+    # no marker and is recognised by its name.
+    file="$PROJECT_DIR/src/Pyz/Yves/CustomerPage/Theme/default/components/molecules/navigation-sidebar/navigation-sidebar.twig"
+    if [ -f "$file" ] && grep -q "name: 'contact-requests'\|{# >>> contact-request exercise #}" "$file"; then
+        php -r '
+            $file = $argv[1];
+            $content = file_get_contents($file);
+            $content = preg_replace("/\n[ \t]*\{# >>> contact-request exercise #\}.*?\{# <<< contact-request exercise #\}[^\n]*/s", "", $content);
+            $content = preg_replace("/\n[ \t]*\{[^{}]*name: \x27contact-requests\x27,[^{}]*\},/s", "", $content);
+            file_put_contents($file, $content);
+        ' "$file"
+        log_success "Removed the My Contact Requests item of an earlier loader from $(relpath "$file")"
     fi
 
-    register_api_platform_sources
+    # Menu entries an earlier loader merged into the project navigation. The branches now ship
+    # them as src/SprykerAcademy/Zed/<Module>/Communication/navigation*.xml.
+    for file in "$PROJECT_DIR/config/Zed/navigation.xml" "$PROJECT_DIR/config/Zed/navigation-main-merchant-portal.xml"; do
+        [ -f "$file" ] || continue
+        grep -qE '<(supplier-gui|supplier-merchant-portal-gui|contact-request)>' "$file" || continue
+        php -r '
+            $file = $argv[1];
+            $dom = new DOMDocument();
+            $dom->preserveWhiteSpace = true;
+            $dom->load($file);
+            $removed = 0;
+            foreach (["supplier-gui", "supplier-merchant-portal-gui", "contact-request"] as $name) {
+                foreach (iterator_to_array($dom->documentElement->childNodes) as $node) {
+                    if ($node->nodeType === XML_ELEMENT_NODE && $node->nodeName === $name) {
+                        $dom->documentElement->removeChild($node);
+                        $removed++;
+                    }
+                }
+            }
+            if ($removed) {
+                $dom->save($file);
+                echo "updated";
+            }
+        ' "$file" | grep -q updated && log_success "Removed the exercise menu entries of an earlier loader from $(relpath "$file")"
+    done
 
-    # Register the SprykerAcademy Zed (facades) and Client services in the Glue application containers (marked block, see unwiring above)
-    if [ -d "$REPO_DIR/src/SprykerAcademy/Glue" ]; then
-        # config/Glue serves glue.eu.spryker.local (storefront and backend resources), so it needs both layers
-        for APP_SERVICES in Glue:Zed Glue:Client GlueBackend:Zed GlueStorefront:Client; do
-            SERVICES_FILE="$PROJECT_DIR/config/${APP_SERVICES%%:*}/ApplicationServices.php"
-            LAYER="${APP_SERVICES##*:}"
-            [ -f "$SERVICES_FILE" ] || continue
-            php -r '
-                $file = $argv[1];
-                $layer = $argv[2];
-                $content = file_get_contents($file);
-                $block = "\n    // >>> supplier exercise\n"
-                    . "    \$configurator->services()\n"
-                    . "        ->defaults()\n        ->autowire()\n        ->public()\n        ->autoconfigure()\n"
-                    . "        ->load(\x27SprykerAcademy\\\\" . $layer . "\\\\\x27, \x27../../src/SprykerAcademy/" . $layer . "/\x27);\n"
-                    . "    // <<< supplier exercise\n";
-                $content = preg_replace_callback("/\n(};)\s*$/", fn ($m) => $block . $m[1] . "\n", $content, 1, $count);
-                if ($count) { file_put_contents($file, $content); echo "updated"; }
-            ' "$SERVICES_FILE" "$LAYER" | grep -q updated && log_success "Registered SprykerAcademy\\$LAYER services in config/${APP_SERVICES%%:*}/ApplicationServices.php"
+    # Import entries an earlier loader appended to the project import configuration
+    file="$PROJECT_DIR/data/import/local/full_EU.yml"
+    if grep -q "# Supplier Academy exercise" "$file" 2>/dev/null; then
+        php -r '
+            $file = $argv[1];
+            $content = file_get_contents($file);
+            $content = preg_replace("/\n*[ \t]*# Supplier Academy exercises?\n[ \t]*- data_entity: supplier(-location)?\n[ \t]*source: [^\n]*(\n[ \t]*- data_entity: supplier-location\n[ \t]*source: [^\n]*)?/", "", $content);
+            file_put_contents($file, rtrim($content) . "\n");
+        ' "$file"
+        log_success "Removed the supplier import entries of an earlier loader from data/import/local/full_EU.yml"
+    fi
+
+    # Files an earlier loader copied without recording them
+    if [ ! -f "$MANIFEST" ]; then
+        for file in data/import/supplier.csv data/import/supplier_location.csv config/Zed/oms/Demo01.xml; do
+            [ -f "$PROJECT_DIR/$file" ] && rm -f "$PROJECT_DIR/$file" && log_success "Removed $file (copied by an earlier loader)"
         done
-    fi
-fi
-
-# ---------------------------------------------------------------------------
-# Contact Request package: Yves wiring in the project (marked lines, removed again on every load)
-# ---------------------------------------------------------------------------
-CR_WIRING_MARKER="contact-request exercise"
-YVES_ROUTER="$PROJECT_DIR/src/Pyz/Yves/Router/RouterDependencyProvider.php"
-SIDEBAR_TWIG="$PROJECT_DIR/src/Pyz/Yves/CustomerPage/Theme/default/components/molecules/navigation-sidebar/navigation-sidebar.twig"
-
-# Always remove the wiring of a previous load: the classes it points to live in src/SprykerAcademy, which was just replaced
-if [ -f "$YVES_ROUTER" ] && grep -q "// $CR_WIRING_MARKER" "$YVES_ROUTER"; then
-    php -r '
-        $file = $argv[1];
-        $marker = preg_quote($argv[2], "/");
-        $content = file_get_contents($file);
-        // a line that replaced a core plugin gets the core plugin back
-        $content = preg_replace("/^([ \t]*)new [^\n]*\/\/ " . $marker . " \(replaces ([A-Za-z]+)\)[^\n]*$/m", "$1new $2(),", $content);
-        // every other marked line disappears
-        $content = preg_replace("/\n[^\n]*\/\/ " . $marker . "[^\n]*/", "", $content);
-        file_put_contents($file, $content);
-    ' "$YVES_ROUTER" "$CR_WIRING_MARKER"
-    log_success "Removed the Contact Request routes from src/Pyz/Yves/Router/RouterDependencyProvider.php"
-fi
-# The item sits inside the {% define data = { items: [...] } %} tag of the sidebar, and a Twig
-# expression has no comments: {# ... #} in there is lexed as an unclosed "{" and every account
-# page dies with a SyntaxError. So the item carries no markers and is recognised by its own name.
-if [ -f "$SIDEBAR_TWIG" ] && grep -q "name: 'contact-requests'\|{# >>> $CR_WIRING_MARKER #}" "$SIDEBAR_TWIG"; then
-    php -r '
-        $file = $argv[1];
-        $marker = preg_quote($argv[2], "/");
-        $content = file_get_contents($file);
-        // the marked form an earlier loader version wrote, including the broken Twig comments
-        $content = preg_replace("/\n[ \t]*\{# >>> " . $marker . " #\}.*?\{# <<< " . $marker . " #\}[^\n]*/s", "", $content);
-        // the item itself
-        $content = preg_replace("/\n[ \t]*\{[^{}]*name: \x27contact-requests\x27,[^{}]*\},/s", "", $content);
-        file_put_contents($file, $content);
-    ' "$SIDEBAR_TWIG" "$CR_WIRING_MARKER"
-    log_success "Removed the Contact Request menu item from navigation-sidebar.twig"
-fi
-
-if [ "$PACKAGE" = "contact-request" ]; then
-    CR_CUSTOMER_ROUTE_PLUGIN="$PROJECT_DIR/src/SprykerAcademy/Yves/CustomerPage/Plugin/Router/CustomerPageRouteProviderPlugin.php"
-
-    # Exercise 7 (extending core modules): the routes come from src/SprykerAcademy/Yves/Router. On the complete branches the account
-    # sidebar of the project gets the link; in the skeleton the route does not exist yet (path() would fail), so adding it is a student step.
-    if [ -f "$CR_CUSTOMER_ROUTE_PLUGIN" ] && [[ "$BRANCH" != */skeleton ]]; then
-        if [ -f "$SIDEBAR_TWIG" ]; then
-            php -r '
-                $file = $argv[1];
-                $marker = $argv[2];
-                $content = file_get_contents($file);
-                $item = "        {\n"
-                    . "            name: \x27contact-requests\x27,\n"
-                    . "            url: path(\x27customer/contact-requests\x27),\n"
-                    . "            label: \x27My Contact Requests\x27,\n"
-                    . "            icon: \x27envelopes\x27,\n"
-                    . "        },";
-                // last element of the items array in the data definition
-                $content = preg_replace_callback(
-                    "/(items:\s*\[.*?)(\n[ \t]*\]\s*\n\s*\}\s*%\})/s",
-                    fn ($m) => $m[1] . "\n" . $item . $m[2],
-                    $content,
-                    1,
-                    $count,
-                );
-                if ($count) { file_put_contents($file, $content); echo "updated"; }
-            ' "$SIDEBAR_TWIG" "$CR_WIRING_MARKER" | grep -q updated && log_success "Added the My Contact Requests item to navigation-sidebar.twig" \
-                || log_error "Warning: could not add the menu item to navigation-sidebar.twig (add a link to customer/contact-requests yourself)"
+        # The supplier branches used to ship a Pyz CacheConfig; remove it only if it is that very file
+        file="$PROJECT_DIR/src/Pyz/Zed/Cache/CacheConfig.php"
+        if [ -f "$file" ] && grep -q "Includes Symfony application caches for all applications (Glue, GlueStorefront, GlueBackend, Zed, Yves)" "$file"; then
+            rm -f "$file"
+            rmdir "$PROJECT_DIR/src/Pyz/Zed/Cache" 2>/dev/null || true
+            log_success "Removed src/Pyz/Zed/Cache/CacheConfig.php (copied by an earlier loader)"
         fi
     fi
+
+    return 0
+}
+
+# ---------------------------------------------------------------------------
+# 3. Install the branch
+# ---------------------------------------------------------------------------
+# Copies the branch's own files outside src/ and tests/ (data/**, config/**) into the project.
+# A file the project already has and that the last load did not put there belongs to the shop:
+# it is never overwritten.
+install_branch_files() {
+    local previous=()
+    [ -f "$MANIFEST" ] && while IFS= read -r line; do [ -n "$line" ] && previous+=("$line"); done < "$MANIFEST"
+
+    # Remove what the previous load copied
+    local file
+    for file in "${previous[@]}"; do
+        rm -f "$PROJECT_DIR/$file"
+    done
+
+    : > "$MANIFEST"
+    local copied=0
+    while IFS= read -r file; do
+        [ -n "$file" ] || continue
+        if [ -e "$PROJECT_DIR/$file" ]; then
+            log_error "Warning: the branch ships $file, but the project already has its own copy - left untouched."
+            continue
+        fi
+        mkdir -p "$PROJECT_DIR/$(dirname "$file")"
+        cp "$REPO_DIR/$file" "$PROJECT_DIR/$file"
+        echo "$file" >> "$MANIFEST"
+        copied=$((copied + 1))
+    done < <(cd "$REPO_DIR" && git ls-files -- data config 2>/dev/null)
+
+    [ "$copied" -gt 0 ] && log_success "Copied $copied data/config file(s) of the branch (listed in $(relpath "$MANIFEST"))"
+    return 0
+}
+
+log_info "Preparing the project for the SprykerAcademy namespace..."
+setup_project
+remove_legacy_wiring
+
+log_info "Installing the exercise files..."
+rm -rf "$PROJECT_DIR/src/SprykerAcademy"
+mkdir -p "$PROJECT_DIR/src/SprykerAcademy"
+if [ -d "$REPO_DIR/src/SprykerAcademy" ]; then
+    cp -R "$REPO_DIR/src/SprykerAcademy/." "$PROJECT_DIR/src/SprykerAcademy/"
+else
+    log_info "Note: This branch has no src/ files (empty skeleton)."
 fi
+if [ -d "$REPO_DIR/src/Pyz" ]; then
+    log_error "Warning: this branch ships src/Pyz files. They are not copied: exercise branches extend Pyz classes from src/SprykerAcademy instead."
+fi
+
+rm -rf "$PROJECT_DIR/tests/SprykerAcademyTest"
+if [ -d "$REPO_DIR/tests/SprykerAcademyTest" ]; then
+    cp -R "$REPO_DIR/tests/SprykerAcademyTest" "$PROJECT_DIR/tests/SprykerAcademyTest"
+fi
+
+install_branch_files
+
+# Generated API Platform resources built from an earlier branch's schema files point at providers
+# that may no longer exist, and the Glue container then fails to compile. The generator writes
+# the source schema into each file's header, which identifies ours.
+STALE_API_RESOURCES=$(grep -rl "src/SprykerAcademy/" "$PROJECT_DIR"/src/Generated/Api 2>/dev/null || true)
+if [ -n "$STALE_API_RESOURCES" ]; then
+    echo "$STALE_API_RESOURCES" | while read -r generated; do rm -f "$generated"; done
+    log_success "Removed the API Platform resources generated from the previous exercise (glue api:generate rebuilds them)"
+fi
+
+# The compiled Glue kernels cache the service and resource lists; cache:empty-all does not reach them
+rm -rf "$PROJECT_DIR"/data/cache/Glue "$PROJECT_DIR"/data/cache/GlueStorefront "$PROJECT_DIR"/data/cache/GlueBackend 2>/dev/null || true
+
+# ai-foundation calls this for its storefront API exercises; the setup above already did the work
+register_api_platform_sources() { return 0; }
 
 # ---------------------------------------------------------------------------
 # AI Foundation package (Exercise 19: Hello AI, Exercise 20: Ask the Catalog, Exercise 21: Product Creation agent)
@@ -750,11 +739,14 @@ CONFIGEOF
     fi
 fi
 
+
 # Safety net: warn about project files that still reference SprykerAcademy classes this branch does not contain (manual wiring from another exercise)
 MISSING_REFS=$(grep -rhE "SprykerAcademy(\\\\[A-Za-z0-9_]+)+" "$PROJECT_DIR/src/Pyz" "$PROJECT_DIR/config" --include="*.php" 2>/dev/null \
     | grep -vE '^[[:space:]]*(//|#|\*|/\*)' \
     | grep -oE "SprykerAcademy(\\\\[A-Za-z0-9_]+)+" | sort -u | while read -r class; do
     rel=$(echo "${class#SprykerAcademy\\}" | tr '\\' '/')
+    # a namespace prefix in a service registration (SprykerAcademy\Client\) is not a class
+    [ -d "$PROJECT_DIR/src/SprykerAcademy/$rel" ] && continue
     [ -f "$PROJECT_DIR/src/SprykerAcademy/$rel.php" ] || echo "$class"
 done)
 if [ -n "$MISSING_REFS" ]; then
@@ -764,26 +756,57 @@ if [ -n "$MISSING_REFS" ]; then
     log_error "         calls one will fatal with a class not found error. Check those files before you carry on."
 fi
 
-# Copy exercise tests if present
-if [ -d "$REPO_DIR/tests/SprykerAcademyTest" ]; then
-    log_info "Installing exercise tests..."
-    rm -rf "$PROJECT_DIR/tests/SprykerAcademyTest"
-    cp -R "$REPO_DIR/tests/SprykerAcademyTest" "$PROJECT_DIR/tests/SprykerAcademyTest"
+# ---------------------------------------------------------------------------
+# Regenerate the composer autoloader.
+#
+# Registering the namespace in composer.json is only half the job: PHP resolves classes
+# through the generated map in vendor/composer/autoload_psr4.php. While the SprykerAcademy
+# prefix is missing there, every exercise class is invisible to PHP - the Zed router finds
+# src/SprykerAcademy/.../IndexController.php on disk, calls class_exists() on the name it
+# derived from the path, gets false and aborts the request with
+#   Expected class "SprykerAcademy\Zed\ContactRequest\Communication\Controller\IndexController" not found!
+# which reads as if the file were missing. Dump it on every run: composer.json may already
+# carry the entry from an earlier load while the generated map is still stale.
+# ---------------------------------------------------------------------------
+DUMP_AUTOLOAD_DONE=0
+dump_autoload() {
+    local map="$PROJECT_DIR/vendor/composer/autoload_psr4.php"
 
-    if file_needs_update "$PROJECT_DIR/composer.json" '"SprykerAcademyTest\\\\'; then
-        php -r '
-            $file = $argv[1] . "/composer.json";
-            $json = json_decode(file_get_contents($file), true);
-            if (!isset($json["autoload-dev"]["psr-4"]["SprykerAcademyTest\\"])) {
-                $json["autoload-dev"]["psr-4"]["SprykerAcademyTest\\"] = "tests/SprykerAcademyTest/";
-                file_put_contents($file, json_encode($json, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n");
-            }
-        ' "$PROJECT_DIR"
-        log_success "Added SprykerAcademyTest\\ to composer.json autoload-dev"
+    log_info "Regenerating the composer autoloader..."
+
+    if [ -x "$PROJECT_DIR/docker/sdk" ] \
+        && (cd "$PROJECT_DIR" && docker/sdk cli composer dump-autoload) </dev/null >/dev/null 2>&1; then
+        DUMP_AUTOLOAD_DONE=1
+    elif command -v composer >/dev/null 2>&1 \
+        && (cd "$PROJECT_DIR" && composer dump-autoload) </dev/null >/dev/null 2>&1; then
+        DUMP_AUTOLOAD_DONE=1
     fi
-fi
 
-# Make the namespaces registered above known to PHP (see dump_autoload)
+    if [ "$DUMP_AUTOLOAD_DONE" = "0" ]; then
+        log_error "Warning: could not run composer dump-autoload (is the shop up?)."
+        log_error "         Run it yourself before you open the Back Office, or PHP will not"
+        log_error "         know a single SprykerAcademy class:"
+        log_error "           docker/sdk cli composer dump-autoload"
+
+        return 0
+    fi
+
+    # composer wrote vendor/ inside the container, so the copy on the host can lag a moment
+    local attempt=0
+    while [ "$attempt" -lt 10 ] && file_needs_update "$map" "SprykerAcademy"; do
+        attempt=$((attempt + 1))
+        sleep 1
+    done
+
+    if [ -f "$map" ] && file_needs_update "$map" "SprykerAcademy"; then
+        log_error "Warning: vendor/composer/autoload_psr4.php still has no SprykerAcademy entry."
+        log_error "         Check the autoload.psr-4 section of composer.json."
+
+        return 0
+    fi
+
+    log_success "composer dump-autoload (SprykerAcademy is registered in vendor/composer/autoload_psr4.php)"
+}
 dump_autoload
 
 # Drop the cached Yves route collection.
@@ -799,6 +822,67 @@ if [ -d "$PROJECT_DIR/src/Generated/Yves/Router" ]; then
     log_success "Dropped the cached Yves route collection (src/Generated/Yves/Router)"
 fi
 
+# ---------------------------------------------------------------------------
+# Post-load commands. Printed, and run with --run.
+# ---------------------------------------------------------------------------
+STEPS=()
+ACADEMY_DIR="$PROJECT_DIR/src/SprykerAcademy"
+has_academy() { compgen -G "$ACADEMY_DIR/$1" > /dev/null; }
+
+if [ "$PACKAGE" = "ai-foundation" ]; then
+    # config_ai.php references a SprykerAcademy class, so the autoloader comes first (dump_autoload
+    # already ran it; only ask for it when that failed). cache:empty-all deletes data/cache, which
+    # holds the Propel table map (data/cache/propel/generated-conf/loadDatabase.php), so
+    # propel:install must run after it; it also deletes the synced configuration schemas.
+    [ "$DUMP_AUTOLOAD_DONE" = "1" ] || STEPS+=("docker/sdk cli composer dump-autoload")
+    STEPS+=("docker/sdk console transfer:generate")
+    STEPS+=("docker/sdk console c:e")
+    STEPS+=("docker/sdk console propel:install")
+    STEPS+=("docker/sdk console configuration:sync")
+else
+    # cache:empty-all deletes data/cache, which holds the Propel table map
+    # (data/cache/propel/generated-conf/loadDatabase.php); propel:install writes it again,
+    # so it must run after cache:empty-all
+    STEPS+=("docker/sdk console c:e")
+    [ "$DUMP_AUTOLOAD_DONE" = "1" ] || STEPS+=("docker/sdk cli composer dump-autoload")
+    STEPS+=("docker/sdk console propel:install")
+    STEPS+=("docker/sdk console transfer:generate")
+fi
+if has_academy "Zed/*/Communication/navigation*.xml"; then
+    STEPS+=("docker/sdk console navigation:build-cache")
+fi
+if has_academy "Client/RabbitMq"; then
+    # creates the supplier publish and sync queues declared in src/SprykerAcademy/Client/RabbitMq
+    STEPS+=("docker/sdk console queue:setup")
+fi
+if has_academy "Client/SymfonyMessenger"; then
+    # creates the transports (exchanges, queues) of the queues in src/SprykerAcademy/Client/SymfonyMessenger
+    STEPS+=("docker/sdk console messenger:setup-transports")
+fi
+if has_academy "Shared/SearchElasticsearch"; then
+    # creates the supplier search index declared in src/SprykerAcademy/Shared/SearchElasticsearch
+    STEPS+=("docker/sdk console search:setup:sources")
+fi
+if has_academy "Zed/SupplierMerchantPortalGui"; then
+    # grants the existing merchant users access to the supplier-merchant-portal-gui bundle
+    STEPS+=("docker/sdk console acl-entity:synchronize")
+fi
+if has_academy "Zed/*/Presentation/Components/entry.ts"; then
+    # the Angular components of the merchant portal exercises are part of the merchant portal bundle
+    STEPS+=("docker/sdk cli \"[ -d node_modules ] || vendor/bin/console frontend:project:install-dependencies\"")
+    STEPS+=("docker/sdk console frontend:mp:build")
+fi
+if has_academy "Glue/*/resources/api/storefront"; then
+    STEPS+=("docker/sdk cli GLUE_APPLICATION=GLUE glue api:generate storefront")
+fi
+if has_academy "Glue/*/resources/api/backend"; then
+    STEPS+=("docker/sdk cli GLUE_APPLICATION=GLUE_BACKEND glue api:generate backend")
+fi
+if has_academy "Glue/*/resources/api/*"; then
+    STEPS+=("docker/sdk cli GLUE_APPLICATION=GLUE glue cache:clear")
+    [ -d "$PROJECT_DIR/config/GlueBackend" ] && STEPS+=("docker/sdk cli GLUE_APPLICATION=GLUE_BACKEND glue cache:clear")
+fi
+
 # Count files
 FILE_COUNT=$(find "$PROJECT_DIR/src/SprykerAcademy" -type f 2>/dev/null | wc -l | tr -d ' ')
 
@@ -808,34 +892,26 @@ echo -e "  Package: ${GREEN}$PACKAGE${NC}"
 echo -e "  Branch:  ${GREEN}$BRANCH${NC}"
 echo -e "  Files:   ${GREEN}$FILE_COUNT${NC} files in src/SprykerAcademy/"
 echo ""
-echo -e "${YELLOW}Next steps:${NC}"
-if [ "$PACKAGE" = "ai-foundation" ]; then
-    # dump_autoload already ran it above; only ask for it when that failed, and first,
-    # because config_ai.php references a SprykerAcademy class
-    # cache:empty-all deletes data/cache, which holds the Propel table map (data/cache/propel/generated-conf/loadDatabase.php);
-    # propel:install (propel:model:build) writes it again, so it must run after cache:empty-all
-    [ "$DUMP_AUTOLOAD_DONE" = "1" ] || echo "  docker/sdk cli composer dump-autoload"
-    echo "  docker/sdk console transfer:generate"
-    echo "  docker/sdk console c:e"
-    echo "  docker/sdk console propel:install"
-    # cache:empty-all also deletes data/cache/configuration (the synced configuration schemas the AI configuration references)
-    echo "  docker/sdk console configuration:sync"
-    if [[ "$BRANCH" == advanced/ai-foundation-hello/* ]] || [[ "$BRANCH" == advanced/ai-foundation-catalog/* ]]; then
-        echo "  docker/sdk cli GLUE_APPLICATION=GLUE_STOREFRONT glue api:generate"
-        echo "  docker/sdk cli GLUE_APPLICATION=GLUE glue cache:clear"
-        echo "  docker/sdk cli GLUE_APPLICATION=GLUE_STOREFRONT glue cache:clear"
-    fi
+
+if [ "$RUN_STEPS" = "1" ]; then
+    log_info "Running the post-load commands..."
+    for step in "${STEPS[@]}"; do
+        echo -e "  ${YELLOW}\$ $step${NC}"
+        # a step is printed for copy & paste, so it is run the way a shell reads it
+        if ! (cd "$PROJECT_DIR" && eval "$step") </dev/null > "$SCRIPT_DIR/.last-step.log" 2>&1; then
+            tail -20 "$SCRIPT_DIR/.last-step.log" | sed 's/^/    /'
+            log_error "Failed: $step (full output in $(relpath "$SCRIPT_DIR/.last-step.log"))"
+            exit 1
+        fi
+    done
+    rm -f "$SCRIPT_DIR/.last-step.log"
+    log_success "All post-load commands passed"
 else
-    # cache:empty-all deletes data/cache, which holds the Propel table map (data/cache/propel/generated-conf/loadDatabase.php);
-    # propel:install (propel:model:build) writes it again, so it must run after cache:empty-all
-    echo "  docker/sdk console c:e"
-    # dump_autoload already ran it above; only ask for it when that failed
-    [ "$DUMP_AUTOLOAD_DONE" = "1" ] || echo "  docker/sdk cli composer dump-autoload"
-    echo "  docker/sdk console propel:install"
-    echo "  docker/sdk console transfer:generate"
-    if [ -d "$PROJECT_DIR/src/SprykerAcademy/Zed/SupplierMerchantPortalGui" ]; then
-        echo "  docker/sdk console acl-entity:synchronize   # grants the existing merchant users access to the supplier-merchant-portal-gui bundle"
-    fi
+    echo -e "${YELLOW}Next steps:${NC}"
+    for step in "${STEPS[@]}"; do
+        echo "  $step"
+    done
+    echo "  (or load again with --run to have them run for you)"
 fi
 
 if [ "$PACKAGE" = "ai-foundation" ]; then
@@ -863,29 +939,15 @@ if [ "$PACKAGE" = "ai-foundation" ]; then
     fi
 fi
 
-# Show test run command for contact-request package
-if [ "$PACKAGE" = "contact-request" ] && [ -d "$PROJECT_DIR/tests/SprykerAcademyTest" ]; then
-    echo ""
-    echo -e "${YELLOW}Verify your work:${NC}"
-
-    case "$BRANCH" in
-        basics/contact-request-back-office/*)
-            echo "  docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/ContactRequest/ Exercise1"
-            ;;
-        basics/data-transfer-object/*)
-            echo "  docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/ContactRequest/ Exercise1"
-            echo "  docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/ContactRequest/ Exercise2"
-            ;;
-        basics/contact-request-table-schema/*)
-            echo "  docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/ContactRequest/ Exercise1"
-            echo "  docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/ContactRequest/ Exercise2"
-            echo "  docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/ContactRequest/ Exercise3"
-            ;;
-        basics/module-layers/*|basics/extending-core-modules/*|basics/configuration/*)
-            echo "  docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/ContactRequest/"
-            ;;
-        *)
-            echo "  docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/ContactRequest/"
-            ;;
-    esac
+# Test suites of the loaded branch: every directory with a codeception.yml
+if [ "$PACKAGE" != "ai-foundation" ] && [ -d "$PROJECT_DIR/tests/SprykerAcademyTest" ]; then
+    SUITES=$(cd "$PROJECT_DIR" && find tests/SprykerAcademyTest -name codeception.yml -exec dirname {} \; | sort)
+    if [ -n "$SUITES" ]; then
+        echo ""
+        echo -e "${YELLOW}Verify your work:${NC}"
+        echo "$SUITES" | while read -r suite; do
+            echo "  docker/sdk cli vendor/bin/codecept build -c $suite/"
+            echo "  docker/sdk cli vendor/bin/codecept run -c $suite/"
+        done
+    fi
 fi

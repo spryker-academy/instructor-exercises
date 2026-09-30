@@ -218,9 +218,8 @@
 <h1 id="exercise-3-create-a-table-and-entity-representation">Exercise 3: Create a Table and Entity Representation</h1>
 <p>In this exercise you will create a database table to store messages and an entity representation for a message using Propel ORM.</p>
 <h2 id="loading-the-exercise">Loading the Exercise</h2>
-<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/contact-request-table-schema/skeleton</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli composer dump-autoload</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/contact-request-table-schema/skeleton <span class="at">--run</span></span></code></pre></div>
+<p><code>--run</code> also runs the commands the loader lists after loading (cache, Propel, transfers and whatever this exercise needs, such as queues or Glue resources) and stops at the first one that fails. Leave it out to run them yourself.</p>
 <hr />
 <h2 id="working-on-the-exercise">Working on the Exercise</h2>
 <h3 id="the-propel-schema-file">1. The Propel Schema File</h3>
@@ -244,7 +243,7 @@
 <span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;/database&gt;</span></span></code></pre></div>
 <p><strong>Coding time:</strong></p>
-<p>Open <code>src/SprykerAcademy/Zed/ContactRequest/Persistence/Propel/Schema/pyz_contact_request.schema.xml</code> and add the definition for the <strong>PyzContactRequest</strong> table:</p>
+<p>Create <code>src/SprykerAcademy/Zed/ContactRequest/Persistence/Propel/Schema/pyz_contact_request.schema.xml</code>, with the <code>&lt;database&gt;</code> element of the example above (namespace <code>Orm\Zed\ContactRequest\Persistence</code>, package <code>src.Orm.Zed.ContactRequest.Persistence</code>), and add the definition for the <strong>PyzContactRequest</strong> table:</p>
 <ul>
 <li>Column <code>id_contact_request</code>: type <code>INTEGER</code>, primary key, auto-increment, required</li>
 <li>Column <code>message</code>: type <code>VARCHAR</code>, size <code>255</code>, required, <strong>unique</strong></li>
@@ -256,11 +255,8 @@
 <p>A previous run generated a migration that was never executed, and Propel refuses to build a new diff while one is pending. The message names the timestamp; the file is in <code>src/Orm/Propel/Migration_mysql/</code>. Look inside it before you delete it - the <code>CREATE TABLE</code> it contains tells you what went wrong:</p>
 <div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> src/Orm/Propel/Migration_mysql/PropelMigration_<span class="op">&lt;</span>timestamp<span class="op">&gt;</span>.php</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span> src/Orm/Propel/Migration_mysql/PropelMigration_<span class="op">&lt;</span>timestamp<span class="op">&gt;</span>.php</span></code></pre></div>
-<p>Two things in this exercise leave such a file behind:</p>
+<p>The usual cause in this exercise:</p>
 <ul>
-<li>**<code>CREATE TABLE \</code>TODO`<code>** - the skeleton ships</code>
-<table name="TODO">
-<code>. You ran</code>propel:install<code>before renaming the table, so Propel built a migration for a table called</code>TODO`.</li>
 <li><strong><code>id_contact_request BIGINT AUTO_INCREMENT</code> with no key</strong> - MySQL rejects <code>AUTO_INCREMENT</code> on a column that is not a key, so the migration aborts while executing and stays pending. That is the real error, and from the next run on it is hidden behind the “uncommitted migrations” message. Add <code>primaryKey="true"</code> to the column.</li>
 </ul>
 <p>Delete the file, correct your table definition against the list above, and run <code>propel:install</code> again. <code>src/Orm/Propel/Migration_mysql/</code> should be empty before the run; a successful run creates exactly one migration and executes it.</p>
@@ -274,6 +270,6 @@
 <p>All tests should pass if your schema definition is correct.</p>
 <hr />
 <h2 id="solution">Solution</h2>
-<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/contact-request-table-schema/complete</span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/contact-request-table-schema/complete <span class="at">--run</span></span></code></pre></div>
 </body>
 </html>

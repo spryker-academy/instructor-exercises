@@ -223,8 +223,8 @@
 <li>Exercises repository cloned (see <a href="../STUDENT_SETUP_GUIDE.html">Student Setup Guide</a>)</li>
 </ul>
 <h2 id="loading-the-exercise">Loading the Exercise</h2>
-<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/contact-request-back-office/skeleton</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/contact-request-back-office/skeleton <span class="at">--run</span></span></code></pre></div>
+<p><code>--run</code> also runs the commands the loader lists after loading (cache, Propel, transfers and whatever this exercise needs, such as queues or Glue resources) and stops at the first one that fails. Leave it out to run them yourself.</p>
 <p>The loader registers the <code>SprykerAcademy</code> namespace in two places - <code>autoload.psr-4</code> in <code>composer.json</code> and <code>PROJECT_NAMESPACES</code> in <code>config/Shared/config_default.php</code> - and then runs <code>composer dump-autoload</code> itself. If it cannot reach the container it says so and prints the command for you to run.</p>
 <blockquote>
 <p><strong>If the page fails with <code>Expected class "SprykerAcademy\Zed\ContactRequest\Communication\Controller\IndexController" not found!</code></strong></p>
@@ -279,17 +279,31 @@
 <h3 id="the-navigation">3. The Navigation</h3>
 <p>Make your new page accessible through the Back Office navigation.</p>
 <p><strong>Coding time:</strong></p>
-<p>Open <code>config/Zed/navigation.xml</code>. Copy an existing navigation entry and adjust it to point to your Contact Request page. The keyword <code>bundle</code> refers to the module name.</p>
+<p>Create <code>src/SprykerAcademy/Zed/ContactRequest/Communication/navigation.xml</code>. A module ships its menu entries in its own <code>Communication/navigation.xml</code>, the same way the core modules in <code>vendor/spryker</code> do; Spryker merges all of them with the project’s <code>config/Zed/navigation.xml</code>. Look at an entry in <code>config/Zed/navigation.xml</code> for the format and adjust it to point to your Contact Request page. The keyword <code>bundle</code> refers to the module name:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode xml"><code class="sourceCode xml"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;?xml</span> version=&quot;1.0&quot;<span class="kw">?&gt;</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;config&gt;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">&lt;contact-request&gt;</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>        <span class="kw">&lt;label&gt;</span>Contact Request<span class="kw">&lt;/label&gt;</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>        <span class="kw">&lt;title&gt;</span>Contact Request<span class="kw">&lt;/title&gt;</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>        <span class="kw">&lt;icon&gt;</span>mail<span class="kw">&lt;/icon&gt;</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>        <span class="kw">&lt;bundle&gt;</span>contact-request<span class="kw">&lt;/bundle&gt;</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>        <span class="kw">&lt;controller&gt;</span>index<span class="kw">&lt;/controller&gt;</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>        <span class="kw">&lt;action&gt;</span>index<span class="kw">&lt;/action&gt;</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">&lt;/contact-request&gt;</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;/config&gt;</span></span></code></pre></div>
+<blockquote>
+<p><strong>Why not edit <code>config/Zed/navigation.xml</code>?</strong> You could, and in a real project you often would. The exercise branches keep everything in <code>src/SprykerAcademy</code> so that loading a solution never has to change your project files. The demo shop merges module navigation with the <em>breadcrumb</em> strategy, which normally only adds pages below entries the project file already has; <code>src/SprykerAcademy/Zed/ZedNavigation</code> (training infrastructure, not part of the exercise) lets SprykerAcademy modules add their own top-level entry.</p>
+</blockquote>
 <p>Rebuild the navigation cache:</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console application:build-navigation-cache</span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console navigation:build-cache</span></code></pre></div>
 <p>Validate the result in the Back Office.</p>
 <hr />
 <h2 id="verify-your-work">Verify Your Work</h2>
 <p>Run the automated tests for this exercise:</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/ContactRequest/ Exercise1</span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/ContactRequest/ Exercise1</span></code></pre></div>
 <p>All tests should pass if your implementation is correct.</p>
 <hr />
 <h2 id="solution">Solution</h2>
-<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/contact-request-back-office/complete</span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/contact-request-back-office/complete <span class="at">--run</span></span></code></pre></div>
 </body>
 </html>

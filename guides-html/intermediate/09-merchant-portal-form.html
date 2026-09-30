@@ -212,6 +212,9 @@
   <![endif]-->
 </head>
 <body>
+<header id="title-block-header">
+<h1 class="title">Exercise 16: Merchant Portal — Supplier Create/Edit Form</h1>
+</header>
 <h1 id="exercise-16-merchant-portal-supplier-createedit-form">Exercise 16: Merchant Portal — Supplier Create/Edit Form</h1>
 <p>In this exercise, you will add create and edit functionality for suppliers in the Merchant Portal using drawer forms. You will learn the Merchant Portal form pattern: Symfony forms rendered in Angular drawers, with JSON responses controlling the UI lifecycle (close drawer, refresh table, show notifications).</p>
 <p>You will learn how to: - Create a Symfony form type for the Merchant Portal - Build create and update controllers that return <code>JsonResponse</code> - Use <code>ZedUiFormResponseBuilder</code> for drawer actions (close, refresh, notify) - Auto-link new suppliers to the current merchant - Register an Angular edit component as a web component</p>
@@ -220,17 +223,15 @@
 <li>Completed Exercise 15 (Merchant Portal Table)</li>
 </ul>
 <h2 id="loading-the-exercise">Loading the Exercise</h2>
-<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> supplier intermediate/merchant-portal-form/skeleton</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli composer dump-autoload</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> supplier intermediate/merchant-portal-form/skeleton <span class="at">--run</span></span></code></pre></div>
+<p><code>--run</code> also runs the commands the loader lists after loading (cache, Propel, transfers and whatever this exercise needs, such as queues or Glue resources) and stops at the first one that fails. Leave it out to run them yourself.</p>
 <hr />
 <h2 id="background-merchant-portal-form-pattern">Background: Merchant Portal Form Pattern</h2>
 <p>Unlike the Back Office (which uses full page reloads), the Merchant Portal uses <strong>drawer forms</strong> that open as side panels over the table:</p>
 <pre><code>Table row action &quot;Edit&quot; clicked
     → AJAX GET /supplier-merchant-portal-gui/update-supplier?id-supplier=5
-    → Controller renders form HTML as JsonResponse
-    → Angular opens drawer with the HTML content
+    → Controller answers {&quot;form&quot;: &quot;&lt;rendered form HTML&gt;&quot;}
+    → Angular opens the drawer with that HTML
 
 Form submitted
     → AJAX POST to same URL
@@ -240,8 +241,9 @@ Form submitted
         → addActionCloseDrawer()
         → addActionRefreshTable()
     → Angular executes actions: closes drawer, refreshes table, shows toast
-    → If invalid: returns re-rendered form HTML with errors</code></pre>
-<p><strong>Key difference from Back Office:</strong> Controllers return <code>JsonResponse</code> (not <code>viewResponse</code>), and the response contains either rendered HTML (for the form) or a ZedUI action payload (after successful submit).</p>
+    → If invalid: returns {&quot;form&quot;: ...} again, re-rendered with the errors</code></pre>
+<p><strong>Key difference from Back Office:</strong> Controllers return <code>JsonResponse</code> (not <code>viewResponse</code>). The drawer’s ajax form reads two things from it: <code>form</code>, the HTML it shows, and the ZedUi actions and notifications after a successful submit.</p>
+<p>The provided template <code>Presentation/Partials/_supplier_form.twig</code> is drawer content, not a page: it extends no layout, and <code>form_start(form, { attr: { excludeFormTag: true } })</code> leaves the <code>&lt;form&gt;</code> tag out, because the drawer’s ajax form wraps the content in its own. The “Add Supplier” button of the supplier list (<code>&lt;web-spy-button-action&gt;</code>) opens <code>/supplier-merchant-portal-gui/create-supplier</code> in such a drawer; a table row’s “Edit” action opens <code>update-supplier</code>.</p>
 <hr />
 <h2 id="working-on-the-exercise">Working on the Exercise</h2>
 <h3 id="part-1-supplier-form">Part 1: Supplier Form</h3>
@@ -287,6 +289,11 @@ Form submitted
 <blockquote>
 <p><strong><code>property_path</code>:</strong> The <code>isActive</code> checkbox maps to the <code>status</code> field on <code>SupplierTransfer</code> via <code>property_path</code>. This lets the form display a friendly checkbox while the transfer uses an integer status.</p>
 </blockquote>
+<p>A <code>CheckboxType</code> only accepts booleans as model data, but <code>status</code> is an integer (<code>1</code>/<code>0</code>). Without a transformer, opening the form fails with <em>“Unable to transform value for property path”status“: Expected a Boolean”</em>. Add a model transformer to the field after the <code>add()</code> chain:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="va">$builder</span>-&gt;get(<span class="kw">static</span>::<span class="cn">FIELD_IS_ACTIVE</span>)-&gt;addModelTransformer(<span class="kw">new</span> <span class="cn">C</span>allbackTransformer(</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> (<span class="ot">?</span><span class="dt">int</span> <span class="va">$status</span>)<span class="ot">:</span> <span class="dt">bool</span> =&gt; <span class="dt">(bool)</span><span class="va">$status</span><span class="ot">,</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> (<span class="ot">?</span><span class="dt">bool</span> <span class="va">$isActive</span>)<span class="ot">:</span> <span class="dt">int</span> =&gt; <span class="va">$isActive</span> <span class="ot">?</span> <span class="dv">1</span> <span class="ot">:</span> <span class="dv">0</span><span class="ot">,</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>))<span class="ot">;</span></span></code></pre></div>
 <blockquote>
 <p><strong><code>getBlockPrefix()</code>:</strong> Returns <code>'supplierForm'</code> — this determines the HTML form field name prefix (e.g., <code>supplierForm[name]</code>).</p>
 </blockquote>
@@ -304,14 +311,16 @@ Form submitted
 <li><p>Create supplier via facade: <code>$this-&gt;getFactory()-&gt;getSupplierFacade()-&gt;createSupplier($supplierTransfer)</code></p></li>
 <li><p>Link to current merchant: create a <code>PyzMerchantToSupplier</code> entity</p></li>
 <li><p>Return <code>JsonResponse</code> with ZedUI actions:</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="va">$this</span>-&gt;getFactory()-&gt;getZedUiFactory()</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    -&gt;createZedUiFormResponseBuilder()</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    -&gt;addSuccessNotification(<span class="st">&#39;Supplier created successfully.&#39;</span>)</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    -&gt;addActionCloseDrawer()</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    -&gt;addActionRefreshTable()</span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    -&gt;createResponse()<span class="ot">;</span></span></code></pre></div></li>
+<div class="sourceCode" id="cb4"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="va">$zedUiFormResponseTransfer</span> <span class="op">=</span> <span class="va">$this</span>-&gt;getFactory()-&gt;getZedUiFactory()</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    -&gt;createZedUiFormResponseBuilder()</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    -&gt;addSuccessNotification(<span class="kw">static</span>::<span class="cn">MESSAGE_SUPPLIER_CREATED</span>)</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    -&gt;addActionCloseDrawer()</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    -&gt;addActionRefreshTable(<span class="kw">static</span>::<span class="cn">ID_TABLE_SUPPLIER_LIST</span>) <span class="co">// the table-id of &lt;web-mp-supplier-list&gt;</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    -&gt;createResponse()<span class="ot">;</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="cf">return</span> <span class="kw">new</span> <span class="cn">J</span>sonResponse(<span class="va">$zedUiFormResponseTransfer</span>-&gt;toArray(<span class="kw">true</span><span class="ot">,</span> <span class="kw">true</span>))<span class="ot">;</span></span></code></pre></div></li>
 </ul></li>
-<li>Otherwise: render the form template as <code>JsonResponse</code></li>
+<li>Otherwise: render the form template and return it as <code>new JsonResponse(['form' =&gt; $html])</code> (the skeleton already does this part)</li>
 </ol>
 <blockquote>
 <p><strong>Merchant linking:</strong> When a merchant creates a supplier, it must be automatically linked via <code>pyz_merchant_to_supplier</code>. Get the current merchant from <code>MerchantUserFacade::getCurrentMerchantUser()-&gt;getMerchantOrFail()</code>.</p>
@@ -329,7 +338,10 @@ Form submitted
 <p>The card component (<code>&lt;web-spy-card&gt;</code>) provides the card layout used in the form template to group related fields.</p>
 <hr />
 <h2 id="testing">Testing</h2>
-<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console propel:model:build</span></code></pre></div>
+<p>Part 4 changed a component, so rebuild the frontend first:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console frontend:mp:build</span></code></pre></div>
 <ol type="1">
 <li>In the Merchant Portal supplier table, click “Add Supplier” → the create form should open</li>
 <li>Fill in the form and submit → supplier should be created and table refreshed</li>
@@ -338,6 +350,6 @@ Form submitted
 </ol>
 <hr />
 <h2 id="solution">Solution</h2>
-<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> supplier intermediate/merchant-portal-form/complete</span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> supplier intermediate/merchant-portal-form/complete <span class="at">--run</span></span></code></pre></div>
 </body>
 </html>

@@ -217,17 +217,16 @@
 </header>
 <h1 id="exercise-8-data-import---supplier">Exercise 8: Data Import - Supplier</h1>
 <p>In this exercise, you will create a data import pipeline to populate the database with suppliers from a CSV file. You will learn how Spryker’s <code>DataImport</code> module works: reading CSV files, processing data through steps, and persisting entities.</p>
-<p>You will learn how to: - Create and configure CSV data sources - Map import types to YAML configuration - Implement <code>DataImportStepInterface</code> for data processing and writing - Chain steps through the <code>DataSetStepBroker</code> - Expose the import through a Facade and Plugin - Register the plugin in Spryker’s data import stack - Handle entity relationships (many-to-many) during import</p>
+<p>You will learn how to: - Create and configure CSV data sources - Map import types to YAML configuration - Implement <code>DataImportStepInterface</code> for data processing and writing - Chain steps through the <code>DataSetStepBroker</code> - Expose the import through a Facade and Plugin - Register the plugin in Spryker’s data import stack - Understand how a related supplier-location import is wired (the location writer is provided as supporting code)</p>
 <h2 id="prerequisites">Prerequisites</h2>
 <ul>
 <li>Completed the basics exercises (1-7)</li>
-<li>The Supplier module schema is provided (tables <code>pyz_supplier</code>, <code>pyz_supplier_location</code>, <code>pyz_merchant_to_supplier</code>)</li>
+<li>The exercise branch includes the Propel schemas for <code>pyz_supplier</code>, <code>pyz_supplier_location</code>, and <code>pyz_merchant_to_supplier</code>. Loading the branch copies the schemas into the project; running <code>propel:install</code> is still required to generate the Propel classes and create/update the database tables.</li>
 </ul>
 <h2 id="loading-the-exercise">Loading the Exercise</h2>
-<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> supplier intermediate/data-import/skeleton</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli composer dump-autoload</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console propel:install</span></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> supplier intermediate/data-import/skeleton <span class="at">--run</span></span></code></pre></div>
+<p><code>--run</code> also runs the commands the loader lists after loading (cache, Propel, transfers and whatever this exercise needs, such as queues or Glue resources) and stops at the first one that fails. Leave it out to run them yourself.</p>
+<p><code>propel:install</code> creates the supplier tables. If you run the commands yourself, keep the order the loader prints: <code>c:e</code> deletes Propel’s generated database map, which <code>propel:install</code> writes again.</p>
 <hr />
 <h2 id="background-spryker-data-import-architecture">Background: Spryker Data Import Architecture</h2>
 <p>Spryker’s data import system processes external data (typically CSV files) through a pipeline of steps:</p>
@@ -267,33 +266,31 @@
 <hr />
 <h2 id="working-on-the-exercise">Working on the Exercise</h2>
 <h3 id="part-1-database-structure">Part 1: Database Structure</h3>
-<p>The exercise skeleton provides the Supplier module with the schema files: - <code>src/SprykerAcademy/Zed/Supplier/Persistence/Propel/Schema/pyz_supplier.schema.xml</code> - <code>src/SprykerAcademy/Zed/SupplierLocation/Persistence/Propel/Schema/pyz_supplier_location.schema.xml</code></p>
-<p>These define the tables <code>pyz_supplier</code> (with columns: id_supplier, name, description, status, email, phone) and <code>pyz_supplier_location</code> (with a FK to supplier).</p>
-<p>Run propel to create the tables:</p>
+<p>The exercise provides the schema files: - <code>src/SprykerAcademy/Zed/Supplier/Persistence/Propel/Schema/pyz_supplier.schema.xml</code> (also defines <code>pyz_merchant_to_supplier</code>) - <code>src/SprykerAcademy/Zed/SupplierLocation/Persistence/Propel/Schema/pyz_supplier_location.schema.xml</code></p>
+<p>They define <code>pyz_supplier</code> (id_supplier, name, description, status, email, phone) and <code>pyz_supplier_location</code> (with a foreign key to <code>pyz_supplier</code>). <code>propel:install</code>, which the loader ran, created the tables. If you change a schema, run it again:</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console propel:install</span></code></pre></div>
 <hr />
 <h3 id="part-2-data-source">Part 2: Data Source</h3>
-<h4 id="review-the-csv-file">2.1 Review the CSV File</h4>
-<p>The exercise skeleton provides <code>data/import/supplier.csv</code> with 4 supplier rows. Open it and examine the column headers — these will become the keys in the <code>DataSet</code> object during import.</p>
-<p>A <code>data/import/supplier_location.csv</code> is also provided for the location import.</p>
+<h4 id="review-the-csv-files">2.1 Review the CSV Files</h4>
+<p>The exercise ships <code>data/import/supplier.csv</code> (4 suppliers) and <code>data/import/supplier_location.csv</code> (their locations); the loader copies them into the project. Open them and look at the column headers - they become the keys of the <code>DataSet</code> object during import. Locations refer to suppliers by name, so suppliers must be imported first.</p>
 <h4 id="configure-the-import-yaml">2.2 Configure the Import YAML</h4>
-<p>The import YAML tells Spryker which CSV file to use for each import type. You need to register the supplier imports.</p>
+<p>An import configuration tells Spryker which CSV file to read for which importer. The demo shop’s full import is <code>data/import/local/full_EU.yml</code>; the exercise brings its own, <code>data/import/local/supplier_import.yml</code>, so it never has to change a project file.</p>
 <p><strong>Coding time:</strong></p>
-<p>Open <code>data/import/local/full_EU.yml</code> and add two new entries at the bottom of the <code>actions:</code> list:</p>
+<p>Open <code>data/import/local/supplier_import.yml</code> and add two entries to <code>actions:</code>, suppliers first:</p>
 <ul>
-<li>One for suppliers: <code>data_entity</code> must match the value of <code>SupplierDataImportConfig::IMPORT_TYPE_SUPPLIER</code>, and <code>source</code> must point to the supplier CSV file path (relative to project root)</li>
-<li>One for supplier locations: <code>data_entity</code> must match <code>SupplierDataImportConfig::IMPORT_TYPE_SUPPLIER_LOCATION</code>, pointing to the location CSV</li>
+<li><code>data_entity</code> must match the value of <code>SupplierDataImportConfig::IMPORT_TYPE_SUPPLIER</code>, <code>source</code> is the supplier CSV (path relative to the project root)</li>
+<li><code>data_entity</code> must match <code>SupplierDataImportConfig::IMPORT_TYPE_SUPPLIER_LOCATION</code>, pointing to the location CSV</li>
 </ul>
-<p>Look at how the other entities are configured in the same file for the correct format. Be careful with YAML indentation (spaces, not tabs).</p>
+<p>Look at <code>data/import/local/full_EU.yml</code> for the format. Be careful with YAML indentation (spaces, not tabs).</p>
 <blockquote>
-<p><strong>How it works:</strong> When you run <code>docker/sdk console data:import supplier</code>, Spryker looks up the <code>data_entity: supplier</code> entry in this YAML to find the CSV path, then passes it to the matching <code>DataImportPlugin</code> via the <code>DataImporterConfigurationTransfer</code>.</p>
+<p><strong>How it works:</strong> <code>docker/sdk console data:import --config=data/import/local/supplier_import.yml</code> runs every action of the file in order; <code>data:import supplier --config=...</code> only the one with <code>data_entity: supplier</code>. For each action Spryker passes the CSV path to the <code>DataImportPlugin</code> whose <code>getImportType()</code> equals the <code>data_entity</code>, inside a <code>DataImporterConfigurationTransfer</code>. In a real project you would add the two entries to <code>full_EU.yml</code> instead.</p>
 </blockquote>
 <hr />
 <h3 id="part-3-the-supplierdataimport-module">Part 3: The SupplierDataImport Module</h3>
-<p>The module <code>SprykerAcademy\Zed\SupplierDataImport</code> follows Spryker’s naming convention: <code>&lt;ModuleName&gt;DataImport</code>.</p>
+<p>The module <code>SprykerAcademy\Zed\SupplierDataImport</code> follows Spryker’s naming convention: <code>&lt;ModuleName&gt;DataImport</code>. The exercise focuses on completing the supplier import; the location importer is included as working supporting code so you can compare a second import pipeline.</p>
 <h4 id="constants-for-column-mapping">3.1 Constants for Column Mapping</h4>
 <p>Review the provided file <code>src/SprykerAcademy/Zed/SupplierDataImport/Business/DataSet/SupplierDataSetInterface.php</code>. It defines constants that map to the CSV column names.</p>
-<p><strong>Verify</strong> that the constant <code>COLUMN_NAME</code> matches the actual CSV column header. The skeleton may have a mismatch — compare the constant value with the first row of <code>supplier.csv</code> and fix it if needed.</p>
+<p>Compare the constants with the CSV header row. In the supplied file, <code>COLUMN_NAME</code> should be <code>name</code>; keep constants aligned with the actual headers if you customize the CSV.</p>
 <blockquote>
 <p><strong>Best practice:</strong> Always use constants for column names. Never use literal strings like <code>$dataSet['name']</code> directly — use <code>$dataSet[SupplierDataSetInterface::COLUMN_NAME]</code> instead.</p>
 </blockquote>
@@ -305,12 +302,7 @@
 <li><p><strong>Find or create</strong> the supplier entity. Propel query classes have a static <code>create()</code> method that returns a query builder. You can chain <code>filterBy&lt;ColumnName&gt;()</code> to build your query, then call <code>findOneOrCreate()</code> to either fetch an existing record or create a fresh (unsaved) entity.</p></li>
 <li><p><strong>Assign fields</strong> from the dataset to the entity. Use the entity’s setter methods (<code>setDescription()</code>, <code>setStatus()</code>, etc.) and read values from <code>$dataSet</code> using the constants from <code>SupplierDataSetInterface</code>.</p></li>
 <li><p><strong>Save conditionally.</strong> Only persist the entity if it’s actually new or has been modified. Propel entities provide <code>isNew()</code> and <code>isModified()</code> methods for this check.</p></li>
-<li><p><strong>Handle merchant relations</strong> (bonus). The CSV may contain a <code>merchant_ids</code> column with comma-separated IDs. Think about how to:</p>
-<ul>
-<li>Parse the comma-separated string into an array of IDs</li>
-<li>Query existing relations to avoid duplicates</li>
-<li>Create only the missing relation records</li>
-</ul></li>
+<li><p><strong>Optional extension — merchant relations.</strong> The supplied <code>supplier.csv</code> does <strong>not</strong> contain a <code>merchant_ids</code> column, so this is not part of the standard import exercise. If you add that column and provide valid existing merchant IDs, you can extend the writer to parse the IDs, avoid duplicate relations, and create only missing records.</p></li>
 </ol>
 <blockquote>
 <p><strong>Why Propel in the Business Layer?</strong> Data importers are one exception to the “no Propel in Business Layer” rule. Imports often process thousands of rows, so direct ORM access avoids the overhead of going through Repository/EntityManager for each row.</p>
@@ -368,14 +360,18 @@
 <p><strong>Plugin pattern:</strong> Plugins are the “glue” between modules. They live in the Communication layer and bridge the module’s Facade to another module’s plugin stack. They should contain no business logic — only delegation.</p>
 </blockquote>
 <h4 id="register-the-plugin">4.2 Register the Plugin</h4>
+<p>The <code>DataImport</code> module collects the importers from its dependency provider. The project’s is <code>src/Pyz/Zed/DataImport/DataImportDependencyProvider.php</code>.</p>
 <p><strong>Coding time:</strong></p>
-<p>Open <code>src/Pyz/Zed/DataImport/DataImportDependencyProvider.php</code> in the project. Find the <code>getDataImporterPlugins()</code> method and add instances of both <code>SupplierDataImportPlugin</code> and <code>SupplierLocationDataImportPlugin</code> to the returned array.</p>
+<p>Open <code>src/SprykerAcademy/Zed/DataImport/DataImportDependencyProvider.php</code>. It extends the project’s provider, and because <code>SprykerAcademy</code> comes before <code>Pyz</code> in <code>KernelConstants::PROJECT_NAMESPACES</code>, the kernel uses it instead of the <code>Pyz</code> one. In <code>getDataImporterPlugins()</code>, add a <code>SupplierDataImportPlugin</code> and a <code>SupplierLocationDataImportPlugin</code> to the plugins returned by <code>parent::getDataImporterPlugins()</code>.</p>
+<blockquote>
+<p>In a real project you would add the two plugins to <code>src/Pyz/Zed/DataImport/DataImportDependencyProvider.php</code> directly. The exercises extend the <code>Pyz</code> classes from <code>src/SprykerAcademy</code> instead, so that loading a solution never changes a project file - you will see the same pattern for the publisher, queue and OMS providers later.</p>
+</blockquote>
 <hr />
 <h3 id="part-5-run-the-import">Part 5: Run the Import</h3>
-<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console data:import supplier</span></code></pre></div>
-<p>This will: 1. Read <code>supplier.csv</code> 2. For each row: run <code>DescriptionToLowercaseStep</code> (lowercase description) then <code>SupplierWriterStep</code> (persist to DB) 3. Output a report with the number of imported rows</p>
-<p>You can also import supplier locations:</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console data:import supplier-location</span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console data:import <span class="at">--config</span><span class="op">=</span>data/import/local/supplier_import.yml</span></code></pre></div>
+<p>This will, for every action of the file: 1. Read the CSV file (<code>supplier.csv</code> first) 2. For each row: run <code>DescriptionToLowercaseStep</code> (lowercase description), then <code>SupplierWriterStep</code> (persist to DB) 3. Output a report with the number of imported rows</p>
+<p>The location import uses the provided <code>SupplierLocationWriterStep</code> and its factory, facade and plugin. To run one importer only:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console data:import supplier <span class="at">--config</span><span class="op">=</span>data/import/local/supplier_import.yml</span></code></pre></div>
 <hr />
 <h2 id="key-concepts-summary">Key Concepts Summary</h2>
 <h3 id="step-pipeline">Step Pipeline</h3>
@@ -387,17 +383,21 @@
 <li>Steps are chained via <code>DataSetStepBroker::addStep()</code> in the Factory</li>
 </ul>
 <h3 id="publishawarestep-preview-of-publish-synchronize">PublishAwareStep (Preview of Publish &amp; Synchronize)</h3>
-<p>In the complete solution, <code>SupplierWriterStep</code> extends <code>PublishAwareStep</code> instead of implementing <code>DataImportStepInterface</code> directly. This enables triggering publish events after saving, which feeds the <strong>Publish &amp; Synchronize</strong> pipeline (next exercise). This is how imported data flows through the entire Spryker architecture:</p>
+<p>From Exercise 10 on, <code>SupplierWriterStep</code> extends <code>PublishAwareStep</code> instead of implementing <code>DataImportStepInterface</code> directly. This enables triggering publish events after saving, which feeds the <strong>Publish &amp; Synchronize</strong> pipeline (next exercise). This is how imported data flows through the entire Spryker architecture:</p>
 <pre><code>CSV → DataImport → Database → Event → Publisher → Search/Storage Table → Queue → Elasticsearch/Redis</code></pre>
 <p>We will explore this in detail in the Publish &amp; Synchronize exercise.</p>
 <h3 id="dependencyprovider-inheritance">DependencyProvider Inheritance</h3>
-<p>The <code>SupplierDataImportDependencyProvider</code> extends <code>DataImportDependencyProvider</code> to inherit all dependencies the DataImport module needs (data reader, data set step broker, etc.). This is a common pattern when creating a module that extends a core module’s functionality.</p>
+<p>Two dependency providers take part, with different jobs:</p>
+<ul>
+<li><code>SupplierDataImportDependencyProvider</code> extends the core <code>DataImportDependencyProvider</code> to inherit what every importer module needs (data reader, step broker, …). It does not register anything.</li>
+<li>The importers are registered in the <code>DataImport</code> module’s provider. The project’s is <code>src/Pyz/Zed/DataImport/DataImportDependencyProvider.php</code>; the exercise extends it in <code>src/SprykerAcademy/Zed/DataImport/DataImportDependencyProvider.php</code>, which the kernel resolves first.</li>
+</ul>
 <hr />
 <h2 id="verify-your-work">Verify Your Work</h2>
-<p>After importing, check: 1. <code>pyz_supplier</code> table has 4 rows 2. Descriptions are lowercase (the <code>DescriptionToLowercaseStep</code> transformed them) 3. Run <code>data:import supplier</code> again — it should NOT create duplicates (idempotent import)</p>
+<p>After importing, check: 1. <code>pyz_supplier</code> has 4 rows and the descriptions are lowercase (the <code>DescriptionToLowercaseStep</code> transformed them). 2. <code>pyz_supplier_location</code> has 6 rows, each pointing to one of the suppliers. 3. Run the import again - it must not create duplicates (idempotent import). 4. Run the tests: <code>docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/Supplier/</code></p>
 <p>Use any database client (DBeaver, TablePlus, CLI) to connect and verify. Connection credentials are in <code>deploy.dev.yml</code> (typically host: <code>localhost</code>, port: <code>3306</code> or <code>5432</code>, user: <code>spryker</code>, password: <code>secret</code>).</p>
 <hr />
 <h2 id="solution">Solution</h2>
-<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> supplier intermediate/data-import/complete</span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> supplier intermediate/data-import/complete <span class="at">--run</span></span></code></pre></div>
 </body>
 </html>

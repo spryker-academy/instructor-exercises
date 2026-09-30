@@ -178,5 +178,5 @@ All tests should pass if your implementation is correct.
 ## Solution
 
 ```bash
-./exercises/load.sh contact-request basics/module-layers/complete
+./exercises/load.sh contact-request basics/module-layers/complete --run
 ```

@@ -17,10 +17,10 @@ You will learn how to:
 ## Loading the Exercise
 
 ```bash
-./exercises/load.sh supplier intermediate/storage-client/skeleton
-docker/sdk cli composer dump-autoload
-docker/sdk console transfer:generate
+./exercises/load.sh supplier intermediate/storage-client/skeleton --run
 ```
+
+`--run` also runs the commands the loader lists after loading (cache, Propel, transfers and whatever this exercise needs, such as queues or Glue resources) and stops at the first one that fails. Leave it out to run them yourself.
 
 ---
 
@@ -214,34 +214,35 @@ First, ensure suppliers are synchronized to Redis (from the P&S exercise):
 docker/sdk cli
 mysql -h database -u spryker -psecret eu-docker -e "SELECT COUNT(*) FROM pyz_supplier_storage;"
 
-# If empty, run data import and trigger P&S
-docker/sdk console data:import supplier
+# If empty, republish the suppliers and process the queues
+docker/sdk console publish:trigger-events -r supplier
 docker/sdk console queue:worker:start --stop-when-empty
 ```
 
 ### Test via Debug Console
 
-```bash
-# Open CLI
-docker/sdk cli
+A short script that boots the client layer and calls your client:
 
-# PHP one-liner to test
-php -r "
-require 'vendor/autoload.php';
-\$client = \Spryker\Client\Kernel\Locator::getInstance()->supplierStorage()->client();
-\$supplier = \$client->findSupplierById(1);
-var_dump(\$supplier);
-"
+```bash
+docker/sdk cli php -r '
+define("APPLICATION", "YVES");
+define("APPLICATION_ROOT_DIR", "/data");
+require "vendor/autoload.php";
+Spryker\Shared\Config\Application\Environment::initialize();
+$client = new SprykerAcademy\Client\SupplierStorage\SupplierStorageClient();
+var_dump($client->findSupplierById(1)?->toArray());
+echo $client->getAllSuppliers()->getSuppliers()->count(), " suppliers in storage", PHP_EOL;
+'
 ```
+
+Use an `id_supplier` that exists in `pyz_supplier`.
 
 ### Expected Data Format in Redis
 
-```bash
-# Connect to Redis
-docker/sdk cli redis-cli -h key_value_store
+The demo shop keeps the key-value storage in Redis database 1, and the storage client adds the prefix `kv:` to every key:
 
-# Get a supplier
-GET "supplier:1"
+```bash
+docker/sdk cli redis-cli -h key_value_store -n 1 GET kv:supplier:1
 ```
 
 Expected response (JSON):
@@ -249,7 +250,7 @@ Expected response (JSON):
 {
   "id_supplier": 1,
   "name": "Acme Supplies",
-  "description": "Leading supplier of industrial equipment",
+  "description": "leading supplier of industrial equipment",
   "status": 1,
   "email": "contact@acmesupplies.com",
   "phone": "+1-555-1234"
@@ -315,5 +316,5 @@ docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/Supplier/
 ## Solution
 
 ```bash
-./exercises/load.sh supplier intermediate/storage-client/complete
+./exercises/load.sh supplier intermediate/storage-client/complete --run
 ```

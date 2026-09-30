@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>Exercise 10: Publish &amp; Synchronize</title>
+  <title>Exercise 10: Publish &amp; Synchronize - Supplier</title>
   <style>
     html {
       line-height: 1.5;
@@ -213,7 +213,7 @@
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">Exercise 10: Publish &amp; Synchronize</h1>
+<h1 class="title">Exercise 10: Publish &amp; Synchronize - Supplier</h1>
 </header>
 <h1 id="exercise-10-publish-synchronize---supplier">Exercise 10: Publish &amp; Synchronize - Supplier</h1>
 <p>In this exercise, you will make supplier data available in Elasticsearch (search) and Redis (storage) using Spryker’s Publish &amp; Synchronize (P&amp;S) pattern. This is a two-step process: first you <strong>publish</strong> data from the main database into intermediate tables, then the <strong>synchronization</strong> behavior automatically pushes that data to the storefront storages.</p>
@@ -224,11 +224,8 @@
 <li>Understanding of the Facade, DependencyProvider, and Factory patterns</li>
 </ul>
 <h2 id="loading-the-exercise">Loading the Exercise</h2>
-<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> supplier intermediate/publish-synchronize/skeleton</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli composer dump-autoload</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console propel:install</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console messenger:setup-transports</span></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> supplier intermediate/publish-synchronize/skeleton <span class="at">--run</span></span></code></pre></div>
+<p><code>--run</code> also runs the commands the loader lists after loading (cache, Propel, transfers and whatever this exercise needs, such as queues or Glue resources) and stops at the first one that fails. Leave it out to run them yourself.</p>
 <hr />
 <h2 id="background-publish-synchronize-architecture">Background: Publish &amp; Synchronize Architecture</h2>
 <p>Spryker uses a two-step process to move data from the Zed database to the storefront storages (Elasticsearch, Redis):</p>
@@ -317,7 +314,7 @@ Insert/Update pyz_*_search/storage</code></pre>
 </tbody>
 </table>
 <p><strong>Coding time:</strong></p>
-<p>Open <code>src/Pyz/Client/SymfonyMessenger/SymfonyMessengerConfig.php</code>:</p>
+<p>Open <code>src/SprykerAcademy/Client/SymfonyMessenger/SymfonyMessengerConfig.php</code>. It extends the project’s <code>Pyz\Client\SymfonyMessenger\SymfonyMessengerConfig</code>, and because <code>SprykerAcademy</code> is listed before <code>Pyz</code> in the kernel’s project namespaces, it is the one Spryker uses (the same pattern as the <code>DataImport</code> provider in Exercise 8):</p>
 <ol type="1">
 <li>In <code>getPublishQueueConfiguration()</code>, add both publish queue constants (<code>SupplierSearchConfig::SUPPLIER_PUBLISH</code> and <code>SupplierStorageConfig::SUPPLIER_PUBLISH</code>)</li>
 <li>In <code>getSynchronizationQueueConfiguration()</code>, add both sync queue constants (<code>SupplierSearchConfig::SUPPLIER_SYNC_SEARCH_QUEUE</code> and <code>SupplierStorageConfig::SUPPLIER_SYNC_STORAGE_QUEUE</code>)</li>
@@ -329,7 +326,7 @@ Insert/Update pyz_*_search/storage</code></pre>
 <h3 id="part-3-set-up-queue-processors">Part 3: Set Up Queue Processors</h3>
 <p>Each queue needs a processor to handle its messages. Spryker provides out-of-the-box processor plugins.</p>
 <p><strong>Coding time:</strong></p>
-<p>Open <code>src/Pyz/Zed/Queue/QueueDependencyProvider.php</code>. For each queue, assign the appropriate processor:</p>
+<p>Open <code>src/SprykerAcademy/Zed/Queue/QueueDependencyProvider.php</code> (it extends the project’s provider). For each queue, assign the appropriate processor:</p>
 <table>
 <thead>
 <tr class="header">
@@ -414,12 +411,13 @@ Insert/Update pyz_*_search/storage</code></pre>
 </tr>
 <tr class="even">
 <td><code>params</code></td>
-<td>JSON string (e.g., <code>'{"type":"page"}'</code>)</td>
-<td>Extra parameters — for search, set <code>type</code> to <code>"page"</code></td>
+<td>JSON string (e.g., <code>'{"type":"supplier"}'</code>)</td>
+<td>Extra parameters — for search, set <code>type</code> to <code>"supplier"</code> (must match the mapping type in <code>supplier.json</code> and the source identifier)</td>
 </tr>
 </tbody>
 </table>
-<p>For the <strong>search</strong> table, you need all four parameters (including <code>params</code> with <code>type: page</code> for Elasticsearch indexing). For the <strong>storage</strong> table (<code>pyz_supplier_storage.schema.xml</code>), it is already provided.</p>
+<p>For the <strong>search</strong> table, you need all four parameters (including <code>params</code> with <code>type: "supplier"</code> for Elasticsearch indexing). This <code>type</code> value must match: - The mapping type name in <code>supplier.json</code> (the key inside <code>mappings</code>) - The <code>SOURCE_IDENTIFIER</code> constant in your query plugin - The index name in <code>SearchElasticsearchConfig::SUPPORTED_SOURCE_IDENTIFIERS</code></p>
+<p>For the <strong>storage</strong> table (<code>pyz_supplier_storage.schema.xml</code>), it is already provided.</p>
 <div class="sourceCode" id="cb5"><pre class="sourceCode xml"><code class="sourceCode xml"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;behavior</span><span class="ot"> name=</span><span class="st">&quot;synchronization&quot;</span><span class="kw">&gt;</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">&lt;parameter</span><span class="ot"> name=</span><span class="st">&quot;...&quot;</span><span class="ot"> value=</span><span class="st">&quot;...&quot;</span><span class="kw">/&gt;</span></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">&lt;parameter</span><span class="ot"> name=</span><span class="st">&quot;...&quot;</span><span class="ot"> value=</span><span class="st">&quot;...&quot;</span><span class="kw">/&gt;</span></span>
@@ -434,7 +432,7 @@ Insert/Update pyz_*_search/storage</code></pre>
 <h3 id="part-5-register-publisher-plugins">Part 5: Register Publisher Plugins</h3>
 <p>Publisher plugins react to entity events and delegate to the business logic. You need to register them so the system knows which plugins handle which events.</p>
 <p><strong>Coding time:</strong></p>
-<p>Open <code>src/Pyz/Zed/Publisher/PublisherDependencyProvider.php</code>. The format maps a queue name to an array of publisher plugins:</p>
+<p>Open <code>src/SprykerAcademy/Zed/Publisher/PublisherDependencyProvider.php</code> (it extends the project’s provider) and complete <code>getSupplierPublisherPlugins()</code>. The format maps a queue name to an array of publisher plugins:</p>
 <div class="sourceCode" id="cb7"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="cf">return</span> [</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="cn">Q</span>ueueName::<span class="fu">CONSTANT</span> =&gt; [</span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>        <span class="kw">new</span> <span class="cn">M</span>yWritePublisherPlugin()<span class="ot">,</span></span>
@@ -532,14 +530,15 @@ Insert/Update pyz_*_search/storage</code></pre>
 <div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console messenger:setup-transports</span></code></pre></div>
 <p>This reads the <code>SymfonyMessengerConfig::getQueueConfiguration()</code> and creates the corresponding AMQP exchanges and queues. <strong>Without this step, messages are silently dropped</strong> because the Symfony Messenger transport has no exchange to route them through.</p>
 <blockquote>
-<p><strong>Three config files required:</strong> Queues must be registered in: 1. <code>SymfonyMessengerConfig</code> — Symfony Messenger transport routing 2. <code>RabbitMqConfig</code> — AMQP queue declaration 3. <code>QueueDependencyProvider</code> — queue message processors</p>
-<p>The <code>load.sh</code> script handles all three and also creates queues/exchanges via the RabbitMQ management API as a fallback.</p>
+<p><strong>Three config classes are involved:</strong> Queues must be registered in: 1. <code>SymfonyMessengerConfig</code> — Symfony Messenger transport routing (Part 2) 2. <code>RabbitMqConfig</code> — AMQP queue declaration (provided in <code>src/SprykerAcademy/Client/RabbitMq</code>) 3. <code>QueueDependencyProvider</code> — queue message processors (Part 3)</p>
+<p><code>load.sh --run</code> runs <code>queue:setup</code> and <code>messenger:setup-transports</code> for you. Run them again after you changed the queue configuration.</p>
 </blockquote>
 <p>Verify the queues exist at http://queue.spryker.local (login: <code>spryker</code>/<code>secret</code>): - <code>publish.search.supplier</code> - <code>publish.storage.supplier</code> - <code>sync.search.supplier</code> - <code>sync.storage.supplier</code></p>
 <h3 id="test-the-flow">Test the Flow</h3>
 <ol type="1">
 <li><p>Add a new supplier to the CSV and import:</p>
-<div class="sourceCode" id="cb10"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console data:import supplier</span></code></pre></div></li>
+<div class="sourceCode" id="cb10"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console data:import supplier <span class="at">--config</span><span class="op">=</span>data/import/local/supplier_import.yml</span></code></pre></div>
+<p>Only new or changed rows fire publish events. To republish every supplier to search and storage, for example after you emptied the index, use <code>docker/sdk console publish:trigger-events -r supplier</code>.</p></li>
 <li><p>Process the event queue first (routes events to publish queues):</p>
 <div class="sourceCode" id="cb11"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console queue:worker:start <span class="at">--stop-when-empty</span></span></code></pre></div></li>
 <li><p>Process again (handles publish → search/storage tables → sync queues → Elasticsearch/Redis):</p>
@@ -556,7 +555,7 @@ Insert/Update pyz_*_search/storage</code></pre>
 <h3 id="troubleshooting">Troubleshooting</h3>
 <ul>
 <li><strong>No messages in queues after import:</strong> Ensure <code>DataImportPublisherPlugin</code> is registered in <code>DataImportDependencyProvider::getDataImportAfterImportHookPlugins()</code></li>
-<li><strong>Queue not found error:</strong> Run <code>docker/sdk boot deploy.dev.yml</code> to recreate infrastructure, or create queues manually via the RabbitMQ API</li>
+<li><strong>Queue not found error:</strong> Run <code>docker/sdk console queue:setup</code> and <code>docker/sdk console messenger:setup-transports</code></li>
 <li><strong>Data in tables but not in Elasticsearch:</strong> Process the sync queues with <code>queue:worker:start --stop-when-empty</code></li>
 </ul>
 <hr />
@@ -564,6 +563,6 @@ Insert/Update pyz_*_search/storage</code></pre>
 <div class="sourceCode" id="cb15"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/Supplier/ PublishSync</span></code></pre></div>
 <hr />
 <h2 id="solution">Solution</h2>
-<div class="sourceCode" id="cb16"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> supplier intermediate/publish-synchronize/complete</span></code></pre></div>
+<div class="sourceCode" id="cb16"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> supplier intermediate/publish-synchronize/complete <span class="at">--run</span></span></code></pre></div>
 </body>
 </html>

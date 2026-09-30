@@ -224,11 +224,8 @@
 <li>Understanding of the Facade pattern and DependencyProvider</li>
 </ul>
 <h2 id="loading-the-exercise">Loading the Exercise</h2>
-<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> supplier intermediate/back-office/skeleton</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli composer dump-autoload</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console propel:install</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> supplier intermediate/back-office/skeleton <span class="at">--run</span></span></code></pre></div>
+<p><code>--run</code> also runs the commands the loader lists after loading (cache, Propel, transfers and whatever this exercise needs, such as queues or Glue resources) and stops at the first one that fails. Leave it out to run them yourself.</p>
 <hr />
 <h2 id="background-spryker-back-office-architecture">Background: Spryker Back Office Architecture</h2>
 <p>Back Office modules in Spryker follow the naming convention <code>&lt;ModuleName&gt;Gui</code> (e.g., <code>SupplierGui</code>). They live in the Communication layer and depend on the core module’s Facade for business logic.</p>
@@ -359,7 +356,8 @@
 <p>Without <code>| raw</code>, Twig would escape the HTML tags and you’d see raw <code>&lt;table&gt;</code> markup as text.</p>
 </blockquote>
 <p>Clear cache:</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console propel:model:build</span></code></pre></div>
 <p>Visit http://backoffice.eu.spryker.local/supplier-gui to see the table.</p>
 <hr />
 <h3 id="part-3-create-the-supplier-form">Part 3: Create the Supplier Form</h3>
@@ -459,9 +457,9 @@
 </blockquote>
 <hr />
 <h3 id="part-4-navigation">Part 4: Navigation</h3>
-<p>The navigation XML (<code>config/Zed/navigation.xml</code>) is provided by the exercise skeleton. It registers the “Suppliers” menu item in the Back Office sidebar with sub-pages for Overview, Create, Edit, and Delete.</p>
-<p>After loading the exercise, clear cache to see the navigation:</p>
-<div class="sourceCode" id="cb12"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span></code></pre></div>
+<p>The menu entry is provided: <code>src/SprykerAcademy/Zed/SupplierGui/Communication/navigation.xml</code> registers “Suppliers” with the sub-pages Overview and Create, and Edit and Delete as hidden pages (they only show up in the breadcrumb). Spryker merges every module’s <code>Communication/navigation.xml</code> into the Back Office menu - the same mechanism the core modules use.</p>
+<p>After you changed a <code>navigation.xml</code>, rebuild the menu:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console navigation:build-cache</span></code></pre></div>
 <hr />
 <h2 id="key-concepts-summary">Key Concepts Summary</h2>
 <h3 id="back-office-table-pattern">Back Office Table Pattern</h3>
@@ -487,6 +485,6 @@ Controller: getFactory()-&gt;createSupplierTable()
 <div class="sourceCode" id="cb16"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/Supplier/ BackOffice</span></code></pre></div>
 <hr />
 <h2 id="solution">Solution</h2>
-<div class="sourceCode" id="cb17"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> supplier intermediate/back-office/complete</span></code></pre></div>
+<div class="sourceCode" id="cb17"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> supplier intermediate/back-office/complete <span class="at">--run</span></span></code></pre></div>
 </body>
 </html>

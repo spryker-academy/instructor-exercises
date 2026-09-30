@@ -5,10 +5,10 @@ In this exercise you will create a database table to store messages and an entit
 ## Loading the Exercise
 
 ```bash
-./exercises/load.sh contact-request basics/contact-request-table-schema/skeleton
-docker/sdk cli composer dump-autoload
-docker/sdk console transfer:generate
+./exercises/load.sh contact-request basics/contact-request-table-schema/skeleton --run
 ```
+
+`--run` also runs the commands the loader lists after loading (cache, Propel, transfers and whatever this exercise needs, such as queues or Glue resources) and stops at the first one that fails. Leave it out to run them yourself.
 
 ---
 
@@ -41,7 +41,7 @@ Here is an example Propel schema definition for a `pyz_human` table:
 
 **Coding time:**
 
-Open `src/SprykerAcademy/Zed/ContactRequest/Persistence/Propel/Schema/pyz_contact_request.schema.xml` and add the definition for the **PyzContactRequest** table:
+Create `src/SprykerAcademy/Zed/ContactRequest/Persistence/Propel/Schema/pyz_contact_request.schema.xml`, with the `<database>` element of the example above (namespace `Orm\Zed\ContactRequest\Persistence`, package `src.Orm.Zed.ContactRequest.Persistence`), and add the definition for the **PyzContactRequest** table:
 
 - Column `id_contact_request`: type `INTEGER`, primary key, auto-increment, required
 - Column `message`: type `VARCHAR`, size `255`, required, **unique**
@@ -64,10 +64,8 @@ docker/sdk console propel:install
 > rm src/Orm/Propel/Migration_mysql/PropelMigration_<timestamp>.php
 > ```
 >
-> Two things in this exercise leave such a file behind:
+> The usual cause in this exercise:
 >
-> - **`CREATE TABLE \`TODO\``** - the skeleton ships `<table name="TODO">`. You ran `propel:install`
->   before renaming the table, so Propel built a migration for a table called `TODO`.
 > - **`id_contact_request BIGINT AUTO_INCREMENT` with no key** - MySQL rejects `AUTO_INCREMENT` on a
 >   column that is not a key, so the migration aborts while executing and stays pending. That is the
 >   real error, and from the next run on it is hidden behind the "uncommitted migrations" message.
@@ -98,5 +96,5 @@ All tests should pass if your schema definition is correct.
 ## Solution
 
 ```bash
-./exercises/load.sh contact-request basics/contact-request-table-schema/complete
+./exercises/load.sh contact-request basics/contact-request-table-schema/complete --run
 ```

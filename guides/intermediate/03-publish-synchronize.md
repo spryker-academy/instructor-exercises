@@ -19,12 +19,10 @@ You will learn how to:
 ## Loading the Exercise
 
 ```bash
-./exercises/load.sh supplier intermediate/publish-synchronize/skeleton
-docker/sdk cli composer dump-autoload
-docker/sdk console transfer:generate
-docker/sdk console propel:install
-docker/sdk console messenger:setup-transports
+./exercises/load.sh supplier intermediate/publish-synchronize/skeleton --run
 ```
+
+`--run` also runs the commands the loader lists after loading (cache, Propel, transfers and whatever this exercise needs, such as queues or Glue resources) and stops at the first one that fails. Leave it out to run them yourself.
 
 ---
 
@@ -86,7 +84,7 @@ P&S uses four queues — two per pipeline (Search + Storage):
 
 **Coding time:**
 
-Open `src/Pyz/Client/SymfonyMessenger/SymfonyMessengerConfig.php`:
+Open `src/SprykerAcademy/Client/SymfonyMessenger/SymfonyMessengerConfig.php`. It extends the project's `Pyz\Client\SymfonyMessenger\SymfonyMessengerConfig`, and because `SprykerAcademy` is listed before `Pyz` in the kernel's project namespaces, it is the one Spryker uses (the same pattern as the `DataImport` provider in Exercise 8):
 
 1. In `getPublishQueueConfiguration()`, add both publish queue constants (`SupplierSearchConfig::SUPPLIER_PUBLISH` and `SupplierStorageConfig::SUPPLIER_PUBLISH`)
 2. In `getSynchronizationQueueConfiguration()`, add both sync queue constants (`SupplierSearchConfig::SUPPLIER_SYNC_SEARCH_QUEUE` and `SupplierStorageConfig::SUPPLIER_SYNC_STORAGE_QUEUE`)
@@ -101,7 +99,7 @@ Each queue needs a processor to handle its messages. Spryker provides out-of-the
 
 **Coding time:**
 
-Open `src/Pyz/Zed/Queue/QueueDependencyProvider.php`. For each queue, assign the appropriate processor:
+Open `src/SprykerAcademy/Zed/Queue/QueueDependencyProvider.php` (it extends the project's provider). For each queue, assign the appropriate processor:
 
 | Queue | Processor Plugin |
 |-------|-----------------|
@@ -198,7 +196,7 @@ Publisher plugins react to entity events and delegate to the business logic. You
 
 **Coding time:**
 
-Open `src/Pyz/Zed/Publisher/PublisherDependencyProvider.php`. The format maps a queue name to an array of publisher plugins:
+Open `src/SprykerAcademy/Zed/Publisher/PublisherDependencyProvider.php` (it extends the project's provider) and complete `getSupplierPublisherPlugins()`. The format maps a queue name to an array of publisher plugins:
 
 ```php
 return [
@@ -339,12 +337,12 @@ docker/sdk console messenger:setup-transports
 
 This reads the `SymfonyMessengerConfig::getQueueConfiguration()` and creates the corresponding AMQP exchanges and queues. **Without this step, messages are silently dropped** because the Symfony Messenger transport has no exchange to route them through.
 
-> **Three config files required:** Queues must be registered in:
-> 1. `SymfonyMessengerConfig` — Symfony Messenger transport routing
-> 2. `RabbitMqConfig` — AMQP queue declaration
-> 3. `QueueDependencyProvider` — queue message processors
+> **Three config classes are involved:** Queues must be registered in:
+> 1. `SymfonyMessengerConfig` — Symfony Messenger transport routing (Part 2)
+> 2. `RabbitMqConfig` — AMQP queue declaration (provided in `src/SprykerAcademy/Client/RabbitMq`)
+> 3. `QueueDependencyProvider` — queue message processors (Part 3)
 >
-> The `load.sh` script handles all three and also creates queues/exchanges via the RabbitMQ management API as a fallback.
+> `load.sh --run` runs `queue:setup` and `messenger:setup-transports` for you. Run them again after you changed the queue configuration.
 
 Verify the queues exist at http://queue.spryker.local (login: `spryker`/`secret`):
 - `publish.search.supplier`
@@ -356,8 +354,9 @@ Verify the queues exist at http://queue.spryker.local (login: `spryker`/`secret`
 
 1. Add a new supplier to the CSV and import:
    ```bash
-   docker/sdk console data:import supplier
+   docker/sdk console data:import supplier --config=data/import/local/supplier_import.yml
    ```
+   Only new or changed rows fire publish events. To republish every supplier to search and storage, for example after you emptied the index, use `docker/sdk console publish:trigger-events -r supplier`.
 
 2. Process the event queue first (routes events to publish queues):
    ```bash
@@ -387,7 +386,7 @@ Verify the queues exist at http://queue.spryker.local (login: `spryker`/`secret`
 ### Troubleshooting
 
 - **No messages in queues after import:** Ensure `DataImportPublisherPlugin` is registered in `DataImportDependencyProvider::getDataImportAfterImportHookPlugins()`
-- **Queue not found error:** Run `docker/sdk boot deploy.dev.yml` to recreate infrastructure, or create queues manually via the RabbitMQ API
+- **Queue not found error:** Run `docker/sdk console queue:setup` and `docker/sdk console messenger:setup-transports`
 - **Data in tables but not in Elasticsearch:** Process the sync queues with `queue:worker:start --stop-when-empty`
 
 ---
@@ -403,5 +402,5 @@ docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/Supplier/
 ## Solution
 
 ```bash
-./exercises/load.sh supplier intermediate/publish-synchronize/complete
+./exercises/load.sh supplier intermediate/publish-synchronize/complete --run
 ```

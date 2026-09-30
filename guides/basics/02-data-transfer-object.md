@@ -5,10 +5,10 @@ In Spryker, data transfer objects (DTOs) are used to pass data across layers and
 ## Loading the Exercise
 
 ```bash
-./exercises/load.sh contact-request basics/data-transfer-object/skeleton
-docker/sdk cli composer dump-autoload
-docker/sdk console transfer:generate
+./exercises/load.sh contact-request basics/data-transfer-object/skeleton --run
 ```
+
+`--run` also runs the commands the loader lists after loading (cache, Propel, transfers and whatever this exercise needs, such as queues or Glue resources) and stops at the first one that fails. Leave it out to run them yourself.
 
 ---
 
@@ -145,5 +145,5 @@ All tests should pass if your transfer definition is correct.
 ## Solution
 
 ```bash
-./exercises/load.sh contact-request basics/data-transfer-object/complete
+./exercises/load.sh contact-request basics/data-transfer-object/complete --run
 ```

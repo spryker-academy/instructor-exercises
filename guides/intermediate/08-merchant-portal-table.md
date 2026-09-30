@@ -19,12 +19,10 @@ You will learn how to:
 ## Loading the Exercise
 
 ```bash
-./exercises/load.sh supplier intermediate/merchant-portal-table/skeleton
-docker/sdk cli composer dump-autoload
-docker/sdk console transfer:generate
-docker/sdk console cache:empty-all
-docker/sdk console propel:model:build
+./exercises/load.sh supplier intermediate/merchant-portal-table/skeleton --run
 ```
+
+`--run` also runs the commands the loader lists after loading (cache, Propel, transfers and whatever this exercise needs, such as queues or Glue resources) and stops at the first one that fails. Leave it out to run them yourself.
 
 ---
 
@@ -59,44 +57,45 @@ GET /supplier-merchant-portal-gui/supplier/table-data (AJAX)
 
 ---
 
-## Setup: Navigation and ACL
+## Setup: Navigation, ACL, Frontend and Data
 
-The exercise skeleton provides these pre-built:
+The exercise provides these pre-built:
 
 ### Navigation
 
-The Merchant Portal navigation is in `config/Zed/navigation-main-merchant-portal.xml` (separate from the Back Office `navigation.xml`). The supplier entry is automatically merged by `load.sh`.
+The Merchant Portal has its own menu, separate from the Back Office one. A module adds its entries in `Communication/navigation-main-merchant-portal.xml`; this exercise ships `src/SprykerAcademy/Zed/SupplierMerchantPortalGui/Communication/navigation-main-merchant-portal.xml`. `load.sh --run` rebuilds the menu (`navigation:build-cache`).
 
 ### ACL (Access Control)
 
-Every Merchant Portal module must register ACL rules so merchant users can access its controllers. The skeleton includes:
+Every Merchant Portal module must register ACL rules so merchant users can access its controllers. The exercise includes:
 
 - `SupplierMerchantPortalGuiMerchantAclRuleExpanderPlugin` — allows all routes in the `supplier-merchant-portal-gui` bundle
-- `AclMerchantPortalDependencyProvider` override — registers the plugin via SprykerAcademy namespace
+- `src/SprykerAcademy/Zed/AclMerchantPortal/AclMerchantPortalDependencyProvider.php` — extends the project's provider and registers the plugins
 
 > **Why ACL?** The Merchant Portal is multi-tenant. Each merchant user can only access modules explicitly allowed by ACL rules. Without the ACL plugin, the Merchant Portal logs you out (redirect to the login page) as soon as you open a supplier route.
 
-The Merchant Portal also restricts every **database entity** for merchant users (ACL entity rules). The skeleton therefore ships a second plugin, `SupplierMerchantPortalGuiMerchantAclEntityRuleExpanderPlugin`, which grants access to the supplier tables. Without it every supplier query returns nothing, and opening a supplier answers with a 404.
+The Merchant Portal also restricts every **database entity** for merchant users (ACL entity rules). The exercise therefore ships a second plugin, `SupplierMerchantPortalGuiMerchantAclEntityRuleExpanderPlugin`, which grants access to the supplier tables. Without it every supplier query returns nothing, and opening a supplier answers with a 404.
 
-Both expander plugins only run when a merchant or merchant user is created. The demo merchant users already exist, so apply the rules to them once:
+Both expander plugins only run when a merchant or merchant user is created. The demo merchant users already exist, so the rules are applied to them once - `load.sh --run` does it:
 
 ```bash
 docker/sdk console acl-entity:synchronize
 ```
 
-### Assign suppliers to your merchant
+### Frontend
 
-The table is merchant-scoped: it only lists suppliers linked to the logged-in merchant through `pyz_merchant_to_supplier`. The demo user `harald@spryker.com` (password `change123`) belongs to the merchant *Spryker* (`MER000008`). Link the imported suppliers to that merchant, either with the `merchant_ids` column of `data/import/supplier.csv` (a comma-separated list of merchant IDs, then `docker/sdk console data:import supplier`) or directly:
+The Angular components live in `src/SprykerAcademy/Zed/SupplierMerchantPortalGui/Presentation/Components`. `entry.ts` registers the module in the Merchant Portal's single JavaScript bundle (`// spy/merchant-portal:single-entry-marker`), exactly as the core modules do; the exercise loader added `src/SprykerAcademy/Zed` to the bundle's entry points once. `load.sh --run` builds the bundle; after you changed a component, build it again (the first run also installs the npm dependencies, which takes a while):
 
 ```bash
-docker/sdk cli mysql -h database -u spryker -psecret eu-docker
+docker/sdk console frontend:mp:build
 ```
 
-```sql
-INSERT INTO pyz_merchant_to_supplier (fk_merchant, fk_supplier)
-SELECT m.id_merchant, s.id_supplier FROM spy_merchant m, pyz_supplier s
-WHERE m.merchant_reference = 'MER000008'
-  AND NOT EXISTS (SELECT 1 FROM pyz_merchant_to_supplier x WHERE x.fk_merchant = m.id_merchant AND x.fk_supplier = s.id_supplier);
+### Assign suppliers to your merchant
+
+The table is merchant-scoped: it only lists suppliers linked to the logged-in merchant through `pyz_merchant_to_supplier`. The demo user `harald@spryker.com` (password `change123`) belongs to the merchant *Spryker* (`MER000008`, id 8). From this exercise on, `data/import/supplier.csv` has a `merchant_ids` column with that id, so an import links the suppliers:
+
+```bash
+docker/sdk console data:import --config=data/import/local/supplier_import.yml
 ```
 
 ---
@@ -210,9 +209,10 @@ Add `SupplierListComponent` to the `WebComponentsModule.withComponents([...])` a
 
 ## Testing
 
-After completing all parts:
+After completing all parts, rebuild the frontend (Part 5 changed a component) and clear the cache:
 
 ```bash
+docker/sdk console frontend:mp:build
 docker/sdk console cache:empty-all
 docker/sdk console propel:model:build
 ```
@@ -227,5 +227,5 @@ docker/sdk console propel:model:build
 ## Solution
 
 ```bash
-./exercises/load.sh supplier intermediate/merchant-portal-table/complete
+./exercises/load.sh supplier intermediate/merchant-portal-table/complete --run
 ```

@@ -19,11 +19,10 @@ You will learn how to:
 ## Loading the Exercise
 
 ```bash
-./exercises/load.sh supplier intermediate/oms/skeleton
-docker/sdk cli composer dump-autoload
-docker/sdk console cache:empty-all
-docker/sdk console propel:model:build
+./exercises/load.sh supplier intermediate/oms/skeleton --run
 ```
+
+`--run` also runs the commands the loader lists after loading (cache, Propel, transfers and whatever this exercise needs, such as queues or Glue resources) and stops at the first one that fails. Leave it out to run them yourself.
 
 ---
 
@@ -32,7 +31,7 @@ docker/sdk console propel:model:build
 Spryker's Order Management System uses an XML-based state machine to define the lifecycle of an order. Each order item moves through states based on events, commands, and conditions.
 
 ```
-State Machine XML (config/Zed/oms/Demo01.xml)
+State Machine XML (config/Zed/oms/Demo01.xml, copied by the loader)
     ├── States      — positions in the workflow (new, paid, shipped, closed)
     ├── Transitions — connections between states (source → target)
     ├── Events      — triggers for transitions (manual, onEnter, timeout)
@@ -56,16 +55,14 @@ State Machine XML (config/Zed/oms/Demo01.xml)
 
 ### Part 1: Enable the State Machine
 
-The OMS process must be registered as an active process and mapped to a payment method.
+The OMS process must be registered as an active process and mapped to a payment method. Projects usually do both in `config/Shared/config_default.php` (`OmsConstants::ACTIVE_PROCESSES`, `SalesConstants::PAYMENT_METHOD_STATEMACHINE_MAPPING`). The exercise keeps them in two config classes instead - they extend the project's ones and, like every `SprykerAcademy` class, are resolved before them.
 
 **Coding time:**
 
-Open `config/Shared/common/config_oms-development.php`:
+1. Open `src/SprykerAcademy/Zed/Oms/OmsConfig.php`. In `getActiveProcesses()`, add `Demo01` to the processes of the project. The name must match the `<process name="...">` of `config/Zed/oms/Demo01.xml` (and the file name without `.xml`).
+2. Open `src/SprykerAcademy/Zed/Sales/SalesConfig.php`. In `getPaymentMethodStatemachineMapping()`, map the invoice payment method (`DummyMarketplacePaymentConfig::PAYMENT_METHOD_DUMMY_MARKETPLACE_PAYMENT_INVOICE`) to `Demo01`, on top of the mapping of the project.
 
-1. Add the state machine name to the list of active processes. The name must match the XML filename without the `.xml` extension (e.g., `'Demo01'`).
-2. Map the state machine to the invoice payment method by replacing the current process name with your new one.
-
-> **Verify:** Visit http://backoffice.eu.spryker.local/oms — the Demo01 process should be listed. Clicking it shows a blank page (the state machine is still empty).
+> **Verify:** Visit http://backoffice.eu.spryker.local/oms - the Demo01 process should be listed. Clicking it shows a blank page (the state machine is still empty).
 
 ---
 
@@ -252,8 +249,19 @@ XML: condition="Demo/IsAuthorized" → PHP: $conditionCollection->add(new IsAuth
 
 ---
 
+## Run Automated Tests
+
+```bash
+docker/sdk cli vendor/bin/codecept build -c tests/SprykerAcademyTest/Zed/Supplier/
+docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/Supplier/ Oms
+```
+
+The tests check the six states, the happy path, the condition routing, that `Demo/Pay` and `Demo/IsAuthorized` are registered under the names the XML uses, and the Demo01 configuration.
+
+---
+
 ## Solution
 
 ```bash
-./exercises/load.sh supplier intermediate/oms/complete
+./exercises/load.sh supplier intermediate/oms/complete --run
 ```

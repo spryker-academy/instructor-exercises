@@ -212,20 +212,21 @@
   <![endif]-->
 </head>
 <body>
+<header id="title-block-header">
+<h1 class="title">Exercise 15: Merchant Portal — Supplier Table</h1>
+</header>
 <h1 id="exercise-15-merchant-portal-supplier-table">Exercise 15: Merchant Portal — Supplier Table</h1>
 <p>In this exercise, you will build a supplier list page in the Merchant Portal using Spryker’s GuiTable framework. The table displays only suppliers belonging to the current merchant and supports pagination, sorting, searching, and filtering.</p>
 <p>You will learn how to: - Create a Merchant Portal GUI module (<code>SupplierMerchantPortalGui</code>) - Build a GuiTable configuration (columns, filters, row actions) - Implement a data provider that fetches merchant-scoped data - Write a repository query that joins suppliers with merchant assignments - Register an Angular web component in the module - Configure ACL rules and Merchant Portal navigation</p>
 <h2 id="prerequisites">Prerequisites</h2>
 <ul>
 <li>Completed Exercise 9 (Back Office) — supplier facade, repository, and entity manager must exist</li>
-<li>Suppliers assigned to a merchant via <code>pyz_merchant_to_supplier</code></li>
-<li>Logged in as a demo merchant user</li>
+<li>Suppliers assigned to a merchant via <code>pyz_merchant_to_supplier</code> (see <em>Assign suppliers to your merchant</em> below)</li>
+<li>Logged in as a demo merchant user (<code>harald@spryker.com</code> / <code>change123</code>)</li>
 </ul>
 <h2 id="loading-the-exercise">Loading the Exercise</h2>
-<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> supplier intermediate/merchant-portal-table/skeleton</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli composer dump-autoload</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> supplier intermediate/merchant-portal-table/skeleton <span class="at">--run</span></span></code></pre></div>
+<p><code>--run</code> also runs the commands the loader lists after loading (cache, Propel, transfers and whatever this exercise needs, such as queues or Glue resources) and stops at the first one that fails. Leave it out to run them yourself.</p>
 <hr />
 <h2 id="background-merchant-portal-architecture">Background: Merchant Portal Architecture</h2>
 <p>The Merchant Portal uses a different architecture from the Back Office:</p>
@@ -288,19 +289,28 @@ GET /supplier-merchant-portal-gui/supplier/table-data (AJAX)
 ├── Repository fetches paginated data
 └── Returns JSON rows to Angular table</code></pre>
 <hr />
-<h2 id="setup-navigation-and-acl">Setup: Navigation and ACL</h2>
-<p>The exercise skeleton provides these pre-built:</p>
+<h2 id="setup-navigation-acl-frontend-and-data">Setup: Navigation, ACL, Frontend and Data</h2>
+<p>The exercise provides these pre-built:</p>
 <h3 id="navigation">Navigation</h3>
-<p>The Merchant Portal navigation is in <code>config/Zed/navigation-main-merchant-portal.xml</code> (separate from the Back Office <code>navigation.xml</code>). The supplier entry is automatically merged by <code>load.sh</code>.</p>
+<p>The Merchant Portal has its own menu, separate from the Back Office one. A module adds its entries in <code>Communication/navigation-main-merchant-portal.xml</code>; this exercise ships <code>src/SprykerAcademy/Zed/SupplierMerchantPortalGui/Communication/navigation-main-merchant-portal.xml</code>. <code>load.sh --run</code> rebuilds the menu (<code>navigation:build-cache</code>).</p>
 <h3 id="acl-access-control">ACL (Access Control)</h3>
-<p>Every Merchant Portal module must register ACL rules so merchant users can access its controllers. The skeleton includes:</p>
+<p>Every Merchant Portal module must register ACL rules so merchant users can access its controllers. The exercise includes:</p>
 <ul>
 <li><code>SupplierMerchantPortalGuiMerchantAclRuleExpanderPlugin</code> — allows all routes in the <code>supplier-merchant-portal-gui</code> bundle</li>
-<li><code>AclMerchantPortalDependencyProvider</code> override — registers the plugin via SprykerAcademy namespace</li>
+<li><code>src/SprykerAcademy/Zed/AclMerchantPortal/AclMerchantPortalDependencyProvider.php</code> — extends the project’s provider and registers the plugins</li>
 </ul>
 <blockquote>
-<p><strong>Why ACL?</strong> The Merchant Portal is multi-tenant. Each merchant user can only access modules explicitly allowed by ACL rules. Without the ACL plugin, all routes return 403 Forbidden.</p>
+<p><strong>Why ACL?</strong> The Merchant Portal is multi-tenant. Each merchant user can only access modules explicitly allowed by ACL rules. Without the ACL plugin, the Merchant Portal logs you out (redirect to the login page) as soon as you open a supplier route.</p>
 </blockquote>
+<p>The Merchant Portal also restricts every <strong>database entity</strong> for merchant users (ACL entity rules). The exercise therefore ships a second plugin, <code>SupplierMerchantPortalGuiMerchantAclEntityRuleExpanderPlugin</code>, which grants access to the supplier tables. Without it every supplier query returns nothing, and opening a supplier answers with a 404.</p>
+<p>Both expander plugins only run when a merchant or merchant user is created. The demo merchant users already exist, so the rules are applied to them once - <code>load.sh --run</code> does it:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console acl-entity:synchronize</span></code></pre></div>
+<h3 id="frontend">Frontend</h3>
+<p>The Angular components live in <code>src/SprykerAcademy/Zed/SupplierMerchantPortalGui/Presentation/Components</code>. <code>entry.ts</code> registers the module in the Merchant Portal’s single JavaScript bundle (<code>// spy/merchant-portal:single-entry-marker</code>), exactly as the core modules do; the exercise loader added <code>src/SprykerAcademy/Zed</code> to the bundle’s entry points once. <code>load.sh --run</code> builds the bundle; after you changed a component, build it again (the first run also installs the npm dependencies, which takes a while):</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console frontend:mp:build</span></code></pre></div>
+<h3 id="assign-suppliers-to-your-merchant">Assign suppliers to your merchant</h3>
+<p>The table is merchant-scoped: it only lists suppliers linked to the logged-in merchant through <code>pyz_merchant_to_supplier</code>. The demo user <code>harald@spryker.com</code> (password <code>change123</code>) belongs to the merchant <em>Spryker</em> (<code>MER000008</code>, id 8). From this exercise on, <code>data/import/supplier.csv</code> has a <code>merchant_ids</code> column with that id, so an import links the suppliers:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console data:import <span class="at">--config</span><span class="op">=</span>data/import/local/supplier_import.yml</span></code></pre></div>
 <hr />
 <h2 id="working-on-the-exercise">Working on the Exercise</h2>
 <h3 id="part-1-guitable-configuration-provider">Part 1: GuiTable Configuration Provider</h3>
@@ -334,7 +344,7 @@ GET /supplier-merchant-portal-gui/supplier/table-data (AJAX)
 <p>Open <code>src/SprykerAcademy/Zed/SupplierMerchantPortalGui/Communication/DataProvider/SupplierGuiTableDataProvider.php</code>:</p>
 <ol type="1">
 <li><p>In <code>createCriteria()</code>, build a <code>SupplierMerchantPortalTableCriteriaTransfer</code> with the current merchant’s reference:</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="va">$this</span>-&gt;merchantUserFacade-&gt;getCurrentMerchantUser()-&gt;getMerchantOrFail()-&gt;getMerchantReference()</span></code></pre></div></li>
+<div class="sourceCode" id="cb6"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="va">$this</span>-&gt;merchantUserFacade-&gt;getCurrentMerchantUser()-&gt;getMerchantOrFail()-&gt;getMerchantReference()</span></code></pre></div></li>
 <li><p>In <code>fetchData()</code>, delegate to the repository: <code>$this-&gt;repository-&gt;getSupplierTableData($criteriaTransfer)</code></p></li>
 </ol>
 <blockquote>
@@ -349,12 +359,12 @@ GET /supplier-merchant-portal-gui/supplier/table-data (AJAX)
 <ol type="1">
 <li><p>Get a fresh <code>PyzSupplierQuery</code> from the factory</p></li>
 <li><p>Join with <code>PyzMerchantToSupplier</code> and filter by merchant reference:</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="va">$supplierQuery</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    -&gt;usePyzMerchantToSupplierQuery()</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>        -&gt;useSpyMerchantQuery()</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>            -&gt;filterByMerchantReference(<span class="va">$criteriaTransfer</span>-&gt;getMerchantReference())</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>        -&gt;endUse()</span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    -&gt;endUse()<span class="ot">;</span></span></code></pre></div></li>
+<div class="sourceCode" id="cb7"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="va">$supplierQuery</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    -&gt;usePyzMerchantToSupplierQuery()</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>        -&gt;useSpyMerchantQuery()</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>            -&gt;filterByMerchantReference(<span class="va">$criteriaTransfer</span>-&gt;getMerchantReference())</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>        -&gt;endUse()</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    -&gt;endUse()<span class="ot">;</span></span></code></pre></div></li>
 <li><p>Apply search filter on name/description/email if <code>searchTerm</code> is set</p></li>
 <li><p>Apply status filter if <code>filterStatus</code> is set</p></li>
 <li><p>Count total before pagination</p></li>
@@ -384,8 +394,10 @@ GET /supplier-merchant-portal-gui/supplier/table-data (AJAX)
 </blockquote>
 <hr />
 <h2 id="testing">Testing</h2>
-<p>After completing all parts:</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span></code></pre></div>
+<p>After completing all parts, rebuild the frontend (Part 5 changed a component) and clear the cache:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console frontend:mp:build</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console propel:model:build</span></code></pre></div>
 <ol type="1">
 <li>Log in to the Merchant Portal (e.g., <code>mp.eu.spryker.local</code>)</li>
 <li>You should see “Suppliers” in the navigation</li>
@@ -394,6 +406,6 @@ GET /supplier-merchant-portal-gui/supplier/table-data (AJAX)
 </ol>
 <hr />
 <h2 id="solution">Solution</h2>
-<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> supplier intermediate/merchant-portal-table/complete</span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> supplier intermediate/merchant-portal-table/complete <span class="at">--run</span></span></code></pre></div>
 </body>
 </html>

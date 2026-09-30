@@ -16,57 +16,56 @@ You will learn how to:
 
 ## Loading the Exercise
 
+The loader copies the completed Search branch source into the project before the Glue exercise files. This ensures the SupplierSearch TODOs are already implemented; you do not need to load the Search complete branch separately.
+
 ```bash
-./exercises/load.sh supplier intermediate/glue-storefront/skeleton
-docker/sdk cli composer dump-autoload
-docker/sdk console transfer:generate
+./exercises/load.sh supplier intermediate/glue-storefront/skeleton --run
 ```
+
+`--run` also runs the commands the loader lists after loading (cache, Propel, transfers and whatever this exercise needs, such as queues or Glue resources) and stops at the first one that fails. Leave it out to run them yourself.
 
 ---
 
-## Setup: Register Custom Namespace
+## Setup: The SprykerAcademy Source Directory
 
-API Platform discovers resource YAML files by scanning **source directories** configured in `config/GlueStorefront/packages/spryker_api_platform.php`. By default, only `src/Spryker`, `src/SprykerFeature`, and `src/Pyz` are registered.
+API Platform discovers resource YAML files by scanning the **source directories** configured per Glue application in `config/<Application>/packages/spryker_api_platform.php`. The demo shop lists `src/Pyz` and the vendor directories.
 
-Since our code lives in `src/SprykerAcademy/`, we need to add it:
+The exercise loader added `src/SprykerAcademy` to that list when you loaded your first exercise (look at `config/Glue/packages/spryker_api_platform.php`):
 
 ```php
-// config/GlueStorefront/packages/spryker_api_platform.php
 $sprykerApiPlatform->sourceDirectories([
-    'src/Spryker',
-    'src/SprykerFeature',
     'src/Pyz',
-    'src/SprykerAcademy',  // <-- Add this
+    'src/SprykerAcademy',
+    'vendor/spryker',
+    // ...
 ]);
 ```
 
-> **Backend API:** If you also need to expose resources via the Backend API, add `src/SprykerAcademy` to `config/GlueBackend/packages/spryker_api_platform.php` as well.
-
-After adding the source directory, generate the API resources:
+In this demo shop the storefront API runs in the **Glue** application (`glue.eu.spryker.local`, `apiTypes(['storefront'])` in `config/Glue/packages/spryker_api_platform.php`). Generate its resources with:
 
 ```bash
-docker/sdk cli GLUE_APPLICATION=GLUE_STOREFRONT glue api:generate
+docker/sdk cli GLUE_APPLICATION=GLUE glue api:generate storefront
 ```
 
-> **Important:** You must specify the Glue application via the `GLUE_APPLICATION` environment variable. Without it, the command doesn't know which API type to generate for and may fail or generate for the wrong application.
+> **Important:** You must specify the Glue application via the `GLUE_APPLICATION` environment variable. Without it, the command doesn't know which application's configuration to use. Shops with a separate storefront application (`glue-storefront.*`) use `GLUE_APPLICATION=GLUE_STOREFRONT`.
 
-This command scans all registered source directories for `.resource.yml` files and generates PHP Resource classes (e.g., `Generated\Api\Storefront\SuppliersStorefrontResource`).
+This command scans all registered source directories for `.resource.yml` files and generates PHP Resource classes (e.g., `Generated\Api\Storefront\SuppliersStorefrontResource`) in `src/Generated/Api/Storefront`.
 
 ### API Platform Commands Reference
 
 | Command | Purpose |
 |---------|---------|
-| `GLUE_APPLICATION=GLUE_STOREFRONT glue api:generate` | Generate Storefront API resources |
+| `GLUE_APPLICATION=GLUE glue api:generate` | Generate Storefront API resources |
 | `GLUE_APPLICATION=GLUE_BACKEND glue api:generate` | Generate Backend API resources |
-| `GLUE_APPLICATION=GLUE_STOREFRONT glue api:generate --dry-run` | Preview what would be generated without writing |
-| `GLUE_APPLICATION=GLUE_STOREFRONT glue api:generate --validate-only` | Validate schemas without generating |
-| `GLUE_APPLICATION=GLUE_STOREFRONT glue api:generate -r suppliers` | Generate only the `suppliers` resource |
-| `GLUE_APPLICATION=GLUE_STOREFRONT glue api:debug --list` | List all registered resources |
-| `GLUE_APPLICATION=GLUE_STOREFRONT glue api:debug suppliers` | Inspect a specific resource's merged schema |
-| `GLUE_APPLICATION=GLUE_STOREFRONT glue api:debug suppliers --show-sources` | Show all source files with priority |
-| `GLUE_APPLICATION=GLUE_STOREFRONT glue api:debug suppliers --show-merged` | Display the final merged YAML schema |
+| `GLUE_APPLICATION=GLUE glue api:generate --dry-run` | Preview what would be generated without writing |
+| `GLUE_APPLICATION=GLUE glue api:generate --validate-only` | Validate schemas without generating |
+| `GLUE_APPLICATION=GLUE glue api:generate -r suppliers` | Generate only the `suppliers` resource |
+| `GLUE_APPLICATION=GLUE glue api:debug --list` | List all registered resources |
+| `GLUE_APPLICATION=GLUE glue api:debug suppliers` | Inspect a specific resource's merged schema |
+| `GLUE_APPLICATION=GLUE glue api:debug suppliers --show-sources` | Show all source files with priority |
+| `GLUE_APPLICATION=GLUE glue api:debug suppliers --show-merged` | Display the final merged YAML schema |
 
-> **Tip:** All `glue` CLI commands require the `GLUE_APPLICATION` env var. Prefix every command with `GLUE_APPLICATION=GLUE_STOREFRONT` or `GLUE_APPLICATION=GLUE_BACKEND` as needed.
+> **Tip:** All `glue` CLI commands require the `GLUE_APPLICATION` env var. Prefix every command with `GLUE_APPLICATION=GLUE` (the storefront API of this shop) or `GLUE_APPLICATION=GLUE_BACKEND` as needed.
 
 > **Docs:** [Spryker API Platform Architecture](https://docs.spryker.com/docs/dg/dev/architecture/api-platform) | [Resource Schemas](https://docs.spryker.com/docs/dg/dev/architecture/api-platform/resource-schemas.html)
 
@@ -107,7 +106,7 @@ The API resource definition tells Spryker what endpoints to expose, which Provid
 
 **Coding time:**
 
-Open `src/SprykerAcademy/Glue/SuppliersApi/resources/api/storefront/suppliers.resource.yml`:
+Open `src/SprykerAcademy/Glue/Supplier/resources/api/storefront/suppliers.resource.yml`:
 
 1. Add the `provider` field pointing to the full class name of the Provider class
 2. Add the resource properties: `name` (string), `description` (string), `status` (int), `email` (string), `phone` (string)
@@ -120,10 +119,10 @@ The skeleton already has the resource name, operations (Get + GetCollection), pa
 > - `properties:` — schema definition with types, descriptions, and identifier flag
 > - `identifier: true` — marks the property used in the URL path (e.g., `/suppliers/{idSupplier}`)
 
-After modifying the YAML, regenerate:
+After modifying the YAML, regenerate the resource classes:
 
 ```bash
-docker/sdk console transfer:generate
+docker/sdk cli GLUE_APPLICATION=GLUE glue api:generate storefront
 ```
 
 This generates a `SuppliersStorefrontResource` class in `Generated\Api\Storefront\` that the Provider returns.
@@ -136,12 +135,12 @@ The Provider is the core of the API resource. It receives the HTTP request conte
 
 **Coding time:**
 
-Open `src/SprykerAcademy/Glue/SuppliersApi/Api/Storefront/Provider/SuppliersStorefrontProvider.php`. The class implements `ApiPlatform\State\ProviderInterface`. In the `provide()` method:
+Open `src/SprykerAcademy/Glue/Supplier/Api/Storefront/Provider/SuppliersStorefrontProvider.php`. The class implements `ApiPlatform\State\ProviderInterface` and receives the `SupplierSearchClientInterface` of Exercise 11 through its constructor - the storefront reads suppliers from Elasticsearch, not from the database. In the `provide()` method:
 
 1. Read the supplier identifier from `$uriVariables` — the key name must match the `identifier` property in the YAML
-2. If the identifier is null, this is a collection request — return an array of mapped resources (load all suppliers via the Client)
-3. If the identifier is present, load the single supplier by ID via the Client
-4. If the supplier is not found, return null (API Platform handles the 404)
+2. If the identifier is null, call `searchSuppliers()` to load suppliers. Loop over `SupplierCollectionTransfer::getSuppliers()` and map each transfer to a resource
+3. If the identifier is present, call `findSupplierById((int)$idSupplier)`
+4. The client returns an empty `SupplierTransfer` for an unknown id: return null then (API Platform answers with a 404)
 5. Map the `SupplierTransfer` to a `SuppliersStorefrontResource` using the provided Mapper
 
 > **`$uriVariables`:** For a GET request to `/suppliers/5`, this array contains `['idSupplier' => '5']`. The key name comes from the identifier property in the resource YAML.
@@ -154,7 +153,7 @@ Open `src/SprykerAcademy/Glue/SuppliersApi/Api/Storefront/Provider/SuppliersStor
 
 The Mapper converts internal `SupplierTransfer` objects to generated `SuppliersStorefrontResource` objects.
 
-Open `src/SprykerAcademy/Glue/SuppliersApi/Processor/Mapper/SupplierMapper.php` and review how it maps transfers to API resources.
+Open `src/SprykerAcademy/Glue/Supplier/Processor/Mapper/SupplierMapper.php` and review how it maps transfers to API resources. Note `toArray(false, true)`: the generated resource reads camel-cased keys (`idSupplier`), while `toArray()` without arguments returns snake_case (`id_supplier`) - the resource would miss its identifier and API Platform could not build the links.
 
 > **Generated Resource classes:** API Platform generates PHP classes from the YAML properties. These classes have `fromArray()` and expose the properties defined in the YAML. The Mapper bridges the internal domain model (Transfer) to the API model (Resource).
 
@@ -162,12 +161,11 @@ Open `src/SprykerAcademy/Glue/SuppliersApi/Processor/Mapper/SupplierMapper.php` 
 
 ### Part 4: Test the Endpoint
 
-After completing all parts, generate the API resources and clear cache:
+After completing all parts, generate the API resources and clear the Glue cache - the compiled Glue container keeps the resource list, and `cache:empty-all` does not reach it:
 
 ```bash
-docker/sdk cli GLUE_APPLICATION=GLUE_STOREFRONT glue api:generate
-docker/sdk console cache:empty-all
-docker/sdk console propel:model:build
+docker/sdk cli GLUE_APPLICATION=GLUE glue api:generate storefront
+docker/sdk cli GLUE_APPLICATION=GLUE glue cache:clear
 ```
 
 Test collection (JSON-LD format):
@@ -222,33 +220,33 @@ Expected collection response:
 
 ## Registering Services in the Symfony Container
 
-API Platform providers use **Symfony's dependency injection** — not Spryker's Factory/DependencyProvider pattern. When a provider declares a constructor dependency like `SupplierFacadeInterface` or `SupplierClientInterface`, Symfony must know how to resolve it.
+API Platform providers use **Symfony's dependency injection** - not Spryker's Factory/DependencyProvider pattern. Your provider asks for `SprykerAcademy\Client\SupplierSearch\SupplierSearchClientInterface` in its constructor, and the Glue application's Symfony container has to resolve it.
 
-Spryker core modules have pre-compiled service containers, but project-level modules (like `SprykerAcademy`) do not. You need to register them explicitly in `ApplicationServices.php`.
+For Clients and Facades of the core and of `Pyz`, Spryker registers these services automatically. For any other namespace the automatic registration falls back to a proxy that fails as soon as it is called:
 
-**GlueBackend** — register Zed layer services (facades) that backend providers need:
-
-```php
-// config/GlueBackend/ApplicationServices.php
-$services->load('SprykerAcademy\\Zed\\', '../../src/SprykerAcademy/Zed/');
+```
+Could not find the "SprykerAcademy\Client\SupplierSearch\SupplierSearchClientInterface" in any of the attached containers.
 ```
 
-**GlueStorefront** — register Client layer services that storefront providers need:
+So the `SprykerAcademy` Clients (and the Business layer, for Backend API providers) are registered explicitly. The exercise loader added this block to `config/Glue/ApplicationServices.php` (and to the `GlueStorefront` and `GlueBackend` ones) once:
 
 ```php
-// config/GlueStorefront/ApplicationServices.php
-$services->load('SprykerAcademy\\Client\\', '../../src/SprykerAcademy/Client/');
+// >>> spryker-academy setup: SprykerAcademy Clients and Facades for API Platform providers
+$academyServices = $configurator->services()->defaults()->autowire()->public()->autoconfigure();
+if (is_dir(__DIR__ . '/../../src/SprykerAcademy/Client')) {
+    $academyServices->load('SprykerAcademy\\Client\\', '../../src/SprykerAcademy/Client/');
+}
+// ... the same for src/SprykerAcademy/Zed/*/Business/
+// <<< spryker-academy setup
 ```
 
-> **`$services->load()`** tells Symfony to scan a directory and auto-register all classes under that namespace as services. Combined with `->defaults()->autowire()` (already set), Symfony can then resolve interfaces to their implementations.
+> **`$services->load()`** tells Symfony to scan a directory and auto-register all classes under that namespace as services. Combined with `->autowire()`, Symfony can then resolve an interface to its only implementation.
 
 > **Alternative:** You can also register individual services explicitly:
 > ```php
-> $services->set(SupplierFacadeInterface::class, SupplierFacade::class);
+> $services->set(\SprykerAcademy\Client\SupplierSearch\SupplierSearchClientInterface::class, \SprykerAcademy\Client\SupplierSearch\SupplierSearchClient::class);
 > ```
 > This is more precise but requires updating whenever you add new dependencies.
-
-> **Note:** The exercise loader (`load.sh`) handles this registration automatically. You don't need to modify `ApplicationServices.php` manually.
 
 ---
 
@@ -289,5 +287,5 @@ docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/Supplier/
 ## Solution
 
 ```bash
-./exercises/load.sh supplier intermediate/glue-storefront/complete
+./exercises/load.sh supplier intermediate/glue-storefront/complete --run
 ```

@@ -224,10 +224,8 @@
 <li>Understanding of the Client/Stub pattern for Yves-Zed communication</li>
 </ul>
 <h2 id="loading-the-exercise">Loading the Exercise</h2>
-<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/extending-core-modules/skeleton</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli composer dump-autoload</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console propel:install</span></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/extending-core-modules/skeleton <span class="at">--run</span></span></code></pre></div>
+<p><code>--run</code> also runs the commands the loader lists after loading (cache, Propel, transfers and whatever this exercise needs, such as queues or Glue resources) and stops at the first one that fails. Leave it out to run them yourself.</p>
 <hr />
 <h2 id="working-on-the-exercise">Working on the Exercise</h2>
 <h3 id="part-1-adjust-the-database-schema">Part 1: Adjust the Database Schema</h3>
@@ -249,7 +247,7 @@
 <div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span></code></pre></div>
 <blockquote>
 <p><strong>Why <code>singular</code> on a collection?</strong> The generator builds the adder from the property name, so <code>contactRequests</code> alone would produce the plural <code>addContactRequests()</code> — a method that adds one element but reads as if it added many. <code>singular="contactRequest"</code> names it <code>addContactRequest()</code> instead.</p>
-<p>Combined with <code>strict="true"</code> (see <a href="02-data-transfer-object.md#11-always-add-stricttrue">Exercise 2</a>) the collection API becomes:</p>
+<p>Combined with <code>strict="true"</code> (see <a href="02-data-transfer-object.html#11-always-add-stricttrue">Exercise 2</a>) the collection API becomes:</p>
 <div class="sourceCode" id="cb5"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span> <span class="kw">function</span> addContactRequest(<span class="cn">C</span>ontactRequestTransfer <span class="va">$contactRequest</span>)</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span> <span class="kw">function</span> getContactRequests()<span class="ot">:</span> <span class="bu">ArrayObject</span></span></code></pre></div>
 <p>The adder only accepts a <code>ContactRequestTransfer</code>, and the getter never returns null — a strict collection is initialised to an empty <code>ArrayObject</code>, so the account template can loop over it even when the customer has no contact requests yet. On a strict <strong>associative</strong> array property <code>singular</code> is not optional at all: leave it out and <code>transfer:generate</code> aborts with <code>InvalidSingularPropertyNameException</code>.</p>
@@ -292,7 +290,10 @@
 <hr />
 <h3 id="part-6-extend-the-customerpage-module">Part 6: Extend the CustomerPage Module</h3>
 <p>Now we extend Spryker’s core <code>CustomerPage</code> module to add our message functionality. This is the key part of the exercise that demonstrates how to extend core Spryker modules at project level.</p>
-<p>The pattern: extend the core class in your project namespace, and override or add the methods you need.</p>
+<p>The pattern: extend the class in your project namespace, and override or add the methods you need.</p>
+<blockquote>
+<p><strong>Extend the Pyz class, not the core one.</strong> <code>SprykerAcademy</code> is listed before <code>Pyz</code> in <code>KernelConstants::PROJECT_NAMESPACES</code>, so the kernel resolves <code>SprykerAcademy\Yves\CustomerPage\CustomerPageDependencyProvider</code> instead of the project’s <code>Pyz\Yves\CustomerPage\CustomerPageDependencyProvider</code>. The demo shop already customises <code>CustomerPage</code> (a session client, after-login redirects, authentication handlers, a <code>Pyz</code> register controller that calls <code>getPyzSessionClient()</code>). Extending <code>SprykerShop\Yves\CustomerPage\...</code> would silently drop all of that and break login and registration; extending <code>Pyz\Yves\CustomerPage\...</code> keeps it. The skeleton classes already extend the <code>Pyz</code> ones.</p>
+</blockquote>
 <h4 id="dependencyprovider">6.1 DependencyProvider</h4>
 <p>We need to inject our <code>ContactRequestClient</code> into the extended <code>CustomerPage</code> module.</p>
 <p><strong>Coding time:</strong></p>
@@ -342,7 +343,9 @@
 </ul>
 <p>Take a moment to review these files to understand: - How Spryker’s <strong>template override</strong> mechanism works (project-level Twig overrides vendor templates by matching the file path) - How the <strong>form</strong> is rendered with <code>form_start</code>/<code>form_widget</code>/<code>form_end</code> (Symfony form rendering helpers) - How each table row has a <strong>mini POST form</strong> for the delete button (no link — delete is always POST)</p>
 <h4 id="sidebar-menu-item">6.7 Sidebar Menu Item</h4>
-<p>Once the route exists, add a “My Contact Requests” entry to the customer account sidebar. The project overrides that molecule in <code>src/Pyz/Yves/CustomerPage/Theme/default/components/molecules/navigation-sidebar/navigation-sidebar.twig</code>; append one more entry to its <code>items</code> array:</p>
+<p>Once the route exists, add a “My Contact Requests” entry to the customer account sidebar. The project overrides that molecule in <code>src/Pyz/Yves/CustomerPage/Theme/default/components/molecules/navigation-sidebar/navigation-sidebar.twig</code>. Override it once more, in your module: Yves looks up templates in the project namespaces in order, so a template at the same path under <code>src/SprykerAcademy</code> wins over the <code>Pyz</code> one.</p>
+<p><strong>Coding time:</strong></p>
+<p>Copy <code>src/Pyz/Yves/CustomerPage/Theme/default/components/molecules/navigation-sidebar/navigation-sidebar.twig</code> to <code>src/SprykerAcademy/Yves/CustomerPage/Theme/default/components/molecules/navigation-sidebar/navigation-sidebar.twig</code> and append one more entry to its <code>items</code> array:</p>
 <pre class="twig"><code>        {
             name: &#39;contact-requests&#39;,
             url: path(&#39;customer/contact-requests&#39;),
@@ -350,7 +353,8 @@
             icon: &#39;envelopes&#39;,
         },</code></pre>
 <blockquote>
-<p><code>customer/contact-requests</code> is the route <strong>name</strong> (<code>ContactRequestController::ROUTE_CUSTOMER_CONTACT_REQUESTS</code>), not the path. Add the item only after the route is registered, otherwise <code>path()</code> fails on every account page. <code>name</code> is what the sidebar compares against the <code>activePage</code> the list page sets, so it has to read <code>contact-requests</code> for the entry to be highlighted. Do not wrap the entry in a Twig comment: the whole <code>items</code> array lives inside one <code>{% define data = {...} %}</code> tag, and a <code>{# ... #}</code> in there is read as an unclosed <code>{</code>, which kills every account page with a <code>SyntaxError</code>. When you load the <code>complete</code> branch, the loader adds this item for you and removes it again when you load another branch.</p>
+<p>A template cannot extend the one it replaces - that is why it is a copy.</p>
+<p><code>customer/contact-requests</code> is the route <strong>name</strong> (<code>ContactRequestController::ROUTE_CUSTOMER_CONTACT_REQUESTS</code>), not the path. Add the item only after the route is registered, otherwise <code>path()</code> fails on every account page. <code>name</code> is what the sidebar compares against the <code>activePage</code> the list page sets, so it has to read <code>contact-requests</code> for the entry to be highlighted. Do not wrap the entry in a Twig comment: the whole <code>items</code> array lives inside one <code>{% define data = {...} %}</code> tag, and a <code>{# ... #}</code> in there is read as an unclosed <code>{</code>, which kills every account page with a <code>SyntaxError</code>. The <code>complete</code> branch contains this template.</p>
 </blockquote>
 <p>Clear cache:</p>
 <div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span>
@@ -415,7 +419,7 @@
 <div class="sourceCode" id="cb14"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/ContactRequest/</span></code></pre></div>
 <hr />
 <h2 id="solution">Solution</h2>
-<div class="sourceCode" id="cb15"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/extending-core-modules/complete</span></code></pre></div>
+<div class="sourceCode" id="cb15"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/extending-core-modules/complete <span class="at">--run</span></span></code></pre></div>
 <hr />
 <h2 id="bonus-ajax-version">Bonus: AJAX Version</h2>
 <p>An extended solution is available that uses Spryker’s built-in AJAX component pattern to add and delete messages without a full page reload. The message table refreshes dynamically.</p>
@@ -482,6 +486,6 @@
 <li><code>contact-request-async.twig</code> — Content fragment re-rendered server-side after each operation</li>
 <li><code>list.twig</code> — Includes the AJAX component trio; uses <code>mount-after-render: true</code> so JS components in new content get re-initialized</li>
 </ul>
-<div class="sourceCode" id="cb19"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/extending-core-modules/complete-ajax</span></code></pre></div>
+<div class="sourceCode" id="cb19"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/extending-core-modules/complete-ajax <span class="at">--run</span></span></code></pre></div>
 </body>
 </html>

@@ -222,8 +222,8 @@
 <li>You must have completed all previous exercises (1 through 5)</li>
 </ul>
 <h2 id="loading-the-exercise">Loading the Exercise</h2>
-<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/configuration/skeleton</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli composer dump-autoload</span></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/configuration/skeleton <span class="at">--run</span></span></code></pre></div>
+<p><code>--run</code> also runs the commands the loader lists after loading (cache, Propel, transfers and whatever this exercise needs, such as queues or Glue resources) and stops at the first one that fails. Leave it out to run them yourself.</p>
 <p>The branch brings <strong>no new source files</strong> - you write all four classes by hand with what you have learned so far. What it does bring is the Exercise 6 test suite, so you can check your own work before you look at the solution:</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/ContactRequest/ Exercise6</span></code></pre></div>
 <p>It is red until you finish the exercise. That is the point.</p>
@@ -252,6 +252,9 @@
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="va">$config</span>[<span class="cn">C</span>ontactRequestConstants::<span class="cn">MY_CONFIG_VALUE</span>] <span class="op">=</span> <span class="st">&#39;Hello from config!&#39;</span><span class="ot">;</span></span></code></pre></div>
 <p>You can use any string you like as the value.</p>
+<blockquote>
+<p><strong>This line stays yours.</strong> <code>config_default.php</code> belongs to the project, and the exercise loader never edits it. The solution branch’s <code>ContactRequestConfig::getMyConfigValue()</code> reads the key with a default (<code>$this-&gt;get(ContactRequestConstants::MY_CONFIG_VALUE, 'This is a default value')</code>), so the page works before you add the line and shows your value after. When you later load a branch without <code>ContactRequestConstants</code> (exercises 1-5), remove the line again: a <code>use</code> of a class that no longer exists is harmless, but <code>ContactRequestConstants::MY_CONFIG_VALUE</code> is not.</p>
+</blockquote>
 <h3 id="create-the-config-class">3. Create the Config Class</h3>
 <p>Each module can have a Config class that provides typed access to global config values. The naming convention is <code>&lt;Module&gt;Config.php</code> at the module root.</p>
 <p>A Zed Config class extends <code>Spryker\Zed\Kernel\AbstractBundleConfig</code>, which provides the <code>$this-&gt;get()</code> helper method to read values from the global config.</p>
@@ -343,6 +346,6 @@
 </blockquote>
 <hr />
 <h2 id="solution">Solution</h2>
-<div class="sourceCode" id="cb11"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/configuration/complete</span></code></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/configuration/complete <span class="at">--run</span></span></code></pre></div>
 </body>
 </html>

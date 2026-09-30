@@ -111,10 +111,10 @@ class SupplierDataImportPlugin extends AbstractPlugin
 
 Register in `DataImportDependencyProvider::getDataImporterPlugins()`
 
-YAML mapping in `data/import/local/full_EU.yml`
+YAML mapping in `data/import/local/supplier_import.yml` (a project adds it to `full_EU.yml`)
 
 ```bash
-docker/sdk console data:import supplier
+docker/sdk console data:import --config=data/import/local/supplier_import.yml
 ```
 
 ---

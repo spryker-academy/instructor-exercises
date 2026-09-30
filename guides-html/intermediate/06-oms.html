@@ -224,13 +224,12 @@
 <li>Understanding of the Facade and DependencyProvider patterns</li>
 </ul>
 <h2 id="loading-the-exercise">Loading the Exercise</h2>
-<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> supplier intermediate/oms/skeleton</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli composer dump-autoload</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> supplier intermediate/oms/skeleton <span class="at">--run</span></span></code></pre></div>
+<p><code>--run</code> also runs the commands the loader lists after loading (cache, Propel, transfers and whatever this exercise needs, such as queues or Glue resources) and stops at the first one that fails. Leave it out to run them yourself.</p>
 <hr />
 <h2 id="background-oms-architecture">Background: OMS Architecture</h2>
 <p>Spryker’s Order Management System uses an XML-based state machine to define the lifecycle of an order. Each order item moves through states based on events, commands, and conditions.</p>
-<pre><code>State Machine XML (config/Zed/oms/Demo01.xml)
+<pre><code>State Machine XML (config/Zed/oms/Demo01.xml, copied by the loader)
     ├── States      — positions in the workflow (new, paid, shipped, closed)
     ├── Transitions — connections between states (source → target)
     ├── Events      — triggers for transitions (manual, onEnter, timeout)
@@ -288,15 +287,14 @@
 <hr />
 <h2 id="working-on-the-exercise">Working on the Exercise</h2>
 <h3 id="part-1-enable-the-state-machine">Part 1: Enable the State Machine</h3>
-<p>The OMS process must be registered as an active process and mapped to a payment method.</p>
+<p>The OMS process must be registered as an active process and mapped to a payment method. Projects usually do both in <code>config/Shared/config_default.php</code> (<code>OmsConstants::ACTIVE_PROCESSES</code>, <code>SalesConstants::PAYMENT_METHOD_STATEMACHINE_MAPPING</code>). The exercise keeps them in two config classes instead - they extend the project’s ones and, like every <code>SprykerAcademy</code> class, are resolved before them.</p>
 <p><strong>Coding time:</strong></p>
-<p>Open <code>config/Shared/common/config_oms-development.php</code>:</p>
 <ol type="1">
-<li>Add the state machine name to the list of active processes. The name must match the XML filename without the <code>.xml</code> extension (e.g., <code>'Demo01'</code>).</li>
-<li>Map the state machine to the invoice payment method by replacing the current process name with your new one.</li>
+<li>Open <code>src/SprykerAcademy/Zed/Oms/OmsConfig.php</code>. In <code>getActiveProcesses()</code>, add <code>Demo01</code> to the processes of the project. The name must match the <code>&lt;process name="..."&gt;</code> of <code>config/Zed/oms/Demo01.xml</code> (and the file name without <code>.xml</code>).</li>
+<li>Open <code>src/SprykerAcademy/Zed/Sales/SalesConfig.php</code>. In <code>getPaymentMethodStatemachineMapping()</code>, map the invoice payment method (<code>DummyMarketplacePaymentConfig::PAYMENT_METHOD_DUMMY_MARKETPLACE_PAYMENT_INVOICE</code>) to <code>Demo01</code>, on top of the mapping of the project.</li>
 </ol>
 <blockquote>
-<p><strong>Verify:</strong> Visit http://backoffice.eu.spryker.local/oms — the Demo01 process should be listed. Clicking it shows a blank page (the state machine is still empty).</p>
+<p><strong>Verify:</strong> Visit http://backoffice.eu.spryker.local/oms - the Demo01 process should be listed. Clicking it shows a blank page (the state machine is still empty).</p>
 </blockquote>
 <hr />
 <h3 id="part-2-define-states">Part 2: Define States</h3>
@@ -424,7 +422,12 @@
 <pre><code>XML: command=&quot;Demo/Pay&quot; → PHP: $commandCollection-&gt;add(new PayCommandPlugin(), &#39;Demo/Pay&#39;)
 XML: condition=&quot;Demo/IsAuthorized&quot; → PHP: $conditionCollection-&gt;add(new IsAuthorizedConditionPlugin(), &#39;Demo/IsAuthorized&#39;)</code></pre>
 <hr />
+<h2 id="run-automated-tests">Run Automated Tests</h2>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept build <span class="at">-c</span> tests/SprykerAcademyTest/Zed/Supplier/</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/Supplier/ Oms</span></code></pre></div>
+<p>The tests check the six states, the happy path, the condition routing, that <code>Demo/Pay</code> and <code>Demo/IsAuthorized</code> are registered under the names the XML uses, and the Demo01 configuration.</p>
+<hr />
 <h2 id="solution">Solution</h2>
-<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> supplier intermediate/oms/complete</span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> supplier intermediate/oms/complete <span class="at">--run</span></span></code></pre></div>
 </body>
 </html>

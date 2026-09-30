@@ -32,7 +32,7 @@ The exercise only works as a cold start. If `src/SprykerAcademy` still holds you
 **Nothing you delete here is precious.** Every exercise in this course is one command away:
 
 ```bash
-./exercises/load.sh contact-request basics/module-layers/complete
+./exercises/load.sh contact-request basics/module-layers/complete --run
 ```
 
 That is what makes a reset cheap, and it is why this exercise does not ask you to juggle branches, stash anything or keep a copy of your work.
@@ -429,7 +429,7 @@ git show --stat HEAD
 Now load the handmade module on top of the assistant's. The loader deletes `src/SprykerAcademy` and writes Exercise 6's version in its place - and because the assistant's version is committed, that turns the whole comparison into one `git diff`:
 
 ```bash
-./exercises/load.sh contact-request basics/module-layers/complete
+./exercises/load.sh contact-request basics/module-layers/complete --run
 
 git status --short     # what the two implementations disagree about
 git diff               # the assistant's version (HEAD) against yours (working tree)

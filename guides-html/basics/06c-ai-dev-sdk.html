@@ -230,7 +230,7 @@
 <h2 id="part-1-start-from-a-clean-shop">Part 1: Start from a Clean Shop</h2>
 <p>The exercise only works as a cold start. If <code>src/SprykerAcademy</code> still holds your ContactRequest module, the assistant will find it, follow it, and you will have tested your own scaffolding rather than the assistant.</p>
 <p><strong>Nothing you delete here is precious.</strong> Every exercise in this course is one command away:</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/module-layers/complete</span></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/module-layers/complete <span class="at">--run</span></span></code></pre></div>
 <p>That is what makes a reset cheap, and it is why this exercise does not ask you to juggle branches, stash anything or keep a copy of your work.</p>
 <h3 id="option-a-a-second-shop">Option A: a second shop</h3>
 <p>Clone the demo shop into a folder of its own and boot it there. You get a genuinely untouched project and the shop you have been working in stays as it is. It costs a full install, so do it if you have the time or an instructor-provided image.</p>
@@ -670,7 +670,7 @@ Ask me whatever you need before you start.</code></pre>
 </blockquote>
 <h3 id="bring-your-own-implementation-back-and-diff-the-two">Bring your own implementation back and diff the two</h3>
 <p>Now load the handmade module on top of the assistant’s. The loader deletes <code>src/SprykerAcademy</code> and writes Exercise 6’s version in its place - and because the assistant’s version is committed, that turns the whole comparison into one <code>git diff</code>:</p>
-<div class="sourceCode" id="cb22"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/module-layers/complete</span>
+<div class="sourceCode" id="cb22"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> contact-request basics/module-layers/complete <span class="at">--run</span></span>
 <span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> status <span class="at">--short</span>     <span class="co"># what the two implementations disagree about</span></span>
 <span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> diff               <span class="co"># the assistant&#39;s version (HEAD) against yours (working tree)</span></span></code></pre></div>

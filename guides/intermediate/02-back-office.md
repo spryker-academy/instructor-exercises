@@ -18,13 +18,10 @@ You will learn how to:
 ## Loading the Exercise
 
 ```bash
-./exercises/load.sh supplier intermediate/back-office/skeleton
-docker/sdk cli composer dump-autoload
-docker/sdk console transfer:generate
-docker/sdk console propel:install
-docker/sdk console cache:empty-all
-docker/sdk console propel:model:build
+./exercises/load.sh supplier intermediate/back-office/skeleton --run
 ```
+
+`--run` also runs the commands the loader lists after loading (cache, Propel, transfers and whatever this exercise needs, such as queues or Glue resources) and stops at the first one that fails. Leave it out to run them yourself.
 
 ---
 
@@ -301,13 +298,12 @@ Open `src/SprykerAcademy/Zed/SupplierGui/Communication/Controller/DeleteControll
 
 ### Part 4: Navigation
 
-The navigation XML (`config/Zed/navigation.xml`) is provided by the exercise skeleton. It registers the "Suppliers" menu item in the Back Office sidebar with sub-pages for Overview, Create, Edit, and Delete.
+The menu entry is provided: `src/SprykerAcademy/Zed/SupplierGui/Communication/navigation.xml` registers "Suppliers" with the sub-pages Overview and Create, and Edit and Delete as hidden pages (they only show up in the breadcrumb). Spryker merges every module's `Communication/navigation.xml` into the Back Office menu - the same mechanism the core modules use.
 
-After loading the exercise, clear cache to see the navigation:
+After you changed a `navigation.xml`, rebuild the menu:
 
 ```bash
-docker/sdk console cache:empty-all
-docker/sdk console propel:model:build
+docker/sdk console navigation:build-cache
 ```
 
 ---
@@ -364,5 +360,5 @@ docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/Supplier/
 ## Solution
 
 ```bash
-./exercises/load.sh supplier intermediate/back-office/complete
+./exercises/load.sh supplier intermediate/back-office/complete --run
 ```

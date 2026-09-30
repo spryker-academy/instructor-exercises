@@ -16,12 +16,10 @@ You will learn how to:
 ## Loading the Exercise
 
 ```bash
-./exercises/load.sh supplier intermediate/merchant-portal-form/skeleton
-docker/sdk cli composer dump-autoload
-docker/sdk console transfer:generate
-docker/sdk console cache:empty-all
-docker/sdk console propel:model:build
+./exercises/load.sh supplier intermediate/merchant-portal-form/skeleton --run
 ```
+
+`--run` also runs the commands the loader lists after loading (cache, Propel, transfers and whatever this exercise needs, such as queues or Glue resources) and stops at the first one that fails. Leave it out to run them yourself.
 
 ---
 
@@ -32,8 +30,8 @@ Unlike the Back Office (which uses full page reloads), the Merchant Portal uses 
 ```
 Table row action "Edit" clicked
     → AJAX GET /supplier-merchant-portal-gui/update-supplier?id-supplier=5
-    → Controller renders form HTML as JsonResponse
-    → Angular opens drawer with the HTML content
+    → Controller answers {"form": "<rendered form HTML>"}
+    → Angular opens the drawer with that HTML
 
 Form submitted
     → AJAX POST to same URL
@@ -43,10 +41,12 @@ Form submitted
         → addActionCloseDrawer()
         → addActionRefreshTable()
     → Angular executes actions: closes drawer, refreshes table, shows toast
-    → If invalid: returns re-rendered form HTML with errors
+    → If invalid: returns {"form": ...} again, re-rendered with the errors
 ```
 
-**Key difference from Back Office:** Controllers return `JsonResponse` (not `viewResponse`), and the response contains either rendered HTML (for the form) or a ZedUI action payload (after successful submit).
+**Key difference from Back Office:** Controllers return `JsonResponse` (not `viewResponse`). The drawer's ajax form reads two things from it: `form`, the HTML it shows, and the ZedUi actions and notifications after a successful submit.
+
+The provided template `Presentation/Partials/_supplier_form.twig` is drawer content, not a page: it extends no layout, and `form_start(form, { attr: { excludeFormTag: true } })` leaves the `<form>` tag out, because the drawer's ajax form wraps the content in its own. The "Add Supplier" button of the supplier list (`<web-spy-button-action>`) opens `/supplier-merchant-portal-gui/create-supplier` in such a drawer; a table row's "Edit" action opens `update-supplier`.
 
 ---
 
@@ -99,14 +99,16 @@ In `indexAction()`:
    - Link to current merchant: create a `PyzMerchantToSupplier` entity
    - Return `JsonResponse` with ZedUI actions:
      ```php
-     $this->getFactory()->getZedUiFactory()
+     $zedUiFormResponseTransfer = $this->getFactory()->getZedUiFactory()
          ->createZedUiFormResponseBuilder()
-         ->addSuccessNotification('Supplier created successfully.')
+         ->addSuccessNotification(static::MESSAGE_SUPPLIER_CREATED)
          ->addActionCloseDrawer()
-         ->addActionRefreshTable()
+         ->addActionRefreshTable(static::ID_TABLE_SUPPLIER_LIST) // the table-id of <web-mp-supplier-list>
          ->createResponse();
+
+     return new JsonResponse($zedUiFormResponseTransfer->toArray(true, true));
      ```
-5. Otherwise: render the form template as `JsonResponse`
+5. Otherwise: render the form template and return it as `new JsonResponse(['form' => $html])` (the skeleton already does this part)
 
 > **Merchant linking:** When a merchant creates a supplier, it must be automatically linked via `pyz_merchant_to_supplier`. Get the current merchant from `MerchantUserFacade::getCurrentMerchantUser()->getMerchantOrFail()`.
 
@@ -145,6 +147,12 @@ docker/sdk console cache:empty-all
 docker/sdk console propel:model:build
 ```
 
+Part 4 changed a component, so rebuild the frontend first:
+
+```bash
+docker/sdk console frontend:mp:build
+```
+
 1. In the Merchant Portal supplier table, click "Add Supplier" → the create form should open
 2. Fill in the form and submit → supplier should be created and table refreshed
 3. Click "Edit" on a table row → the edit drawer should open with pre-filled data
@@ -155,5 +163,5 @@ docker/sdk console propel:model:build
 ## Solution
 
 ```bash
-./exercises/load.sh supplier intermediate/merchant-portal-form/complete
+./exercises/load.sh supplier intermediate/merchant-portal-form/complete --run
 ```

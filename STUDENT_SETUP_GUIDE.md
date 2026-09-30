@@ -45,16 +45,18 @@ Open `composer.json` and add `SprykerAcademy` to the `autoload.psr-4` section:
 
 **4b. Add to Spryker kernel namespaces:**
 
-Open `config/Shared/config_default.php` and add `'SprykerAcademy'` to the `PROJECT_NAMESPACES` array:
+Open `config/Shared/config_default.php` and add `'SprykerAcademy'` to the `PROJECT_NAMESPACES` array, **before** `'Pyz'`:
 
 ```php
 $config[KernelConstants::PROJECT_NAMESPACES] = [
-    'Pyz',
     'SprykerAcademy',
+    'Pyz',
 ];
 ```
 
 > **Why both?** The `composer.json` entry tells PHP where to autoload the classes. The `PROJECT_NAMESPACES` entry tells Spryker's kernel class resolver to look in `SprykerAcademy` when resolving Facades, Factories, and other module classes. Without this, you'll get "class not found" or "FacadeNotFoundException" errors.
+>
+> **Why first?** The resolver takes the first namespace that has the class. Several exercises extend a project class from `src/SprykerAcademy` - `SprykerAcademy\Zed\DataImport\DataImportDependencyProvider extends Pyz\Zed\DataImport\DataImportDependencyProvider`, for example - and that only takes effect when `SprykerAcademy` comes before `Pyz`.
 
 **4c. Rebuild the autoloader:**
 
@@ -64,7 +66,7 @@ docker/sdk cli composer dump-autoload
 
 > **Why this is not optional.** PHP never reads `composer.json` at runtime. It resolves classes through the generated map in `vendor/composer/autoload_psr4.php`, and that file only changes when you dump the autoloader. Until you do, every `SprykerAcademy` class is unknown - and the error does not say "autoloader": the Zed router finds your controller file on disk, derives the class name from its path, calls `class_exists()`, gets `false` and aborts with `Expected class "SprykerAcademy\Zed\...\IndexController" not found!`. Check it with `grep SprykerAcademy vendor/composer/autoload_psr4.php`.
 
-> **Note:** The `load.sh` script does all three steps automatically on every run, but it's good to do them once manually so the project is ready from the start.
+> **Note:** The `load.sh` script does all three steps automatically (together with the API Platform and Merchant Portal settings the later exercises need), but it's good to do them once manually so you know what they are.
 
 ## Step 5: Boot the Docker Environment
 
@@ -79,13 +81,13 @@ Wait for all services to be ready. This may take several minutes on first run.
 
 ## Loading Exercises
 
-Use the `exercises/load.sh` script to load any exercise. It handles everything automatically: cloning repos, switching branches, copying files into `src/`, and configuring the project.
+Use the `exercises/load.sh` script to load any exercise. It clones the package, checks out the branch exactly as it is on GitHub, and copies its files (`src/SprykerAcademy`, `tests/SprykerAcademyTest`, and the exercise's own CSV and config files) into the project. It never edits your project files for an exercise: the solutions carry their wiring in `src/SprykerAcademy`.
 
 ```bash
-./exercises/load.sh <package> <branch>
+./exercises/load.sh <package> <branch> --run
 ```
 
-The loader registers the `SprykerAcademy` namespace and runs `composer dump-autoload` itself, so the classes it copies are loadable right away. After loading, run:
+The loader registers the `SprykerAcademy` namespace and runs `composer dump-autoload` itself, so the classes it copies are loadable right away. `--run` then runs the post-load commands for you; without it the loader prints them. For every branch they start with:
 
 ```bash
 docker/sdk console c:e
@@ -182,15 +184,13 @@ Check the solution:
 
 ### Part 2: Basics (Supplier - Table Schema)
 
-#### Module 4b: Supplier Table Schema
+#### Supplier Table Schema
 
 ```bash
-./exercises/load.sh supplier basics/supplier-table-schema/skeleton
+./exercises/load.sh supplier basics/supplier-table-schema/skeleton --run
 ```
 
-Your task: Define the Propel database schema for supplier tables.
-
-After modifying schema XML files, run:
+Your task: Define the Propel database schema for the supplier tables in `src/SprykerAcademy/Zed/Supplier/Persistence/Propel/Schema/pyz_supplier.schema.xml`. After changing a schema file, run:
 
 ```bash
 docker/sdk console propel:install
@@ -201,229 +201,33 @@ docker/sdk console transfer:generate
 
 ### Part 3: Intermediate (Supplier)
 
-#### Module 6: Back Office (CRUD)
+The supplier exercises build on each other: every skeleton contains the solutions of the exercises before it. Each has its own guide in `guides/intermediate/`, and its solution is the `complete` branch of the same name:
+
+| Exercise | Guide | Skeleton branch |
+|---|---|---|
+| 8 Data Import | `01-data-import.md` | `intermediate/data-import/skeleton` |
+| 9 Back Office (CRUD) | `02-back-office.md` | `intermediate/back-office/skeleton` |
+| 10 Publish & Synchronize | `03-publish-synchronize.md` | `intermediate/publish-synchronize/skeleton` |
+| 11 Search | `04-search.md` | `intermediate/search/skeleton` |
+| 12 Glue Storefront API | `05-glue-storefront-api.md` | `intermediate/glue-storefront/skeleton` |
+| 13 Order Management System | `06-oms.md` | `intermediate/oms/skeleton` |
+| 14 Storage Client | `07-storage-client.md` | `intermediate/storage-client/skeleton` |
+| 15 Merchant Portal - Supplier Table | `08-merchant-portal-table.md` | `intermediate/merchant-portal-table/skeleton` |
+| 16 Merchant Portal - Create/Edit Form | `09-merchant-portal-form.md` | `intermediate/merchant-portal-form/skeleton` |
+| 17 Merchant Portal - Supplier Locations | `10-merchant-portal-locations.md` | `intermediate/merchant-portal-locations/skeleton` |
+| 18 Yves Storefront | `11-yves-storefront.md` | `intermediate/yves-storefront/skeleton` |
 
 ```bash
-./exercises/load.sh supplier intermediate/back-office/skeleton
+./exercises/load.sh supplier intermediate/data-import/skeleton --run     # an exercise
+./exercises/load.sh supplier intermediate/data-import/complete --run     # its solution
 ```
 
-Your task: Build the Back Office GUI for managing suppliers (list, create, edit, delete).
-
-Check the solution:
-
-```bash
-./exercises/load.sh supplier intermediate/back-office/complete
-```
-
----
-
-#### Module 7: Data Import
-
-```bash
-./exercises/load.sh supplier intermediate/data-import/skeleton
-```
-
-Your task: Implement data importers for suppliers and supplier locations.
-
-After implementing, run:
-
-```bash
-docker/sdk console data:import
-```
-
-Check the solution:
-
-```bash
-./exercises/load.sh supplier intermediate/data-import/complete
-```
-
----
-
-#### Module 8: Publish & Synchronize
-
-```bash
-./exercises/load.sh supplier intermediate/publish-synchronize/skeleton
-```
-
-Your task: Implement event publishing and synchronization for supplier data to storage/search.
-
-After implementing, run:
-
-```bash
-docker/sdk console event:trigger
-docker/sdk console queue:worker:start
-```
-
-Check the solution:
-
-```bash
-./exercises/load.sh supplier intermediate/publish-synchronize/complete
-```
-
----
-
-#### Module 9: Search
-
-```bash
-./exercises/load.sh supplier intermediate/search/skeleton
-```
-
-Your task: Implement Elasticsearch integration for supplier search.
-
-Check the solution:
-
-```bash
-./exercises/load.sh supplier intermediate/search/complete
-```
-
----
-
-#### Module: Storage Client
-
-```bash
-./exercises/load.sh supplier intermediate/storage-client/skeleton
-```
-
-Your task: Implement the Client layer to read supplier data from Redis storage.
-
-Check the solution:
-
-```bash
-./exercises/load.sh supplier intermediate/storage-client/complete
-```
-
----
-
-#### Module 10: Glue Storefront API
-
-```bash
-./exercises/load.sh supplier intermediate/glue-storefront/skeleton
-```
-
-Your task: Build a Glue API resource for exposing supplier data to storefront applications.
-
-After implementing, run:
-
-```bash
-docker/sdk console glue-api:controller:cache:warm-up
-```
-
-Check the solution:
-
-```bash
-./exercises/load.sh supplier intermediate/glue-storefront/complete
-```
-
----
-
-#### Module 11: Order Management System (OMS)
-
-```bash
-./exercises/load.sh supplier intermediate/oms/skeleton
-```
-
-Your task: Define OMS states, transitions, events, conditions, and commands in `config/Zed/oms/Demo01.xml` and implement the OMS plugins.
-
-Check the solution:
-
-```bash
-./exercises/load.sh supplier intermediate/oms/complete
-```
-
----
-
-#### Module 12: Merchant Portal - Supplier Table
-
-```bash
-./exercises/load.sh supplier intermediate/merchant-portal-table/skeleton
-```
-
-Your task: Add a supplier table to the Merchant Portal. The navigation entry in `config/Zed/navigation-main-merchant-portal.xml` is merged automatically by `load.sh`.
-
-After loading, run:
-
-```bash
-docker/sdk cli composer dump-autoload
-docker/sdk console transfer:generate
-docker/sdk console cache:empty-all
-```
-
-Check the solution:
-
-```bash
-./exercises/load.sh supplier intermediate/merchant-portal-table/complete
-```
-
----
-
-#### Module 13: Merchant Portal - Supplier Create/Edit Form
-
-```bash
-./exercises/load.sh supplier intermediate/merchant-portal-form/skeleton
-```
-
-Your task: Add create and edit forms for suppliers in the Merchant Portal.
-
-After loading, run:
-
-```bash
-docker/sdk cli composer dump-autoload
-docker/sdk console transfer:generate
-docker/sdk console cache:empty-all
-```
-
-Check the solution:
-
-```bash
-./exercises/load.sh supplier intermediate/merchant-portal-form/complete
-```
-
----
-
-#### Module 14: Merchant Portal - Supplier Locations
-
-```bash
-./exercises/load.sh supplier intermediate/merchant-portal-locations/skeleton
-```
-
-Your task: Add a nested supplier locations table inside the supplier edit view of the Merchant Portal.
-
-After loading, run:
-
-```bash
-docker/sdk cli composer dump-autoload
-docker/sdk console transfer:generate
-docker/sdk console cache:empty-all
-```
-
-Check the solution:
-
-```bash
-./exercises/load.sh supplier intermediate/merchant-portal-locations/complete
-```
-
----
-
-#### Module 15: Yves Storefront
-
-```bash
-./exercises/load.sh supplier intermediate/yves-storefront/skeleton
-```
-
-Your task: Build a Yves storefront page that shows supplier data, with its route, controller, and Twig template.
-
-After loading, run:
-
-```bash
-docker/sdk cli composer dump-autoload
-docker/sdk console cache:empty-all
-```
-
-Check the solution:
-
-```bash
-./exercises/load.sh supplier intermediate/yves-storefront/complete
-```
+A few things the guides rely on:
+
+- **Imports** use the exercise's own configuration: `docker/sdk console data:import --config=data/import/local/supplier_import.yml`.
+- **Queues** (from exercise 10): `docker/sdk console queue:worker:start --stop-when-empty` processes publish and sync messages; `docker/sdk console publish:trigger-events -r supplier` republishes every supplier to search and storage.
+- **Glue** (exercise 12): `docker/sdk cli GLUE_APPLICATION=GLUE glue api:generate storefront` and `docker/sdk cli GLUE_APPLICATION=GLUE glue cache:clear` after changing a resource.
+- **Merchant Portal** (exercises 15-17): log in at http://mp.eu.spryker.local as `harald@spryker.com` / `change123`; after changing an Angular component run `docker/sdk console frontend:mp:build`. The first `--run` of a merchant portal branch installs the npm dependencies, which takes a while.
 
 ---
 

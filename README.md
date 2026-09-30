@@ -4,18 +4,35 @@ This package contains the exercise loader and guides for Spryker Academy hands-o
 
 ## Overview
 
-The `load.sh` script automates the process of loading exercise code into a Spryker project. It handles:
-- Cloning exercise repositories
-- Switching to the correct branch
-- Copying source files to the project
-- Configuring autoload namespaces
-- Setting up project configurations (navigation, data import, publishers, queues, etc.)
+The `load.sh` script loads an exercise branch of a training package into a Spryker project:
+
+- It clones the package (`contact-request`, `supplier`, `ai-foundation`) into `exercises/repos/` and checks out the branch exactly as it is on GitHub. Uncommitted work in that clone is stashed first.
+- It replaces `src/SprykerAcademy` and `tests/SprykerAcademyTest` with the branch's copy, and copies the branch's own data and config files (CSV files, import configuration, OMS process). Those files are listed in `exercises/.loaded-files` and removed again by the next load; a file the project already has is never overwritten.
+- It removes what the previous exercise left in caches the usual cache clear does not reach: the generated API Platform resources, the compiled Glue containers and the Yves route cache.
+
+The contact-request and supplier branches carry their complete wiring themselves. A dependency provider or config class in `src/SprykerAcademy` that extends the `Pyz` one wins over it, because `SprykerAcademy` is listed before `Pyz` in `KernelConstants::PROJECT_NAMESPACES`; menu entries ship as the module's `Communication/navigation*.xml`; a template override lives in the module's theme. So for these packages the loader never edits a file the shop owns.
+
+### One-time project setup
+
+On its first run the loader prepares the project for the `SprykerAcademy` namespace. None of it refers to a single exercise, so it never has to be undone:
+
+- `composer.json`: `SprykerAcademy\\` and `SprykerAcademyTest\\` autoload entries
+- `config/Shared/config_default.php`: `SprykerAcademy` in `KernelConstants::PROJECT_NAMESPACES`, before `Pyz`
+- `config/Glue*/packages/spryker_api_platform.php`: `src/SprykerAcademy` as an API Platform source directory
+- `config/Glue*/ApplicationServices.php`: the SprykerAcademy Clients and Business layers as Symfony services, for API Platform providers
+- `frontend/merchant-portal/entry-points.js` and `tsconfig.mp.json`: `src/SprykerAcademy/Zed` in the Merchant Portal build
+
+It also removes what earlier loader versions wrote into project files (marked blocks, merged menu entries, `full_EU.yml` entries, copied files).
+
+The ai-foundation branches still wire their complete solutions into the project's AI configuration (`config/Shared/config_ai.php` and the Back Office Assistant providers), marked `ai-foundation exercise` and removed again on the next load.
 
 ## Usage
 
 ```bash
-./exercises/load.sh <package> <branch>
+./exercises/load.sh <package> <branch> [--run]
 ```
+
+`--run` also runs the post-load commands the loader lists for the branch (cache, Propel, transfers, menu, queues, search index, Merchant Portal build, Glue resources) and stops at the first one that fails. To try unpublished branches, point the loader at a local copy of a package: `ACADEMY_SUPPLIER_REPO=/path/to/supplier ./exercises/load.sh supplier <branch>` (likewise `ACADEMY_CONTACT_REQUEST_REPO`, `ACADEMY_AI_FOUNDATION_REPO`).
 
 ### Packages
 
@@ -73,7 +90,7 @@ The `load.sh` script automates the process of loading exercise code into a Spryk
 - `advanced/ai-foundation-agent/skeleton`
 - `advanced/ai-foundation-agent/complete`
 
-The `complete` branches are wired into the project automatically. Every line the loader adds is marked `ai-foundation exercise` and is removed again when you load a skeleton or another package.
+The ai-foundation `complete` branches are wired into the project automatically. Every line the loader adds is marked `ai-foundation exercise` and is removed again when you load a skeleton or another package.
 
 ## Examples
 
@@ -93,7 +110,7 @@ The `complete` branches are wired into the project automatically. Every line the
 
 ## Post-Installation Steps
 
-The loader registers the `SprykerAcademy` namespace (`composer.json` and `PROJECT_NAMESPACES`) and runs `composer dump-autoload` itself, so the exercise classes are loadable as soon as it finishes. If it cannot reach the container it says so and prints the command. After loading an exercise, run these commands:
+The loader prints the commands a branch needs after loading and runs them with `--run`. For contact-request and supplier they start with:
 
 ```bash
 docker/sdk console c:e
@@ -102,6 +119,8 @@ docker/sdk console transfer:generate
 ```
 
 Keep this order. `cache:empty-all` deletes `data/cache`, which also holds the Propel table map (`data/cache/propel/generated-conf/loadDatabase.php`); until `propel:install` (or `propel:model:build`) has written it again, every Zed request and every console command fails with "Database map was not initialized". So whenever you run `cache:empty-all` later on, follow it with `docker/sdk console propel:model:build`. It also deletes the synced configuration schemas (`data/cache/configuration`), which the AI configurations reference: in the AI exercises follow it with `docker/sdk console configuration:sync` as well.
+
+Depending on the branch, the list continues with `navigation:build-cache`, `queue:setup`, `messenger:setup-transports`, `search:setup:sources`, `acl-entity:synchronize`, the Merchant Portal build (`frontend:mp:build`) and the Glue resources (`GLUE_APPLICATION=GLUE glue api:generate storefront`, `glue cache:clear`).
 
 For the AI exercises the order differs, because `config_ai.php` references an exercise class - it has to be autoloadable before any console command runs, which is why the loader dumps the autoloader itself. The loader prints the exact list per branch:
 
@@ -112,9 +131,8 @@ docker/sdk console c:e
 docker/sdk console propel:install
 docker/sdk console configuration:sync
 # storefront API exercises additionally:
-docker/sdk cli GLUE_APPLICATION=GLUE_STOREFRONT glue api:generate
+docker/sdk cli GLUE_APPLICATION=GLUE glue api:generate storefront
 docker/sdk cli GLUE_APPLICATION=GLUE glue cache:clear
-docker/sdk cli GLUE_APPLICATION=GLUE_STOREFRONT glue cache:clear
 ```
 
 ## Student Setup Guide
