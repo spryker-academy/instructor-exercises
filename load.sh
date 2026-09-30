@@ -898,7 +898,10 @@ if [ "$RUN_STEPS" = "1" ]; then
     for step in "${STEPS[@]}"; do
         echo -e "  ${YELLOW}\$ $step${NC}"
         # a step is printed for copy & paste, so it is run the way a shell reads it
-        if ! (cd "$PROJECT_DIR" && eval "$step") </dev/null > "$SCRIPT_DIR/.last-step.log" 2>&1; then
+        # a failed step gets one retry: files the loader just removed on the host can still be on
+        # their way into the container (file sync), which makes a cache clear trip over a vanishing directory
+        if ! (cd "$PROJECT_DIR" && eval "$step") </dev/null > "$SCRIPT_DIR/.last-step.log" 2>&1 \
+            && ! { sleep 5; (cd "$PROJECT_DIR" && eval "$step") </dev/null > "$SCRIPT_DIR/.last-step.log" 2>&1; }; then
             tail -20 "$SCRIPT_DIR/.last-step.log" | sed 's/^/    /'
             log_error "Failed: $step (full output in $(relpath "$SCRIPT_DIR/.last-step.log"))"
             exit 1
