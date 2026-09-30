@@ -253,7 +253,7 @@ curl -s -X POST http://glue.eu.spryker.local/ai-chats -H 'Content-Type: applicat
 # same question without the reference  ->  "I don't know your name yet."
 ```
 
-> **Apply:** `glue api:generate`, then `GLUE_APPLICATION=GLUE glue cache:clear` and the same for `GLUE_STOREFRONT`. The compiled Glue kernels cache API Platform source directories and routes — `cache:empty-all` does not touch them.
+> **Apply:** `GLUE_APPLICATION=GLUE glue api:generate storefront`, then `GLUE_APPLICATION=GLUE glue cache:clear`. The compiled Glue kernels cache API Platform source directories and routes — `cache:empty-all` does not touch them.
 
 Tests: `codecept run -c tests/SprykerAcademyTest/Glue/HelloAi/ Exercise19` — 11 tests, client mocked, no tokens spent.
 

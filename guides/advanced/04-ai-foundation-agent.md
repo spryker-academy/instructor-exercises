@@ -24,16 +24,10 @@ The business logic that creates products, prices, stock, and images is provided.
 ## Loading the Exercise
 
 ```bash
-./exercises/load.sh ai-foundation advanced/ai-foundation-agent/skeleton
-docker/sdk cli composer dump-autoload
-docker/sdk console transfer:generate
-docker/sdk console configuration:sync
-docker/sdk console cache:empty-all
-docker/sdk console propel:model:build
-docker/sdk console configuration:sync
+./exercises/load.sh ai-foundation advanced/ai-foundation-agent/skeleton --run
 ```
 
-> **Order matters.** Run `composer dump-autoload` first. Later in this exercise `config_ai.php` references a `SprykerAcademy` class, and every console command fails until the class can be autoloaded.
+`--run` also runs the commands the loader lists after loading (cache, Propel, transfers, `configuration:sync`) and stops at the first one that fails. Leave it out to run them yourself.
 
 The loader copies the module to `src/SprykerAcademy/`, the agent settings to `data/configuration/ai_product_creation.configuration.yml`, and the tests to `tests/SprykerAcademyTest/`.
 
@@ -149,52 +143,43 @@ All 12 tests must pass. They use mocks, so no AI call is made and no token is sp
 
 ### Part 5: Wire the Agent into the Project
 
-Your plugins exist, but the project does not know them yet.
+Your plugins exist, but the project does not know them yet. A project would wire them in `src/Pyz` and `config/Shared/config_ai.php`. The exercise keeps the wiring with its own code: the classes in `src/SprykerAcademy/Zed/AiCommerce/` and `src/SprykerAcademy/Zed/AiFoundation/` extend the project's classes - the ones the Back Office Assistant setup created - and, because `SprykerAcademy` comes before `Pyz` in the project namespaces, are the ones Spryker uses. Complete their TODOs:
 
-**1. Register the agent.** In `src/Pyz/Zed/AiCommerce/AiCommerceDependencyProvider.php`, add `new ProductCreationAgentPlugin()` to `getBackofficeAssistantAgentPlugins()`.
+**1. Register the agent.** In `src/SprykerAcademy/Zed/AiCommerce/AiCommerceDependencyProvider.php`, add `new ProductCreationAgentPlugin()` to the agents of `parent::getBackofficeAssistantAgentPlugins()`.
 
-**2. Register the tool set.** In `src/Pyz/Zed/AiFoundation/AiFoundationDependencyProvider.php`, add `new ProductCreationToolSetPlugin()` to `getAiToolSetPlugins()`.
+**2. Register the tool set.** In `src/SprykerAcademy/Zed/AiFoundation/AiFoundationDependencyProvider.php`, add `new ProductCreationToolSetPlugin()` to the tool sets of `parent::getAiToolSetPlugins()`.
 
-Both classes need an import:
-
-```php
-use SprykerAcademy\Zed\AiProductCreation\Communication\Plugin\Agent\ProductCreationAgentPlugin;
-use SprykerAcademy\Zed\AiProductCreation\Communication\Plugin\AiFoundation\ProductCreationToolSetPlugin;
-```
-
-**3. Add the AI configuration.** Append to `config/Shared/config_ai.php`:
+**3. Add the AI configuration.** In `src/SprykerAcademy/Zed/AiFoundation/AiFoundationConfig.php`:
 
 ```php
-use SprykerAcademy\Shared\AiProductCreation\AiProductCreationConstants;
-
-$config[AiFoundationConstants::AI_CONFIGURATIONS][AiProductCreationConstants::AI_CONFIGURATION_PRODUCT_CREATION_OPENAI] = [
-    'provider_name' => AiFoundationConstants::PROVIDER_OPENAI,
-    'provider_config' => [
-        'key' => AiFoundationConstants::CONFIGURATION_REFERENCE_PREFIX . AiCommerceConstants::CONFIGURATION_KEY_OPENAI_API_TOKEN,
-        'model' => AiFoundationConstants::CONFIGURATION_REFERENCE_PREFIX . AiCommerceConstants::CONFIGURATION_KEY_BACKOFFICE_ASSISTANT_OPENAI_MODEL,
-    ],
-    'system_prompt' => AiFoundationConstants::CONFIGURATION_REFERENCE_PREFIX . AiProductCreationConstants::CONFIGURATION_KEY_SYSTEM_PROMPT,
-];
+public function getAiConfigurations(): array
+{
+    return array_merge(parent::getAiConfigurations(), $this->resolveConfigurationReferences([
+        AiProductCreationConstants::AI_CONFIGURATION_PRODUCT_CREATION_OPENAI => [
+            'provider_name' => AiFoundationConstants::PROVIDER_OPENAI,
+            'provider_config' => [
+                'key' => AiFoundationConstants::CONFIGURATION_REFERENCE_PREFIX . AiCommerceConstants::CONFIGURATION_KEY_OPENAI_API_TOKEN,
+                'model' => AiFoundationConstants::CONFIGURATION_REFERENCE_PREFIX . AiCommerceConstants::CONFIGURATION_KEY_BACKOFFICE_ASSISTANT_OPENAI_MODEL,
+            ],
+            'system_prompt' => AiFoundationConstants::CONFIGURATION_REFERENCE_PREFIX . AiProductCreationConstants::CONFIGURATION_KEY_SYSTEM_PROMPT,
+        ],
+    ]));
+}
 ```
 
-Put the `use` line at the top of the file with the other imports. The agent reuses the assistant's token and model settings and brings its own system prompt.
+The agent reuses the assistant's token and model settings and brings its own system prompt.
 
-**4. Enable SSE streaming.** Tool call progress is only streamed for AI configuration names the assistant knows. Add to `src/Pyz/Zed/AiCommerce/AiCommerceConfig.php`:
+**4. Enable SSE streaming.** Tool call progress is only streamed for AI configuration names the assistant knows. In `src/SprykerAcademy/Zed/AiCommerce/AiCommerceConfig.php`:
 
 ```php
-    /**
-     * @return array<string>
-     */
-    public function getBackofficeAssistantSseAiConfigurationNames(): array
-    {
-        return array_values(array_filter([
-            ...parent::getBackofficeAssistantSseAiConfigurationNames(),
-            AiProductCreationConstants::AI_CONFIGURATION_PRODUCT_CREATION_OPENAI,
-        ]));
-    }
+public function getBackofficeAssistantSseAiConfigurationNames(): array
+{
+    return array_values(array_filter([
+        ...parent::getBackofficeAssistantSseAiConfigurationNames(),
+        AiProductCreationConstants::AI_CONFIGURATION_PRODUCT_CREATION_OPENAI,
+    ]));
+}
 ```
-
-Import the constants interface here as well: `use SprykerAcademy\Shared\AiProductCreation\AiProductCreationConstants;`
 
 **5. Apply.**
 
@@ -222,18 +207,12 @@ docker/sdk console configuration:sync
 ## Solution
 
 ```bash
-./exercises/load.sh ai-foundation advanced/ai-foundation-agent/complete
-docker/sdk cli composer dump-autoload
-docker/sdk console transfer:generate
-docker/sdk console configuration:sync
-docker/sdk console cache:empty-all
-docker/sdk console propel:model:build
-docker/sdk console configuration:sync
+./exercises/load.sh ai-foundation advanced/ai-foundation-agent/complete --run
 ```
 
-For the `complete` branch the loader also does the wiring of Part 5 for you. It marks every line it adds with `ai-foundation exercise` and removes those lines again when you load the skeleton or another package.
+The `complete` branch contains the wiring of Part 5 in `src/SprykerAcademy/Zed/AiCommerce/` and `src/SprykerAcademy/Zed/AiFoundation/`.
 
-> **Switching packages:** if you wired Part 5 by hand, remove those lines before you load `contact-request` or `supplier`. The loader replaces `src/SprykerAcademy/`, and the Back Office fails when a registered plugin class no longer exists. The loader warns you about this.
+> **Wired by hand in an earlier version of this exercise?** Remove those lines from `src/Pyz` and `config/Shared/config_ai.php` before you load another branch or package: the loader replaces `src/SprykerAcademy/`, and the Back Office fails when a registered plugin class no longer exists. The loader warns you about leftover references.
 
 ## Going Further
 

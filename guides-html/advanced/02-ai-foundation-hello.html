@@ -212,9 +212,12 @@
   <![endif]-->
 </head>
 <body>
+<header id="title-block-header">
+<h1 class="title">Exercise 19: Hello AI - A Storefront API Backed by an LLM</h1>
+</header>
 <h1 id="exercise-19-hello-ai---a-storefront-api-backed-by-an-llm">Exercise 19: Hello AI - A Storefront API Backed by an LLM</h1>
 <p>In this exercise, you will build a Storefront API endpoint with API Platform. A client posts a message, the endpoint sends it to a large language model (LLM) through AiFoundation, and returns the answer. The LLM remembers the conversation: send the returned conversation reference with the next message, and it knows what was said before.</p>
-<p>You will learn how to: - Register an <strong>AI configuration</strong> in <code>config_ai.php</code>: provider, API key, model, and system prompt - Send a prompt from the Glue application through the <strong>AiFoundation client</strong>, never through the provider library directly - Give the LLM <strong>memory</strong> with a conversation reference - Define an API Platform <strong>POST resource</strong> with a processor</p>
+<p>You will learn how to: - Register an <strong>AI configuration</strong> (provider, API key, model, and system prompt) - in a project in <code>config_ai.php</code>, here in a <code>SprykerAcademy</code> <code>AiFoundationConfig</code> - Send a prompt from the Glue application through the <strong>AiFoundation client</strong>, never through the provider library directly - Give the LLM <strong>memory</strong> with a conversation reference - Define an API Platform <strong>POST resource</strong> with a processor</p>
 <p><strong>Official documentation:</strong> - <a href="https://docs.spryker.com/docs/dg/dev/ai/ai-foundation/ai-foundation-module.html">AI Foundation module</a> - <a href="https://docs.spryker.com/docs/integrations/spryker-api/api-platform/resource-schemas.html">API Platform: resource schemas</a> - <a href="https://docs.spryker.com/docs/integrations/spryker-api/api-platform/api-platform.html#cache-warming">API Platform: cache warming</a></p>
 <h2 id="prerequisites">Prerequisites</h2>
 <ul>
@@ -222,11 +225,9 @@
 <li>Completed Exercise 12 (Glue Storefront API). You know resource schemas, providers, and <code>glue api:generate</code>.</li>
 </ul>
 <h2 id="loading-the-exercise">Loading the Exercise</h2>
-<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> ai-foundation advanced/ai-foundation-hello/skeleton</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli composer dump-autoload</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span></code></pre></div>
-<p>The loader copies the module to <code>src/SprykerAcademy/</code>, registers <code>src/SprykerAcademy</code> as an API Platform source directory in <code>config/Glue</code>, <code>config/GlueStorefront</code>, and <code>config/GlueBackend</code>, and installs the tests.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> ai-foundation advanced/ai-foundation-hello/skeleton <span class="at">--run</span></span></code></pre></div>
+<p><code>--run</code> also runs the commands the loader lists after loading (cache, Propel, transfers, <code>configuration:sync</code>, Glue resources) and stops at the first one that fails. Leave it out to run them yourself.</p>
+<p>The loader copies the module to <code>src/SprykerAcademy/</code> and installs the tests. <code>src/SprykerAcademy</code> is registered as an API Platform source directory since your first exercise load.</p>
 <hr />
 <h2 id="background-who-talks-to-whom">Background: Who Talks to Whom</h2>
 <pre><code>curl  --POST /ai-chats--&gt;  Glue (API Platform)
@@ -331,32 +332,34 @@
 <p><strong>Where is the answer?</strong> <code>PromptResponseTransfer::getMessage()</code> returns a <code>PromptMessageTransfer</code>. Its <code>getContent()</code> is the text of the LLM.</p>
 </blockquote>
 <h3 id="verify-parts-1-and-2">Verify Parts 1 and 2</h3>
-<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli GLUE_APPLICATION=GLUE_STOREFRONT glue api:generate</span>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli GLUE_APPLICATION=GLUE glue api:generate storefront</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept build <span class="at">-c</span> tests/SprykerAcademyTest/Glue/HelloAi/</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Glue/HelloAi/ Exercise19</span></code></pre></div>
 <p><code>api:generate</code> creates <code>Generated\Api\Storefront\AiChatsStorefrontResource</code>, which the tests need. All 11 tests must pass. The AiFoundation client is mocked, so no token is spent. One test fails if your processor references the <code>NeuronAI</code> namespace.</p>
 <h3 id="part-3-the-ai-configuration">Part 3: The AI Configuration</h3>
-<p>Your code names a configuration that does not exist yet. Add it to <code>config/Shared/config_ai.php</code>:</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="cn">S</span>prykerAcademy\<span class="cn">S</span>hared\<span class="cn">H</span>elloAi\<span class="cn">H</span>elloAiConstants<span class="ot">;</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="va">$config</span>[<span class="cn">A</span>iFoundationConstants::<span class="cn">AI_CONFIGURATIONS</span>][<span class="cn">H</span>elloAiConstants::<span class="cn">AI_CONFIGURATION_HELLO_AI</span>] <span class="op">=</span> [</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;provider_name&#39;</span> =&gt; <span class="cn">A</span>iFoundationConstants::<span class="cn">PROVIDER_OPENAI</span><span class="ot">,</span></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;provider_config&#39;</span> =&gt; [</span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;key&#39;</span> =&gt; <span class="cn">A</span>iFoundationConstants::<span class="cn">CONFIGURATION_REFERENCE_PREFIX</span> <span class="op">.</span> <span class="cn">A</span>iCommerceConstants::<span class="cn">CONFIGURATION_KEY_OPENAI_API_TOKEN</span><span class="ot">,</span></span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;model&#39;</span> =&gt; <span class="st">&#39;gpt-4.1-mini&#39;</span><span class="ot">,</span></span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    ]<span class="ot">,</span></span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;system_prompt&#39;</span> =&gt; <span class="st">&#39;You are a friendly assistant for a Spryker developer training. Answer in one or two short sentences.&#39;</span><span class="ot">,</span></span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>]<span class="ot">;</span></span></code></pre></div>
-<p>Put the <code>use</code> line at the top with the other imports. <code>AiCommerceConstants</code> here is <code>Pyz\Shared\AiCommerce\AiCommerceConstants</code>, which the demo shop already imports in this file.</p>
+<p>Your code names a configuration that does not exist yet. Projects register AI configurations in <code>config/Shared/config_ai.php</code> (<code>AiFoundationConstants::AI_CONFIGURATIONS</code>). The exercise keeps it with its own code instead: <code>src/SprykerAcademy/Zed/AiFoundation/AiFoundationConfig.php</code> extends the <code>AiFoundationConfig</code> of the project (or the core one) and, because <code>SprykerAcademy</code> comes before <code>Pyz</code> in the project namespaces, is the one Spryker uses.</p>
+<p><strong>Coding time:</strong> open <code>src/SprykerAcademy/Zed/AiFoundation/AiFoundationConfig.php</code> and add the configuration to the project’s ones in <code>getAiConfigurations()</code>:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="cf">return</span> <span class="fu">array_merge</span>(<span class="kw">parent</span>::getAiConfigurations()<span class="ot">,</span> <span class="va">$this</span>-&gt;resolveConfigurationReferences([</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="cn">H</span>elloAiConstants::<span class="cn">AI_CONFIGURATION_HELLO_AI</span> =&gt; [</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;provider_name&#39;</span> =&gt; <span class="cn">A</span>iFoundationConstants::<span class="cn">PROVIDER_OPENAI</span><span class="ot">,</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;provider_config&#39;</span> =&gt; [</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;key&#39;</span> =&gt; <span class="cn">A</span>iFoundationConstants::<span class="cn">CONFIGURATION_REFERENCE_PREFIX</span> <span class="op">.</span> <span class="cn">A</span>iCommerceConstants::<span class="cn">CONFIGURATION_KEY_OPENAI_API_TOKEN</span><span class="ot">,</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;model&#39;</span> =&gt; <span class="st">&#39;gpt-4.1-mini&#39;</span><span class="ot">,</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>        ]<span class="ot">,</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;system_prompt&#39;</span> =&gt; <span class="st">&#39;You are a friendly assistant for a Spryker developer training. Answer in one or two short sentences.&#39;</span><span class="ot">,</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    ]<span class="ot">,</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>]))<span class="ot">;</span></span></code></pre></div>
+<p><code>AiCommerceConstants</code> is <code>Pyz\Shared\AiCommerce\AiCommerceConstants</code>; the file already imports it. <code>resolveConfigurationReferences()</code> replaces the <code>configuration::</code> references - <code>parent::getAiConfigurations()</code> already did that for the project’s entries.</p>
 <blockquote>
 <p><strong>Two ways to set a value.</strong> <code>key</code> uses the prefix <code>configuration::</code> and is read at runtime from the Back Office configuration. <code>model</code> and <code>system_prompt</code> are plain strings. Both forms are valid for every field. Use the prefix for secrets and for anything an admin should change without a deployment.</p>
 </blockquote>
 <h3 id="part-4-apply-and-call-the-api">Part 4: Apply and Call the API</h3>
 <div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli GLUE_APPLICATION=GLUE glue cache:clear</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli GLUE_APPLICATION=GLUE_STOREFRONT glue cache:clear</span></code></pre></div>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console propel:model:build</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console configuration:sync</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli GLUE_APPLICATION=GLUE glue cache:clear</span></code></pre></div>
 <blockquote>
-<p><strong>Why two cache commands?</strong> The Glue applications compile a Symfony container that caches the API Platform source directories and routes. <code>cache:empty-all</code> does not touch it. In the demo shop, <code>glue.eu.spryker.local</code> is served by the <code>GLUE</code> application, and <code>GLUE_STOREFRONT</code> is the dedicated storefront application. Clear both. This is the documented step, see <em>API Platform: cache warming</em> above.</p>
+<p><strong>Why <code>glue cache:clear</code>?</strong> The Glue application compiles a Symfony container that caches the API Platform source directories and routes, and <code>cache:empty-all</code> does not touch it. In the demo shop <code>glue.eu.spryker.local</code> is served by the <code>GLUE</code> application, so that is the one to generate and clear (<code>GLUE_STOREFRONT</code> is not the application behind that host). If the endpoint still answers 404 or 500, see <em>Troubleshooting</em> in <a href="../intermediate/05-glue-storefront-api.html">the Glue Storefront API guide</a>.</p>
 </blockquote>
 <p>Send the first message:</p>
 <div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-s</span> <span class="at">-X</span> POST http://glue.eu.spryker.local/ai-chats <span class="dt">\</span></span>
@@ -378,14 +381,8 @@
 <li>AiFoundation records every prompt of the <code>SPRYKER_ACADEMY:AI_CONFIGURATION_HELLO_AI</code> configuration in its audit log, separate from the other AI features.</li>
 </ol>
 <h2 id="solution">Solution</h2>
-<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> ai-foundation advanced/ai-foundation-hello/complete</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli composer dump-autoload</span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli GLUE_APPLICATION=GLUE_STOREFRONT glue api:generate</span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli GLUE_APPLICATION=GLUE glue cache:clear</span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli GLUE_APPLICATION=GLUE_STOREFRONT glue cache:clear</span></code></pre></div>
-<p>For the <code>complete</code> branch the loader adds the AI configuration of Part 3 for you, marked with <code>ai-foundation exercise</code>. It removes it again when you load the skeleton or another package.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> ai-foundation advanced/ai-foundation-hello/complete <span class="at">--run</span></span></code></pre></div>
+<p>The <code>complete</code> branch contains the AI configuration of Part 3 in <code>src/SprykerAcademy/Zed/AiFoundation/AiFoundationConfig.php</code>. If you added the configuration to <code>config/Shared/config_ai.php</code> by hand in an earlier version of this exercise, remove it again.</p>
 <h2 id="going-further">Going Further</h2>
 <ul>
 <li>Change the system prompt to answer only in German, and clear the caches. No code changed.</li>

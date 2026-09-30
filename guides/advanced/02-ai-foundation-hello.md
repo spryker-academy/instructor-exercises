@@ -3,7 +3,7 @@
 In this exercise, you will build a Storefront API endpoint with API Platform. A client posts a message, the endpoint sends it to a large language model (LLM) through AiFoundation, and returns the answer. The LLM remembers the conversation: send the returned conversation reference with the next message, and it knows what was said before.
 
 You will learn how to:
-- Register an **AI configuration** in `config_ai.php`: provider, API key, model, and system prompt
+- Register an **AI configuration** (provider, API key, model, and system prompt) - in a project in `config_ai.php`, here in a `SprykerAcademy` `AiFoundationConfig`
 - Send a prompt from the Glue application through the **AiFoundation client**, never through the provider library directly
 - Give the LLM **memory** with a conversation reference
 - Define an API Platform **POST resource** with a processor
@@ -21,15 +21,12 @@ You will learn how to:
 ## Loading the Exercise
 
 ```bash
-./exercises/load.sh ai-foundation advanced/ai-foundation-hello/skeleton
-docker/sdk cli composer dump-autoload
-docker/sdk console transfer:generate
-docker/sdk console cache:empty-all
-docker/sdk console propel:model:build
-docker/sdk console configuration:sync
+./exercises/load.sh ai-foundation advanced/ai-foundation-hello/skeleton --run
 ```
 
-The loader copies the module to `src/SprykerAcademy/`, registers `src/SprykerAcademy` as an API Platform source directory in `config/Glue`, `config/GlueStorefront`, and `config/GlueBackend`, and installs the tests.
+`--run` also runs the commands the loader lists after loading (cache, Propel, transfers, `configuration:sync`, Glue resources) and stops at the first one that fails. Leave it out to run them yourself.
+
+The loader copies the module to `src/SprykerAcademy/` and installs the tests. `src/SprykerAcademy` is registered as an API Platform source directory since your first exercise load.
 
 ---
 
@@ -101,7 +98,7 @@ Then call `$this->aiFoundationClient->prompt($promptRequestTransfer)`.
 ### Verify Parts 1 and 2
 
 ```bash
-docker/sdk cli GLUE_APPLICATION=GLUE_STOREFRONT glue api:generate
+docker/sdk cli GLUE_APPLICATION=GLUE glue api:generate storefront
 docker/sdk cli vendor/bin/codecept build -c tests/SprykerAcademyTest/Glue/HelloAi/
 docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Glue/HelloAi/ Exercise19
 ```
@@ -110,22 +107,24 @@ docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Glue/HelloAi/
 
 ### Part 3: The AI Configuration
 
-Your code names a configuration that does not exist yet. Add it to `config/Shared/config_ai.php`:
+Your code names a configuration that does not exist yet. Projects register AI configurations in `config/Shared/config_ai.php` (`AiFoundationConstants::AI_CONFIGURATIONS`). The exercise keeps it with its own code instead: `src/SprykerAcademy/Zed/AiFoundation/AiFoundationConfig.php` extends the `AiFoundationConfig` of the project (or the core one) and, because `SprykerAcademy` comes before `Pyz` in the project namespaces, is the one Spryker uses.
+
+**Coding time:** open `src/SprykerAcademy/Zed/AiFoundation/AiFoundationConfig.php` and add the configuration to the project's ones in `getAiConfigurations()`:
 
 ```php
-use SprykerAcademy\Shared\HelloAi\HelloAiConstants;
-
-$config[AiFoundationConstants::AI_CONFIGURATIONS][HelloAiConstants::AI_CONFIGURATION_HELLO_AI] = [
-    'provider_name' => AiFoundationConstants::PROVIDER_OPENAI,
-    'provider_config' => [
-        'key' => AiFoundationConstants::CONFIGURATION_REFERENCE_PREFIX . AiCommerceConstants::CONFIGURATION_KEY_OPENAI_API_TOKEN,
-        'model' => 'gpt-4.1-mini',
+return array_merge(parent::getAiConfigurations(), $this->resolveConfigurationReferences([
+    HelloAiConstants::AI_CONFIGURATION_HELLO_AI => [
+        'provider_name' => AiFoundationConstants::PROVIDER_OPENAI,
+        'provider_config' => [
+            'key' => AiFoundationConstants::CONFIGURATION_REFERENCE_PREFIX . AiCommerceConstants::CONFIGURATION_KEY_OPENAI_API_TOKEN,
+            'model' => 'gpt-4.1-mini',
+        ],
+        'system_prompt' => 'You are a friendly assistant for a Spryker developer training. Answer in one or two short sentences.',
     ],
-    'system_prompt' => 'You are a friendly assistant for a Spryker developer training. Answer in one or two short sentences.',
-];
+]));
 ```
 
-Put the `use` line at the top with the other imports. `AiCommerceConstants` here is `Pyz\Shared\AiCommerce\AiCommerceConstants`, which the demo shop already imports in this file.
+`AiCommerceConstants` is `Pyz\Shared\AiCommerce\AiCommerceConstants`; the file already imports it. `resolveConfigurationReferences()` replaces the `configuration::` references - `parent::getAiConfigurations()` already did that for the project's entries.
 
 > **Two ways to set a value.** `key` uses the prefix `configuration::` and is read at runtime from the Back Office configuration. `model` and `system_prompt` are plain strings. Both forms are valid for every field. Use the prefix for secrets and for anything an admin should change without a deployment.
 
@@ -136,10 +135,9 @@ docker/sdk console cache:empty-all
 docker/sdk console propel:model:build
 docker/sdk console configuration:sync
 docker/sdk cli GLUE_APPLICATION=GLUE glue cache:clear
-docker/sdk cli GLUE_APPLICATION=GLUE_STOREFRONT glue cache:clear
 ```
 
-> **Why two cache commands?** The Glue applications compile a Symfony container that caches the API Platform source directories and routes. `cache:empty-all` does not touch it. In the demo shop, `glue.eu.spryker.local` is served by the `GLUE` application, and `GLUE_STOREFRONT` is the dedicated storefront application. Clear both. This is the documented step, see *API Platform: cache warming* above.
+> **Why `glue cache:clear`?** The Glue application compiles a Symfony container that caches the API Platform source directories and routes, and `cache:empty-all` does not touch it. In the demo shop `glue.eu.spryker.local` is served by the `GLUE` application, so that is the one to generate and clear (`GLUE_STOREFRONT` is not the application behind that host). If the endpoint still answers 404 or 500, see *Troubleshooting* in [the Glue Storefront API guide](../intermediate/05-glue-storefront-api.md).
 
 Send the first message:
 
@@ -176,18 +174,10 @@ The answer names you. Send the same question without the reference, and the LLM 
 ## Solution
 
 ```bash
-./exercises/load.sh ai-foundation advanced/ai-foundation-hello/complete
-docker/sdk cli composer dump-autoload
-docker/sdk console transfer:generate
-docker/sdk console cache:empty-all
-docker/sdk console propel:model:build
-docker/sdk console configuration:sync
-docker/sdk cli GLUE_APPLICATION=GLUE_STOREFRONT glue api:generate
-docker/sdk cli GLUE_APPLICATION=GLUE glue cache:clear
-docker/sdk cli GLUE_APPLICATION=GLUE_STOREFRONT glue cache:clear
+./exercises/load.sh ai-foundation advanced/ai-foundation-hello/complete --run
 ```
 
-For the `complete` branch the loader adds the AI configuration of Part 3 for you, marked with `ai-foundation exercise`. It removes it again when you load the skeleton or another package.
+The `complete` branch contains the AI configuration of Part 3 in `src/SprykerAcademy/Zed/AiFoundation/AiFoundationConfig.php`. If you added the configuration to `config/Shared/config_ai.php` by hand in an earlier version of this exercise, remove it again.
 
 ## Going Further
 

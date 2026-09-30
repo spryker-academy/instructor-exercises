@@ -250,6 +250,25 @@ if (is_dir(__DIR__ . '/../../src/SprykerAcademy/Client')) {
 
 ---
 
+## Troubleshooting: When the Endpoint Does Not Answer
+
+API Platform endpoints are built from three things that live in different places: the resource YAML, the PHP classes **generated** from it, and the Glue application's **compiled Symfony container**. Most problems come from one of them being stale. Work through this list from the top.
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| `404 Not Found` for `/suppliers`, or your change to the YAML has no effect | The generated resource classes or the compiled Glue container still reflect the old YAML. `cache:empty-all` does **not** clear the Glue containers. | `docker/sdk cli GLUE_APPLICATION=GLUE glue api:generate storefront`, then `docker/sdk cli GLUE_APPLICATION=GLUE glue cache:clear` |
+| `api:generate` finds nothing | `src/SprykerAcademy` is not in the source directories of the application you generated for, or you generated for another application | Check `sourceDirectories` in `config/Glue/packages/spryker_api_platform.php`; in this shop the storefront API runs in the `GLUE` application |
+| `500` with *Could not find the "SprykerAcademy\Client\...Interface" in any of the attached containers* | The Glue container cannot resolve the client your provider injects. It registers Clients and Facades of the core and of `Pyz` automatically, but not of other namespaces. | The block that loads `src/SprykerAcademy/Client` in `config/Glue/ApplicationServices.php` is missing: see [Registering Services](#registering-services-in-the-symfony-container), then `glue cache:clear` |
+| `500` after you loaded another exercise, naming a class of the previous one | Generated resources of the old exercise point at a provider that no longer exists | Load exercises with `load.sh` (it deletes them), or delete the files under `src/Generated/Api/Storefront` whose header names a `src/SprykerAcademy` schema, then `api:generate` and `glue cache:clear` |
+| Items have no `id`/links, or `idSupplier` is `null` | The mapper fills the resource from snake_case keys (`id_supplier`); the generated resource reads camelCase (`idSupplier`) | `SuppliersStorefrontResource::fromArray($supplierTransfer->toArray(false, true))` |
+| Items come back with `name` but `null` for `description`, `email`, ... | The Elasticsearch documents do not have those fields at the top level, so the search result cannot fill the transfer | The search document must be the flat one of `Schema/supplier.json` (Exercise 10). Rebuild the documents: delete the `pyz_supplier_search` rows, `publish:trigger-events -r supplier`, `queue:worker:start --stop-when-empty` |
+| An empty collection | Nothing is in the index yet | Import and process the queues (Exercises 8 and 10), then check `curl localhost:9200/_cat/indices \| grep supplier` |
+| `GET /suppliers/999999` answers `500` instead of `404` | The provider returns an empty resource for an unknown id | Return `null` when the client's transfer has no `idSupplier` |
+
+> **When in doubt, rebuild all three:** `docker/sdk console c:e`, `docker/sdk console propel:model:build`, `docker/sdk cli GLUE_APPLICATION=GLUE glue api:generate storefront`, `docker/sdk cli GLUE_APPLICATION=GLUE glue cache:clear`. `load.sh --run` does exactly this after every load.
+
+---
+
 ## Key Concepts Summary
 
 ### API Platform vs Legacy

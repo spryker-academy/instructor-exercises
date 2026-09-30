@@ -212,20 +212,21 @@
   <![endif]-->
 </head>
 <body>
+<header id="title-block-header">
+<h1 class="title">Exercise 20: Ask the Catalog - Tool Calling and Structured Answers</h1>
+</header>
 <h1 id="exercise-20-ask-the-catalog---tool-calling-and-structured-answers">Exercise 20: Ask the Catalog - Tool Calling and Structured Answers</h1>
 <p>In this exercise, you extend the Hello AI pattern with the two ideas that make an LLM useful in a shop. A customer asks a question about a product. The LLM does not know your catalog, so it <strong>calls a tool</strong> that reads the product from the database. Then it answers in a <strong>fixed structure</strong> with typed fields instead of free text.</p>
 <p>You will learn how to: - Write a <strong>tool plugin</strong> that the LLM can call: name, description, typed parameters, and execution in Zed - Group tools in a <strong>tool set plugin</strong> and register it with AiFoundation - Define a <strong>structured answer</strong> as a transfer object and get typed getters back - Request tools and the answer shape from a Storefront API processor - Write a system prompt with a <strong>guardrail</strong> against invented facts</p>
 <p><strong>Official documentation:</strong> - <a href="https://docs.spryker.com/docs/dg/dev/ai/ai-commerce/extend-ai-commerce-agents-with-toolsets.html">Extend AI Commerce agents with custom toolsets</a> - <a href="https://docs.spryker.com/docs/dg/dev/ai/ai-foundation/ai-foundation-module.html">AI Foundation module</a></p>
 <h2 id="prerequisites">Prerequisites</h2>
 <ul>
-<li>Completed <a href="02-ai-foundation-hello.md">Exercise 19: Hello AI</a>. The endpoint, the processor, and the AI configuration follow the same pattern.</li>
+<li>Completed <a href="02-ai-foundation-hello.html">Exercise 19: Hello AI</a>. The endpoint, the processor, and the AI configuration follow the same pattern.</li>
 <li>An OpenAI API token in the Back Office. The Back Office Assistant is not required.</li>
 </ul>
 <h2 id="loading-the-exercise">Loading the Exercise</h2>
-<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> ai-foundation advanced/ai-foundation-catalog/skeleton</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli composer dump-autoload</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> ai-foundation advanced/ai-foundation-catalog/skeleton <span class="at">--run</span></span></code></pre></div>
+<p><code>--run</code> also runs the commands the loader lists after loading (cache, Propel, transfers, <code>configuration:sync</code>, Glue resources) and stops at the first one that fails. Leave it out to run them yourself.</p>
 <hr />
 <h2 id="background-one-request-several-round-trips">Background: One Request, Several Round Trips</h2>
 <pre><code>POST /product-questions {sku, question}
@@ -334,55 +335,45 @@ typed ProductAnswerTransfer  --&gt;  processor maps it  --&gt;  JSON:API respons
 <p><strong>TODO-9:</strong> copy <code>answer</code>, <code>isInStock</code>, <code>confidence</code>, and <code>relatedSkus</code> from the typed transfer into the resource.</p>
 <p>The resource schema <code>product-questions.resource.yml</code> is complete. Read it to see how the four answer fields are declared read-only.</p>
 <h3 id="verify-parts-1-to-4">Verify Parts 1 to 4</h3>
-<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli GLUE_APPLICATION=GLUE_STOREFRONT glue api:generate</span>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli GLUE_APPLICATION=GLUE glue api:generate storefront</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept build <span class="at">-c</span> tests/SprykerAcademyTest/Zed/CatalogAssistant/</span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/CatalogAssistant/ Exercise20</span></code></pre></div>
 <p>All 15 tests must pass. The client is mocked, so no token is spent.</p>
 <h3 id="part-5-wire-it-into-the-project">Part 5: Wire It Into the Project</h3>
-<p><strong>1. Register the tool set.</strong> In <code>src/Pyz/Zed/AiFoundation/AiFoundationDependencyProvider.php</code>, add <code>new CatalogToolSetPlugin()</code> to <code>getAiToolSetPlugins()</code>. If the file does not exist yet, create it:</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;?php</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="kw">declare</span>(strict_types <span class="op">=</span> <span class="dv">1</span>)<span class="ot">;</span></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="kw">namespace</span> <span class="cn">P</span>yz\<span class="cn">Z</span>ed\<span class="cn">A</span>iFoundation<span class="ot">;</span></span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="cn">S</span>pryker\<span class="cn">Z</span>ed\<span class="cn">A</span>iFoundation\<span class="cn">A</span>iFoundationDependencyProvider <span class="kw">as</span> <span class="cn">S</span>prykerAiFoundationDependencyProvider<span class="ot">;</span></span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="cn">S</span>prykerAcademy\<span class="cn">Z</span>ed\<span class="cn">C</span>atalogAssistant\<span class="cn">C</span>ommunication\<span class="cn">P</span>lugin\<span class="cn">A</span>iFoundation\<span class="cn">C</span>atalogToolSetPlugin<span class="ot">;</span></span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="cn">A</span>iFoundationDependencyProvider <span class="kw">extends</span> <span class="cn">S</span>prykerAiFoundationDependencyProvider</span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>{</span>
-<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    <span class="co">/**</span></span>
-<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="co">     * </span><span class="an">@return</span><span class="co"> array&lt;</span><span class="an">\Spryker\Zed\AiFoundation\Dependency\Tools\ToolSetPluginInterface&gt;</span></span>
-<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="co">     */</span></span>
-<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">protected</span> <span class="kw">function</span> getAiToolSetPlugins()<span class="ot">:</span> <span class="dt">array</span></span>
-<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>    {</span>
-<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> [</span>
-<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>            <span class="kw">new</span> <span class="cn">C</span>atalogToolSetPlugin()<span class="ot">,</span></span>
-<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>        ]<span class="ot">;</span></span>
-<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>    }</span>
-<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
-<p><strong>2. Add the AI configuration with a guardrail prompt</strong> to <code>config/Shared/config_ai.php</code>:</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="cn">S</span>prykerAcademy\<span class="cn">S</span>hared\<span class="cn">C</span>atalogAssistant\<span class="cn">C</span>atalogAssistantConstants<span class="ot">;</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="va">$config</span>[<span class="cn">A</span>iFoundationConstants::<span class="cn">AI_CONFIGURATIONS</span>][<span class="cn">C</span>atalogAssistantConstants::<span class="cn">AI_CONFIGURATION_CATALOG_ASSISTANT</span>] <span class="op">=</span> [</span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;provider_name&#39;</span> =&gt; <span class="cn">A</span>iFoundationConstants::<span class="cn">PROVIDER_OPENAI</span><span class="ot">,</span></span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;provider_config&#39;</span> =&gt; [</span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;key&#39;</span> =&gt; <span class="cn">A</span>iFoundationConstants::<span class="cn">CONFIGURATION_REFERENCE_PREFIX</span> <span class="op">.</span> <span class="cn">A</span>iCommerceConstants::<span class="cn">CONFIGURATION_KEY_OPENAI_API_TOKEN</span><span class="ot">,</span></span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;model&#39;</span> =&gt; <span class="st">&#39;gpt-4.1-mini&#39;</span><span class="ot">,</span></span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    ]<span class="ot">,</span></span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;system_prompt&#39;</span> =&gt; <span class="st">&#39;You are a product advisor for an online shop. You answer questions about one product at a time. &#39;</span></span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span> <span class="st">&#39;ALWAYS call get_product_details with the given SKU before answering, even for follow-up questions. &#39;</span></span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span> <span class="st">&#39;Answer only with facts from the tool result. If the tool returns an error or the details do not cover the question, &#39;</span></span>
-<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span> <span class="st">&#39;say so and set confidence to low. Prices in the tool result are gross amounts in cents; show them in major units. &#39;</span></span>
-<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span> <span class="st">&#39;Keep the answer under 80 words.&#39;</span><span class="ot">,</span></span>
-<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>]<span class="ot">;</span></span></code></pre></div>
+<p>Projects register tool sets in <code>src/Pyz/Zed/AiFoundation/AiFoundationDependencyProvider.php</code> and AI configurations in <code>config/Shared/config_ai.php</code>. The exercise keeps both with its own code: the two classes in <code>src/SprykerAcademy/Zed/AiFoundation/</code> extend the project’s classes (the core ones when the project has none) and, because <code>SprykerAcademy</code> comes before <code>Pyz</code> in the project namespaces, are the ones Spryker uses.</p>
+<p><strong>1. Register the tool set.</strong> Open <code>src/SprykerAcademy/Zed/AiFoundation/AiFoundationDependencyProvider.php</code> and add your tool set to the project’s:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">protected</span> <span class="kw">function</span> getAiToolSetPlugins()<span class="ot">:</span> <span class="dt">array</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="fu">array_merge</span>(<span class="kw">parent</span>::getAiToolSetPlugins()<span class="ot">,</span> [</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>        <span class="kw">new</span> <span class="cn">C</span>atalogToolSetPlugin()<span class="ot">,</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    ])<span class="ot">;</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p><strong>2. Add the AI configuration with a guardrail prompt.</strong> Open <code>src/SprykerAcademy/Zed/AiFoundation/AiFoundationConfig.php</code> and add it to the project’s configurations:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span> <span class="kw">function</span> getAiConfigurations()<span class="ot">:</span> <span class="dt">array</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="fu">array_merge</span>(<span class="kw">parent</span>::getAiConfigurations()<span class="ot">,</span> <span class="va">$this</span>-&gt;resolveConfigurationReferences([</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>        <span class="cn">C</span>atalogAssistantConstants::<span class="cn">AI_CONFIGURATION_CATALOG_ASSISTANT</span> =&gt; [</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;provider_name&#39;</span> =&gt; <span class="cn">A</span>iFoundationConstants::<span class="cn">PROVIDER_OPENAI</span><span class="ot">,</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;provider_config&#39;</span> =&gt; [</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>                <span class="st">&#39;key&#39;</span> =&gt; <span class="cn">A</span>iFoundationConstants::<span class="cn">CONFIGURATION_REFERENCE_PREFIX</span> <span class="op">.</span> <span class="cn">A</span>iCommerceConstants::<span class="cn">CONFIGURATION_KEY_OPENAI_API_TOKEN</span><span class="ot">,</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>                <span class="st">&#39;model&#39;</span> =&gt; <span class="st">&#39;gpt-4.1-mini&#39;</span><span class="ot">,</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>            ]<span class="ot">,</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;system_prompt&#39;</span> =&gt; <span class="st">&#39;You are a product advisor for an online shop. You answer questions about one product at a time. &#39;</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>                <span class="op">.</span> <span class="st">&#39;ALWAYS call get_product_details with the given SKU before answering, even for follow-up questions. &#39;</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>                <span class="op">.</span> <span class="st">&#39;Answer only with facts from the tool result. If the tool returns an error or the details do not cover the question, &#39;</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>                <span class="op">.</span> <span class="st">&#39;say so and set confidence to low. Prices in the tool result are gross amounts in cents; show them in major units. &#39;</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>                <span class="op">.</span> <span class="st">&#39;Keep the answer under 80 words.&#39;</span><span class="ot">,</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>        ]<span class="ot">,</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>    ]))<span class="ot">;</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 <blockquote>
 <p><strong>The guardrail.</strong> Without “answer only with facts from the tool result”, the model happily describes a product it has never seen. Test it later with a SKU that does not exist.</p>
 </blockquote>
 <p><strong>3. Apply:</strong></p>
 <div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli GLUE_APPLICATION=GLUE glue cache:clear</span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli GLUE_APPLICATION=GLUE_STOREFRONT glue cache:clear</span></code></pre></div>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console propel:model:build</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console configuration:sync</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli GLUE_APPLICATION=GLUE glue cache:clear</span></code></pre></div>
 <hr />
 <h2 id="testing">Testing</h2>
 <p>Ask about a real product from the demo data:</p>
@@ -401,14 +392,8 @@ typed ProductAnswerTransfer  --&gt;  processor maps it  --&gt;  JSON:API respons
 <p><strong>Where did the model go wrong?</strong> When the shape does not fit, the API returns HTTP 503 with <em>The AI provider did not return a structured answer</em> followed by AiFoundation’s reason, for example <em>Failed to map structured response to transfer. Missing or empty properties: is_in_stock</em>. Fix the description of that property, not the code.</p>
 </blockquote>
 <h2 id="solution">Solution</h2>
-<div class="sourceCode" id="cb10"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> ai-foundation advanced/ai-foundation-catalog/complete</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli composer dump-autoload</span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli GLUE_APPLICATION=GLUE_STOREFRONT glue api:generate</span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli GLUE_APPLICATION=GLUE glue cache:clear</span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli GLUE_APPLICATION=GLUE_STOREFRONT glue cache:clear</span></code></pre></div>
-<p>For the <code>complete</code> branch the loader does Part 5 for you, marked with <code>ai-foundation exercise</code>, and removes it again when you load a skeleton or another package.</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> ai-foundation advanced/ai-foundation-catalog/complete <span class="at">--run</span></span></code></pre></div>
+<p>The <code>complete</code> branch contains Part 5 in <code>src/SprykerAcademy/Zed/AiFoundation/</code>. If you wired the tool set or the configuration into <code>src/Pyz</code> or <code>config/Shared/config_ai.php</code> by hand in an earlier version of this exercise, remove it again.</p>
 <h2 id="going-further">Going Further</h2>
 <ul>
 <li>Add a second tool <code>list_similar_products</code> that searches the catalog by the product’s category, and let the model fill <code>relatedSkus</code> from it.</li>

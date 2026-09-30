@@ -247,9 +247,8 @@ After loading, run the commands in this order:
 docker/sdk cli composer dump-autoload
 docker/sdk console transfer:generate
 docker/sdk console cache:empty-all
-docker/sdk cli GLUE_APPLICATION=GLUE_STOREFRONT glue api:generate
+docker/sdk cli GLUE_APPLICATION=GLUE glue api:generate storefront
 docker/sdk cli GLUE_APPLICATION=GLUE glue cache:clear
-docker/sdk cli GLUE_APPLICATION=GLUE_STOREFRONT glue cache:clear
 ```
 
 Verify your work without spending AI tokens:
@@ -344,7 +343,7 @@ Check the solution. The loader wires the agent into the project for you:
 | `docker/sdk console navigation:build-cache` | After modifying navigation XML |
 | `docker/sdk console cache:empty-all` | After loading Yves or Merchant Portal exercises |
 | `docker/sdk console configuration:sync` | After adding or changing `*.configuration.yml` setting schemas |
-| `GLUE_APPLICATION=GLUE glue cache:clear` | After changing API Platform resources or source directories, also for `GLUE_STOREFRONT` |
+| `GLUE_APPLICATION=GLUE glue cache:clear` | After changing API Platform resources or source directories (see *Troubleshooting* in the Glue Storefront API guide) |
 
 ## Troubleshooting
 

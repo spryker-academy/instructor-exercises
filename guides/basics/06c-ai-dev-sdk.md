@@ -218,9 +218,10 @@ New APIs use the Spryker API Platform: a `*.resource.yml` under
 resources/api/storefront/ plus a Provider class implementing
 ApiPlatform\State\ProviderInterface. Do not use the legacy GlueApplication
 resource plugins. For resources in this namespace to be found, `src/SprykerAcademy`
-must be listed in config/GlueStorefront/packages/spryker_api_platform.php, and
-resources are generated with
-`GLUE_APPLICATION=GLUE_STOREFRONT glue api:generate`.
+must be listed in config/Glue/packages/spryker_api_platform.php (this shop serves
+glue.eu.spryker.local from the GLUE application), resources are generated with
+`GLUE_APPLICATION=GLUE glue api:generate storefront`, and the compiled container is
+refreshed with `GLUE_APPLICATION=GLUE glue cache:clear`.
 ```
 
 And the wiring conventions, which are the ones an assistant gets wrong most often because the older Spryker style is what it has read most of:
@@ -338,7 +339,8 @@ docker/sdk console cache:empty-all
 docker/sdk console propel:install
 docker/sdk console transfer:generate
 docker/sdk console navigation:build-cache
-docker/sdk cli GLUE_APPLICATION=GLUE_STOREFRONT glue api:generate
+docker/sdk cli GLUE_APPLICATION=GLUE glue api:generate storefront
+docker/sdk cli GLUE_APPLICATION=GLUE glue cache:clear
 ```
 
 > The last command is the one people forget. A `*.resource.yml` does nothing until `glue api:generate` has turned it into a generated resource class, and it needs `GLUE_APPLICATION` in the environment - every `glue` command does.

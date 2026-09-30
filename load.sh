@@ -18,12 +18,11 @@
 #   3. Replaces src/SprykerAcademy and tests/SprykerAcademyTest with the branch's copy, and copies
 #      the branch's own data and config files (CSV files, import configuration, OMS process).
 #
-# The contact-request and supplier branches carry their complete wiring themselves: a dependency
-# provider or config class in src/SprykerAcademy that extends the Pyz one wins over it, because
-# SprykerAcademy is listed before Pyz in the kernel's project namespaces. Navigation comes from the
-# module's Communication/navigation.xml. The loader therefore never edits a file the shop owns
-# for those packages. (The ai-foundation package still wires its complete branches into the
-# project's AI configuration, see below.)
+# The exercise branches carry their complete wiring themselves: a dependency provider or config
+# class in src/SprykerAcademy that extends the Pyz one wins over it, because SprykerAcademy is
+# listed before Pyz in the kernel's project namespaces. Navigation comes from the module's
+# Communication/navigation.xml, AI configurations from a SprykerAcademy AiFoundationConfig. The
+# loader therefore never edits a file the shop owns for an exercise.
 #
 # --run  also runs the post-load commands (cache, Propel, transfers, Glue resources).
 #
@@ -447,6 +446,23 @@ remove_legacy_wiring() {
         log_success "Removed the supplier import entries of an earlier loader from data/import/local/full_EU.yml"
     fi
 
+    # AI Foundation wiring an earlier loader wrote into config_ai.php and the project providers
+    local ai_markers="ai-foundation exercise|ai-product-creation exercise"
+    local ai_wired_files
+    ai_wired_files=$(grep -rlE "$ai_markers" "$PROJECT_DIR/src/Pyz" "$PROJECT_DIR/src/Demo" "$PROJECT_DIR/config/Shared/config_ai.php" --include="*.php" 2>/dev/null || true)
+    if [ -n "$ai_wired_files" ]; then
+        echo "$ai_wired_files" | while read -r file; do
+            strip_marked "$file" "ai-foundation exercise" "ai-product-creation exercise" >/dev/null
+        done
+        log_success "Removed the AI Foundation wiring of an earlier loader from the project"
+    fi
+    # the agent's configuration schema, copied by an earlier loader without recording it
+    file="data/configuration/ai_product_creation.configuration.yml"
+    if [ -f "$PROJECT_DIR/$file" ] && ! grep -qx "$file" "$MANIFEST" 2>/dev/null; then
+        rm -f "$PROJECT_DIR/$file"
+        log_success "Removed $file (copied by an earlier loader)"
+    fi
+
     # Files an earlier loader copied without recording them
     if [ ! -f "$MANIFEST" ]; then
         for file in data/import/supplier.csv data/import/supplier_location.csv config/Zed/oms/Demo01.xml; do
@@ -532,213 +548,6 @@ fi
 
 # The compiled Glue kernels cache the service and resource lists; cache:empty-all does not reach them
 rm -rf "$PROJECT_DIR"/data/cache/Glue "$PROJECT_DIR"/data/cache/GlueStorefront "$PROJECT_DIR"/data/cache/GlueBackend 2>/dev/null || true
-
-# ai-foundation calls this for its storefront API exercises; the setup above already did the work
-register_api_platform_sources() { return 0; }
-
-# ---------------------------------------------------------------------------
-# AI Foundation package (Exercise 19: Hello AI, Exercise 20: Ask the Catalog, Exercise 21: Product Creation agent)
-# ---------------------------------------------------------------------------
-AI_WIRING_MARKER="ai-foundation exercise"
-AI_WIRING_MARKERS="$AI_WIRING_MARKER|ai-product-creation exercise" # second value: marker of an earlier loader version
-
-# Always remove wiring that a previous "complete" load added: other packages and other branches must not reference
-# classes that src/SprykerAcademy no longer contains, and in the skeleton branches the wiring is a student task.
-# The complete branches add their own wiring again below.
-if true; then
-    AI_WIRED_FILES=$(grep -rlE "$AI_WIRING_MARKERS" "$PROJECT_DIR/src/Pyz" "$PROJECT_DIR/src/Demo" "$PROJECT_DIR/config/Shared/config_ai.php" --include="*.php" 2>/dev/null || true)
-    if [ -n "$AI_WIRED_FILES" ]; then
-        echo "$AI_WIRED_FILES" | while read -r wired_file; do
-            php -r '
-                $file = $argv[1];
-                $content = file_get_contents($file);
-                foreach (explode("|", $argv[2]) as $marker) {
-                    $marker = preg_quote($marker, "/");
-                    $content = preg_replace("/\n[ \t]*\/\/ >>> " . $marker . ".*?\/\/ <<< " . $marker . "[^\n]*/s", "", $content);
-                    $content = preg_replace("/\n[^\n]*\/\/ " . $marker . "[^\n]*/", "", $content);
-                }
-                $content = preg_replace("/\n{3,}/", "\n\n", $content);
-                file_put_contents($file, rtrim($content) . "\n");
-            ' "$wired_file" "$AI_WIRING_MARKERS"
-        done
-        log_success "Removed automatic AI Foundation wiring from the project"
-    fi
-    if [ "$PACKAGE" != "ai-foundation" ]; then
-        rm -f "$PROJECT_DIR/data/configuration/ai_product_creation.configuration.yml"
-        if grep -rq "AiProductCreation\|HelloAi\|CatalogAssistant" "$PROJECT_DIR/src/Pyz" "$PROJECT_DIR/config/Shared/config_ai.php" 2>/dev/null; then
-            log_error "Warning: the project still references an AI exercise module (AiProductCreation, HelloAi, CatalogAssistant) (manual wiring from the AI exercises)."
-            log_error "         Remove those lines, or the application will fail because src/SprykerAcademy was replaced."
-        fi
-    fi
-fi
-
-if [ "$PACKAGE" = "ai-foundation" ]; then
-    CONFIG_AI="$PROJECT_DIR/config/Shared/config_ai.php"
-
-    # --- Storefront API exercises need the SprykerAcademy sources in the API Platform configs
-    if [ -d "$REPO_DIR/src/SprykerAcademy/Glue" ]; then
-        register_api_platform_sources
-    fi
-
-    # --- Configuration schema of the agent: project-level schemas live in data/configuration
-    if [ -d "$REPO_DIR/resources/configuration" ]; then
-        mkdir -p "$PROJECT_DIR/data/configuration"
-        cp "$REPO_DIR"/resources/configuration/*.configuration.yml "$PROJECT_DIR/data/configuration/"
-        log_success "Copied agent configuration schema to data/configuration/"
-    else
-        rm -f "$PROJECT_DIR/data/configuration/ai_product_creation.configuration.yml"
-    fi
-
-    # --- Exercise 19 (Hello AI), complete branch: register the AI configuration
-    if [[ "$BRANCH" == advanced/ai-foundation-hello/complete ]] && [ -f "$CONFIG_AI" ] && file_needs_update "$CONFIG_AI" "AI_CONFIGURATION_HELLO_AI"; then
-        cat >> "$CONFIG_AI" <<'CONFIGEOF'
-
-// >>> ai-foundation exercise
-$config[\Spryker\Shared\AiFoundation\AiFoundationConstants::AI_CONFIGURATIONS][\SprykerAcademy\Shared\HelloAi\HelloAiConstants::AI_CONFIGURATION_HELLO_AI] = [
-    'provider_name' => \Spryker\Shared\AiFoundation\AiFoundationConstants::PROVIDER_OPENAI,
-    'provider_config' => [
-        'key' => \Spryker\Shared\AiFoundation\AiFoundationConstants::CONFIGURATION_REFERENCE_PREFIX . \Pyz\Shared\AiCommerce\AiCommerceConstants::CONFIGURATION_KEY_OPENAI_API_TOKEN,
-        'model' => 'gpt-4.1-mini',
-    ],
-    'system_prompt' => 'You are a friendly assistant for a Spryker developer training. Answer in one or two short sentences.',
-];
-// <<< ai-foundation exercise
-CONFIGEOF
-        log_success "Added the Hello AI configuration to config_ai.php"
-    fi
-
-    # Registers a plugin instance inside a dependency provider method, marked so it can be removed again
-    wire_plugin() {
-        # $1 file, $2 method name, $3 fully qualified plugin class
-        if file_needs_update "$1" "$(basename "${3//\\//}")"; then
-            php -r '
-                [$file, $method, $class, $marker] = [$argv[1], $argv[2], $argv[3], $argv[4]];
-                $content = file_get_contents($file);
-                $pattern = "/(function " . preg_quote($method, "/") . "\(\): array\s*\{\s*return \[.*?)(\n\s*\];)/s";
-                $line = "\n            new \\" . $class . "(), // " . $marker;
-                $updated = preg_replace($pattern, "$1" . str_replace("\\", "\\\\", $line) . "$2", $content, 1, $count);
-                if ($count === 1) {
-                    file_put_contents($file, $updated);
-                    echo "updated";
-                }
-            ' "$1" "$2" "$3" "$AI_WIRING_MARKER" | grep -q "updated" && log_success "Registered $(basename "${3//\\//}") in $(basename "$1")"
-        fi
-    }
-
-    # --- Exercise 20 (Ask the Catalog), complete branch: AI configuration and tool set registration
-    if [[ "$BRANCH" == advanced/ai-foundation-catalog/complete ]]; then
-        if [ -f "$CONFIG_AI" ] && file_needs_update "$CONFIG_AI" "AI_CONFIGURATION_CATALOG_ASSISTANT"; then
-            cat >> "$CONFIG_AI" <<'CONFIGEOF'
-
-// >>> ai-foundation exercise
-$config[\Spryker\Shared\AiFoundation\AiFoundationConstants::AI_CONFIGURATIONS][\SprykerAcademy\Shared\CatalogAssistant\CatalogAssistantConstants::AI_CONFIGURATION_CATALOG_ASSISTANT] = [
-    'provider_name' => \Spryker\Shared\AiFoundation\AiFoundationConstants::PROVIDER_OPENAI,
-    'provider_config' => [
-        'key' => \Spryker\Shared\AiFoundation\AiFoundationConstants::CONFIGURATION_REFERENCE_PREFIX . \Pyz\Shared\AiCommerce\AiCommerceConstants::CONFIGURATION_KEY_OPENAI_API_TOKEN,
-        'model' => 'gpt-4.1-mini',
-    ],
-    'system_prompt' => 'You are a product advisor for an online shop. You answer questions about one product at a time. ALWAYS call get_product_details with the given SKU before answering, even for follow-up questions. Answer only with facts from the tool result. If the tool returns an error or the details do not cover the question, say so and set confidence to low. Prices in the tool result are gross amounts in cents; show them in major units. Keep the answer under 80 words.',
-];
-// <<< ai-foundation exercise
-CONFIGEOF
-            log_success "Added the Catalog Assistant AI configuration to config_ai.php"
-        fi
-
-        TOOLSET_PROVIDER=$(grep -rl "function getAiToolSetPlugins" "$PROJECT_DIR/src" --include="*.php" 2>/dev/null | head -1)
-        if [ -z "$TOOLSET_PROVIDER" ]; then
-            # No project-level AiFoundationDependencyProvider yet (Back Office Assistant not installed): create a minimal one
-            TOOLSET_PROVIDER="$PROJECT_DIR/src/Pyz/Zed/AiFoundation/AiFoundationDependencyProvider.php"
-            mkdir -p "$(dirname "$TOOLSET_PROVIDER")"
-            cat > "$TOOLSET_PROVIDER" <<'PROVIDEREOF'
-<?php
-
-declare(strict_types = 1);
-
-namespace Pyz\Zed\AiFoundation;
-
-use Spryker\Zed\AiFoundation\AiFoundationDependencyProvider as SprykerAiFoundationDependencyProvider;
-
-class AiFoundationDependencyProvider extends SprykerAiFoundationDependencyProvider
-{
-    /**
-     * @return array<\Spryker\Zed\AiFoundation\Dependency\Tools\ToolSetPluginInterface>
-     */
-    protected function getAiToolSetPlugins(): array
-    {
-        return [
-        ];
-    }
-}
-PROVIDEREOF
-            log_success "Created src/Pyz/Zed/AiFoundation/AiFoundationDependencyProvider.php"
-        fi
-        wire_plugin "$TOOLSET_PROVIDER" "getAiToolSetPlugins" 'SprykerAcademy\Zed\CatalogAssistant\Communication\Plugin\AiFoundation\CatalogToolSetPlugin'
-    fi
-
-    # --- Exercise 21 (agent): needs the Back Office Assistant
-    if [[ "$BRANCH" == advanced/ai-foundation-agent/* ]]; then
-        AGENT_PROVIDER=$(grep -rl "function getBackofficeAssistantAgentPlugins" "$PROJECT_DIR/src" --include="*.php" 2>/dev/null | head -1)
-        TOOLSET_PROVIDER=$(grep -rl "function getAiToolSetPlugins" "$PROJECT_DIR/src" --include="*.php" 2>/dev/null | head -1)
-
-        if [ -z "$AGENT_PROVIDER" ] || [ -z "$TOOLSET_PROVIDER" ]; then
-            log_error "Warning: the Back Office Assistant is not installed in this project."
-            log_error "         Follow exercises/guides/advanced/01-back-office-assistant-setup.md first."
-        fi
-    fi
-
-    # The complete branch of the agent is wired automatically. In the skeleton branch wiring is part of the exercise.
-    if [[ "$BRANCH" == advanced/ai-foundation-agent/complete ]] && [ -n "$AGENT_PROVIDER" ] && [ -n "$TOOLSET_PROVIDER" ]; then
-        wire_plugin "$AGENT_PROVIDER" "getBackofficeAssistantAgentPlugins" 'SprykerAcademy\Zed\AiProductCreation\Communication\Plugin\Agent\ProductCreationAgentPlugin'
-        wire_plugin "$TOOLSET_PROVIDER" "getAiToolSetPlugins" 'SprykerAcademy\Zed\AiProductCreation\Communication\Plugin\AiFoundation\ProductCreationToolSetPlugin'
-
-        # AI configuration (OpenAI) for the agent
-        if file_needs_update "$CONFIG_AI" "AI_CONFIGURATION_PRODUCT_CREATION_OPENAI"; then
-            cat >> "$CONFIG_AI" <<'CONFIGEOF'
-
-// >>> ai-foundation exercise
-$config[\Spryker\Shared\AiFoundation\AiFoundationConstants::AI_CONFIGURATIONS][\SprykerAcademy\Shared\AiProductCreation\AiProductCreationConstants::AI_CONFIGURATION_PRODUCT_CREATION_OPENAI] = [
-    'provider_name' => \Spryker\Shared\AiFoundation\AiFoundationConstants::PROVIDER_OPENAI,
-    'provider_config' => [
-        'key' => \Spryker\Shared\AiFoundation\AiFoundationConstants::CONFIGURATION_REFERENCE_PREFIX . \Pyz\Shared\AiCommerce\AiCommerceConstants::CONFIGURATION_KEY_OPENAI_API_TOKEN,
-        'model' => \Spryker\Shared\AiFoundation\AiFoundationConstants::CONFIGURATION_REFERENCE_PREFIX . \Pyz\Shared\AiCommerce\AiCommerceConstants::CONFIGURATION_KEY_BACKOFFICE_ASSISTANT_OPENAI_MODEL,
-    ],
-    'system_prompt' => \Spryker\Shared\AiFoundation\AiFoundationConstants::CONFIGURATION_REFERENCE_PREFIX . \SprykerAcademy\Shared\AiProductCreation\AiProductCreationConstants::CONFIGURATION_KEY_SYSTEM_PROMPT,
-];
-// <<< ai-foundation exercise
-CONFIGEOF
-            log_success "Added the Product Creation AI configuration to config_ai.php"
-        fi
-
-        # SSE streaming: tool call progress is only streamed for listed AI configuration names
-        SSE_CONFIG=$(grep -l "function getBackofficeAssistantSseAiConfigurationNames" "$PROJECT_DIR"/src/*/Zed/AiCommerce/AiCommerceConfig.php 2>/dev/null | head -1)
-        [ -z "$SSE_CONFIG" ] && SSE_CONFIG="$PROJECT_DIR/src/Pyz/Zed/AiCommerce/AiCommerceConfig.php"
-        if file_needs_update "$SSE_CONFIG" "AI_CONFIGURATION_PRODUCT_CREATION_OPENAI"; then
-            php -r '
-                [$file, $marker] = [$argv[1], $argv[2]];
-                $content = file_get_contents($file);
-                $constant = "\\SprykerAcademy\\Shared\\AiProductCreation\\AiProductCreationConstants::AI_CONFIGURATION_PRODUCT_CREATION_OPENAI";
-                if (strpos($content, "function getBackofficeAssistantSseAiConfigurationNames") !== false) {
-                    $pattern = "/(function getBackofficeAssistantSseAiConfigurationNames\(\): array\s*\{.*?)(\n\s*\]\)\);)/s";
-                    $content = preg_replace_callback($pattern, fn ($m) => $m[1] . "\n            " . $constant . ", // " . $marker . $m[2], $content, 1);
-                } else {
-                    $method = "\n    // >>> " . $marker . "\n"
-                        . "    /**\n     * @return array<string>\n     */\n"
-                        . "    public function getBackofficeAssistantSseAiConfigurationNames(): array\n    {\n"
-                        . "        return array_values(array_filter([\n"
-                        . "            ...parent::getBackofficeAssistantSseAiConfigurationNames(),\n"
-                        . "            " . $constant . ",\n"
-                        . "        ]));\n    }\n"
-                        . "    // <<< " . $marker . "\n";
-                    $position = strrpos($content, "}");
-                    $content = rtrim(substr($content, 0, $position)) . "\n" . $method . "}\n";
-                }
-                file_put_contents($file, $content);
-            ' "$SSE_CONFIG" "$AI_WIRING_MARKER"
-            log_success "Enabled SSE streaming for the agent in $(basename "$SSE_CONFIG")"
-        fi
-    fi
-fi
-
 
 # Safety net: warn about project files that still reference SprykerAcademy classes this branch does not contain (manual wiring from another exercise)
 MISSING_REFS=$(grep -rhE "SprykerAcademy(\\\\[A-Za-z0-9_]+)+" "$PROJECT_DIR/src/Pyz" "$PROJECT_DIR/config" --include="*.php" 2>/dev/null \
@@ -829,25 +638,13 @@ STEPS=()
 ACADEMY_DIR="$PROJECT_DIR/src/SprykerAcademy"
 has_academy() { compgen -G "$ACADEMY_DIR/$1" > /dev/null; }
 
-if [ "$PACKAGE" = "ai-foundation" ]; then
-    # config_ai.php references a SprykerAcademy class, so the autoloader comes first (dump_autoload
-    # already ran it; only ask for it when that failed). cache:empty-all deletes data/cache, which
-    # holds the Propel table map (data/cache/propel/generated-conf/loadDatabase.php), so
-    # propel:install must run after it; it also deletes the synced configuration schemas.
-    [ "$DUMP_AUTOLOAD_DONE" = "1" ] || STEPS+=("docker/sdk cli composer dump-autoload")
-    STEPS+=("docker/sdk console transfer:generate")
-    STEPS+=("docker/sdk console c:e")
-    STEPS+=("docker/sdk console propel:install")
-    STEPS+=("docker/sdk console configuration:sync")
-else
-    # cache:empty-all deletes data/cache, which holds the Propel table map
-    # (data/cache/propel/generated-conf/loadDatabase.php); propel:install writes it again,
-    # so it must run after cache:empty-all
-    STEPS+=("docker/sdk console c:e")
-    [ "$DUMP_AUTOLOAD_DONE" = "1" ] || STEPS+=("docker/sdk cli composer dump-autoload")
-    STEPS+=("docker/sdk console propel:install")
-    STEPS+=("docker/sdk console transfer:generate")
-fi
+# cache:empty-all deletes data/cache, which holds the Propel table map
+# (data/cache/propel/generated-conf/loadDatabase.php); propel:install writes it again,
+# so it must run after cache:empty-all
+STEPS+=("docker/sdk console c:e")
+[ "$DUMP_AUTOLOAD_DONE" = "1" ] || STEPS+=("docker/sdk cli composer dump-autoload")
+STEPS+=("docker/sdk console propel:install")
+STEPS+=("docker/sdk console transfer:generate")
 if has_academy "Zed/*/Communication/navigation*.xml"; then
     STEPS+=("docker/sdk console navigation:build-cache")
 fi
@@ -882,6 +679,10 @@ if has_academy "Glue/*/resources/api/*"; then
     STEPS+=("docker/sdk cli GLUE_APPLICATION=GLUE glue cache:clear")
     [ -d "$PROJECT_DIR/config/GlueBackend" ] && STEPS+=("docker/sdk cli GLUE_APPLICATION=GLUE_BACKEND glue cache:clear")
 fi
+
+# cache:empty-all also deletes the synced configuration schemas (data/cache/configuration), which the
+# shop's Back Office settings and the AI configurations read; the AI exercises bring schemas of their own
+STEPS+=("docker/sdk console configuration:sync")
 
 # Count files
 FILE_COUNT=$(find "$PROJECT_DIR/src/SprykerAcademy" -type f 2>/dev/null | wc -l | tr -d ' ')
@@ -920,7 +721,11 @@ fi
 if [ "$PACKAGE" = "ai-foundation" ]; then
     echo ""
     if [[ "$BRANCH" == */skeleton ]]; then
-        echo -e "${YELLOW}This is the skeleton:${NC} complete the TODOs and do the project wiring yourself."
+        echo -e "${YELLOW}This is the skeleton:${NC} complete the TODOs, including the wiring in src/SprykerAcademy/Zed/AiFoundation."
+    fi
+    if [[ "$BRANCH" == advanced/ai-foundation-agent/* ]] && [ ! -f "$PROJECT_DIR/src/Pyz/Zed/AiCommerce/AiCommerceDependencyProvider.php" ]; then
+        log_error "Warning: the Back Office Assistant is not set up in this project."
+        log_error "         Follow exercises/guides/advanced/01-back-office-assistant-setup.md first."
     fi
     if [[ "$BRANCH" == advanced/ai-foundation-hello/* ]]; then
         echo "  Guide: exercises/guides/advanced/02-ai-foundation-hello.md"

@@ -21,13 +21,10 @@ You will learn how to:
 ## Loading the Exercise
 
 ```bash
-./exercises/load.sh ai-foundation advanced/ai-foundation-catalog/skeleton
-docker/sdk cli composer dump-autoload
-docker/sdk console transfer:generate
-docker/sdk console cache:empty-all
-docker/sdk console propel:model:build
-docker/sdk console configuration:sync
+./exercises/load.sh ai-foundation advanced/ai-foundation-catalog/skeleton --run
 ```
+
+`--run` also runs the commands the loader lists after loading (cache, Propel, transfers, `configuration:sync`, Glue resources) and stops at the first one that fails. Leave it out to run them yourself.
 
 ---
 
@@ -108,7 +105,7 @@ The resource schema `product-questions.resource.yml` is complete. Read it to see
 ### Verify Parts 1 to 4
 
 ```bash
-docker/sdk cli GLUE_APPLICATION=GLUE_STOREFRONT glue api:generate
+docker/sdk cli GLUE_APPLICATION=GLUE glue api:generate storefront
 docker/sdk cli vendor/bin/codecept build -c tests/SprykerAcademyTest/Zed/CatalogAssistant/
 docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/CatalogAssistant/ Exercise20
 ```
@@ -117,49 +114,39 @@ All 15 tests must pass. The client is mocked, so no token is spent.
 
 ### Part 5: Wire It Into the Project
 
-**1. Register the tool set.** In `src/Pyz/Zed/AiFoundation/AiFoundationDependencyProvider.php`, add `new CatalogToolSetPlugin()` to `getAiToolSetPlugins()`. If the file does not exist yet, create it:
+Projects register tool sets in `src/Pyz/Zed/AiFoundation/AiFoundationDependencyProvider.php` and AI configurations in `config/Shared/config_ai.php`. The exercise keeps both with its own code: the two classes in `src/SprykerAcademy/Zed/AiFoundation/` extend the project's classes (the core ones when the project has none) and, because `SprykerAcademy` comes before `Pyz` in the project namespaces, are the ones Spryker uses.
+
+**1. Register the tool set.** Open `src/SprykerAcademy/Zed/AiFoundation/AiFoundationDependencyProvider.php` and add your tool set to the project's:
 
 ```php
-<?php
-
-declare(strict_types = 1);
-
-namespace Pyz\Zed\AiFoundation;
-
-use Spryker\Zed\AiFoundation\AiFoundationDependencyProvider as SprykerAiFoundationDependencyProvider;
-use SprykerAcademy\Zed\CatalogAssistant\Communication\Plugin\AiFoundation\CatalogToolSetPlugin;
-
-class AiFoundationDependencyProvider extends SprykerAiFoundationDependencyProvider
+protected function getAiToolSetPlugins(): array
 {
-    /**
-     * @return array<\Spryker\Zed\AiFoundation\Dependency\Tools\ToolSetPluginInterface>
-     */
-    protected function getAiToolSetPlugins(): array
-    {
-        return [
-            new CatalogToolSetPlugin(),
-        ];
-    }
+    return array_merge(parent::getAiToolSetPlugins(), [
+        new CatalogToolSetPlugin(),
+    ]);
 }
 ```
 
-**2. Add the AI configuration with a guardrail prompt** to `config/Shared/config_ai.php`:
+**2. Add the AI configuration with a guardrail prompt.** Open `src/SprykerAcademy/Zed/AiFoundation/AiFoundationConfig.php` and add it to the project's configurations:
 
 ```php
-use SprykerAcademy\Shared\CatalogAssistant\CatalogAssistantConstants;
-
-$config[AiFoundationConstants::AI_CONFIGURATIONS][CatalogAssistantConstants::AI_CONFIGURATION_CATALOG_ASSISTANT] = [
-    'provider_name' => AiFoundationConstants::PROVIDER_OPENAI,
-    'provider_config' => [
-        'key' => AiFoundationConstants::CONFIGURATION_REFERENCE_PREFIX . AiCommerceConstants::CONFIGURATION_KEY_OPENAI_API_TOKEN,
-        'model' => 'gpt-4.1-mini',
-    ],
-    'system_prompt' => 'You are a product advisor for an online shop. You answer questions about one product at a time. '
-        . 'ALWAYS call get_product_details with the given SKU before answering, even for follow-up questions. '
-        . 'Answer only with facts from the tool result. If the tool returns an error or the details do not cover the question, '
-        . 'say so and set confidence to low. Prices in the tool result are gross amounts in cents; show them in major units. '
-        . 'Keep the answer under 80 words.',
-];
+public function getAiConfigurations(): array
+{
+    return array_merge(parent::getAiConfigurations(), $this->resolveConfigurationReferences([
+        CatalogAssistantConstants::AI_CONFIGURATION_CATALOG_ASSISTANT => [
+            'provider_name' => AiFoundationConstants::PROVIDER_OPENAI,
+            'provider_config' => [
+                'key' => AiFoundationConstants::CONFIGURATION_REFERENCE_PREFIX . AiCommerceConstants::CONFIGURATION_KEY_OPENAI_API_TOKEN,
+                'model' => 'gpt-4.1-mini',
+            ],
+            'system_prompt' => 'You are a product advisor for an online shop. You answer questions about one product at a time. '
+                . 'ALWAYS call get_product_details with the given SKU before answering, even for follow-up questions. '
+                . 'Answer only with facts from the tool result. If the tool returns an error or the details do not cover the question, '
+                . 'say so and set confidence to low. Prices in the tool result are gross amounts in cents; show them in major units. '
+                . 'Keep the answer under 80 words.',
+        ],
+    ]));
+}
 ```
 
 > **The guardrail.** Without "answer only with facts from the tool result", the model happily describes a product it has never seen. Test it later with a SKU that does not exist.
@@ -171,7 +158,6 @@ docker/sdk console cache:empty-all
 docker/sdk console propel:model:build
 docker/sdk console configuration:sync
 docker/sdk cli GLUE_APPLICATION=GLUE glue cache:clear
-docker/sdk cli GLUE_APPLICATION=GLUE_STOREFRONT glue cache:clear
 ```
 
 ---
@@ -201,18 +187,10 @@ curl -s -X POST http://glue.eu.spryker.local/product-questions \
 ## Solution
 
 ```bash
-./exercises/load.sh ai-foundation advanced/ai-foundation-catalog/complete
-docker/sdk cli composer dump-autoload
-docker/sdk console transfer:generate
-docker/sdk console cache:empty-all
-docker/sdk console propel:model:build
-docker/sdk console configuration:sync
-docker/sdk cli GLUE_APPLICATION=GLUE_STOREFRONT glue api:generate
-docker/sdk cli GLUE_APPLICATION=GLUE glue cache:clear
-docker/sdk cli GLUE_APPLICATION=GLUE_STOREFRONT glue cache:clear
+./exercises/load.sh ai-foundation advanced/ai-foundation-catalog/complete --run
 ```
 
-For the `complete` branch the loader does Part 5 for you, marked with `ai-foundation exercise`, and removes it again when you load a skeleton or another package.
+The `complete` branch contains Part 5 in `src/SprykerAcademy/Zed/AiFoundation/`. If you wired the tool set or the configuration into `src/Pyz` or `config/Shared/config_ai.php` by hand in an earlier version of this exercise, remove it again.
 
 ## Going Further
 

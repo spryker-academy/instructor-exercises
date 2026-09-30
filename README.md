@@ -24,7 +24,7 @@ On its first run the loader prepares the project for the `SprykerAcademy` namesp
 
 It also removes what earlier loader versions wrote into project files (marked blocks, merged menu entries, `full_EU.yml` entries, copied files).
 
-The ai-foundation branches still wire their complete solutions into the project's AI configuration (`config/Shared/config_ai.php` and the Back Office Assistant providers), marked `ai-foundation exercise` and removed again on the next load.
+The ai-foundation branches work the same way: their AI configuration, tool sets, agent and streaming setting are `SprykerAcademy` overrides of `AiFoundationConfig`, `AiFoundationDependencyProvider`, `AiCommerceDependencyProvider` and `AiCommerceConfig`. They extend the project's classes when the Back Office Assistant setup created them, and the core ones otherwise.
 
 ## Usage
 
@@ -90,7 +90,7 @@ The ai-foundation branches still wire their complete solutions into the project'
 - `advanced/ai-foundation-agent/skeleton`
 - `advanced/ai-foundation-agent/complete`
 
-The ai-foundation `complete` branches are wired into the project automatically. Every line the loader adds is marked `ai-foundation exercise` and is removed again when you load a skeleton or another package.
+The ai-foundation `complete` branches carry their wiring in `src/SprykerAcademy/Zed/AiFoundation` and `src/SprykerAcademy/Zed/AiCommerce`; in the skeletons it is part of the exercise. The agent exercise needs the Back Office Assistant set up once (`guides/advanced/01-back-office-assistant-setup.md`).
 
 ## Examples
 
@@ -118,22 +118,11 @@ docker/sdk console propel:install
 docker/sdk console transfer:generate
 ```
 
-Keep this order. `cache:empty-all` deletes `data/cache`, which also holds the Propel table map (`data/cache/propel/generated-conf/loadDatabase.php`); until `propel:install` (or `propel:model:build`) has written it again, every Zed request and every console command fails with "Database map was not initialized". So whenever you run `cache:empty-all` later on, follow it with `docker/sdk console propel:model:build`. It also deletes the synced configuration schemas (`data/cache/configuration`), which the AI configurations reference: in the AI exercises follow it with `docker/sdk console configuration:sync` as well.
+Keep this order. `cache:empty-all` deletes `data/cache`, which also holds the Propel table map (`data/cache/propel/generated-conf/loadDatabase.php`); until `propel:install` (or `propel:model:build`) has written it again, every Zed request and every console command fails with "Database map was not initialized". So whenever you run `cache:empty-all` later on, follow it with `docker/sdk console propel:model:build`. It also deletes the synced configuration schemas (`data/cache/configuration`): follow it with `docker/sdk console configuration:sync` as well.
 
 Depending on the branch, the list continues with `navigation:build-cache`, `queue:setup`, `messenger:setup-transports`, `search:setup:sources`, `acl-entity:synchronize`, the Merchant Portal build (`frontend:mp:build`) and the Glue resources (`GLUE_APPLICATION=GLUE glue api:generate storefront`, `glue cache:clear`).
 
-For the AI exercises the order differs, because `config_ai.php` references an exercise class - it has to be autoloadable before any console command runs, which is why the loader dumps the autoloader itself. The loader prints the exact list per branch:
-
-```bash
-docker/sdk cli composer dump-autoload   # only if the loader could not run it
-docker/sdk console transfer:generate
-docker/sdk console c:e
-docker/sdk console propel:install
-docker/sdk console configuration:sync
-# storefront API exercises additionally:
-docker/sdk cli GLUE_APPLICATION=GLUE glue api:generate storefront
-docker/sdk cli GLUE_APPLICATION=GLUE glue cache:clear
-```
+Every list ends with `configuration:sync`: `cache:empty-all` also deletes the synced configuration schemas (`data/cache/configuration`), which the Back Office settings and the AI configurations read.
 
 ## Student Setup Guide
 

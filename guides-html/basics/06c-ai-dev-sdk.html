@@ -415,9 +415,10 @@ registered in composer.json and before `Pyz` in `PROJECT_NAMESPACES`.</code></pr
 resources/api/storefront/ plus a Provider class implementing
 ApiPlatform\State\ProviderInterface. Do not use the legacy GlueApplication
 resource plugins. For resources in this namespace to be found, `src/SprykerAcademy`
-must be listed in config/GlueStorefront/packages/spryker_api_platform.php, and
-resources are generated with
-`GLUE_APPLICATION=GLUE_STOREFRONT glue api:generate`.</code></pre>
+must be listed in config/Glue/packages/spryker_api_platform.php (this shop serves
+glue.eu.spryker.local from the GLUE application), resources are generated with
+`GLUE_APPLICATION=GLUE glue api:generate storefront`, and the compiled container is
+refreshed with `GLUE_APPLICATION=GLUE glue cache:clear`.</code></pre>
 <p>And the wiring conventions, which are the ones an assistant gets wrong most often because the older Spryker style is what it has read most of:</p>
 <pre class="text"><code>Zed wires dependencies with Symfony constructor injection. config/Zed/ApplicationServices.php
 loads every project module into the container, so a project class type-hints what it needs
@@ -582,7 +583,8 @@ Ask me whatever you need before you start.</code></pre>
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console propel:install</span>
 <span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span>
 <span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console navigation:build-cache</span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli GLUE_APPLICATION=GLUE_STOREFRONT glue api:generate</span></code></pre></div>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli GLUE_APPLICATION=GLUE glue api:generate storefront</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli GLUE_APPLICATION=GLUE glue cache:clear</span></code></pre></div>
 <blockquote>
 <p>The last command is the one people forget. A <code>*.resource.yml</code> does nothing until <code>glue api:generate</code> has turned it into a generated resource class, and it needs <code>GLUE_APPLICATION</code> in the environment - every <code>glue</code> command does.</p>
 </blockquote>

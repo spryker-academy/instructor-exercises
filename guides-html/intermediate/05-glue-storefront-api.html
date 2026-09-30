@@ -485,6 +485,68 @@
 <p>This is more precise but requires updating whenever you add new dependencies.</p>
 </blockquote>
 <hr />
+<h2 id="troubleshooting-when-the-endpoint-does-not-answer">Troubleshooting: When the Endpoint Does Not Answer</h2>
+<p>API Platform endpoints are built from three things that live in different places: the resource YAML, the PHP classes <strong>generated</strong> from it, and the Glue application’s <strong>compiled Symfony container</strong>. Most problems come from one of them being stale. Work through this list from the top.</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Symptom</th>
+<th>Cause</th>
+<th>Fix</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>404 Not Found</code> for <code>/suppliers</code>, or your change to the YAML has no effect</td>
+<td>The generated resource classes or the compiled Glue container still reflect the old YAML. <code>cache:empty-all</code> does <strong>not</strong> clear the Glue containers.</td>
+<td><code>docker/sdk cli GLUE_APPLICATION=GLUE glue api:generate storefront</code>, then <code>docker/sdk cli GLUE_APPLICATION=GLUE glue cache:clear</code></td>
+</tr>
+<tr class="even">
+<td><code>api:generate</code> finds nothing</td>
+<td><code>src/SprykerAcademy</code> is not in the source directories of the application you generated for, or you generated for another application</td>
+<td>Check <code>sourceDirectories</code> in <code>config/Glue/packages/spryker_api_platform.php</code>; in this shop the storefront API runs in the <code>GLUE</code> application</td>
+</tr>
+<tr class="odd">
+<td><code>500</code> with <em>Could not find the “SprykerAcademy...Interface” in any of the attached containers</em></td>
+<td>The Glue container cannot resolve the client your provider injects. It registers Clients and Facades of the core and of <code>Pyz</code> automatically, but not of other namespaces.</td>
+<td>The block that loads <code>src/SprykerAcademy/Client</code> in <code>config/Glue/ApplicationServices.php</code> is missing: see <a href="#registering-services-in-the-symfony-container">Registering Services</a>, then <code>glue cache:clear</code></td>
+</tr>
+<tr class="even">
+<td><code>500</code> after you loaded another exercise, naming a class of the previous one</td>
+<td>Generated resources of the old exercise point at a provider that no longer exists</td>
+<td>Load exercises with <code>load.sh</code> (it deletes them), or delete the files under <code>src/Generated/Api/Storefront</code> whose header names a <code>src/SprykerAcademy</code> schema, then <code>api:generate</code> and <code>glue cache:clear</code></td>
+</tr>
+<tr class="odd">
+<td>Items have no <code>id</code>/links, or <code>idSupplier</code> is <code>null</code></td>
+<td>The mapper fills the resource from snake_case keys (<code>id_supplier</code>); the generated resource reads camelCase (<code>idSupplier</code>)</td>
+<td><code>SuppliersStorefrontResource::fromArray($supplierTransfer-&gt;toArray(false, true))</code></td>
+</tr>
+<tr class="even">
+<td>Items come back with <code>name</code> but <code>null</code> for <code>description</code>, <code>email</code>, …</td>
+<td>The Elasticsearch documents do not have those fields at the top level, so the search result cannot fill the transfer</td>
+<td>The search document must be the flat one of <code>Schema/supplier.json</code> (Exercise 10). Rebuild the documents: delete the <code>pyz_supplier_search</code> rows, <code>publish:trigger-events -r supplier</code>, <code>queue:worker:start --stop-when-empty</code></td>
+</tr>
+<tr class="odd">
+<td>An empty collection</td>
+<td>Nothing is in the index yet</td>
+<td>Import and process the queues (Exercises 8 and 10), then check <code>curl localhost:9200/_cat/indices \| grep supplier</code></td>
+</tr>
+<tr class="even">
+<td><code>GET /suppliers/999999</code> answers <code>500</code> instead of <code>404</code></td>
+<td>The provider returns an empty resource for an unknown id</td>
+<td>Return <code>null</code> when the client’s transfer has no <code>idSupplier</code></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>When in doubt, rebuild all three:</strong> <code>docker/sdk console c:e</code>, <code>docker/sdk console propel:model:build</code>, <code>docker/sdk cli GLUE_APPLICATION=GLUE glue api:generate storefront</code>, <code>docker/sdk cli GLUE_APPLICATION=GLUE glue cache:clear</code>. <code>load.sh --run</code> does exactly this after every load.</p>
+</blockquote>
+<hr />
 <h2 id="key-concepts-summary">Key Concepts Summary</h2>
 <h3 id="api-platform-vs-legacy">API Platform vs Legacy</h3>
 <p>With API Platform, there’s <strong>no need for</strong>: - DependencyProvider in the Glue layer (constructor injection is auto-wired by Symfony) - Factory in the Glue layer - Controller class (the Provider IS the handler) - Plugin registration in <code>GlueStorefrontApiApplicationDependencyProvider</code></p>
