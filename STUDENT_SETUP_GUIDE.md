@@ -365,7 +365,7 @@ Both cost a little speed per request. What you do **not** need to switch off: ed
 What no setting removes:
 
 - **Generated code is not a cache.** After a `.transfer.xml` change run `transfer:generate`, after a schema change `propel:install`.
-- **The Glue API Platform container** (`data/cache/Glue`) is compiled once and never checked again, because Glue runs without the Symfony debug flag. After changing a `*.resource.yml`, a provider's constructor or the API source directories, run `glue api:generate` and `glue cache:clear` (see the Glue Storefront API guide, which also shows how to get error details in API responses).
+- **The Glue API Platform container** (`data/cache/Glue`) is compiled once and never checked again, because Glue runs without the Symfony debug flag. After changing a `*.resource.yml`, a provider's constructor or the API source directories, run `glue api:generate` and `glue cache:clear` (see the Glue Storefront API guide, which also shows where to read the error behind a `500`).
 
 ## Troubleshooting
 

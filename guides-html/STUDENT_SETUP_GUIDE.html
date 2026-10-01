@@ -516,7 +516,7 @@
 <p>What no setting removes:</p>
 <ul>
 <li><strong>Generated code is not a cache.</strong> After a <code>.transfer.xml</code> change run <code>transfer:generate</code>, after a schema change <code>propel:install</code>.</li>
-<li><strong>The Glue API Platform container</strong> (<code>data/cache/Glue</code>) is compiled once and never checked again, because Glue runs without the Symfony debug flag. After changing a <code>*.resource.yml</code>, a provider’s constructor or the API source directories, run <code>glue api:generate</code> and <code>glue cache:clear</code> (see the Glue Storefront API guide, which also shows how to get error details in API responses).</li>
+<li><strong>The Glue API Platform container</strong> (<code>data/cache/Glue</code>) is compiled once and never checked again, because Glue runs without the Symfony debug flag. After changing a <code>*.resource.yml</code>, a provider’s constructor or the API source directories, run <code>glue api:generate</code> and <code>glue cache:clear</code> (see the Glue Storefront API guide, which also shows where to read the error behind a <code>500</code>).</li>
 </ul>
 <h2 id="troubleshooting">Troubleshooting</h2>
 <p><strong>Script says “not found” or permission denied:</strong></p>

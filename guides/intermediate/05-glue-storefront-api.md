@@ -289,48 +289,24 @@ API Platform endpoints are built from three things that live in different places
 
 ### Seeing the Real Error Behind a `500`
 
-By default a `500` from an API Platform endpoint only says `"detail":"Internal Server Error"`, even in the development environment. Glue builds its Symfony kernel without the debug flag, so `kernel.debug` is `false` for every environment, and that is what API Platform reads.
+A `500` from an API Platform endpoint only says `"detail":"Internal Server Error"`, even in the development environment. The full exception is in the log of the Glue container.
 
-The message is always in the log of the Glue container:
+**In the browser:** open http://spryker.local, the Docker SDK dashboard, and choose **Logs**. It shows the log of every container; pick the Glue one (`glue_eu`).
+
+**From a shell:**
 
 ```bash
-docker logs -f gluedemo_glue_eu_1      # <project>_glue_eu_1; docker ps lists the names
-# [error] Uncaught exception on API Platform request "GET /suppliers/...": <message>
+docker ps --format '{{.Names}}' | grep glue      # the container name, e.g. gluedemo_glue_eu_1
+docker logs -f gluedemo_glue_eu_1                # follow it, then send the request again
 ```
 
-To get the message and the stack trace **in the response**, two changes, for development only:
+The line to look for:
 
-1. Switch on the debug option of Spryker's API Platform integration in `config/Glue/packages/spryker_api_platform.php`:
+```
+[error] Uncaught exception on API Platform request "GET /suppliers/5434543545": Search failed with the following reason: ...
+```
 
-   ```php
-   return static function (SprykerApiPlatformConfig $sprykerApiPlatform, string $env): void {
-       // ...
-       if ($env === 'dockerdev') {
-           $sprykerApiPlatform->debug(true);
-       }
-   };
-   ```
-
-2. Make the option reach API Platform. `config/Glue/bundles.php` registers `ApiPlatformBundle` after `SprykerApiPlatformBundle`, and it redefines the error provider and the serializer context builder with `%kernel.debug%`, which overwrites Spryker's wiring of the option. Services defined in `config/Glue/ApplicationServices.php` win over bundle definitions, so define them there again:
-
-   ```php
-   use function Symfony\Component\DependencyInjection\Loader\Configurator\param;
-   use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
-
-   // inside the closure, after the existing service definitions:
-   $configurator->services()
-       ->set('api_platform.state.error_provider', \ApiPlatform\State\ErrorProvider::class)
-       ->arg('$debug', param('spryker_api_platform.debug'))
-       ->arg('$resourceClassResolver', service('api_platform.resource_class_resolver'))
-       ->arg('$resourceMetadataCollectionFactory', service('api_platform.metadata.resource.metadata_collection_factory'))
-       ->tag('api_platform.state_provider', ['key' => 'api_platform.state.error_provider']);
-   $configurator->services()
-       ->set('api_platform.serializer.context_builder', \ApiPlatform\Serializer\SerializerContextBuilder::class)
-       ->arg(0, service('api_platform.metadata.resource.metadata_collection_factory'))
-       ->arg('$debug', param('spryker_api_platform.debug'));
-   ```
-
-Then `docker/sdk cli GLUE_APPLICATION=GLUE glue cache:clear`. A `500` now carries the exception message in `detail` and the stack in `trace`. With only step 1 the response format changes but the detail stays hidden - check with `grep -rh "ErrorProvider(" data/cache/Glue/dockerdev/` that the compiled provider gets `true`. Never enable this in production: traces expose paths and internals.
+> **Why the response hides it.** Glue builds its Symfony kernel without the debug flag, so `kernel.debug` is `false` in every environment, and API Platform's error provider only puts the exception message and trace into the response when it is `true`. Spryker's `debug` option in `config/Glue/packages/spryker_api_platform.php` is meant to switch that on, but in this release it does not reach API Platform: `ApiPlatformBundle` is registered after `SprykerApiPlatformBundle` in `config/Glue/bundles.php` and defines the error provider again with `%kernel.debug%`. Setting `debug(true)` alone therefore only changes the format of the error, not its detail. Read the log instead; it has the message and, with the file and line, everything you need.
 
 > **When in doubt, rebuild all three:** `docker/sdk console c:e`, `docker/sdk console propel:model:build`, `docker/sdk cli GLUE_APPLICATION=GLUE glue api:generate storefront`, `docker/sdk cli GLUE_APPLICATION=GLUE glue cache:clear`. `load.sh --run` does exactly this after every load.
 
