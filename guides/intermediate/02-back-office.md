@@ -12,7 +12,7 @@ You will learn how to:
 
 ## Prerequisites
 
-- Completed Exercise 8 (Data Import) — you should have suppliers in the database
+- **You do not need your own solutions of the earlier exercises.** The branch contains them, and `load.sh --run` imports the sample suppliers (Exercise 8's import) into the database.
 - Understanding of the Facade pattern and DependencyProvider
 
 ## Loading the Exercise

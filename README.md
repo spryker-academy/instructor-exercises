@@ -124,6 +124,16 @@ Depending on the branch, the list continues with `navigation:build-cache`, `queu
 
 Every list ends with `configuration:sync`: `cache:empty-all` also deletes the synced configuration schemas (`data/cache/configuration`), which the Back Office settings and the AI configurations read.
 
+On the supplier branches after Exercise 8, the list then imports the sample suppliers (`data:import --config=data/import/local/supplier_import.yml`) and, from Exercise 10 on, publishes them to Redis and Elasticsearch (`publish:trigger-events -r supplier`, `queue:worker:start --stop-when-empty`). Every branch contains the solutions of the exercises before it, so a student can start any exercise without having solved the earlier ones. The two exceptions are the skeletons that teach these steps: Data Import (no import) and Publish & Synchronize (no publishing).
+
+The queue workers write the search documents a few seconds after the loader returns, so an Elasticsearch count right after `--run` can still read 0.
+
+### How the supplier branches build on each other
+
+The supplier exercises form one chain in guide order: Data Import, Back Office, Publish & Synchronize, Search, Glue Storefront API, OMS, Storage Client, Merchant Portal Table, Form and Locations, Yves Storefront. Each `skeleton` branch is the previous exercise's `complete` branch plus the new exercise's files and TODOs, and each `complete` branch is its skeleton solved; `main` is the last complete. In git, every branch has the one before it as an ancestor (`git merge-base --is-ancestor intermediate/search/complete intermediate/glue-storefront/skeleton`). The code students wrote in earlier exercises is never rewritten later: an exercise only adds to it, as Publish & Synchronize adds the publish events to the Data Import step.
+
+A fix to an exercise's code has to reach its branches and every later one: commit it on the branch, then merge it forward along the chain.
+
 ## Student Setup Guide
 
 See [STUDENT_SETUP_GUIDE.md](STUDENT_SETUP_GUIDE.md) for detailed setup instructions.

@@ -11,7 +11,7 @@ You will learn how to:
 
 ## Prerequisites
 
-- Completed Exercise 11 (Search) — suppliers must be indexed in Elasticsearch
+- **You do not need your own solutions of the earlier exercises.** The branch contains them, and `load.sh --run` imports the sample suppliers and publishes them to Redis and Elasticsearch (Exercises 8, 10 and 11).
 - Understanding of the Client layer and DependencyProvider pattern
 
 ## Loading the Exercise

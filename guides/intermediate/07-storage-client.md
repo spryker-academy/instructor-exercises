@@ -11,7 +11,7 @@ You will learn how to:
 
 ## Prerequisites
 
-- Completed Exercise 10 (Publish & Synchronize) — suppliers must be synchronized to Redis
+- **You do not need your own solutions of the earlier exercises.** The branch contains them, and `load.sh --run` imports the sample suppliers and publishes them to Redis and Elasticsearch (Exercises 8 and 10).
 - Understanding of the Client layer and DependencyProvider pattern
 
 ## Loading the Exercise

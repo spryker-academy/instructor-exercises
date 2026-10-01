@@ -12,8 +12,7 @@ You will learn how to:
 
 ## Prerequisites
 
-- Completed Exercise 9 (Back Office) — supplier facade, repository, and entity manager must exist
-- Suppliers assigned to a merchant via `pyz_merchant_to_supplier` (see *Assign suppliers to your merchant* below)
+- **You do not need your own solutions of the earlier exercises.** The branch contains them, and `load.sh --run` imports the sample suppliers and links them to the demo merchant through `pyz_merchant_to_supplier` (see *Assign suppliers to your merchant* below).
 - Logged in as a demo merchant user (`harald@spryker.com` / `change123`)
 
 ## Loading the Exercise

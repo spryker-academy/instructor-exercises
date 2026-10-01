@@ -11,12 +11,11 @@ You will learn how to:
 
 ## Prerequisites
 
-- Completed Exercises 8-11 (Data Import, Back Office, P&S, Search)
-- Suppliers should exist in the database
+- **You do not need your own solutions of the earlier exercises.** The branch contains them, and `load.sh --run` imports the sample suppliers and publishes them to Redis and Elasticsearch, so `/suppliers` has data to return.
 
 ## Loading the Exercise
 
-The loader copies the completed Search branch source into the project before the Glue exercise files. This ensures the SupplierSearch TODOs are already implemented; you do not need to load the Search complete branch separately.
+Like every exercise from Exercise 9 on, the branch builds on the solutions of the earlier ones.
 
 ```bash
 ./exercises/load.sh supplier intermediate/glue-storefront/skeleton --run
@@ -55,8 +54,9 @@ This command scans all registered source directories for `.resource.yml` files a
 
 | Command | Purpose |
 |---------|---------|
-| `GLUE_APPLICATION=GLUE glue api:generate` | Generate Storefront API resources |
-| `GLUE_APPLICATION=GLUE_BACKEND glue api:generate` | Generate Backend API resources |
+| `GLUE_APPLICATION=GLUE glue api:generate storefront` | Generate Storefront API resources |
+| `GLUE_APPLICATION=GLUE_BACKEND glue api:generate backend` | Generate Backend API resources |
+| `GLUE_APPLICATION=GLUE glue cache:clear` | Delete the compiled Glue container and its metadata cache, so the next request reads the generated resources again |
 | `GLUE_APPLICATION=GLUE glue api:generate --dry-run` | Preview what would be generated without writing |
 | `GLUE_APPLICATION=GLUE glue api:generate --validate-only` | Validate schemas without generating |
 | `GLUE_APPLICATION=GLUE glue api:generate -r suppliers` | Generate only the `suppliers` resource |
@@ -66,6 +66,24 @@ This command scans all registered source directories for `.resource.yml` files a
 | `GLUE_APPLICATION=GLUE glue api:debug suppliers --show-merged` | Display the final merged YAML schema |
 
 > **Tip:** All `glue` CLI commands require the `GLUE_APPLICATION` env var. Prefix every command with `GLUE_APPLICATION=GLUE` (the storefront API of this shop) or `GLUE_APPLICATION=GLUE_BACKEND` as needed.
+
+### Why `cache:clear` Follows `api:generate`
+
+The two commands work on different things:
+
+- **`api:generate`** reads the `*.resource.yml` files and writes PHP resource classes to `src/Generated/Api/Storefront/`. It only writes files; it clears nothing.
+- **The running Glue application never reads those files per request.** On its first request it compiles a Symfony container into `data/cache/Glue/<environment>/`: the API Platform services and source directories are baked into it, and API Platform stores its resource metadata (which classes are resources, their operations and routes, which provider handles them) in the cache pools next to it. Every later request uses that cache.
+
+Nothing invalidates the cache when the generated classes change. So after a generate, Glue keeps answering from the old metadata:
+
+| You changed | Without `cache:clear` |
+|---|---|
+| Added a resource | `404`: the resource is not in the cached list |
+| Renamed or removed a resource, or changed its provider | `500`: the cached metadata points at a class that no longer exists |
+| Only the code inside an existing provider method | Works: classes are autoloaded on every request |
+| A provider's constructor, a new service, a source directory | Stale wiring: those are compiled into the container |
+
+`glue cache:clear` deletes that cache, and the next request builds it from the current files. `docker/sdk console cache:empty-all` does **not** reach it: it clears the Zed, Yves and console caches, not the per-application Glue container. Rule of thumb: **after every change to a `resource.yml` run both commands, generate first.**
 
 > **Docs:** [Spryker API Platform Architecture](https://docs.spryker.com/docs/dg/dev/architecture/api-platform) | [Resource Schemas](https://docs.spryker.com/docs/dg/dev/architecture/api-platform/resource-schemas.html)
 
@@ -161,7 +179,7 @@ Open `src/SprykerAcademy/Glue/Supplier/Processor/Mapper/SupplierMapper.php` and 
 
 ### Part 4: Test the Endpoint
 
-After completing all parts, generate the API resources and clear the Glue cache - the compiled Glue container keeps the resource list, and `cache:empty-all` does not reach it:
+After completing all parts, generate the API resources and clear the Glue cache (see [Why `cache:clear` Follows `api:generate`](#why-cacheclear-follows-apigenerate)):
 
 ```bash
 docker/sdk cli GLUE_APPLICATION=GLUE glue api:generate storefront
@@ -262,7 +280,8 @@ API Platform endpoints are built from three things that live in different places
 | `500` after you loaded another exercise, naming a class of the previous one | Generated resources of the old exercise point at a provider that no longer exists | Load exercises with `load.sh` (it deletes them), or delete the files under `src/Generated/Api/Storefront` whose header names a `src/SprykerAcademy` schema, then `api:generate` and `glue cache:clear` |
 | Items have no `id`/links, or `idSupplier` is `null` | The mapper fills the resource from snake_case keys (`id_supplier`); the generated resource reads camelCase (`idSupplier`) | `SuppliersStorefrontResource::fromArray($supplierTransfer->toArray(false, true))` |
 | Items come back with `name` but `null` for `description`, `email`, ... | The Elasticsearch documents do not have those fields at the top level, so the search result cannot fill the transfer | The search document must be the flat one of `Schema/supplier.json` (Exercise 10). Rebuild the documents: delete the `pyz_supplier_search` rows, `publish:trigger-events -r supplier`, `queue:worker:start --stop-when-empty` |
-| An empty collection | Nothing is in the index yet | Import and process the queues (Exercises 8 and 10), then check `curl localhost:9200/_cat/indices \| grep supplier` |
+| An empty collection right after loading | The queue workers write the documents to Elasticsearch a few seconds after `load.sh --run` returns | Wait a moment and call again; check with `curl -s localhost:9200/<store>_supplier/_count` (for example `gluedemo_de_supplier`) |
+| An empty collection that stays empty | Nothing was imported or published (you loaded without `--run`, or emptied the index) | `docker/sdk console data:import --config=data/import/local/supplier_import.yml`, `publish:trigger-events -r supplier`, `queue:worker:start --stop-when-empty` |
 | `GET /suppliers/999999` answers `500` instead of `404` | The provider returns an empty resource for an unknown id | Return `null` when the client's transfer has no `idSupplier` |
 
 > **When in doubt, rebuild all three:** `docker/sdk console c:e`, `docker/sdk console propel:model:build`, `docker/sdk cli GLUE_APPLICATION=GLUE glue api:generate storefront`, `docker/sdk cli GLUE_APPLICATION=GLUE glue cache:clear`. `load.sh --run` does exactly this after every load.

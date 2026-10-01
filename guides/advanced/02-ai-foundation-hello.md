@@ -137,7 +137,7 @@ docker/sdk console configuration:sync
 docker/sdk cli GLUE_APPLICATION=GLUE glue cache:clear
 ```
 
-> **Why `glue cache:clear`?** The Glue application compiles a Symfony container that caches the API Platform source directories and routes, and `cache:empty-all` does not touch it. In the demo shop `glue.eu.spryker.local` is served by the `GLUE` application, so that is the one to generate and clear (`GLUE_STOREFRONT` is not the application behind that host). If the endpoint still answers 404 or 500, see *Troubleshooting* in [the Glue Storefront API guide](../intermediate/05-glue-storefront-api.md).
+> **Why `glue cache:clear`?** The Glue application compiles a Symfony container that caches the API Platform source directories and routes, and `cache:empty-all` does not touch it. In the demo shop `glue.eu.spryker.local` is served by the `GLUE` application, so that is the one to generate and clear (`GLUE_STOREFRONT` is not the application behind that host). `api:generate` only writes the resource classes; the cache is what Glue serves from, so it has to be rebuilt after every generate. The full explanation is *Why `cache:clear` Follows `api:generate`* in [the Glue Storefront API guide](../intermediate/05-glue-storefront-api.md#why-cacheclear-follows-apigenerate); if the endpoint still answers 404 or 500, see *Troubleshooting* there.
 
 Send the first message:
 

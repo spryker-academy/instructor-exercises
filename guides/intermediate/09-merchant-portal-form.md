@@ -11,7 +11,7 @@ You will learn how to:
 
 ## Prerequisites
 
-- Completed Exercise 15 (Merchant Portal Table)
+- **You do not need your own solutions of the earlier exercises.** The branch contains them, and `load.sh --run` imports the sample suppliers and links them to the demo merchant; the branch contains the Merchant Portal table of Exercise 15.
 
 ## Loading the Exercise
 

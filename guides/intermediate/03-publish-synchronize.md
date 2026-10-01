@@ -13,7 +13,7 @@ You will learn how to:
 
 ## Prerequisites
 
-- Completed Exercise 8 (Data Import) — suppliers must be in the database
+- **You do not need your own solutions of the earlier exercises.** The branch contains them, and `load.sh --run` imports the sample suppliers into the database. Publishing them to Redis and Elasticsearch is this exercise.
 - Understanding of the Facade, DependencyProvider, and Factory patterns
 
 ## Loading the Exercise

@@ -220,8 +220,7 @@
 <p>You will learn how to: - Define an Elasticsearch mapping (analyzer, index schema) - Build a search query plugin using Elastica’s BoolQuery - Build a result formatter plugin to convert Elasticsearch results to Transfer objects - Wire the SearchClient through the DependencyProvider and Factory - Create a Client module that exposes search functionality</p>
 <h2 id="prerequisites">Prerequisites</h2>
 <ul>
-<li>Completed Exercise 10 (Publish &amp; Synchronize) — suppliers must be indexed in Elasticsearch</li>
-<li>Suppliers should exist in the <code>pyz_supplier_search</code> table</li>
+<li><strong>You do not need your own solutions of the earlier exercises.</strong> The branch contains them, and <code>load.sh --run</code> imports the sample suppliers and publishes them to Redis and Elasticsearch (Exercises 8 and 10).</li>
 </ul>
 <h2 id="loading-the-exercise">Loading the Exercise</h2>
 <div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> supplier intermediate/search/skeleton <span class="at">--run</span></span></code></pre></div>

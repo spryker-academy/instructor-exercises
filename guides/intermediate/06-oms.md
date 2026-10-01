@@ -14,6 +14,7 @@ You will learn how to:
 ## Prerequisites
 
 - A running Spryker demo shop with products available for checkout
+- **You do not need your own solutions of the earlier exercises.** The branch contains them, and `load.sh --run` imports the sample suppliers, so the code of Exercises 8-12 is in place.
 - Understanding of the Facade and DependencyProvider patterns
 
 ## Loading the Exercise

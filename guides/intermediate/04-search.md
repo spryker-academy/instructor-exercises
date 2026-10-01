@@ -11,8 +11,7 @@ You will learn how to:
 
 ## Prerequisites
 
-- Completed Exercise 10 (Publish & Synchronize) — suppliers must be indexed in Elasticsearch
-- Suppliers should exist in the `pyz_supplier_search` table
+- **You do not need your own solutions of the earlier exercises.** The branch contains them, and `load.sh --run` imports the sample suppliers and publishes them to Redis and Elasticsearch (Exercises 8 and 10).
 
 ## Loading the Exercise
 

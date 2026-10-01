@@ -684,6 +684,19 @@ fi
 # shop's Back Office settings and the AI configurations read; the AI exercises bring schemas of their own
 STEPS+=("docker/sdk console configuration:sync")
 
+# Sample data, so an exercise works without the earlier ones having been solved in this project.
+# Not where the step is the exercise itself: the importer of the data-import skeleton and the
+# publishers of the publish-synchronize skeleton are still TODOs.
+if [ -f "$PROJECT_DIR/data/import/local/supplier_import.yml" ] && has_academy "Zed/SupplierDataImport" \
+    && [[ "$BRANCH" != */data-import/skeleton ]]; then
+    STEPS+=("docker/sdk console data:import --config=data/import/local/supplier_import.yml")
+    if has_academy "Zed/SupplierSearch/Communication/Plugin/Publisher" && [[ "$BRANCH" != */publish-synchronize/skeleton ]]; then
+        # the import only publishes new or changed rows: republish all of them to search and storage
+        STEPS+=("docker/sdk console publish:trigger-events -r supplier")
+        STEPS+=("docker/sdk console queue:worker:start --stop-when-empty")
+    fi
+fi
+
 # Count files
 FILE_COUNT=$(find "$PROJECT_DIR/src/SprykerAcademy" -type f 2>/dev/null | wc -l | tr -d ' ')
 
