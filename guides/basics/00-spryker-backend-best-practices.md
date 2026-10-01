@@ -833,7 +833,7 @@ This enables running subsets of tests: `vendor/bin/codecept run --group Supplier
 | `docker/sdk cli composer dump-autoload` | After adding a class in a namespace PHP does not know yet (the loader runs it for you) |
 | `docker/sdk console transfer:generate` | After modifying `.transfer.xml` files |
 | `docker/sdk console propel:install` | After modifying `.schema.xml` files |
-| `docker/sdk console data:import` | After implementing data importers |
+| `docker/sdk console data:import --config=<file>.yml` | After implementing data importers; without `--config` only the entries of `data/import/local/full_EU.yml` run (the supplier exercises: `--config=data/import/local/supplier_import.yml`) |
 | `docker/sdk console event:trigger` | To trigger publish & sync events |
 | `docker/sdk console queue:worker:start` | To process queued messages |
 | `docker/sdk console search:setup:sources` | After modifying search schemas |

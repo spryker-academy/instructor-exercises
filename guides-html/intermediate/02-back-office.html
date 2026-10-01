@@ -276,8 +276,11 @@
 <p>If you haven’t already, create the tables and generate transfers:</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console propel:install</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span></code></pre></div>
-<p>If you have no supplier data, import it first:</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console data:import supplier</span></code></pre></div>
+<p><code>load.sh --run</code> already imported the sample suppliers. To import them again:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console data:import <span class="at">--config</span><span class="op">=</span>data/import/local/supplier_import.yml</span></code></pre></div>
+<blockquote>
+<p><strong>Always pass <code>--config</code>.</strong> Without it, <code>data:import</code> reads the shop’s default list <code>data/import/local/full_EU.yml</code>, which has no <code>supplier</code> entry, and stops with <em>Requested import type “supplier” was not found in /data/data/import/local/full_EU.yml</em>. The supplier import is defined only in the exercise’s own <code>data/import/local/supplier_import.yml</code>.</p>
+</blockquote>
 <hr />
 <h3 id="part-2-create-the-supplier-table">Part 2: Create the Supplier Table</h3>
 <p>The table displays suppliers in the Back Office with sorting, searching, and action buttons (Edit/Delete).</p>

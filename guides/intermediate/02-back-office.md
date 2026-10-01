@@ -62,11 +62,13 @@ docker/sdk console propel:install
 docker/sdk console transfer:generate
 ```
 
-If you have no supplier data, import it first:
+`load.sh --run` already imported the sample suppliers. To import them again:
 
 ```bash
-docker/sdk console data:import supplier
+docker/sdk console data:import --config=data/import/local/supplier_import.yml
 ```
+
+> **Always pass `--config`.** Without it, `data:import` reads the shop's default list `data/import/local/full_EU.yml`, which has no `supplier` entry, and stops with *Requested import type "supplier" was not found in /data/data/import/local/full_EU.yml*. The supplier import is defined only in the exercise's own `data/import/local/supplier_import.yml`.
 
 ---
 

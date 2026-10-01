@@ -213,6 +213,8 @@ The location import uses the provided `SupplierLocationWriterStep` and its facto
 docker/sdk console data:import supplier --config=data/import/local/supplier_import.yml
 ```
 
+> **Always pass `--config`.** Without it, `data:import` reads the shop's default list `data/import/local/full_EU.yml`, which has no `supplier` entry, and stops with *Requested import type "supplier" was not found in /data/data/import/local/full_EU.yml*. The supplier import is defined only in the exercise's own `data/import/local/supplier_import.yml`.
+
 ---
 
 ## Key Concepts Summary

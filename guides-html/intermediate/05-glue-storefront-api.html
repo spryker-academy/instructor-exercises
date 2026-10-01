@@ -578,11 +578,16 @@
 <td>Wait a moment and call again; check with <code>curl -s localhost:9200/&lt;store&gt;_supplier/_count</code> (for example <code>gluedemo_de_supplier</code>)</td>
 </tr>
 <tr class="even">
+<td><code>data:import</code> says <em>Requested import type “supplier” was not found in …/full_EU.yml</em></td>
+<td>The command ran without <code>--config</code>, so it read the shop’s default import list</td>
+<td><code>docker/sdk console data:import --config=data/import/local/supplier_import.yml</code></td>
+</tr>
+<tr class="odd">
 <td>An empty collection that stays empty</td>
 <td>Nothing was imported or published (you loaded without <code>--run</code>, or emptied the index)</td>
 <td><code>docker/sdk console data:import --config=data/import/local/supplier_import.yml</code>, <code>publish:trigger-events -r supplier</code>, <code>queue:worker:start --stop-when-empty</code></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>GET /suppliers/999999</code> answers <code>500</code> instead of <code>404</code></td>
 <td>The provider returns an empty resource for an unknown id</td>
 <td>Return <code>null</code> when the client’s transfer has no <code>idSupplier</code></td>

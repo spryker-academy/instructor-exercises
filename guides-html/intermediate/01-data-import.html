@@ -372,6 +372,9 @@
 <p>This will, for every action of the file: 1. Read the CSV file (<code>supplier.csv</code> first) 2. For each row: run <code>DescriptionToLowercaseStep</code> (lowercase description), then <code>SupplierWriterStep</code> (persist to DB) 3. Output a report with the number of imported rows</p>
 <p>The location import uses the provided <code>SupplierLocationWriterStep</code> and its factory, facade and plugin. To run one importer only:</p>
 <div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console data:import supplier <span class="at">--config</span><span class="op">=</span>data/import/local/supplier_import.yml</span></code></pre></div>
+<blockquote>
+<p><strong>Always pass <code>--config</code>.</strong> Without it, <code>data:import</code> reads the shop’s default list <code>data/import/local/full_EU.yml</code>, which has no <code>supplier</code> entry, and stops with <em>Requested import type “supplier” was not found in /data/data/import/local/full_EU.yml</em>. The supplier import is defined only in the exercise’s own <code>data/import/local/supplier_import.yml</code>.</p>
+</blockquote>
 <hr />
 <h2 id="key-concepts-summary">Key Concepts Summary</h2>
 <h3 id="step-pipeline">Step Pipeline</h3>
