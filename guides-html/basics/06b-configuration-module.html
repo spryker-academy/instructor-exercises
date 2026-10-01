@@ -356,7 +356,8 @@
 <hr />
 <h2 id="part-4-read-the-value-in-zed">Part 4: Read the Value in Zed</h2>
 <p>The Back Office now holds a value your code ignores. Wiring it in takes one constructor argument, because the core <code>Configuration</code> module registers its facade as a service in the Zed container. Check for yourself:</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/console debug:container ConfigurationFacadeInterface</span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/console debug:container <span class="st">&#39;Spryker\\Zed\\Configuration\\Business\\ConfigurationFacadeInterface&#39;</span></span></code></pre></div>
+<p>(The backslashes are doubled because <code>docker/sdk cli</code> runs the command through a shell inside the container.)</p>
 <pre><code>Service ID   Spryker\Zed\Configuration\Business\ConfigurationFacadeInterface
 Class        Spryker\Zed\Configuration\Business\ConfigurationFacade
 Public       yes</code></pre>
@@ -367,7 +368,7 @@ Public       yes</code></pre>
 &lt;Org&gt;\Client\&lt;Module&gt;\&lt;Module&gt;ClientInterface
 &lt;Org&gt;\Service\&lt;Module&gt;\&lt;Module&gt;ServiceInterface</code></pre>
 <p>Only those. Ask the container what it has from the core <code>Configuration</code> module and you get exactly two entries, the facade interface and the module config - no readers, no writers, no mappers:</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/console debug:container <span class="st">&#39;Spryker\Zed\Configuration&#39;</span></span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/console debug:container <span class="kw">|</span> <span class="fu">grep</span> <span class="st">&#39;Spryker\\Zed\\Configuration\\&#39;</span></span></code></pre></div>
 <p>So you can constructor-inject the <strong>front door</strong> of any module, core or project, and nothing behind it - facades, clients and services by their interface, module configs by their class, and no factories or repositories of a core module. <a href="04-module-layers-back-office.html">Exercise 4, section 2.6</a> has the full table, and section 2.7 next to it is what to run when a change to a constructor does not seem to take effect. And because the pass looks for a project override before the core class, a <code>ContactRequestFacade</code> of your own in <code>SprykerAcademy</code> would be injected in place of a core one with the same name - the same precedence the class resolver uses everywhere else in Spryker.</p>
 <p><strong>Coding time:</strong></p>
 <p>Open <code>src/SprykerAcademy/Zed/ContactRequest/Communication/Controller/ConfigController.php</code> and take the Configuration facade as a second constructor argument:</p>

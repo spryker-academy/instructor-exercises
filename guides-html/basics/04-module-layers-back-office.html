@@ -358,8 +358,11 @@ Class        SprykerAcademy\Zed\ContactRequest\Persistence\ContactRequestReposit
 </tr>
 </tbody>
 </table>
-<p>Check any of it yourself - <code>debug:container</code> takes a fragment of the name:</p>
-<div class="sourceCode" id="cb10"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/console debug:container <span class="st">&#39;Spryker\Zed\Configuration&#39;</span></span></code></pre></div>
+<p>Check any of it yourself: list the container and filter it.</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/console debug:container <span class="kw">|</span> <span class="fu">grep</span> <span class="st">&#39;Spryker\\Zed\\Configuration\\&#39;</span></span></code></pre></div>
+<blockquote>
+<p><code>debug:container &lt;fragment&gt;</code> also searches, but when the fragment matches more than one service it stops and asks you to pick one. And <code>docker/sdk cli</code> hands the command to a shell inside the container, which eats single backslashes: write a full service id with doubled ones, <code>debug:container 'Spryker\\Zed\\Configuration\\ConfigurationConfig'</code>.</p>
+</blockquote>
 <p>The whole core <code>Configuration</code> module contributes exactly two services, the facade interface and the module config. Nothing behind the front door is reachable, which is the point: a module’s internals stay its own business.</p>
 <blockquote>
 <p><strong>You never bypass the class resolver.</strong> The pass looks for a project override before the core class, so type-hinting the core name gives you the project class when one exists. On this shop <code>Spryker\Zed\Customer\CustomerConfig</code> resolves to <code>Class Pyz\Zed\Customer\CustomerConfig</code>.</p>
@@ -393,7 +396,7 @@ SprykerAcademy\Zed\ContactRequest\Communication\Controller\IndexController::__co
 <span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>...</span>
 <span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="va">$controllerInstance</span> <span class="op">=</span> <span class="kw">new</span> <span class="va">$controller</span>[<span class="dv">0</span>]()<span class="ot">;</span>                  <span class="co">// fallback: no arguments</span></span></code></pre></div>
 <p>A Zed route carries <code>_controller =&gt; [IndexController::class, 'indexAction']</code>. The resolver asks the container for that class; if the container does not have it, it falls back to <code>new</code> with no arguments, and a constructor that expects a facade gets nothing. <strong>The message is always about the container, never about your constructor.</strong> Ask the container whether it knows your controller:</p>
-<div class="sourceCode" id="cb15"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/console debug:container ContactRequest</span></code></pre></div>
+<div class="sourceCode" id="cb15"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/console debug:container <span class="kw">|</span> <span class="fu">grep</span> ContactRequest</span></code></pre></div>
 <p>If the controller is missing from that list, it is one of these, in order of likelihood:</p>
 <ol type="1">
 <li><strong>The autoloader is stale.</strong> <code>$services-&gt;load()</code> cannot register a class PHP cannot autoload. <code>docker/sdk cli composer dump-autoload</code>, then <code>grep SprykerAcademy vendor/composer/autoload_psr4.php</code>.</li>

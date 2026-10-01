@@ -822,7 +822,7 @@ Every test class must carry `@group` annotations mirroring the namespace hierarc
  */
 ```
 
-This enables running subsets of tests: `vendor/bin/codecept run --group Supplier`.
+This enables running subsets of tests: `docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/Supplier/ --group Supplier`.
 
 ---
 
@@ -834,10 +834,10 @@ This enables running subsets of tests: `vendor/bin/codecept run --group Supplier
 | `docker/sdk console transfer:generate` | After modifying `.transfer.xml` files |
 | `docker/sdk console propel:install` | After modifying `.schema.xml` files |
 | `docker/sdk console data:import --config=<file>.yml` | After implementing data importers; without `--config` only the entries of `data/import/local/full_EU.yml` run (the supplier exercises: `--config=data/import/local/supplier_import.yml`) |
-| `docker/sdk console event:trigger` | To trigger publish & sync events |
+| `docker/sdk console publish:trigger-events -r <resource>` | To publish existing rows again (e.g. `-r supplier`); then run the queue workers |
 | `docker/sdk console queue:worker:start` | To process queued messages |
 | `docker/sdk console search:setup:sources` | After modifying search schemas |
-| `docker/sdk console glue-api:controller:cache:warm-up` | After adding Glue API resources |
+| `docker/sdk cli GLUE_APPLICATION=GLUE glue api:generate storefront` | After adding or changing API Platform resources (`*.resource.yml`); follow it with `glue cache:clear` |
 | `docker/sdk console router:cache:warm-up` | After adding new route providers |
 | `docker/sdk console navigation:build-cache` | After modifying navigation XML |
 | `docker/sdk console cache:empty-all` | When experiencing cache issues. It also deletes the Propel table map, so follow it with `propel:model:build` |

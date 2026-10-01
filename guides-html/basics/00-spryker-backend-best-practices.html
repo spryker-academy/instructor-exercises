@@ -1039,7 +1039,7 @@
 <span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a><span class="co"> * </span><span class="an">@group</span><span class="co"> Business</span></span>
 <span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a><span class="co"> * </span><span class="an">@group</span><span class="co"> SupplierReaderTest</span></span>
 <span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a><span class="co"> */</span></span></code></pre></div>
-<p>This enables running subsets of tests: <code>vendor/bin/codecept run --group Supplier</code>.</p>
+<p>This enables running subsets of tests: <code>docker/sdk cli vendor/bin/codecept run -c tests/SprykerAcademyTest/Zed/Supplier/ --group Supplier</code>.</p>
 <hr />
 <h2 id="common-commands-reference">10. Common Commands Reference</h2>
 <table>
@@ -1071,8 +1071,8 @@
 <td>After implementing data importers; without <code>--config</code> only the entries of <code>data/import/local/full_EU.yml</code> run (the supplier exercises: <code>--config=data/import/local/supplier_import.yml</code>)</td>
 </tr>
 <tr class="odd">
-<td><code>docker/sdk console event:trigger</code></td>
-<td>To trigger publish &amp; sync events</td>
+<td><code>docker/sdk console publish:trigger-events -r &lt;resource&gt;</code></td>
+<td>To publish existing rows again (e.g. <code>-r supplier</code>); then run the queue workers</td>
 </tr>
 <tr class="even">
 <td><code>docker/sdk console queue:worker:start</code></td>
@@ -1083,8 +1083,8 @@
 <td>After modifying search schemas</td>
 </tr>
 <tr class="even">
-<td><code>docker/sdk console glue-api:controller:cache:warm-up</code></td>
-<td>After adding Glue API resources</td>
+<td><code>docker/sdk cli GLUE_APPLICATION=GLUE glue api:generate storefront</code></td>
+<td>After adding or changing API Platform resources (<code>*.resource.yml</code>); follow it with <code>glue cache:clear</code></td>
 </tr>
 <tr class="odd">
 <td><code>docker/sdk console router:cache:warm-up</code></td>

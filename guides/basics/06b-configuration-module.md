@@ -129,8 +129,10 @@ Open it, and there is your **Config Page** group with the **Greeting** field, fi
 The Back Office now holds a value your code ignores. Wiring it in takes one constructor argument, because the core `Configuration` module registers its facade as a service in the Zed container. Check for yourself:
 
 ```bash
-docker/sdk cli vendor/bin/console debug:container ConfigurationFacadeInterface
+docker/sdk cli vendor/bin/console debug:container 'Spryker\\Zed\\Configuration\\Business\\ConfigurationFacadeInterface'
 ```
+
+(The backslashes are doubled because `docker/sdk cli` runs the command through a shell inside the container.)
 
 ```
 Service ID   Spryker\Zed\Configuration\Business\ConfigurationFacadeInterface
@@ -152,7 +154,7 @@ A Symfony compiler pass does it. `Spryker\Shared\Application\Kernel::build()` ad
 Only those. Ask the container what it has from the core `Configuration` module and you get exactly two entries, the facade interface and the module config - no readers, no writers, no mappers:
 
 ```bash
-docker/sdk cli vendor/bin/console debug:container 'Spryker\Zed\Configuration'
+docker/sdk cli vendor/bin/console debug:container | grep 'Spryker\\Zed\\Configuration\\'
 ```
 
 So you can constructor-inject the **front door** of any module, core or project, and nothing behind it - facades, clients and services by their interface, module configs by their class, and no factories or repositories of a core module. [Exercise 4, section 2.6](04-module-layers-back-office.md) has the full table, and section 2.7 next to it is what to run when a change to a constructor does not seem to take effect. And because the pass looks for a project override before the core class, a `ContactRequestFacade` of your own in `SprykerAcademy` would be injected in place of a core one with the same name - the same precedence the class resolver uses everywhere else in Spryker.

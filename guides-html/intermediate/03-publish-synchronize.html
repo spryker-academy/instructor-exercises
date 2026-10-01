@@ -557,6 +557,7 @@ Insert/Update pyz_*_search/storage</code></pre>
 <li><strong>No messages in queues after import:</strong> Ensure <code>DataImportPublisherPlugin</code> is registered in <code>DataImportDependencyProvider::getDataImportAfterImportHookPlugins()</code></li>
 <li><strong>Queue not found error:</strong> Run <code>docker/sdk console queue:setup</code> and <code>docker/sdk console messenger:setup-transports</code></li>
 <li><strong>Data in tables but not in Elasticsearch:</strong> Process the sync queues with <code>queue:worker:start --stop-when-empty</code></li>
+<li><strong>Your <code>SprykerAcademy</code> <code>QueueDependencyProvider</code>, <code>SymfonyMessengerConfig</code> or <code>RabbitMqConfig</code> is ignored, and the same code works in <code>Pyz</code>:</strong> the class resolver cache still names the <code>Pyz</code> class. Delete <code>src/Generated/Shared/Kernel</code> (or run <code>docker/sdk console cache:class-resolver:build</code>), or set <code>KernelConstants::RESOLVABLE_CLASS_NAMES_CACHE_ENABLED</code> to <code>false</code> in <code>config/Shared/config_default-docker.dev.php</code>. The full explanation is in the <a href="../../STUDENT_SETUP_GUIDE.html#troubleshooting">Student Setup Guide</a>.</li>
 </ul>
 <hr />
 <h2 id="run-automated-tests">Run Automated Tests</h2>

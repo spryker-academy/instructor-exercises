@@ -224,7 +224,8 @@ docker/sdk console queue:worker:start --stop-when-empty
 A short script that boots the client layer and calls your client:
 
 ```bash
-docker/sdk cli php -r '
+docker/sdk cli php <<'PHP'
+<?php
 define("APPLICATION", "YVES");
 define("APPLICATION_ROOT_DIR", "/data");
 require "vendor/autoload.php";
@@ -232,8 +233,10 @@ Spryker\Shared\Config\Application\Environment::initialize();
 $client = new SprykerAcademy\Client\SupplierStorage\SupplierStorageClient();
 var_dump($client->findSupplierById(1)?->toArray());
 echo $client->getAllSuppliers()->getSuppliers()->count(), " suppliers in storage", PHP_EOL;
-'
+PHP
 ```
+
+> The script goes in through standard input (a heredoc), not as `php -r '...'`: `docker/sdk cli` hands its arguments to a shell inside the container, which splits a multi-line argument, and `php -r` then fails with *no argument for option r*.
 
 Use an `id_supplier` that exists in `pyz_supplier`.
 

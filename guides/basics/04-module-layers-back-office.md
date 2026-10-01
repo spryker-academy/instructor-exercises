@@ -216,11 +216,13 @@ included, and registers each module's conventional entry points:
 | a **core** factory, repository, entity manager, reader, mapper | not a conventional entry point - `debug:container Business\CustomerBusinessFactory` answers *No services found* |
 | a facade by its **concrete** class | the registered id is the interface; `ConfigurationFacade` is not a service |
 
-Check any of it yourself - `debug:container` takes a fragment of the name:
+Check any of it yourself: list the container and filter it.
 
 ```bash
-docker/sdk cli vendor/bin/console debug:container 'Spryker\Zed\Configuration'
+docker/sdk cli vendor/bin/console debug:container | grep 'Spryker\\Zed\\Configuration\\'
 ```
+
+> `debug:container <fragment>` also searches, but when the fragment matches more than one service it stops and asks you to pick one. And `docker/sdk cli` hands the command to a shell inside the container, which eats single backslashes: write a full service id with doubled ones, `debug:container 'Spryker\\Zed\\Configuration\\ConfigurationConfig'`.
 
 The whole core `Configuration` module contributes exactly two services, the facade interface and the
 module config. Nothing behind the front door is reachable, which is the point: a module's internals
@@ -304,7 +306,7 @@ arguments, and a constructor that expects a facade gets nothing. **The message i
 container, never about your constructor.** Ask the container whether it knows your controller:
 
 ```bash
-docker/sdk cli vendor/bin/console debug:container ContactRequest
+docker/sdk cli vendor/bin/console debug:container | grep ContactRequest
 ```
 
 If the controller is missing from that list, it is one of these, in order of likelihood:

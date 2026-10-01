@@ -465,8 +465,8 @@
 <td>After implementing data importers; without <code>--config</code> only the entries of <code>data/import/local/full_EU.yml</code> run (the supplier exercises: <code>--config=data/import/local/supplier_import.yml</code>)</td>
 </tr>
 <tr class="odd">
-<td><code>docker/sdk console event:trigger</code></td>
-<td>To trigger publish &amp; sync events</td>
+<td><code>docker/sdk console publish:trigger-events -r &lt;resource&gt;</code></td>
+<td>To publish existing rows again (e.g. <code>-r supplier</code>); then run the queue workers</td>
 </tr>
 <tr class="even">
 <td><code>docker/sdk console queue:worker:start</code></td>
@@ -477,8 +477,8 @@
 <td>After modifying search schemas</td>
 </tr>
 <tr class="even">
-<td><code>docker/sdk console glue-api:controller:cache:warm-up</code></td>
-<td>After adding Glue API resources</td>
+<td><code>docker/sdk cli GLUE_APPLICATION=GLUE glue api:generate storefront</code></td>
+<td>After adding or changing API Platform resources (<code>*.resource.yml</code>); follow it with <code>glue cache:clear</code></td>
 </tr>
 <tr class="odd">
 <td><code>docker/sdk console router:cache:warm-up</code></td>
@@ -502,20 +502,48 @@
 </tr>
 </tbody>
 </table>
+<h2 id="development-settings-fewer-cache-clears">Development Settings: Fewer Cache Clears</h2>
+<p>Some caches of the demo shop stay on in the development environment. Each one means a change does not show until you rebuild it. Switch them off in <code>config/Shared/config_default-docker.dev.php</code> (development only; production keeps them):</p>
+<div class="sourceCode" id="cb34"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="cn">S</span>pryker\<span class="cn">S</span>hared\<span class="cn">K</span>ernel\<span class="cn">K</span>ernelConstants<span class="ot">;</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="cn">S</span>pryker\<span class="cn">S</span>hared\<span class="cn">Z</span>edNavigation\<span class="cn">Z</span>edNavigationConstants<span class="ot">;</span></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a><span class="co">// A new SprykerAcademy dependency provider/config is used without cache:class-resolver:build (see Troubleshooting)</span></span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a><span class="va">$config</span>[<span class="cn">K</span>ernelConstants::<span class="cn">RESOLVABLE_CLASS_NAMES_CACHE_ENABLED</span>] <span class="op">=</span> <span class="kw">false</span><span class="ot">;</span></span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a><span class="co">// A changed navigation.xml shows in the Back Office menu without navigation:build-cache</span></span>
+<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a><span class="va">$config</span>[<span class="cn">Z</span>edNavigationConstants::<span class="cn">ZED_NAVIGATION_CACHE_ENABLED</span>] <span class="op">=</span> <span class="kw">false</span><span class="ot">;</span></span></code></pre></div>
+<p>Both cost a little speed per request. What you do <strong>not</strong> need to switch off: edited Twig templates are recompiled automatically in this environment.</p>
+<p>What no setting removes:</p>
+<ul>
+<li><strong>Generated code is not a cache.</strong> After a <code>.transfer.xml</code> change run <code>transfer:generate</code>, after a schema change <code>propel:install</code>.</li>
+<li><strong>The Glue API Platform container</strong> (<code>data/cache/Glue</code>) is compiled once and never checked again, because Glue runs without the Symfony debug flag. After changing a <code>*.resource.yml</code>, a provider’s constructor or the API source directories, run <code>glue api:generate</code> and <code>glue cache:clear</code> (see the Glue Storefront API guide, which also shows how to get error details in API responses).</li>
+</ul>
 <h2 id="troubleshooting">Troubleshooting</h2>
 <p><strong>Script says “not found” or permission denied:</strong></p>
-<div class="sourceCode" id="cb34"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="fu">chmod</span> +x exercises/load.sh</span></code></pre></div>
+<div class="sourceCode" id="cb35"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="fu">chmod</span> +x exercises/load.sh</span></code></pre></div>
 <p><strong>Transfer/Propel errors after switching exercises:</strong> Always regenerate after switching:</p>
-<div class="sourceCode" id="cb35"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli composer dump-autoload</span>
-<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console propel:install</span>
-<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span></code></pre></div>
+<div class="sourceCode" id="cb36"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli composer dump-autoload</span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console propel:install</span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console transfer:generate</span></code></pre></div>
 <p><strong><code>Expected class "SprykerAcademy\...\SomeController" not found!</code> although the file exists:</strong> The composer autoloader has no entry for the namespace. <code>composer.json</code> alone does not count - PHP reads the generated map:</p>
-<div class="sourceCode" id="cb36"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> SprykerAcademy vendor/composer/autoload_psr4.php   <span class="co"># no output = stale autoloader</span></span>
-<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli composer dump-autoload</span>
-<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span></code></pre></div>
+<div class="sourceCode" id="cb37"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> SprykerAcademy vendor/composer/autoload_psr4.php   <span class="co"># no output = stale autoloader</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli composer dump-autoload</span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span></code></pre></div>
+<p><strong>A <code>SprykerAcademy</code> dependency provider or config is ignored, and the same change only works in <code>Pyz</code>:</strong> For example <code>SprykerAcademy\Zed\Queue\QueueDependencyProvider</code>, <code>SymfonyMessengerConfig</code> or <code>RabbitMqConfig</code>: the queues are not created, or the queue processors are not called.</p>
+<p>This is Spryker’s <strong>class resolver cache</strong>. To find a module’s dependency provider, config, factory or facade, Spryker tries the project namespaces in order (<code>SprykerAcademy</code>, then <code>Pyz</code>, then the core) and takes the first class that exists. With <code>KernelConstants::RESOLVABLE_CLASS_NAMES_CACHE_ENABLED = true</code> (the demo shop sets it in <code>config/Shared/config_default.php</code>) it first looks the answer up in <code>src/Generated/Shared/Kernel/&lt;namespaces&gt;/resolvableClassCache*.php</code>, and only searches when the module is not in that file. The file is written by <code>console cache:class-resolver:build</code>, which the install recipe <code>config/install/docker.yml</code> runs on <code>docker/sdk up</code>. So:</p>
+<ol type="1">
+<li>You run <code>docker/sdk up</code> while an earlier exercise is loaded: the cache records <code>Pyz\Zed\Queue\QueueDependencyProvider</code>, because there is no <code>SprykerAcademy</code> one yet.</li>
+<li>You load an exercise that brings <code>SprykerAcademy\Zed\Queue\QueueDependencyProvider</code>. Spryker never looks for it: the cached <code>Pyz</code> class wins.</li>
+<li><code>cache:empty-all</code> does not help: it clears <code>data/cache</code>, and this file lives in <code>src/Generated</code>.</li>
+</ol>
+<p><code>load.sh</code> deletes the folder on every load. When you add an override class yourself, do one of these:</p>
+<div class="sourceCode" id="cb38"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span> <span class="at">-rf</span> src/Generated/Shared/Kernel                       <span class="co"># Spryker searches again; the next build records your class</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:class-resolver:build            <span class="co"># or rebuild the cache with the classes that exist now</span></span></code></pre></div>
+<p>Or switch the cache off for your development environment, in <code>config/Shared/config_default-docker.dev.php</code>. Every lookup is then a search again: a bit slower, but a new override works immediately and there is nothing to clean or rebuild.</p>
+<div class="sourceCode" id="cb39"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="va">$config</span>[<span class="cn">K</span>ernelConstants::<span class="cn">RESOLVABLE_CLASS_NAMES_CACHE_ENABLED</span>] <span class="op">=</span> <span class="kw">false</span><span class="ot">;</span></span></code></pre></div>
 <p><strong>Cache issues:</strong></p>
-<div class="sourceCode" id="cb37"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span></code></pre></div>
+<div class="sourceCode" id="cb40"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span></code></pre></div>
 <p><strong>List available branches:</strong></p>
-<div class="sourceCode" id="cb38"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span></span></code></pre></div>
+<div class="sourceCode" id="cb41"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span></span></code></pre></div>
 </body>
 </html>

@@ -446,7 +446,7 @@
 <p>Test collection (JSON-LD format):</p>
 <div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-s</span> <span class="st">&#39;http://glue.eu.spryker.local/suppliers&#39;</span> <span class="dt">\</span></span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-H</span> <span class="st">&#39;Accept: application/ld+json&#39;</span> <span class="kw">|</span> <span class="ex">python3</span> <span class="at">-m</span> json.tool</span></code></pre></div>
-<p>Test single supplier:</p>
+<p>Test single supplier (use an <code>idSupplier</code> from the collection; in a fresh shop the first supplier has id 1):</p>
 <div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-s</span> <span class="st">&#39;http://glue.eu.spryker.local/suppliers/1&#39;</span> <span class="dt">\</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-H</span> <span class="st">&#39;Accept: application/ld+json&#39;</span> <span class="kw">|</span> <span class="ex">python3</span> <span class="at">-m</span> json.tool</span></code></pre></div>
 <p>Expected collection response:</p>
@@ -597,6 +597,37 @@
 </tr>
 </tbody>
 </table>
+<h3 id="seeing-the-real-error-behind-a-500">Seeing the Real Error Behind a <code>500</code></h3>
+<p>By default a <code>500</code> from an API Platform endpoint only says <code>"detail":"Internal Server Error"</code>, even in the development environment. Glue builds its Symfony kernel without the debug flag, so <code>kernel.debug</code> is <code>false</code> for every environment, and that is what API Platform reads.</p>
+<p>The message is always in the log of the Glue container:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> logs <span class="at">-f</span> gluedemo_glue_eu_1      <span class="co"># &lt;project&gt;_glue_eu_1; docker ps lists the names</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="co"># [error] Uncaught exception on API Platform request &quot;GET /suppliers/...&quot;: &lt;message&gt;</span></span></code></pre></div>
+<p>To get the message and the stack trace <strong>in the response</strong>, two changes, for development only:</p>
+<ol type="1">
+<li><p>Switch on the debug option of Spryker’s API Platform integration in <code>config/Glue/packages/spryker_api_platform.php</code>:</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="cf">return</span> <span class="kw">static</span> <span class="kw">function</span> (<span class="cn">S</span>prykerApiPlatformConfig <span class="va">$sprykerApiPlatform</span><span class="ot">,</span> <span class="dt">string</span> <span class="va">$env</span>)<span class="ot">:</span> <span class="dt">void</span> {</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ...</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="va">$env</span> <span class="op">===</span> <span class="st">&#39;dockerdev&#39;</span>) {</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>        <span class="va">$sprykerApiPlatform</span>-&gt;debug(<span class="kw">true</span>)<span class="ot">;</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>}<span class="ot">;</span></span></code></pre></div></li>
+<li><p>Make the option reach API Platform. <code>config/Glue/bundles.php</code> registers <code>ApiPlatformBundle</code> after <code>SprykerApiPlatformBundle</code>, and it redefines the error provider and the serializer context builder with <code>%kernel.debug%</code>, which overwrites Spryker’s wiring of the option. Services defined in <code>config/Glue/ApplicationServices.php</code> win over bundle definitions, so define them there again:</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="kw">function</span> <span class="cn">S</span>ymfony\<span class="cn">C</span>omponent\<span class="cn">D</span>ependencyInjection\<span class="cn">L</span>oader\<span class="cn">C</span>onfigurator\param<span class="ot">;</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="kw">function</span> <span class="cn">S</span>ymfony\<span class="cn">C</span>omponent\<span class="cn">D</span>ependencyInjection\<span class="cn">L</span>oader\<span class="cn">C</span>onfigurator\service<span class="ot">;</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="co">// inside the closure, after the existing service definitions:</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="va">$configurator</span>-&gt;services()</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>    -&gt;set(<span class="st">&#39;api_platform.state.error_provider&#39;</span><span class="ot">,</span> \<span class="cn">A</span>piPlatform\<span class="cn">S</span>tate\<span class="cn">E</span>rrorProvider::<span class="kw">class</span>)</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>    -&gt;arg(<span class="st">&#39;$debug&#39;</span><span class="ot">,</span> param(<span class="st">&#39;spryker_api_platform.debug&#39;</span>))</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>    -&gt;arg(<span class="st">&#39;$resourceClassResolver&#39;</span><span class="ot">,</span> service(<span class="st">&#39;api_platform.resource_class_resolver&#39;</span>))</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>    -&gt;arg(<span class="st">&#39;$resourceMetadataCollectionFactory&#39;</span><span class="ot">,</span> service(<span class="st">&#39;api_platform.metadata.resource.metadata_collection_factory&#39;</span>))</span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>    -&gt;tag(<span class="st">&#39;api_platform.state_provider&#39;</span><span class="ot">,</span> [<span class="st">&#39;key&#39;</span> =&gt; <span class="st">&#39;api_platform.state.error_provider&#39;</span>])<span class="ot">;</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a><span class="va">$configurator</span>-&gt;services()</span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>    -&gt;set(<span class="st">&#39;api_platform.serializer.context_builder&#39;</span><span class="ot">,</span> \<span class="cn">A</span>piPlatform\<span class="cn">S</span>erializer\<span class="cn">S</span>erializerContextBuilder::<span class="kw">class</span>)</span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>    -&gt;arg(<span class="dv">0</span><span class="ot">,</span> service(<span class="st">&#39;api_platform.metadata.resource.metadata_collection_factory&#39;</span>))</span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>    -&gt;arg(<span class="st">&#39;$debug&#39;</span><span class="ot">,</span> param(<span class="st">&#39;spryker_api_platform.debug&#39;</span>))<span class="ot">;</span></span></code></pre></div></li>
+</ol>
+<p>Then <code>docker/sdk cli GLUE_APPLICATION=GLUE glue cache:clear</code>. A <code>500</code> now carries the exception message in <code>detail</code> and the stack in <code>trace</code>. With only step 1 the response format changes but the detail stays hidden - check with <code>grep -rh "ErrorProvider(" data/cache/Glue/dockerdev/</code> that the compiled provider gets <code>true</code>. Never enable this in production: traces expose paths and internals.</p>
 <blockquote>
 <p><strong>When in doubt, rebuild all three:</strong> <code>docker/sdk console c:e</code>, <code>docker/sdk console propel:model:build</code>, <code>docker/sdk cli GLUE_APPLICATION=GLUE glue api:generate storefront</code>, <code>docker/sdk cli GLUE_APPLICATION=GLUE glue cache:clear</code>. <code>load.sh --run</code> does exactly this after every load.</p>
 </blockquote>
@@ -615,9 +646,9 @@
 </ul>
 <hr />
 <h2 id="run-automated-tests">Run Automated Tests</h2>
-<div class="sourceCode" id="cb14"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/Supplier/ GlueApi</span></code></pre></div>
+<div class="sourceCode" id="cb17"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/Supplier/ GlueApi</span></code></pre></div>
 <hr />
 <h2 id="solution">Solution</h2>
-<div class="sourceCode" id="cb15"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> supplier intermediate/glue-storefront/complete <span class="at">--run</span></span></code></pre></div>
+<div class="sourceCode" id="cb18"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> supplier intermediate/glue-storefront/complete <span class="at">--run</span></span></code></pre></div>
 </body>
 </html>

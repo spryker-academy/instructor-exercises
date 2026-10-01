@@ -631,6 +631,18 @@ if [ -d "$PROJECT_DIR/src/Generated/Yves/Router" ]; then
     log_success "Dropped the cached Yves route collection (src/Generated/Yves/Router)"
 fi
 
+# The class resolver cache (KernelConstants::RESOLVABLE_CLASS_NAMES_CACHE_ENABLED) maps every dependency
+# provider, config, factory, ... to the class that existed when `console cache:class-resolver:build` ran;
+# the install recipe config/install/docker.yml runs it on every `docker/sdk up`. A SprykerAcademy override
+# added afterwards (QueueDependencyProvider, SymfonyMessengerConfig, ...) is then never looked up: the
+# cached Pyz class wins. cache:empty-all does not touch it. Without the file the resolver looks the classes
+# up again, and the next build records the overrides. (A project can instead set the constant to false for
+# development: every lookup is a search then - slower, but nothing to clean. STUDENT_SETUP_GUIDE.md, Troubleshooting.)
+if [ -d "$PROJECT_DIR/src/Generated/Shared/Kernel" ]; then
+    rm -rf "$PROJECT_DIR/src/Generated/Shared/Kernel"
+    log_success "Dropped the class resolver cache (src/Generated/Shared/Kernel)"
+fi
+
 # ---------------------------------------------------------------------------
 # Post-load commands. Printed, and run with --run.
 # ---------------------------------------------------------------------------

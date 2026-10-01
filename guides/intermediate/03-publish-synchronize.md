@@ -388,6 +388,7 @@ Verify the queues exist at http://queue.spryker.local (login: `spryker`/`secret`
 - **No messages in queues after import:** Ensure `DataImportPublisherPlugin` is registered in `DataImportDependencyProvider::getDataImportAfterImportHookPlugins()`
 - **Queue not found error:** Run `docker/sdk console queue:setup` and `docker/sdk console messenger:setup-transports`
 - **Data in tables but not in Elasticsearch:** Process the sync queues with `queue:worker:start --stop-when-empty`
+- **Your `SprykerAcademy` `QueueDependencyProvider`, `SymfonyMessengerConfig` or `RabbitMqConfig` is ignored, and the same code works in `Pyz`:** the class resolver cache still names the `Pyz` class. Delete `src/Generated/Shared/Kernel` (or run `docker/sdk console cache:class-resolver:build`), or set `KernelConstants::RESOLVABLE_CLASS_NAMES_CACHE_ENABLED` to `false` in `config/Shared/config_default-docker.dev.php`. The full explanation is in the [Student Setup Guide](../../STUDENT_SETUP_GUIDE.md#troubleshooting).
 
 ---
 

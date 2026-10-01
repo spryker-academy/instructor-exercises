@@ -335,15 +335,37 @@ Check the solution. The loader wires the agent into the project for you:
 | `docker/sdk console transfer:generate` | After modifying `.transfer.xml` files |
 | `docker/sdk console propel:install` | After modifying `.schema.xml` files |
 | `docker/sdk console data:import --config=<file>.yml` | After implementing data importers; without `--config` only the entries of `data/import/local/full_EU.yml` run (the supplier exercises: `--config=data/import/local/supplier_import.yml`) |
-| `docker/sdk console event:trigger` | To trigger publish & sync events |
+| `docker/sdk console publish:trigger-events -r <resource>` | To publish existing rows again (e.g. `-r supplier`); then run the queue workers |
 | `docker/sdk console queue:worker:start` | To process queued messages |
 | `docker/sdk console search:setup:sources` | After modifying search schemas |
-| `docker/sdk console glue-api:controller:cache:warm-up` | After adding Glue API resources |
+| `docker/sdk cli GLUE_APPLICATION=GLUE glue api:generate storefront` | After adding or changing API Platform resources (`*.resource.yml`); follow it with `glue cache:clear` |
 | `docker/sdk console router:cache:warm-up` | After adding new route providers |
 | `docker/sdk console navigation:build-cache` | After modifying navigation XML |
 | `docker/sdk console cache:empty-all` | After loading Yves or Merchant Portal exercises |
 | `docker/sdk console configuration:sync` | After adding or changing `*.configuration.yml` setting schemas |
 | `docker/sdk cli GLUE_APPLICATION=GLUE glue cache:clear` | After changing API Platform resources or source directories (see *Troubleshooting* in the Glue Storefront API guide) |
+
+## Development Settings: Fewer Cache Clears
+
+Some caches of the demo shop stay on in the development environment. Each one means a change does not show until you rebuild it. Switch them off in `config/Shared/config_default-docker.dev.php` (development only; production keeps them):
+
+```php
+use Spryker\Shared\Kernel\KernelConstants;
+use Spryker\Shared\ZedNavigation\ZedNavigationConstants;
+
+// A new SprykerAcademy dependency provider/config is used without cache:class-resolver:build (see Troubleshooting)
+$config[KernelConstants::RESOLVABLE_CLASS_NAMES_CACHE_ENABLED] = false;
+
+// A changed navigation.xml shows in the Back Office menu without navigation:build-cache
+$config[ZedNavigationConstants::ZED_NAVIGATION_CACHE_ENABLED] = false;
+```
+
+Both cost a little speed per request. What you do **not** need to switch off: edited Twig templates are recompiled automatically in this environment.
+
+What no setting removes:
+
+- **Generated code is not a cache.** After a `.transfer.xml` change run `transfer:generate`, after a schema change `propel:install`.
+- **The Glue API Platform container** (`data/cache/Glue`) is compiled once and never checked again, because Glue runs without the Symfony debug flag. After changing a `*.resource.yml`, a provider's constructor or the API source directories, run `glue api:generate` and `glue cache:clear` (see the Glue Storefront API guide, which also shows how to get error details in API responses).
 
 ## Troubleshooting
 
@@ -368,6 +390,28 @@ The composer autoloader has no entry for the namespace. `composer.json` alone do
 grep SprykerAcademy vendor/composer/autoload_psr4.php   # no output = stale autoloader
 docker/sdk cli composer dump-autoload
 docker/sdk console cache:empty-all
+```
+
+**A `SprykerAcademy` dependency provider or config is ignored, and the same change only works in `Pyz`:**
+For example `SprykerAcademy\Zed\Queue\QueueDependencyProvider`, `SymfonyMessengerConfig` or `RabbitMqConfig`: the queues are not created, or the queue processors are not called.
+
+This is Spryker's **class resolver cache**. To find a module's dependency provider, config, factory or facade, Spryker tries the project namespaces in order (`SprykerAcademy`, then `Pyz`, then the core) and takes the first class that exists. With `KernelConstants::RESOLVABLE_CLASS_NAMES_CACHE_ENABLED = true` (the demo shop sets it in `config/Shared/config_default.php`) it first looks the answer up in `src/Generated/Shared/Kernel/<namespaces>/resolvableClassCache*.php`, and only searches when the module is not in that file. The file is written by `console cache:class-resolver:build`, which the install recipe `config/install/docker.yml` runs on `docker/sdk up`. So:
+
+1. You run `docker/sdk up` while an earlier exercise is loaded: the cache records `Pyz\Zed\Queue\QueueDependencyProvider`, because there is no `SprykerAcademy` one yet.
+2. You load an exercise that brings `SprykerAcademy\Zed\Queue\QueueDependencyProvider`. Spryker never looks for it: the cached `Pyz` class wins.
+3. `cache:empty-all` does not help: it clears `data/cache`, and this file lives in `src/Generated`.
+
+`load.sh` deletes the folder on every load. When you add an override class yourself, do one of these:
+
+```bash
+rm -rf src/Generated/Shared/Kernel                       # Spryker searches again; the next build records your class
+docker/sdk console cache:class-resolver:build            # or rebuild the cache with the classes that exist now
+```
+
+Or switch the cache off for your development environment, in `config/Shared/config_default-docker.dev.php`. Every lookup is then a search again: a bit slower, but a new override works immediately and there is nothing to clean or rebuild.
+
+```php
+$config[KernelConstants::RESOLVABLE_CLASS_NAMES_CACHE_ENABLED] = false;
 ```
 
 **Cache issues:**

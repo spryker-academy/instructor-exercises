@@ -415,15 +415,19 @@ Redis</code></pre>
 <span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console queue:worker:start <span class="at">--stop-when-empty</span></span></code></pre></div>
 <h3 id="test-via-debug-console">Test via Debug Console</h3>
 <p>A short script that boots the client layer and calls your client:</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli php <span class="at">-r</span> <span class="st">&#39;</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="st">define(&quot;APPLICATION&quot;, &quot;YVES&quot;);</span></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="st">define(&quot;APPLICATION_ROOT_DIR&quot;, &quot;/data&quot;);</span></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="st">require &quot;vendor/autoload.php&quot;;</span></span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="st">Spryker\Shared\Config\Application\Environment::initialize();</span></span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="st">$client = new SprykerAcademy\Client\SupplierStorage\SupplierStorageClient();</span></span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="st">var_dump($client-&gt;findSupplierById(1)?-&gt;toArray());</span></span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="st">echo $client-&gt;getAllSuppliers()-&gt;getSuppliers()-&gt;count(), &quot; suppliers in storage&quot;, PHP_EOL;</span></span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="st">&#39;</span></span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli php <span class="op">&lt;&lt;&#39;PHP&#39;</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="st">&lt;?php</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="st">define(&quot;APPLICATION&quot;, &quot;YVES&quot;);</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="st">define(&quot;APPLICATION_ROOT_DIR&quot;, &quot;/data&quot;);</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="st">require &quot;vendor/autoload.php&quot;;</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="st">Spryker\Shared\Config\Application\Environment::initialize();</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="st">$client = new SprykerAcademy\Client\SupplierStorage\SupplierStorageClient();</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="st">var_dump($client-&gt;findSupplierById(1)?-&gt;toArray());</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="st">echo $client-&gt;getAllSuppliers()-&gt;getSuppliers()-&gt;count(), &quot; suppliers in storage&quot;, PHP_EOL;</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="op">PHP</span></span></code></pre></div>
+<blockquote>
+<p>The script goes in through standard input (a heredoc), not as <code>php -r '...'</code>: <code>docker/sdk cli</code> hands its arguments to a shell inside the container, which splits a multi-line argument, and <code>php -r</code> then fails with <em>no argument for option r</em>.</p>
+</blockquote>
 <p>Use an <code>id_supplier</code> that exists in <code>pyz_supplier</code>.</p>
 <h3 id="expected-data-format-in-redis">Expected Data Format in Redis</h3>
 <p>The demo shop keeps the key-value storage in Redis database 1, and the storage client adds the prefix <code>kv:</code> to every key:</p>
