@@ -276,27 +276,30 @@
 <td>Validate schemas without generating</td>
 </tr>
 <tr class="even">
-<td><code>docker/sdk cli GLUE_APPLICATION=GLUE glue api:generate -r suppliers</code></td>
-<td>Generate only the <code>suppliers</code> resource</td>
+<td><code>docker/sdk cli GLUE_APPLICATION=GLUE glue api:generate storefront -r Suppliers</code></td>
+<td>Generate only the <code>Suppliers</code> resource</td>
 </tr>
 <tr class="odd">
 <td><code>docker/sdk cli GLUE_APPLICATION=GLUE glue api:debug --list</code></td>
 <td>List all registered resources</td>
 </tr>
 <tr class="even">
-<td><code>docker/sdk cli GLUE_APPLICATION=GLUE glue api:debug suppliers</code></td>
+<td><code>docker/sdk cli GLUE_APPLICATION=GLUE glue api:debug Suppliers</code></td>
 <td>Inspect a specific resource’s merged schema</td>
 </tr>
 <tr class="odd">
-<td><code>docker/sdk cli GLUE_APPLICATION=GLUE glue api:debug suppliers --show-sources</code></td>
+<td><code>docker/sdk cli GLUE_APPLICATION=GLUE glue api:debug Suppliers --show-sources</code></td>
 <td>Show all source files with priority</td>
 </tr>
 <tr class="even">
-<td><code>docker/sdk cli GLUE_APPLICATION=GLUE glue api:debug suppliers --show-merged</code></td>
+<td><code>docker/sdk cli GLUE_APPLICATION=GLUE glue api:debug Suppliers --show-merged</code></td>
 <td>Display the final merged YAML schema</td>
 </tr>
 </tbody>
 </table>
+<blockquote>
+<p><strong>Resource names are case-sensitive.</strong> <code>-r</code> and <code>api:debug</code> take the <code>name</code> of the resource YAML (<code>resource: name: Suppliers</code>), not the file name or the URL path <code>/suppliers</code>. <code>api:debug suppliers</code> fails with <em>Resource “suppliers” not found for ApiType “storefront”</em>, and <code>api:generate -r suppliers</code> silently generates nothing. <code>api:debug --list</code> shows the exact names.</p>
+</blockquote>
 <blockquote>
 <p><strong>Tip:</strong> All <code>glue</code> CLI commands require the <code>GLUE_APPLICATION</code> env var. Run them inside the CLI container with <code>docker/sdk cli</code> and prefix every command with <code>GLUE_APPLICATION=GLUE</code> (the storefront API of this shop) or <code>GLUE_APPLICATION=GLUE_BACKEND</code> as needed.</p>
 </blockquote>

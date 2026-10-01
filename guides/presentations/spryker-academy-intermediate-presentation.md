@@ -696,8 +696,8 @@ class SuppliersStorefrontProvider implements ProviderInterface
 | `docker/sdk cli GLUE_APPLICATION=GLUE glue api:generate --dry-run`            | Preview without writing files               |
 | `docker/sdk cli GLUE_APPLICATION=GLUE glue api:generate --validate-only`      | Validate schemas only                       |
 | `docker/sdk cli GLUE_APPLICATION=GLUE glue api:debug --list`                  | List all registered resources               |
-| `docker/sdk cli GLUE_APPLICATION=GLUE glue api:debug suppliers`               | Inspect a specific resource                 |
-| `docker/sdk cli GLUE_APPLICATION=GLUE glue api:debug suppliers --show-merged` | Show final merged YAML                      |
+| `docker/sdk cli GLUE_APPLICATION=GLUE glue api:debug Suppliers`               | Inspect a specific resource                 |
+| `docker/sdk cli GLUE_APPLICATION=GLUE glue api:debug Suppliers --show-merged` | Show final merged YAML                      |
 
 ---
 
