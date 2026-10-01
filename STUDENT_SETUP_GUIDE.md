@@ -347,20 +347,24 @@ Check the solution. The loader wires the agent into the project for you:
 
 ## Development Settings: Fewer Cache Clears
 
-Some caches of the demo shop stay on in the development environment. Each one means a change does not show until you rebuild it. Switch them off in `config/Shared/config_default-docker.dev.php` (development only; production keeps them):
+Some caches of the demo shop stay on in the development environment, and each one means a change does not show until you clear or rebuild it. The first `load.sh` run lists the main ones at the end of `config/Shared/config_default-docker.dev.php`, set to `true` (Spryker's default):
 
 ```php
-use Spryker\Shared\Kernel\KernelConstants;
-use Spryker\Shared\ZedNavigation\ZedNavigationConstants;
-
-// A new SprykerAcademy dependency provider/config is used without cache:class-resolver:build (see Troubleshooting)
-$config[KernelConstants::RESOLVABLE_CLASS_NAMES_CACHE_ENABLED] = false;
-
-// A changed navigation.xml shows in the Back Office menu without navigation:build-cache
-$config[ZedNavigationConstants::ZED_NAVIGATION_CACHE_ENABLED] = false;
+// >>> spryker-academy setup: caches of the local development environment
+$config[\Spryker\Shared\Kernel\KernelConstants::RESOLVABLE_CLASS_NAMES_CACHE_ENABLED] = true;
+$config[\Spryker\Shared\Kernel\KernelConstants::RESOLVED_INSTANCE_CACHE_ENABLED] = true;
+$config[\Spryker\Shared\Router\RouterConstants::ZED_IS_CACHE_ENABLED] = true;
+// <<< spryker-academy setup
 ```
 
-Both cost a little speed per request. What you do **not** need to switch off: edited Twig templates are recompiled automatically in this environment.
+**If you do not want to clear the cache after every change, set them to `false`.** Requests get a little slower, in exchange:
+
+- **Class resolver** (`RESOLVABLE_CLASS_NAMES_CACHE_ENABLED`, `RESOLVED_INSTANCE_CACHE_ENABLED`): a new `SprykerAcademy` dependency provider, config or factory is used immediately, without `cache:class-resolver:build` (see *Troubleshooting*).
+- **Zed router** (`ZED_IS_CACHE_ENABLED`): a new Back Office controller or route is found without rebuilding the router cache.
+
+The Back Office menu has its own cache: with `$config[\Spryker\Shared\ZedNavigation\ZedNavigationConstants::ZED_NAVIGATION_CACHE_ENABLED] = false;` in the same file, a changed `navigation.xml` shows without `navigation:build-cache`.
+
+Change these only in `config_default-docker.dev.php`. `config_default.php` is shared with production, where the caches must stay on. What you do **not** need to switch off: edited Twig templates are recompiled automatically in this environment.
 
 What no setting removes:
 
@@ -408,11 +412,7 @@ rm -rf src/Generated/Shared/Kernel                       # Spryker searches agai
 docker/sdk console cache:class-resolver:build            # or rebuild the cache with the classes that exist now
 ```
 
-Or switch the cache off for your development environment, in `config/Shared/config_default-docker.dev.php`. Every lookup is then a search again: a bit slower, but a new override works immediately and there is nothing to clean or rebuild.
-
-```php
-$config[KernelConstants::RESOLVABLE_CLASS_NAMES_CACHE_ENABLED] = false;
-```
+Or switch the cache off for your development environment: set `RESOLVABLE_CLASS_NAMES_CACHE_ENABLED` and `RESOLVED_INSTANCE_CACHE_ENABLED` to `false` in the block `load.sh` added to `config/Shared/config_default-docker.dev.php` (see *Development Settings* above). Every lookup is then a search again: a bit slower, but a new override works immediately and there is nothing to clean or rebuild.
 
 **Cache issues:**
 ```bash

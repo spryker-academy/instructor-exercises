@@ -322,6 +322,25 @@ setup_project() {
         ' "$mp_tsconfig" | grep -q updated && log_success "Added src/SprykerAcademy/Zed entry points to tsconfig.mp.json"
     fi
 
+    # The caches that make a change invisible until it is rebuilt, spelled out in the local development config
+    # with their default (on), so a student can switch them off there. Production configs are not touched.
+    local dev_config="$PROJECT_DIR/config/Shared/config_default-docker.dev.php"
+    if [ -f "$dev_config" ] && ! grep -q "$SETUP_MARKER" "$dev_config" \
+        && ! grep -qE "RESOLVABLE_CLASS_NAMES_CACHE_ENABLED|RESOLVED_INSTANCE_CACHE_ENABLED|ZED_IS_CACHE_ENABLED" "$dev_config"; then
+        cat >> "$dev_config" <<EOF
+
+// >>> $SETUP_MARKER: caches of the local development environment
+// Set them to false if you do not want to clear or rebuild a cache after every change (slower requests):
+// - class resolver: a new SprykerAcademy dependency provider or config is ignored until cache:class-resolver:build
+// - Zed router: a new Back Office controller or route is not found until the router cache is rebuilt
+\$config[\\Spryker\\Shared\\Kernel\\KernelConstants::RESOLVABLE_CLASS_NAMES_CACHE_ENABLED] = true;
+\$config[\\Spryker\\Shared\\Kernel\\KernelConstants::RESOLVED_INSTANCE_CACHE_ENABLED] = true;
+\$config[\\Spryker\\Shared\\Router\\RouterConstants::ZED_IS_CACHE_ENABLED] = true;
+// <<< $SETUP_MARKER
+EOF
+        log_success "Listed the development caches in $(relpath "$dev_config") (set them to false to skip cache clears)"
+    fi
+
     return 0
 }
 

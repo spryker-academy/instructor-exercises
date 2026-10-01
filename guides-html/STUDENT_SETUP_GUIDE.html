@@ -503,16 +503,19 @@
 </tbody>
 </table>
 <h2 id="development-settings-fewer-cache-clears">Development Settings: Fewer Cache Clears</h2>
-<p>Some caches of the demo shop stay on in the development environment. Each one means a change does not show until you rebuild it. Switch them off in <code>config/Shared/config_default-docker.dev.php</code> (development only; production keeps them):</p>
-<div class="sourceCode" id="cb34"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="cn">S</span>pryker\<span class="cn">S</span>hared\<span class="cn">K</span>ernel\<span class="cn">K</span>ernelConstants<span class="ot">;</span></span>
-<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="cn">S</span>pryker\<span class="cn">S</span>hared\<span class="cn">Z</span>edNavigation\<span class="cn">Z</span>edNavigationConstants<span class="ot">;</span></span>
-<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a><span class="co">// A new SprykerAcademy dependency provider/config is used without cache:class-resolver:build (see Troubleshooting)</span></span>
-<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a><span class="va">$config</span>[<span class="cn">K</span>ernelConstants::<span class="cn">RESOLVABLE_CLASS_NAMES_CACHE_ENABLED</span>] <span class="op">=</span> <span class="kw">false</span><span class="ot">;</span></span>
-<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a><span class="co">// A changed navigation.xml shows in the Back Office menu without navigation:build-cache</span></span>
-<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a><span class="va">$config</span>[<span class="cn">Z</span>edNavigationConstants::<span class="cn">ZED_NAVIGATION_CACHE_ENABLED</span>] <span class="op">=</span> <span class="kw">false</span><span class="ot">;</span></span></code></pre></div>
-<p>Both cost a little speed per request. What you do <strong>not</strong> need to switch off: edited Twig templates are recompiled automatically in this environment.</p>
+<p>Some caches of the demo shop stay on in the development environment, and each one means a change does not show until you clear or rebuild it. The first <code>load.sh</code> run lists the main ones at the end of <code>config/Shared/config_default-docker.dev.php</code>, set to <code>true</code> (Spryker’s default):</p>
+<div class="sourceCode" id="cb34"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="co">// &gt;&gt;&gt; spryker-academy setup: caches of the local development environment</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="va">$config</span>[\<span class="cn">S</span>pryker\<span class="cn">S</span>hared\<span class="cn">K</span>ernel\<span class="cn">K</span>ernelConstants::<span class="cn">RESOLVABLE_CLASS_NAMES_CACHE_ENABLED</span>] <span class="op">=</span> <span class="kw">true</span><span class="ot">;</span></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a><span class="va">$config</span>[\<span class="cn">S</span>pryker\<span class="cn">S</span>hared\<span class="cn">K</span>ernel\<span class="cn">K</span>ernelConstants::<span class="cn">RESOLVED_INSTANCE_CACHE_ENABLED</span>] <span class="op">=</span> <span class="kw">true</span><span class="ot">;</span></span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a><span class="va">$config</span>[\<span class="cn">S</span>pryker\<span class="cn">S</span>hared\<span class="cn">R</span>outer\<span class="cn">R</span>outerConstants::<span class="cn">ZED_IS_CACHE_ENABLED</span>] <span class="op">=</span> <span class="kw">true</span><span class="ot">;</span></span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a><span class="co">// &lt;&lt;&lt; spryker-academy setup</span></span></code></pre></div>
+<p><strong>If you do not want to clear the cache after every change, set them to <code>false</code>.</strong> Requests get a little slower, in exchange:</p>
+<ul>
+<li><strong>Class resolver</strong> (<code>RESOLVABLE_CLASS_NAMES_CACHE_ENABLED</code>, <code>RESOLVED_INSTANCE_CACHE_ENABLED</code>): a new <code>SprykerAcademy</code> dependency provider, config or factory is used immediately, without <code>cache:class-resolver:build</code> (see <em>Troubleshooting</em>).</li>
+<li><strong>Zed router</strong> (<code>ZED_IS_CACHE_ENABLED</code>): a new Back Office controller or route is found without rebuilding the router cache.</li>
+</ul>
+<p>The Back Office menu has its own cache: with <code>$config[\Spryker\Shared\ZedNavigation\ZedNavigationConstants::ZED_NAVIGATION_CACHE_ENABLED] = false;</code> in the same file, a changed <code>navigation.xml</code> shows without <code>navigation:build-cache</code>.</p>
+<p>Change these only in <code>config_default-docker.dev.php</code>. <code>config_default.php</code> is shared with production, where the caches must stay on. What you do <strong>not</strong> need to switch off: edited Twig templates are recompiled automatically in this environment.</p>
 <p>What no setting removes:</p>
 <ul>
 <li><strong>Generated code is not a cache.</strong> After a <code>.transfer.xml</code> change run <code>transfer:generate</code>, after a schema change <code>propel:install</code>.</li>
@@ -539,11 +542,10 @@
 <p><code>load.sh</code> deletes the folder on every load. When you add an override class yourself, do one of these:</p>
 <div class="sourceCode" id="cb38"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span> <span class="at">-rf</span> src/Generated/Shared/Kernel                       <span class="co"># Spryker searches again; the next build records your class</span></span>
 <span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:class-resolver:build            <span class="co"># or rebuild the cache with the classes that exist now</span></span></code></pre></div>
-<p>Or switch the cache off for your development environment, in <code>config/Shared/config_default-docker.dev.php</code>. Every lookup is then a search again: a bit slower, but a new override works immediately and there is nothing to clean or rebuild.</p>
-<div class="sourceCode" id="cb39"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="va">$config</span>[<span class="cn">K</span>ernelConstants::<span class="cn">RESOLVABLE_CLASS_NAMES_CACHE_ENABLED</span>] <span class="op">=</span> <span class="kw">false</span><span class="ot">;</span></span></code></pre></div>
+<p>Or switch the cache off for your development environment: set <code>RESOLVABLE_CLASS_NAMES_CACHE_ENABLED</code> and <code>RESOLVED_INSTANCE_CACHE_ENABLED</code> to <code>false</code> in the block <code>load.sh</code> added to <code>config/Shared/config_default-docker.dev.php</code> (see <em>Development Settings</em> above). Every lookup is then a search again: a bit slower, but a new override works immediately and there is nothing to clean or rebuild.</p>
 <p><strong>Cache issues:</strong></p>
-<div class="sourceCode" id="cb40"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span></code></pre></div>
+<div class="sourceCode" id="cb39"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console cache:empty-all</span></code></pre></div>
 <p><strong>List available branches:</strong></p>
-<div class="sourceCode" id="cb41"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span></span></code></pre></div>
+<div class="sourceCode" id="cb40"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span></span></code></pre></div>
 </body>
 </html>

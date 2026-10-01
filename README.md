@@ -122,6 +122,8 @@ Keep this order. `cache:empty-all` deletes `data/cache`, which also holds the Pr
 
 Depending on the branch, the list continues with `navigation:build-cache`, `queue:setup`, `messenger:setup-transports`, `search:setup:sources`, `acl-entity:synchronize`, the Merchant Portal build (`frontend:mp:build`) and the Glue resources (`GLUE_APPLICATION=GLUE glue api:generate storefront`, `glue cache:clear`).
 
+The first run also lists the development caches (class resolver, Zed router) at the end of `config/Shared/config_default-docker.dev.php`, set to `true`; students can set them to `false` to skip cache clears (STUDENT_SETUP_GUIDE.md, *Development Settings*). Production configs are never touched.
+
 Every list ends with `configuration:sync`: `cache:empty-all` also deletes the synced configuration schemas (`data/cache/configuration`), which the Back Office settings and the AI configurations read.
 
 On the supplier branches after Exercise 8, the list then imports the sample suppliers (`data:import --config=data/import/local/supplier_import.yml`) and, from Exercise 10 on, publishes them to Redis and Elasticsearch (`publish:trigger-events -r supplier`, `queue:worker:start --stop-when-empty`). Every branch contains the solutions of the exercises before it, so a student can start any exercise without having solved the earlier ones. The two exceptions are the skeletons that teach these steps: Data Import (no import) and Publish & Synchronize (no publishing).
