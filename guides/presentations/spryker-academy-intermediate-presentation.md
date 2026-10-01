@@ -688,15 +688,16 @@ class SuppliersStorefrontProvider implements ProviderInterface
 
 ### API Platform Commands
 
-| Command                                  | Purpose                                     |
-|------------------------------------------|---------------------------------------------|
-| `glue api:generate Storefront`           | Generate Storefront API resources from YAML |
-| `glue api:generate Backend`              | Generate Backend API resources              |
-| `glue api:generate --dry-run`            | Preview without writing files               |
-| `glue api:generate --validate-only`      | Validate schemas only                       |
-| `glue api:debug --list`                  | List all registered resources               |
-| `glue api:debug suppliers`               | Inspect a specific resource                 |
-| `glue api:debug suppliers --show-merged` | Show final merged YAML                      |
+| Command                                                                       | Purpose                                     |
+|-------------------------------------------------------------------------------|---------------------------------------------|
+| `docker/sdk cli GLUE_APPLICATION=GLUE glue api:generate storefront`           | Generate Storefront API resources from YAML |
+| `docker/sdk cli GLUE_APPLICATION=GLUE_BACKEND glue api:generate backend`      | Generate Backend API resources              |
+| `docker/sdk cli GLUE_APPLICATION=GLUE glue cache:clear`                       | Rebuild the Glue cache after every generate |
+| `docker/sdk cli GLUE_APPLICATION=GLUE glue api:generate --dry-run`            | Preview without writing files               |
+| `docker/sdk cli GLUE_APPLICATION=GLUE glue api:generate --validate-only`      | Validate schemas only                       |
+| `docker/sdk cli GLUE_APPLICATION=GLUE glue api:debug --list`                  | List all registered resources               |
+| `docker/sdk cli GLUE_APPLICATION=GLUE glue api:debug suppliers`               | Inspect a specific resource                 |
+| `docker/sdk cli GLUE_APPLICATION=GLUE glue api:debug suppliers --show-merged` | Show final merged YAML                      |
 
 ---
 

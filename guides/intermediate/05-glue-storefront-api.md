@@ -54,18 +54,18 @@ This command scans all registered source directories for `.resource.yml` files a
 
 | Command | Purpose |
 |---------|---------|
-| `GLUE_APPLICATION=GLUE glue api:generate storefront` | Generate Storefront API resources |
-| `GLUE_APPLICATION=GLUE_BACKEND glue api:generate backend` | Generate Backend API resources |
-| `GLUE_APPLICATION=GLUE glue cache:clear` | Delete the compiled Glue container and its metadata cache, so the next request reads the generated resources again |
-| `GLUE_APPLICATION=GLUE glue api:generate --dry-run` | Preview what would be generated without writing |
-| `GLUE_APPLICATION=GLUE glue api:generate --validate-only` | Validate schemas without generating |
-| `GLUE_APPLICATION=GLUE glue api:generate -r suppliers` | Generate only the `suppliers` resource |
-| `GLUE_APPLICATION=GLUE glue api:debug --list` | List all registered resources |
-| `GLUE_APPLICATION=GLUE glue api:debug suppliers` | Inspect a specific resource's merged schema |
-| `GLUE_APPLICATION=GLUE glue api:debug suppliers --show-sources` | Show all source files with priority |
-| `GLUE_APPLICATION=GLUE glue api:debug suppliers --show-merged` | Display the final merged YAML schema |
+| `docker/sdk cli GLUE_APPLICATION=GLUE glue api:generate storefront` | Generate Storefront API resources |
+| `docker/sdk cli GLUE_APPLICATION=GLUE_BACKEND glue api:generate backend` | Generate Backend API resources |
+| `docker/sdk cli GLUE_APPLICATION=GLUE glue cache:clear` | Delete the compiled Glue container and its metadata cache, so the next request reads the generated resources again |
+| `docker/sdk cli GLUE_APPLICATION=GLUE glue api:generate --dry-run` | Preview what would be generated without writing |
+| `docker/sdk cli GLUE_APPLICATION=GLUE glue api:generate --validate-only` | Validate schemas without generating |
+| `docker/sdk cli GLUE_APPLICATION=GLUE glue api:generate -r suppliers` | Generate only the `suppliers` resource |
+| `docker/sdk cli GLUE_APPLICATION=GLUE glue api:debug --list` | List all registered resources |
+| `docker/sdk cli GLUE_APPLICATION=GLUE glue api:debug suppliers` | Inspect a specific resource's merged schema |
+| `docker/sdk cli GLUE_APPLICATION=GLUE glue api:debug suppliers --show-sources` | Show all source files with priority |
+| `docker/sdk cli GLUE_APPLICATION=GLUE glue api:debug suppliers --show-merged` | Display the final merged YAML schema |
 
-> **Tip:** All `glue` CLI commands require the `GLUE_APPLICATION` env var. Prefix every command with `GLUE_APPLICATION=GLUE` (the storefront API of this shop) or `GLUE_APPLICATION=GLUE_BACKEND` as needed.
+> **Tip:** All `glue` CLI commands require the `GLUE_APPLICATION` env var. Run them inside the CLI container with `docker/sdk cli` and prefix every command with `GLUE_APPLICATION=GLUE` (the storefront API of this shop) or `GLUE_APPLICATION=GLUE_BACKEND` as needed.
 
 ### Why `cache:clear` Follows `api:generate`
 
