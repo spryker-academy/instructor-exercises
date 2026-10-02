@@ -112,7 +112,7 @@ In `buildActionButtons()`:
 >     EditController::REQUEST_PARAM_ID_SUPPLIER => $idSupplier,
 > ]);
 > ```
-> Combine multiple buttons with `implode(' ', [...])` and assign to the Actions column. The skeleton already provides the constants `URL_SUPPLIER_EDIT` and `URL_SUPPLIER_DELETE` as well as imports for `EditController` and `DeleteController`.
+> Combine multiple buttons with `implode(' ', [...])` and assign to the Actions column. The skeleton already provides the constants `URL_SUPPLIER_EDIT` and `URL_SUPPLIER_DELETE` as well as imports for `EditController` and `DeleteController`. `URL_SUPPLIER_DELETE` points to the confirmation page (`/supplier-gui/delete/confirm`): the Delete button never deletes directly (see 3.5).
 
 > **About Propel in the Communication layer:** Tables are an exception to the "no Propel outside Persistence" rule. The `AbstractTable` class handles pagination, sorting, and filtering internally through the Propel query.
 
@@ -168,7 +168,7 @@ Open `src/SprykerAcademy/Zed/SupplierGui/Presentation/Index/index.twig`:
 > {{ createActionButton('/supplier-gui/create', 'Create Supplier') }}
 > {{ editActionButton('/supplier-gui/edit?id-supplier=' ~ id, 'Edit') }}
 > {{ backActionButton(backUrl, 'Back') }}
-> {{ removeActionButton('/supplier-gui/delete?id-supplier=' ~ id, 'Delete') }}
+> {{ removeActionButton('/supplier-gui/delete/confirm?id-supplier=' ~ id, 'Delete') }}
 > ```
 > These functions are provided by the Gui module's Twig plugins (`CreateActionButtonTwigPlugin`, etc.) and automatically apply the correct CSS classes and styling.
 >
@@ -288,13 +288,20 @@ Open `src/SprykerAcademy/Zed/SupplierGui/Communication/Controller/EditController
 
 **Coding time:**
 
-Open `src/SprykerAcademy/Zed/SupplierGui/Communication/Controller/DeleteController.php`:
+A supplier has rows in other tables that point to it: its locations (`pyz_supplier_location`) and its merchant assignments (`pyz_merchant_to_supplier`). Both reference `pyz_supplier` with a foreign key, so deleting the supplier alone fails. The delete therefore works in two steps, and both are provided:
+
+- **The confirmation page.** The table's Delete button opens `DeleteController::confirmAction()` (`/supplier-gui/delete/confirm`). It names the supplier and warns that its locations and merchant assignments are deleted too. Its form sends a `DELETE` request with a CSRF token to `indexAction()`; Cancel goes back to the overview. `indexAction()` starts by checking that form, so a plain link to `/supplier-gui/delete` deletes nothing.
+- **The business layer.** `SupplierWriter::delete()` deletes the locations, then the merchant assignments, then the supplier - in one transaction (`TransactionTrait`): if one step fails, nothing is deleted.
+
+**Coding time:**
+
+Open `src/SprykerAcademy/Zed/SupplierGui/Communication/Controller/DeleteController.php` and complete `indexAction()` after the form check:
 
 1. Extract and validate the supplier ID using `$this->castId()`
 2. Call the Facade's `deleteSupplier()` passing a `SupplierTransfer` with the ID set
 3. Add a success message and redirect to the overview
 
-> **Exception handling:** Wrap `deleteSupplier()` in `try/catch (Throwable)` — deletion can fail due to foreign key constraints (e.g. if the supplier is referenced by other tables). On failure, use `$this->addErrorMessage(static::MESSAGE_SUPPLIER_DELETE_FAILED)` and redirect to the overview.
+> **Exception handling:** Wrap `deleteSupplier()` in `try/catch (Throwable)`. If the transaction fails, nothing was deleted; use `$this->addErrorMessage(static::MESSAGE_SUPPLIER_DELETE_FAILED)` and redirect to the overview.
 
 ---
 
@@ -349,7 +356,7 @@ Visit the Back Office:
 1. http://backoffice.eu.spryker.local/supplier-gui — Table with suppliers
 2. Click "Create Supplier" — Fill the form and submit
 3. Click "Edit" on a row — Modify and save
-4. Click "Delete" on a row — Confirm removal
+4. Click "Delete" on a row — the confirmation page names the supplier and warns about its locations; confirm, and the supplier is gone together with its locations
 
 Run the automated tests:
 

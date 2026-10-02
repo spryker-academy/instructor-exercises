@@ -304,7 +304,7 @@
 <div class="sourceCode" id="cb6"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="va">$url</span> <span class="op">=</span> <span class="cn">U</span>rl::generate(<span class="st">&#39;/supplier-gui/edit&#39;</span><span class="ot">,</span> [</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="cn">E</span>ditController::<span class="cn">REQUEST_PARAM_ID_SUPPLIER</span> =&gt; <span class="va">$idSupplier</span><span class="ot">,</span></span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>])<span class="ot">;</span></span></code></pre></div>
-<p>Combine multiple buttons with <code>implode(' ', [...])</code> and assign to the Actions column. The skeleton already provides the constants <code>URL_SUPPLIER_EDIT</code> and <code>URL_SUPPLIER_DELETE</code> as well as imports for <code>EditController</code> and <code>DeleteController</code>.</p>
+<p>Combine multiple buttons with <code>implode(' ', [...])</code> and assign to the Actions column. The skeleton already provides the constants <code>URL_SUPPLIER_EDIT</code> and <code>URL_SUPPLIER_DELETE</code> as well as imports for <code>EditController</code> and <code>DeleteController</code>. <code>URL_SUPPLIER_DELETE</code> points to the confirmation page (<code>/supplier-gui/delete/confirm</code>): the Delete button never deletes directly (see 3.5).</p>
 </blockquote>
 <blockquote>
 <p><strong>About Propel in the Communication layer:</strong> Tables are an exception to the “no Propel outside Persistence” rule. The <code>AbstractTable</code> class handles pagination, sorting, and filtering internally through the Propel query.</p>
@@ -352,7 +352,7 @@
 {{ createActionButton(&#39;/supplier-gui/create&#39;, &#39;Create Supplier&#39;) }}
 {{ editActionButton(&#39;/supplier-gui/edit?id-supplier=&#39; ~ id, &#39;Edit&#39;) }}
 {{ backActionButton(backUrl, &#39;Back&#39;) }}
-{{ removeActionButton(&#39;/supplier-gui/delete?id-supplier=&#39; ~ id, &#39;Delete&#39;) }}</code></pre>
+{{ removeActionButton(&#39;/supplier-gui/delete/confirm?id-supplier=&#39; ~ id, &#39;Delete&#39;) }}</code></pre>
 <p>These functions are provided by the Gui module’s Twig plugins (<code>CreateActionButtonTwigPlugin</code>, etc.) and automatically apply the correct CSS classes and styling.</p>
 <p><strong>Rendering raw HTML:</strong> The controller passes pre-rendered HTML from <code>$table-&gt;render()</code>. Use the <code>raw</code> filter to prevent Twig from escaping it:</p>
 <pre class="twig"><code>{{ supplierTable | raw }}</code></pre>
@@ -449,14 +449,20 @@
 </blockquote>
 <h4 id="implement-the-deletecontroller">3.5 Implement the DeleteController</h4>
 <p><strong>Coding time:</strong></p>
-<p>Open <code>src/SprykerAcademy/Zed/SupplierGui/Communication/Controller/DeleteController.php</code>:</p>
+<p>A supplier has rows in other tables that point to it: its locations (<code>pyz_supplier_location</code>) and its merchant assignments (<code>pyz_merchant_to_supplier</code>). Both reference <code>pyz_supplier</code> with a foreign key, so deleting the supplier alone fails. The delete therefore works in two steps, and both are provided:</p>
+<ul>
+<li><strong>The confirmation page.</strong> The table’s Delete button opens <code>DeleteController::confirmAction()</code> (<code>/supplier-gui/delete/confirm</code>). It names the supplier and warns that its locations and merchant assignments are deleted too. Its form sends a <code>DELETE</code> request with a CSRF token to <code>indexAction()</code>; Cancel goes back to the overview. <code>indexAction()</code> starts by checking that form, so a plain link to <code>/supplier-gui/delete</code> deletes nothing.</li>
+<li><strong>The business layer.</strong> <code>SupplierWriter::delete()</code> deletes the locations, then the merchant assignments, then the supplier - in one transaction (<code>TransactionTrait</code>): if one step fails, nothing is deleted.</li>
+</ul>
+<p><strong>Coding time:</strong></p>
+<p>Open <code>src/SprykerAcademy/Zed/SupplierGui/Communication/Controller/DeleteController.php</code> and complete <code>indexAction()</code> after the form check:</p>
 <ol type="1">
 <li>Extract and validate the supplier ID using <code>$this-&gt;castId()</code></li>
 <li>Call the Facade’s <code>deleteSupplier()</code> passing a <code>SupplierTransfer</code> with the ID set</li>
 <li>Add a success message and redirect to the overview</li>
 </ol>
 <blockquote>
-<p><strong>Exception handling:</strong> Wrap <code>deleteSupplier()</code> in <code>try/catch (Throwable)</code> — deletion can fail due to foreign key constraints (e.g. if the supplier is referenced by other tables). On failure, use <code>$this-&gt;addErrorMessage(static::MESSAGE_SUPPLIER_DELETE_FAILED)</code> and redirect to the overview.</p>
+<p><strong>Exception handling:</strong> Wrap <code>deleteSupplier()</code> in <code>try/catch (Throwable)</code>. If the transaction fails, nothing was deleted; use <code>$this-&gt;addErrorMessage(static::MESSAGE_SUPPLIER_DELETE_FAILED)</code> and redirect to the overview.</p>
 </blockquote>
 <hr />
 <h3 id="part-4-navigation">Part 4: Navigation</h3>
@@ -483,7 +489,7 @@ Controller: getFactory()-&gt;createSupplierTable()
             getFactory()-&gt;getSupplierFacade()-&gt;createSupplier(...)</code></pre>
 <hr />
 <h2 id="testing">Testing</h2>
-<p>Visit the Back Office: 1. http://backoffice.eu.spryker.local/supplier-gui — Table with suppliers 2. Click “Create Supplier” — Fill the form and submit 3. Click “Edit” on a row — Modify and save 4. Click “Delete” on a row — Confirm removal</p>
+<p>Visit the Back Office: 1. http://backoffice.eu.spryker.local/supplier-gui — Table with suppliers 2. Click “Create Supplier” — Fill the form and submit 3. Click “Edit” on a row — Modify and save 4. Click “Delete” on a row — the confirmation page names the supplier and warns about its locations; confirm, and the supplier is gone together with its locations</p>
 <p>Run the automated tests:</p>
 <div class="sourceCode" id="cb16"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/Supplier/ BackOffice</span></code></pre></div>
 <hr />
