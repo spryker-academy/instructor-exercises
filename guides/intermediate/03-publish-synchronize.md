@@ -206,9 +206,11 @@ return [
 ];
 ```
 
-1. Create a method that returns the Search publisher plugin mapped to the search publish queue
-2. Create a method that returns the Storage publisher plugin mapped to the storage publish queue
-3. Add both to `getPublisherPlugins()`
+1. Map the search publish queue to the Search publisher plugins: `SupplierSearchWritePublisherPlugin` and `SupplierSearchDeletePublisherPlugin`
+2. Map the storage publish queue to the Storage publisher plugins: `SupplierStorageWritePublisherPlugin` and `SupplierStorageDeletePublisherPlugin`
+3. `getPublisherPlugins()` already merges them with the project's plugins
+
+> **The delete plugins are provided.** `SupplierSearchDeletePublisherPlugin` and `SupplierStorageDeletePublisherPlugin` subscribe to `Entity.pyz_supplier.delete`. The write plugins only handle create and update, so without them a supplier deleted in the Back Office would stay in Elasticsearch and Redis - and keep showing up in the Glue API and in Yves. Read them after Part 7: same Plugin → Facade → Factory → `SupplierSearchDeleter` chain as the write side, ending in `SupplierSearchEntityManager::deleteSupplierSearchesBySupplierIds()`. It deletes the rows **one entity at a time**: a bulk `->delete()` on the query skips the Propel behaviors, and the synchronization behavior is what sends the delete on to Elasticsearch / Redis.
 
 > **Queue routing:** By specifying the queue as the array key, you tell the system: "put events for these plugins on this queue." If no key is specified, events go to the default publish queue.
 
@@ -321,6 +323,18 @@ After implementing all parts, here's what happens when a supplier is created or 
    → Data pushed to Elasticsearch
 
 (Same flow in parallel for Storage → Redis)
+```
+
+And when a supplier is deleted (Back Office → Delete):
+
+```
+1. pyz_supplier row deleted → event behavior fires Entity.pyz_supplier.delete (with the id of the deleted row)
+2. SupplierSearchDeletePublisherPlugin → Facade → SupplierSearchDeleter
+   → deletes the pyz_supplier_search row of that supplier (entity by entity)
+3. Synchronization behavior sends a delete message to sync.search.supplier
+   → the document is removed from Elasticsearch
+
+(Same for Storage: SupplierStorageDeletePublisherPlugin → pyz_supplier_storage → Redis key removed)
 ```
 
 ---

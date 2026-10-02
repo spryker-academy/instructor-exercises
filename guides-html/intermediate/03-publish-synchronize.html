@@ -439,10 +439,13 @@ Insert/Update pyz_*_search/storage</code></pre>
 <span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    ]<span class="ot">,</span></span>
 <span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>]<span class="ot">;</span></span></code></pre></div>
 <ol type="1">
-<li>Create a method that returns the Search publisher plugin mapped to the search publish queue</li>
-<li>Create a method that returns the Storage publisher plugin mapped to the storage publish queue</li>
-<li>Add both to <code>getPublisherPlugins()</code></li>
+<li>Map the search publish queue to the Search publisher plugins: <code>SupplierSearchWritePublisherPlugin</code> and <code>SupplierSearchDeletePublisherPlugin</code></li>
+<li>Map the storage publish queue to the Storage publisher plugins: <code>SupplierStorageWritePublisherPlugin</code> and <code>SupplierStorageDeletePublisherPlugin</code></li>
+<li><code>getPublisherPlugins()</code> already merges them with the project’s plugins</li>
 </ol>
+<blockquote>
+<p><strong>The delete plugins are provided.</strong> <code>SupplierSearchDeletePublisherPlugin</code> and <code>SupplierStorageDeletePublisherPlugin</code> subscribe to <code>Entity.pyz_supplier.delete</code>. The write plugins only handle create and update, so without them a supplier deleted in the Back Office would stay in Elasticsearch and Redis - and keep showing up in the Glue API and in Yves. Read them after Part 7: same Plugin → Facade → Factory → <code>SupplierSearchDeleter</code> chain as the write side, ending in <code>SupplierSearchEntityManager::deleteSupplierSearchesBySupplierIds()</code>. It deletes the rows <strong>one entity at a time</strong>: a bulk <code>-&gt;delete()</code> on the query skips the Propel behaviors, and the synchronization behavior is what sends the delete on to Elasticsearch / Redis.</p>
+</blockquote>
 <blockquote>
 <p><strong>Queue routing:</strong> By specifying the queue as the array key, you tell the system: “put events for these plugins on this queue.” If no key is specified, events go to the default publish queue.</p>
 </blockquote>
@@ -523,11 +526,19 @@ Insert/Update pyz_*_search/storage</code></pre>
    → Data pushed to Elasticsearch
 
 (Same flow in parallel for Storage → Redis)</code></pre>
+<p>And when a supplier is deleted (Back Office → Delete):</p>
+<pre><code>1. pyz_supplier row deleted → event behavior fires Entity.pyz_supplier.delete (with the id of the deleted row)
+2. SupplierSearchDeletePublisherPlugin → Facade → SupplierSearchDeleter
+   → deletes the pyz_supplier_search row of that supplier (entity by entity)
+3. Synchronization behavior sends a delete message to sync.search.supplier
+   → the document is removed from Elasticsearch
+
+(Same for Storage: SupplierStorageDeletePublisherPlugin → pyz_supplier_storage → Redis key removed)</code></pre>
 <hr />
 <h2 id="testing-the-flow">Testing the Flow</h2>
 <h3 id="setup-ensure-queues-and-exchanges-exist">Setup: Ensure Queues and Exchanges Exist</h3>
 <p>After registering queues in the config files, you must create the AMQP infrastructure (queues, exchanges, bindings) in RabbitMQ:</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console messenger:setup-transports</span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console messenger:setup-transports</span></code></pre></div>
 <p>This reads the <code>SymfonyMessengerConfig::getQueueConfiguration()</code> and creates the corresponding AMQP exchanges and queues. <strong>Without this step, messages are silently dropped</strong> because the Symfony Messenger transport has no exchange to route them through.</p>
 <blockquote>
 <p><strong>Three config classes are involved:</strong> Queues must be registered in: 1. <code>SymfonyMessengerConfig</code> — Symfony Messenger transport routing (Part 2) 2. <code>RabbitMqConfig</code> — AMQP queue declaration (provided in <code>src/SprykerAcademy/Client/RabbitMq</code>) 3. <code>QueueDependencyProvider</code> — queue message processors (Part 3)</p>
@@ -537,19 +548,19 @@ Insert/Update pyz_*_search/storage</code></pre>
 <h3 id="test-the-flow">Test the Flow</h3>
 <ol type="1">
 <li><p>Add a new supplier to the CSV and import:</p>
-<div class="sourceCode" id="cb10"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console data:import supplier <span class="at">--config</span><span class="op">=</span>data/import/local/supplier_import.yml</span></code></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console data:import supplier <span class="at">--config</span><span class="op">=</span>data/import/local/supplier_import.yml</span></code></pre></div>
 <p>Only new or changed rows fire publish events. To republish every supplier to search and storage, for example after you emptied the index, use <code>docker/sdk console publish:trigger-events -r supplier</code>.</p></li>
 <li><p>Process the event queue first (routes events to publish queues):</p>
-<div class="sourceCode" id="cb11"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console queue:worker:start <span class="at">--stop-when-empty</span></span></code></pre></div></li>
+<div class="sourceCode" id="cb12"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console queue:worker:start <span class="at">--stop-when-empty</span></span></code></pre></div></li>
 <li><p>Process again (handles publish → search/storage tables → sync queues → Elasticsearch/Redis):</p>
-<div class="sourceCode" id="cb12"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console queue:worker:start <span class="at">--stop-when-empty</span></span></code></pre></div>
+<div class="sourceCode" id="cb13"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console queue:worker:start <span class="at">--stop-when-empty</span></span></code></pre></div>
 <p>You may need to run the worker multiple times — the first run processes publish events (writes to intermediate tables), the second processes sync events (pushes to Elasticsearch/Redis).</p></li>
 <li><p>Check the intermediate tables using any DB client (credentials in <code>deploy.dev.yml</code>):</p>
-<div class="sourceCode" id="cb13"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="fu">count</span>(<span class="op">*</span>) <span class="kw">FROM</span> pyz_supplier_search;</span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="fu">count</span>(<span class="op">*</span>) <span class="kw">FROM</span> pyz_supplier_storage;</span></code></pre></div></li>
+<div class="sourceCode" id="cb14"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="fu">count</span>(<span class="op">*</span>) <span class="kw">FROM</span> pyz_supplier_search;</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="fu">count</span>(<span class="op">*</span>) <span class="kw">FROM</span> pyz_supplier_storage;</span></code></pre></div></li>
 <li><p>Verify Elasticsearch:</p>
-<div class="sourceCode" id="cb14"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-s</span> <span class="st">&#39;localhost:9200/_search&#39;</span> <span class="at">-H</span> <span class="st">&#39;Content-type: application/json&#39;</span> <span class="dt">\</span></span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-d</span> <span class="st">&#39;{&quot;query&quot;:{&quot;exists&quot;:{&quot;field&quot;:&quot;id_supplier&quot;}}}&#39;</span></span></code></pre></div></li>
+<div class="sourceCode" id="cb15"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-s</span> <span class="st">&#39;localhost:9200/_search&#39;</span> <span class="at">-H</span> <span class="st">&#39;Content-type: application/json&#39;</span> <span class="dt">\</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-d</span> <span class="st">&#39;{&quot;query&quot;:{&quot;exists&quot;:{&quot;field&quot;:&quot;id_supplier&quot;}}}&#39;</span></span></code></pre></div></li>
 <li><p>Creating a supplier via the Back Office also triggers P&amp;S automatically (via the event behavior) — no manual queue processing needed if the scheduler is running.</p></li>
 </ol>
 <h3 id="troubleshooting">Troubleshooting</h3>
@@ -561,9 +572,9 @@ Insert/Update pyz_*_search/storage</code></pre>
 </ul>
 <hr />
 <h2 id="run-automated-tests">Run Automated Tests</h2>
-<div class="sourceCode" id="cb15"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/Supplier/ PublishSync</span></code></pre></div>
+<div class="sourceCode" id="cb16"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/Supplier/ PublishSync</span></code></pre></div>
 <hr />
 <h2 id="solution">Solution</h2>
-<div class="sourceCode" id="cb16"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> supplier intermediate/publish-synchronize/complete <span class="at">--run</span></span></code></pre></div>
+<div class="sourceCode" id="cb17"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> supplier intermediate/publish-synchronize/complete <span class="at">--run</span></span></code></pre></div>
 </body>
 </html>
