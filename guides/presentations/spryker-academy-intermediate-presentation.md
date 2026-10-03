@@ -636,7 +636,8 @@ $services->set(SupplierFacadeInterface::class, SupplierFacade::class);
 | Provider base class | `AbstractStorefrontProvider`                  | `AbstractBackendProvider`              |
 | Resource files      | `resources/api/storefront/`                   | `resources/api/backend/`               |
 
--   The Storefront API never queries the database
+-   The Storefront API never queries the database: it can only return what Publish & Synchronize published
+-   Supplier locations: published inside the supplier document (Storefront), read from `pyz_supplier_location` (Backend)
 -   Same resource name in both directories = two resources, two providers
 
 ---
@@ -732,7 +733,7 @@ GET /suppliers?include=supplier-locations
 ```
 
 ```yaml
-# resources/api/backend/suppliers.resource.yml
+# resources/api/storefront/suppliers.resource.yml and resources/api/backend/suppliers.resource.yml
     includes:
         - relationshipName: supplier-locations   # the value of ?include=
           targetResource: SupplierLocations      # `name` of the related resource

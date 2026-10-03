@@ -206,11 +206,13 @@ return [
 ];
 ```
 
-1. Map the search publish queue to the Search publisher plugins: `SupplierSearchWritePublisherPlugin` and `SupplierSearchDeletePublisherPlugin`
-2. Map the storage publish queue to the Storage publisher plugins: `SupplierStorageWritePublisherPlugin` and `SupplierStorageDeletePublisherPlugin`
+1. Map the search publish queue to the Search publisher plugins: `SupplierSearchWritePublisherPlugin`, `SupplierSearchDeletePublisherPlugin` and `SupplierLocationSearchWritePublisherPlugin`
+2. Map the storage publish queue to the Storage publisher plugins: `SupplierStorageWritePublisherPlugin`, `SupplierStorageDeletePublisherPlugin` and `SupplierLocationStorageWritePublisherPlugin`
 3. `getPublisherPlugins()` already merges them with the project's plugins
 
 > **The delete plugins are provided.** `SupplierSearchDeletePublisherPlugin` and `SupplierStorageDeletePublisherPlugin` subscribe to `Entity.pyz_supplier.delete`. The write plugins only handle create and update, so without them a supplier deleted in the Back Office would stay in Elasticsearch and Redis - and keep showing up in the Glue API and in Yves. Read them after Part 7: same Plugin → Facade → Factory → `SupplierSearchDeleter` chain as the write side, ending in `SupplierSearchEntityManager::deleteSupplierSearchesBySupplierIds()`. It deletes the rows **one entity at a time**: a bulk `->delete()` on the query skips the Propel behaviors, and the synchronization behavior is what sends the delete on to Elasticsearch / Redis.
+
+> **The supplier-location plugins are provided.** A supplier's locations are published inside the supplier's document (see [Publishing Related Data](#publishing-related-data-the-supplier-locations)). `SupplierLocationSearchWritePublisherPlugin` and `SupplierLocationStorageWritePublisherPlugin` subscribe to `Entity.pyz_supplier_location.create`, `.update` and `.delete` and republish the supplier of the changed location.
 
 > **Queue routing:** By specifying the queue as the array key, you tell the system: "put events for these plugins on this queue." If no key is specified, events go to the default publish queue.
 
@@ -245,13 +247,46 @@ The writer is the core business logic. It processes a batch of events in bulk.
 
 Open `src/SprykerAcademy/Zed/SupplierSearch/Business/Writer/SupplierSearchWriter.php`. The skeleton has the iteration logic. You need to fill in the data-loading methods:
 
-1. Create a `SupplierCriteriaTransfer`, populate it with the supplier IDs, and use the `SupplierFacade` to load supplier entities
+1. Create a `SupplierCriteriaTransfer`, populate it with the supplier IDs and `setWithSupplierLocations(true)`, and use the `SupplierFacade` to load supplier entities
 2. Create a `SupplierSearchCriteriaTransfer`, populate it with the same IDs, and use the Repository to load existing search records
 3. The rest of the loop (create/update per supplier) is provided
 
 > **Bulk processing:** Loading all suppliers in one query is critical. The writer receives an array of events (potentially hundreds) — doing one query per event would be extremely slow.
 
 Apply the same pattern to `SupplierStorageWriter`.
+
+#### Publishing Related Data: the Supplier Locations
+
+A storefront that shows a supplier needs its locations too (`pyz_supplier_location`, imported in Exercise 8). The storefront cannot join tables: whatever it shows has to be **in the published document**. So the supplier document carries its locations:
+
+```json
+{
+  "id_supplier": 1,
+  "name": "Acme Supplies",
+  "supplier_locations": [
+    { "id_supplier_location": 1, "fk_supplier": 1, "city": "New York", "country": "USA", "address": "123 Broadway Ave", "zip_code": "10001", "is_default": true },
+    { "id_supplier_location": 2, "fk_supplier": 1, "city": "Los Angeles", "country": "USA", "address": "456 Sunset Blvd", "zip_code": "90028", "is_default": false }
+  ]
+}
+```
+
+Two things make that work:
+
+| What | Where |
+|---|---|
+| **The document contains the locations.** With `SupplierCriteriaTransfer.withSupplierLocations`, `SupplierFacade::getSuppliers()` fills `SupplierTransfer.supplierLocations` - with one query for the locations of all suppliers of the batch. The writer's `$supplierTransfer->toArray()` then includes them. | `SupplierReader::expandSuppliersWithSupplierLocations()` (provided), your `setWithSupplierLocations(true)` in both writers |
+| **A change of a location republishes its supplier.** A location has no document of its own, so its events must lead to the supplier. `pyz_supplier_location` has the event behavior; the event of a row carries the row's foreign keys, and the writer reads the supplier id from `pyz_supplier_location.fk_supplier`. | `SupplierLocation*WritePublisherPlugin`, `writeCollectionBySupplierLocationEvents()` (provided) |
+
+```php
+$supplierIds = $this->eventBehaviorFacade->getEventTransferForeignKeys(
+    $eventEntityTransfers,
+    SupplierSearchConfig::COL_SUPPLIER_LOCATION_FK_SUPPLIER, // 'pyz_supplier_location.fk_supplier'
+);
+```
+
+> **This is the standard pattern for related data.** The core publishes product prices, images and categories the same way: the related table fires its own events, and a publisher plugin maps them to the id of the document that has to be rewritten - `getEventTransferIds()` for the entity itself, `getEventTransferForeignKeys()` for a related entity.
+
+Exercise 12 uses these published locations: the Storefront API returns them with `GET /suppliers?include=supplier-locations`.
 
 #### 7.2 Provide Module Dependencies
 
@@ -297,6 +332,8 @@ Open `src/SprykerAcademy/Zed/SupplierDataImport/Business/DataImportStep/Supplier
 - Once for storage (using `SupplierStorageConfig::SUPPLIER_PUBLISH`)
 
 Pass the supplier ID as the second parameter.
+
+> `SupplierLocationWriterStep` (provided) does the same for an imported location: it queues the two publish events **for the location's supplier**, so the supplier document is rewritten with the new location.
 
 ---
 

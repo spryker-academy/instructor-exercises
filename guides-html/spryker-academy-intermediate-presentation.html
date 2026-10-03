@@ -621,7 +621,8 @@ $services->load('SprykerAcademy\\Zed\\', '../../src/SprykerAcademy/Zed/');</code
       <tr><td>Resource files</td><td><code>resources/api/storefront/</code></td><td><code>resources/api/backend/</code></td></tr>
     </table>
     <ul>
-      <li>The Storefront API never queries the database</li>
+      <li>The Storefront API never queries the database: it can only return what Publish &amp; Synchronize published</li>
+      <li>Supplier locations: published inside the supplier document (Storefront), read from <code>pyz_supplier_location</code> (Backend)</li>
       <li>Same resource name in both directories = two resources, two providers</li>
     </ul>
   </section>
@@ -699,7 +700,7 @@ $resources[0]->pagination = SuppliersPaginationStorefrontObject::fromArray(
   <section>
     <h3>Includes: Related Resources in One Request</h3>
     <pre><code>GET /suppliers?include=supplier-locations</code></pre>
-    <pre><code class="language-yaml"># resources/api/backend/suppliers.resource.yml
+    <pre><code class="language-yaml"># resources/api/storefront/suppliers.resource.yml and resources/api/backend/suppliers.resource.yml
     includes:
         - relationshipName: supplier-locations   # the value of ?include=
           targetResource: SupplierLocations      # `name` of the related resource

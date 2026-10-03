@@ -439,12 +439,15 @@ Insert/Update pyz_*_search/storage</code></pre>
 <span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    ]<span class="ot">,</span></span>
 <span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>]<span class="ot">;</span></span></code></pre></div>
 <ol type="1">
-<li>Map the search publish queue to the Search publisher plugins: <code>SupplierSearchWritePublisherPlugin</code> and <code>SupplierSearchDeletePublisherPlugin</code></li>
-<li>Map the storage publish queue to the Storage publisher plugins: <code>SupplierStorageWritePublisherPlugin</code> and <code>SupplierStorageDeletePublisherPlugin</code></li>
+<li>Map the search publish queue to the Search publisher plugins: <code>SupplierSearchWritePublisherPlugin</code>, <code>SupplierSearchDeletePublisherPlugin</code> and <code>SupplierLocationSearchWritePublisherPlugin</code></li>
+<li>Map the storage publish queue to the Storage publisher plugins: <code>SupplierStorageWritePublisherPlugin</code>, <code>SupplierStorageDeletePublisherPlugin</code> and <code>SupplierLocationStorageWritePublisherPlugin</code></li>
 <li><code>getPublisherPlugins()</code> already merges them with the project’s plugins</li>
 </ol>
 <blockquote>
 <p><strong>The delete plugins are provided.</strong> <code>SupplierSearchDeletePublisherPlugin</code> and <code>SupplierStorageDeletePublisherPlugin</code> subscribe to <code>Entity.pyz_supplier.delete</code>. The write plugins only handle create and update, so without them a supplier deleted in the Back Office would stay in Elasticsearch and Redis - and keep showing up in the Glue API and in Yves. Read them after Part 7: same Plugin → Facade → Factory → <code>SupplierSearchDeleter</code> chain as the write side, ending in <code>SupplierSearchEntityManager::deleteSupplierSearchesBySupplierIds()</code>. It deletes the rows <strong>one entity at a time</strong>: a bulk <code>-&gt;delete()</code> on the query skips the Propel behaviors, and the synchronization behavior is what sends the delete on to Elasticsearch / Redis.</p>
+</blockquote>
+<blockquote>
+<p><strong>The supplier-location plugins are provided.</strong> A supplier’s locations are published inside the supplier’s document (see <a href="#publishing-related-data-the-supplier-locations">Publishing Related Data</a>). <code>SupplierLocationSearchWritePublisherPlugin</code> and <code>SupplierLocationStorageWritePublisherPlugin</code> subscribe to <code>Entity.pyz_supplier_location.create</code>, <code>.update</code> and <code>.delete</code> and republish the supplier of the changed location.</p>
 </blockquote>
 <blockquote>
 <p><strong>Queue routing:</strong> By specifying the queue as the array key, you tell the system: “put events for these plugins on this queue.” If no key is specified, events go to the default publish queue.</p>
@@ -470,7 +473,7 @@ Insert/Update pyz_*_search/storage</code></pre>
 <p><strong>Coding time:</strong></p>
 <p>Open <code>src/SprykerAcademy/Zed/SupplierSearch/Business/Writer/SupplierSearchWriter.php</code>. The skeleton has the iteration logic. You need to fill in the data-loading methods:</p>
 <ol type="1">
-<li>Create a <code>SupplierCriteriaTransfer</code>, populate it with the supplier IDs, and use the <code>SupplierFacade</code> to load supplier entities</li>
+<li>Create a <code>SupplierCriteriaTransfer</code>, populate it with the supplier IDs and <code>setWithSupplierLocations(true)</code>, and use the <code>SupplierFacade</code> to load supplier entities</li>
 <li>Create a <code>SupplierSearchCriteriaTransfer</code>, populate it with the same IDs, and use the Repository to load existing search records</li>
 <li>The rest of the loop (create/update per supplier) is provided</li>
 </ol>
@@ -478,6 +481,47 @@ Insert/Update pyz_*_search/storage</code></pre>
 <p><strong>Bulk processing:</strong> Loading all suppliers in one query is critical. The writer receives an array of events (potentially hundreds) — doing one query per event would be extremely slow.</p>
 </blockquote>
 <p>Apply the same pattern to <code>SupplierStorageWriter</code>.</p>
+<h4 id="publishing-related-data-the-supplier-locations">Publishing Related Data: the Supplier Locations</h4>
+<p>A storefront that shows a supplier needs its locations too (<code>pyz_supplier_location</code>, imported in Exercise 8). The storefront cannot join tables: whatever it shows has to be <strong>in the published document</strong>. So the supplier document carries its locations:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;id_supplier&quot;</span><span class="fu">:</span> <span class="dv">1</span><span class="fu">,</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;Acme Supplies&quot;</span><span class="fu">,</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;supplier_locations&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span> <span class="dt">&quot;id_supplier_location&quot;</span><span class="fu">:</span> <span class="dv">1</span><span class="fu">,</span> <span class="dt">&quot;fk_supplier&quot;</span><span class="fu">:</span> <span class="dv">1</span><span class="fu">,</span> <span class="dt">&quot;city&quot;</span><span class="fu">:</span> <span class="st">&quot;New York&quot;</span><span class="fu">,</span> <span class="dt">&quot;country&quot;</span><span class="fu">:</span> <span class="st">&quot;USA&quot;</span><span class="fu">,</span> <span class="dt">&quot;address&quot;</span><span class="fu">:</span> <span class="st">&quot;123 Broadway Ave&quot;</span><span class="fu">,</span> <span class="dt">&quot;zip_code&quot;</span><span class="fu">:</span> <span class="st">&quot;10001&quot;</span><span class="fu">,</span> <span class="dt">&quot;is_default&quot;</span><span class="fu">:</span> <span class="kw">true</span> <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span> <span class="dt">&quot;id_supplier_location&quot;</span><span class="fu">:</span> <span class="dv">2</span><span class="fu">,</span> <span class="dt">&quot;fk_supplier&quot;</span><span class="fu">:</span> <span class="dv">1</span><span class="fu">,</span> <span class="dt">&quot;city&quot;</span><span class="fu">:</span> <span class="st">&quot;Los Angeles&quot;</span><span class="fu">,</span> <span class="dt">&quot;country&quot;</span><span class="fu">:</span> <span class="st">&quot;USA&quot;</span><span class="fu">,</span> <span class="dt">&quot;address&quot;</span><span class="fu">:</span> <span class="st">&quot;456 Sunset Blvd&quot;</span><span class="fu">,</span> <span class="dt">&quot;zip_code&quot;</span><span class="fu">:</span> <span class="st">&quot;90028&quot;</span><span class="fu">,</span> <span class="dt">&quot;is_default&quot;</span><span class="fu">:</span> <span class="kw">false</span> <span class="fu">}</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>Two things make that work:</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>What</th>
+<th>Where</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>The document contains the locations.</strong> With <code>SupplierCriteriaTransfer.withSupplierLocations</code>, <code>SupplierFacade::getSuppliers()</code> fills <code>SupplierTransfer.supplierLocations</code> - with one query for the locations of all suppliers of the batch. The writer’s <code>$supplierTransfer-&gt;toArray()</code> then includes them.</td>
+<td><code>SupplierReader::expandSuppliersWithSupplierLocations()</code> (provided), your <code>setWithSupplierLocations(true)</code> in both writers</td>
+</tr>
+<tr class="even">
+<td><strong>A change of a location republishes its supplier.</strong> A location has no document of its own, so its events must lead to the supplier. <code>pyz_supplier_location</code> has the event behavior; the event of a row carries the row’s foreign keys, and the writer reads the supplier id from <code>pyz_supplier_location.fk_supplier</code>.</td>
+<td><code>SupplierLocation*WritePublisherPlugin</code>, <code>writeCollectionBySupplierLocationEvents()</code> (provided)</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb9"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="va">$supplierIds</span> <span class="op">=</span> <span class="va">$this</span>-&gt;eventBehaviorFacade-&gt;getEventTransferForeignKeys(</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    <span class="va">$eventEntityTransfers</span><span class="ot">,</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="cn">S</span>upplierSearchConfig::<span class="cn">COL_SUPPLIER_LOCATION_FK_SUPPLIER</span><span class="ot">,</span> <span class="co">// &#39;pyz_supplier_location.fk_supplier&#39;</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>)<span class="ot">;</span></span></code></pre></div>
+<blockquote>
+<p><strong>This is the standard pattern for related data.</strong> The core publishes product prices, images and categories the same way: the related table fires its own events, and a publisher plugin maps them to the id of the document that has to be rewritten - <code>getEventTransferIds()</code> for the entity itself, <code>getEventTransferForeignKeys()</code> for a related entity.</p>
+</blockquote>
+<p>Exercise 12 uses these published locations: the Storefront API returns them with <code>GET /suppliers?include=supplier-locations</code>.</p>
 <h4 id="provide-module-dependencies">7.2 Provide Module Dependencies</h4>
 <p><strong>Coding time:</strong></p>
 <p>Open <code>src/SprykerAcademy/Zed/SupplierSearch/SupplierSearchDependencyProvider.php</code>:</p>
@@ -505,6 +549,9 @@ Insert/Update pyz_*_search/storage</code></pre>
 <p><strong>Coding time:</strong></p>
 <p>Open <code>src/SprykerAcademy/Zed/SupplierDataImport/Business/DataImportStep/SupplierWriterStep.php</code>. The step extends <code>PublishAwareStep</code> which provides <code>addPublishEvents()</code>. After saving a supplier entity (inside the <code>isNew() || isModified()</code> condition), call it twice: - Once for search (using <code>SupplierSearchConfig::SUPPLIER_PUBLISH</code>) - Once for storage (using <code>SupplierStorageConfig::SUPPLIER_PUBLISH</code>)</p>
 <p>Pass the supplier ID as the second parameter.</p>
+<blockquote>
+<p><code>SupplierLocationWriterStep</code> (provided) does the same for an imported location: it queues the two publish events <strong>for the location’s supplier</strong>, so the supplier document is rewritten with the new location.</p>
+</blockquote>
 <hr />
 <h2 id="the-complete-flow">The Complete Flow</h2>
 <p>After implementing all parts, here’s what happens when a supplier is created or imported:</p>
@@ -538,7 +585,7 @@ Insert/Update pyz_*_search/storage</code></pre>
 <h2 id="testing-the-flow">Testing the Flow</h2>
 <h3 id="setup-ensure-queues-and-exchanges-exist">Setup: Ensure Queues and Exchanges Exist</h3>
 <p>After registering queues in the config files, you must create the AMQP infrastructure (queues, exchanges, bindings) in RabbitMQ:</p>
-<div class="sourceCode" id="cb10"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console messenger:setup-transports</span></code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console messenger:setup-transports</span></code></pre></div>
 <p>This reads the <code>SymfonyMessengerConfig::getQueueConfiguration()</code> and creates the corresponding AMQP exchanges and queues. <strong>Without this step, messages are silently dropped</strong> because the Symfony Messenger transport has no exchange to route them through.</p>
 <blockquote>
 <p><strong>Three config classes are involved:</strong> Queues must be registered in: 1. <code>SymfonyMessengerConfig</code> — Symfony Messenger transport routing (Part 2) 2. <code>RabbitMqConfig</code> — AMQP queue declaration (provided in <code>src/SprykerAcademy/Client/RabbitMq</code>) 3. <code>QueueDependencyProvider</code> — queue message processors (Part 3)</p>
@@ -548,19 +595,19 @@ Insert/Update pyz_*_search/storage</code></pre>
 <h3 id="test-the-flow">Test the Flow</h3>
 <ol type="1">
 <li><p>Add a new supplier to the CSV and import:</p>
-<div class="sourceCode" id="cb11"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console data:import supplier <span class="at">--config</span><span class="op">=</span>data/import/local/supplier_import.yml</span></code></pre></div>
+<div class="sourceCode" id="cb13"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console data:import supplier <span class="at">--config</span><span class="op">=</span>data/import/local/supplier_import.yml</span></code></pre></div>
 <p>Only new or changed rows fire publish events. To republish every supplier to search and storage, for example after you emptied the index, use <code>docker/sdk console publish:trigger-events -r supplier</code>.</p></li>
 <li><p>Process the event queue first (routes events to publish queues):</p>
-<div class="sourceCode" id="cb12"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console queue:worker:start <span class="at">--stop-when-empty</span></span></code></pre></div></li>
+<div class="sourceCode" id="cb14"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console queue:worker:start <span class="at">--stop-when-empty</span></span></code></pre></div></li>
 <li><p>Process again (handles publish → search/storage tables → sync queues → Elasticsearch/Redis):</p>
-<div class="sourceCode" id="cb13"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console queue:worker:start <span class="at">--stop-when-empty</span></span></code></pre></div>
+<div class="sourceCode" id="cb15"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> console queue:worker:start <span class="at">--stop-when-empty</span></span></code></pre></div>
 <p>You may need to run the worker multiple times — the first run processes publish events (writes to intermediate tables), the second processes sync events (pushes to Elasticsearch/Redis).</p></li>
 <li><p>Check the intermediate tables using any DB client (credentials in <code>deploy.dev.yml</code>):</p>
-<div class="sourceCode" id="cb14"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="fu">count</span>(<span class="op">*</span>) <span class="kw">FROM</span> pyz_supplier_search;</span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="fu">count</span>(<span class="op">*</span>) <span class="kw">FROM</span> pyz_supplier_storage;</span></code></pre></div></li>
+<div class="sourceCode" id="cb16"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="fu">count</span>(<span class="op">*</span>) <span class="kw">FROM</span> pyz_supplier_search;</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="fu">count</span>(<span class="op">*</span>) <span class="kw">FROM</span> pyz_supplier_storage;</span></code></pre></div></li>
 <li><p>Verify Elasticsearch:</p>
-<div class="sourceCode" id="cb15"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-s</span> <span class="st">&#39;localhost:9200/_search&#39;</span> <span class="at">-H</span> <span class="st">&#39;Content-type: application/json&#39;</span> <span class="dt">\</span></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-d</span> <span class="st">&#39;{&quot;query&quot;:{&quot;exists&quot;:{&quot;field&quot;:&quot;id_supplier&quot;}}}&#39;</span></span></code></pre></div></li>
+<div class="sourceCode" id="cb17"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-s</span> <span class="st">&#39;localhost:9200/_search&#39;</span> <span class="at">-H</span> <span class="st">&#39;Content-type: application/json&#39;</span> <span class="dt">\</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-d</span> <span class="st">&#39;{&quot;query&quot;:{&quot;exists&quot;:{&quot;field&quot;:&quot;id_supplier&quot;}}}&#39;</span></span></code></pre></div></li>
 <li><p>Creating a supplier via the Back Office also triggers P&amp;S automatically (via the event behavior) — no manual queue processing needed if the scheduler is running.</p></li>
 </ol>
 <h3 id="troubleshooting">Troubleshooting</h3>
@@ -572,9 +619,9 @@ Insert/Update pyz_*_search/storage</code></pre>
 </ul>
 <hr />
 <h2 id="run-automated-tests">Run Automated Tests</h2>
-<div class="sourceCode" id="cb16"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/Supplier/ PublishSync</span></code></pre></div>
+<div class="sourceCode" id="cb18"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/Supplier/ PublishSync</span></code></pre></div>
 <hr />
 <h2 id="solution">Solution</h2>
-<div class="sourceCode" id="cb17"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> supplier intermediate/publish-synchronize/complete <span class="at">--run</span></span></code></pre></div>
+<div class="sourceCode" id="cb19"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> supplier intermediate/publish-synchronize/complete <span class="at">--run</span></span></code></pre></div>
 </body>
 </html>

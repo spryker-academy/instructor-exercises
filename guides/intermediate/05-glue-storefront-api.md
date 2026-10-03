@@ -10,11 +10,11 @@ You will learn how to:
 - Handle both Get (single) and GetCollection (list) operations
 - Tell the Storefront API (published data) from the Backend API (the database, through a facade)
 - Page through a collection with `page[offset]` and `page[limit]`
-- Declare a relationship, so that `?include=supplier-locations` returns the locations of a supplier
+- Declare a relationship, so that `?include=supplier-locations` returns the locations of a supplier - on both APIs
 
 | API | Host | Reads from | Endpoints of this exercise |
 |-----|------|-----------|----------------------------|
-| Storefront | `glue.eu.spryker.local` | Elasticsearch, through the `SupplierSearch` client | `/suppliers`, `/suppliers/{idSupplier}` |
+| Storefront | `glue.eu.spryker.local` | Elasticsearch, through the `SupplierSearch` client | `/suppliers`, `/suppliers/{idSupplier}`, `/suppliers/{idSupplier}/supplier-locations`, `/suppliers/{idSupplier}/supplier-locations/{idSupplierLocation}` |
 | Backend | `glue-backend.eu.spryker.local` | The database, through the `Supplier` facade | `/suppliers`, `/suppliers/{idSupplier}`, `/suppliers/{idSupplier}/supplier-locations`, `/supplier-locations/{idSupplierLocation}` |
 
 ## Prerequisites
@@ -131,7 +131,9 @@ Spryker 202512.0+ introduces **API Platform** as the recommended approach for bu
 | Provider base class | `AbstractStorefrontProvider` | `AbstractBackendProvider` |
 | Resource files | `resources/api/storefront/` | `resources/api/backend/` |
 
-The Storefront API never queries the database: it scales with the storefront and serves what Publish & Synchronize put into Redis and Elasticsearch. The Backend API runs next to Zed and works on the source data. That is why the locations of a supplier are available in the Backend API of this exercise only: they are in the database, but nothing publishes them.
+The Storefront API never queries the database: it scales with the storefront and serves what Publish & Synchronize put into Redis and Elasticsearch. The Backend API runs next to Zed and works on the source data.
+
+Both APIs of this exercise return the locations of a supplier, and each takes them from its own source: the Storefront API from the supplier's search document (Exercise 10 publishes the locations inside it), the Backend API from the `pyz_supplier_location` table.
 
 **API Platform flow:**
 
@@ -159,7 +161,7 @@ Open `src/SprykerAcademy/Glue/Supplier/resources/api/storefront/suppliers.resour
 1. Add the `provider` field pointing to the full class name of the Provider class
 2. Add the resource properties: `name` (string), `description` (string), `status` (int), `email` (string), `phone` (string)
 
-The skeleton already has the resource name, operations (Get + GetCollection), pagination config, the `idSupplier` identifier property and the `pagination` property (see [Pagination](#pagination-pageoffset-and-pagelimit)).
+The skeleton already has the resource name, operations (Get + GetCollection), pagination config, the `idSupplier` identifier property and the `pagination` property (see [Pagination](#pagination-pageoffset-and-pagelimit)). Leave TODO-3 (the include) for Part 6.
 
 > **Resource YAML structure:**
 > - `provider:` — full class name of the PHP Provider that handles requests
@@ -221,7 +223,7 @@ Three places work together:
 
 > **Never load everything and slice it in PHP.** `array_slice()` over all suppliers returns the right page, but the database or Elasticsearch still delivers every row for every request. Pass the offset and the limit down to the data source.
 
-> **Why not API Platform's own paginator?** API Platform can page with `?page=2&itemsPerPage=10` when a provider returns a `PaginatorInterface` object. Spryker's relationship handling (`?include=`, Part 6) only works on a plain array, so a provider that returns a paginator loses its includes. Spryker's own resources (orders, catalog search) use the convention shown here.
+> **Why not API Platform's `PaginatorInterface`?** API Platform itself has a paginator object (`TraversablePaginator`, `?page=2&itemsPerPage=10`). Spryker's API Platform module does not use it: no core provider returns one, and its relationship handling (`?include=`, Part 6) resolves includes only for a single resource or a plain array - a provider that returns a paginator silently loses its includes. Spryker's own resources (orders, returns, catalog search, CMS pages) page as shown here, with the helpers of the abstract providers.
 
 ---
 
@@ -229,7 +231,7 @@ Three places work together:
 
 The Mapper converts internal `SupplierTransfer` objects to generated `SuppliersStorefrontResource` objects.
 
-Open `src/SprykerAcademy/Glue/Supplier/Processor/Mapper/SupplierMapper.php` and review how it maps transfers to API resources. Note `toArray(false, true)`: the generated resource reads camel-cased keys (`idSupplier`), while `toArray()` without arguments returns snake_case (`id_supplier`) - the resource would miss its identifier and API Platform could not build the links.
+Open `src/SprykerAcademy/Glue/Supplier/Processor/Mapper/SupplierMapper.php` and review how it maps transfers to API resources. It removes `supplierLocations` before filling the supplier resource: the include of Part 6 gives the generated resource a `supplierLocations` property of its own, which Glue fills with the related resources when a client asks for them. Note `toArray(false, true)`: the generated resource reads camel-cased keys (`idSupplier`), while `toArray()` without arguments returns snake_case (`id_supplier`) - the resource would miss its identifier and API Platform could not build the links.
 
 > **Generated Resource classes:** API Platform generates PHP classes from the YAML properties. These classes have `fromArray()` and expose the properties defined in the YAML. The Mapper bridges the internal domain model (Transfer) to the API model (Resource).
 
@@ -363,18 +365,26 @@ GET /suppliers?include=supplier-locations
 
 The response then has a `relationships` entry per supplier and the locations in a top-level `included` list. Without `?include=`, the response stays small.
 
-In Spryker's API Platform a relationship is declared in the YAML of the resource that offers it. It names a **target resource**; Glue asks that resource's provider for the related items.
+In Spryker's API Platform a relationship is declared in the YAML of the resource that offers it. It names a **target resource**; Glue asks that resource's provider for the related items. You build it twice, once per API:
 
-**Coding time:**
+| | Storefront API | Backend API |
+|---|---|---|
+| Target resource | `resources/api/storefront/supplier-locations.resource.yml` | `resources/api/backend/supplier-locations.resource.yml` |
+| Its provider | `SupplierLocationsStorefrontProvider` | `SupplierLocationsBackendProvider` |
+| Where the locations come from | The supplier's search document: `findSupplierById()->getSupplierLocations()` | The database: `SupplierFacade::getSupplierLocationCollection()` |
+| One location | `/suppliers/{idSupplier}/supplier-locations/{idSupplierLocation}` | `/supplier-locations/{idSupplierLocation}` |
 
-1. Review `src/SprykerAcademy/Glue/Supplier/resources/api/backend/supplier-locations.resource.yml`: the `SupplierLocations` resource. Its collection lives under its supplier (`/suppliers/{idSupplier}/supplier-locations`), a single location has its own URL (`/supplier-locations/{idSupplierLocation}`).
+**Coding time - Storefront API:**
 
-2. Open `src/SprykerAcademy/Glue/Supplier/Api/Backend/Provider/SupplierLocationsBackendProvider.php` and implement `provide()`:
-   - With `idSupplierLocation` in `$uriVariables`: load that location (criteria `setIdSupplierLocation()`), return the first resource or `null`
+1. Review `src/SprykerAcademy/Glue/Supplier/resources/api/storefront/supplier-locations.resource.yml`: the `SupplierLocations` resource. Both URLs name the supplier, because a location is only reachable through its supplier's document.
+
+2. Open `src/SprykerAcademy/Glue/Supplier/Api/Storefront/Provider/SupplierLocationsStorefrontProvider.php` and implement `provide()`:
    - Without `idSupplier` in `$uriVariables`: return an empty array
-   - Otherwise: return the locations of that supplier (criteria `setFkSupplier()`)
+   - Load the supplier with `findSupplierById()`; map every transfer of `getSupplierLocations()` with `SupplierMapper::mapSupplierLocationTransferToSupplierLocationsStorefrontResource()`
+   - With `idSupplierLocation` in `$uriVariables`: return the resource with that id, or `null`
+   - Otherwise: return the array of resources
 
-3. In `resources/api/backend/suppliers.resource.yml`, add the relationship (TODO-2):
+3. In `resources/api/storefront/suppliers.resource.yml`, add the relationship (TODO-3):
 
 ```yaml
     includes:
@@ -390,13 +400,38 @@ In Spryker's API Platform a relationship is declared in the YAML of the resource
 | `relationshipName` | The value of `?include=` and the key in `relationships` |
 | `targetResource` | The `name` of the related resource's YAML (`SupplierLocations`), not its file name or URL |
 | `uriTemplate` | The collection URL of the target resource |
-| `uriVariableMappings` | `<URI variable of the target provider>: <property of this resource>`. For every supplier of the response Glue calls `SupplierLocationsBackendProvider::provide()` with `['idSupplier' => <the supplier's idSupplier>]` |
+| `uriVariableMappings` | `<URI variable of the target provider>: <property of this resource>`. For every supplier of the response Glue calls the locations provider with `['idSupplier' => <the supplier's idSupplier>]` |
 
-> **One provider, three uses.** `SupplierLocationsBackendProvider` answers `GET /suppliers/6/supplier-locations`, `GET /supplier-locations/7` and the include. For the include there is no HTTP request to the locations URL: Glue calls the provider directly with the mapped URI variables.
+4. Generate, clear the cache and test:
 
-> **One query per supplier.** With `uriVariableMappings` Glue calls the target provider once for every supplier of the page: a page of 10 suppliers runs 10 location queries. That is bounded by the page size, and fine here. For larger pages, implement `Spryker\ApiPlatform\Provider\BatchLoadableProviderInterface` in the target provider (Glue then calls it once, with all suppliers' URI variables in `$uriVariables['_batch_data']`), or write a `resolverClass` that implements `PerItemRelationshipResolverInterface`.
+```bash
+docker/sdk cli GLUE_APPLICATION=GLUE glue api:generate storefront
+docker/sdk cli GLUE_APPLICATION=GLUE glue cache:clear
+
+curl -s -g 'http://glue.eu.spryker.local/suppliers?page[limit]=2&include=supplier-locations' \
+  -H 'Accept: application/vnd.api+json' | python3 -m json.tool
+curl -s 'http://glue.eu.spryker.local/suppliers/1/supplier-locations' \
+  -H 'Accept: application/vnd.api+json' | python3 -m json.tool
+```
+
+**Coding time - Backend API:**
+
+1. Review `src/SprykerAcademy/Glue/Supplier/resources/api/backend/supplier-locations.resource.yml`. Its collection lives under its supplier (`/suppliers/{idSupplier}/supplier-locations`), a single location has its own URL (`/supplier-locations/{idSupplierLocation}`): the database finds a location by its id alone.
+
+2. Open `src/SprykerAcademy/Glue/Supplier/Api/Backend/Provider/SupplierLocationsBackendProvider.php` and implement `provide()`:
+   - With `idSupplierLocation` in `$uriVariables`: load that location (criteria `setIdSupplierLocation()`), return the first resource or `null`
+   - Without `idSupplier` in `$uriVariables`: return an empty array
+   - Otherwise: return the locations of that supplier (criteria `setFkSupplier()`)
+
+3. In `resources/api/backend/suppliers.resource.yml`, add the same `includes` block (TODO-2).
+
+> **One provider, three uses.** A locations provider answers the collection URL, the single-location URL and the include. For the include there is no HTTP request to the locations URL: Glue calls the provider directly with the mapped URI variables.
+
+> **One call per supplier.** With `uriVariableMappings` Glue calls the target provider once for every supplier of the page: a page of 10 suppliers runs 10 lookups. That is bounded by the page size, and fine here. Two ways to avoid it: implement `Spryker\ApiPlatform\Provider\BatchLoadableProviderInterface` in the target provider (Glue then calls it once, with all suppliers' URI variables in `$uriVariables['_batch_data']`), or write a `resolverClass` that implements `PerItemRelationshipResolverInterface` and builds the related resources from data the parent resource already has - as the core does for `order-items`.
 
 > **An include needs an array.** Glue resolves relationships only when the provider returns one resource or a plain array of resources. That is why `provideCollection()` returns an array and carries the pagination in a property.
+
+> **The include adds a property.** `api:generate` gives the supplier resource a `supplierLocations` property for the relationship. That is why the mappers do not copy `SupplierTransfer.supplierLocations` into the resource.
 
 ---
 
@@ -547,6 +582,8 @@ API Platform endpoints are built from three things that live in different places
 | The Backend API answers that `404` although `glue debug:router` lists the route | The request failed inside API Platform and Glue fell back to its own "not found". Typical: a legacy Storefront REST plugin ran in the Backend API | Read the log of the `gluebackend_eu` container. The branch ships `src/SprykerAcademy/Glue/GlueApplication/GlueApplicationDependencyProvider.php`, which keeps the Storefront plugins out of the Backend API: run `docker/sdk console c:e` and `glue cache:clear` if it is not picked up |
 | `?include=supplier-locations` is ignored: no `relationships`, no `included` | The `includes` block is missing or the resources were not regenerated; `relationshipName` differs from the value in the URL; or the provider returns something other than a resource or a plain array | Check the YAML, `api:generate backend`, `cache:clear`; return an array from `provideCollection()` |
 | `included` is empty, `relationships` too | `uriVariableMappings` names a property the supplier resource does not have, or the locations provider ignores `$uriVariables['idSupplier']` | `idSupplier: idSupplier`; filter with `setFkSupplier()` |
+| The Storefront include is empty, the Backend one is not | The search documents were published before the locations were part of them, or `setWithSupplierLocations(true)` is missing in `SupplierSearchWriter` (Exercise 10) | `docker/sdk console publish:trigger-events -r supplier`, `docker/sdk console queue:worker:start --stop-when-empty`; check a document with `curl -s 'localhost:9200/<store>_supplier/_search?size=1'` |
+| `500`: *Cannot assign ArrayObject to property ...Resource::$supplierLocations of type array* | The mapper copies `SupplierTransfer.supplierLocations` into the resource; that property belongs to the include | Remove the key before `fromArray()`, as the provided mappers do |
 | `500`: *Unable to generate an IRI for the item of type ...SupplierLocationsBackendResource* | The resource has no Get operation API Platform can build a link from | Keep the `Get` operation with `uriTemplate: /supplier-locations/{idSupplierLocation}` |
 | A change is not there right after `api:generate` + `cache:clear` | The generated files had not reached the Glue container yet when its cache was rebuilt (file sync of the Docker SDK) | Run `glue cache:clear` once more |
 
@@ -596,6 +633,7 @@ Everything is defined in YAML + one Provider class + service registration in `Ap
 
 - The provider passes `page[offset]` and `page[limit]` to the data source, returns the page as a plain array and sets `pagination` on its first item; Glue adds the page links.
 - `includes` in the resource YAML + a target resource with its own provider = `?include=<relationshipName>`.
+- The Storefront API can only include what Publish & Synchronize published; the Backend API reads the related table.
 
 ### Provider Pattern
 
