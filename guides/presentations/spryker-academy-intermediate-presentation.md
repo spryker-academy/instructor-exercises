@@ -12,18 +12,18 @@ Namespace: `SprykerAcademy\` \| Module: `Supplier`
 
 ## Agenda
 
-| \#  | Exercise                    | Key Concepts                                                 |
-|-----|-----------------------------|--------------------------------------------------------------|
-| 8   | Data Import                 | CSV, WriterSteps, DataSetStepBroker, Plugins                 |
-| 9   | Back Office                 | Tables, Forms, CRUD Controllers, Gui module                  |
-| 10  | Publish & Synchronize       | Events, Publishers, Queues, Elasticsearch/Redis              |
-| 11  | Search                      | Query Plugins, Result Formatters, SearchClient               |
-| 12  | Glue Storefront API         | API Platform, Providers, Resource YAML                       |
-| 13  | OMS                         | State Machine, Commands, Conditions, Events                  |
-| 14  | Storage Client              | Redis, StorageClient, Key Generation, SynchronizationService |
-| 15  | Merchant Portal — Table     | GuiTable, DataProvider, Angular Web Components, ACL          |
-| 16  | Merchant Portal — Form      | Drawer Forms, ZedUI Actions, Symfony Forms                   |
-| 17  | Merchant Portal — Locations | Editable GuiTable, Nested Tables, DataTransformer            |
+| \#  | Exercise                        | Key Concepts                                                 |
+|-----|---------------------------------|--------------------------------------------------------------|
+| 8   | Data Import                     | CSV, WriterSteps, DataSetStepBroker, Plugins                 |
+| 9   | Back Office                     | Tables, Forms, CRUD Controllers, Gui module                  |
+| 10  | Publish & Synchronize           | Events, Publishers, Queues, Elasticsearch/Redis              |
+| 11  | Search                          | Query Plugins, Result Formatters, SearchClient               |
+| 12  | Glue Storefront and Backend API | API Platform, Providers, Resource YAML, Pagination, Includes |
+| 13  | OMS                             | State Machine, Commands, Conditions, Events                  |
+| 14  | Storage Client                  | Redis, StorageClient, Key Generation, SynchronizationService |
+| 15  | Merchant Portal — Table         | GuiTable, DataProvider, Angular Web Components, ACL          |
+| 16  | Merchant Portal — Form          | Drawer Forms, ZedUI Actions, Symfony Forms                   |
+| 17  | Merchant Portal — Locations     | Editable GuiTable, Nested Tables, DataTransformer            |
 
 > **Prerequisites:** Basics exercises 1-7 completed. Understanding of Facade, Factory, DependencyProvider patterns.
 
@@ -618,11 +618,26 @@ $services->set(SupplierFacadeInterface::class, SupplierFacade::class);
 
 ---
 
-## Exercise 12: Glue Storefront API
+## Exercise 12: Glue Storefront and Backend API
 
 ### REST API with Spryker API Platform
 
-> **Goal:** Expose supplier data through a REST API using Spryker's API Platform
+> **Goal:** Expose supplier data through the Storefront API and the Backend API, with pagination and an include for the supplier locations
+
+---
+
+### Storefront API vs Backend API
+
+|                     | Storefront API                                | Backend API                            |
+|---------------------|-----------------------------------------------|----------------------------------------|
+| Host                | `glue.eu.spryker.local`                       | `glue-backend.eu.spryker.local`        |
+| Who calls it        | Shops, apps, customers                        | ERP, PIM, back-office integrations     |
+| Data source         | Redis and Elasticsearch, through a **Client** | The database, through a **Zed facade** |
+| Provider base class | `AbstractStorefrontProvider`                  | `AbstractBackendProvider`              |
+| Resource files      | `resources/api/storefront/`                   | `resources/api/backend/`               |
+
+-   The Storefront API never queries the database
+-   Same resource name in both directories = two resources, two providers
 
 ---
 
@@ -657,32 +672,78 @@ resource:
 ### Provider Pattern
 
 ```php
-class SuppliersStorefrontProvider implements ProviderInterface
+class SuppliersStorefrontProvider extends AbstractStorefrontProvider
 {
     public function __construct(
-        protected SupplierClientInterface $supplierClient, // auto-wired
+        protected SupplierSearchClientInterface $supplierSearchClient, // auto-wired
     ) {}
 
-    public function provide(
-        Operation $operation,
-        array $uriVariables = [],
-        array $context = [],
-    ): object|array|null {
-        $id = $uriVariables['idSupplier'] ?? null;
+    protected function provideItem(): ?object      // GET /suppliers/{idSupplier}
+    {
+        $id = $this->getUriVariables()['idSupplier'] ?? null;
+        $supplier = $this->supplierSearchClient->findSupplierById((int)$id);
 
-        if ($id === null) {
-            return $this->provideCollection(); // → array = GetCollection
+        if ($supplier->getIdSupplier() === null) {
+            return null;                           // → null = 404
         }
 
-        $supplier = $this->supplierClient->findSupplierById((int)$id);
-        if (!$supplier) {
-            return null;                       // → null = 404
-        }
+        return $this->mapToResource($supplier);    // → object = Get
+    }
 
-        return $this->mapToResource($supplier); // → object = Get
+    protected function provideCollection(): array  // GET /suppliers
+    {
+        // ... one page of suppliers             // → array = GetCollection
     }
 }
 ```
+
+---
+
+### Pagination
+
+```
+GET /suppliers?page[offset]=2&page[limit]=2
+```
+
+```php
+$limit = $this->getPaginationLimit();   // page[limit], default: paginationItemsPerPage
+$offset = $this->getPaginationOffset(); // page[offset], default: 0
+
+$collection = $this->supplierSearchClient->searchSuppliers([
+    SupplierSearchConfig::PARAMETER_OFFSET => $offset,
+    SupplierSearchConfig::PARAMETER_LIMIT => $limit,
+]);
+// ... map the suppliers to resources ...
+
+$resources[0]->pagination = SuppliersPaginationStorefrontObject::fromArray(
+    $this->calculatePagination($offset, $limit, $collection->getPagination()->getNbResults()),
+);
+```
+
+-   The **data source** cuts the page out (Elasticsearch `from`/`size`, SQL `LIMIT`/`OFFSET`) - never `array_slice()` over everything
+-   The first item carries `pagination`; Glue adds the `first`/`prev`/`next`/`last` links
+
+---
+
+### Includes: Related Resources in One Request
+
+```
+GET /suppliers?include=supplier-locations
+```
+
+```yaml
+# resources/api/backend/suppliers.resource.yml
+    includes:
+        - relationshipName: supplier-locations   # the value of ?include=
+          targetResource: SupplierLocations      # `name` of the related resource
+          uriTemplate: /suppliers/{idSupplier}/supplier-locations
+          uriVariableMappings:
+              idSupplier: idSupplier             # target URI variable: property of the supplier
+```
+
+-   Glue calls the **target resource's provider** for every supplier, with the mapped URI variables
+-   Response: `relationships` per supplier + a top-level `included` list
+-   Works on one resource or a plain array - that is why the pagination travels in a property, not in a paginator object
 
 ---
 
@@ -693,6 +754,7 @@ class SuppliersStorefrontProvider implements ProviderInterface
 | `docker/sdk cli GLUE_APPLICATION=GLUE glue api:generate storefront`           | Generate Storefront API resources from YAML |
 | `docker/sdk cli GLUE_APPLICATION=GLUE_BACKEND glue api:generate backend`      | Generate Backend API resources              |
 | `docker/sdk cli GLUE_APPLICATION=GLUE glue cache:clear`                       | Rebuild the Glue cache after every generate |
+| `docker/sdk cli GLUE_APPLICATION=GLUE_BACKEND glue cache:clear`               | The same for the Backend API application    |
 | `docker/sdk cli GLUE_APPLICATION=GLUE glue api:generate --dry-run`            | Preview without writing files               |
 | `docker/sdk cli GLUE_APPLICATION=GLUE glue api:generate --validate-only`      | Validate schemas only                       |
 | `docker/sdk cli GLUE_APPLICATION=GLUE glue api:debug --list`                  | List all registered resources               |

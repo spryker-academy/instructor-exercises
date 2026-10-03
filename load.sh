@@ -285,6 +285,28 @@ setup_project() {
         ' "$services_file" "$SETUP_MARKER" | grep -q updated && log_success "Registered the SprykerAcademy Client and Facade services in $(relpath "$services_file")"
     done
 
+    # Backend API: the demo shop imports the API Platform routes only when src/Generated/Api/Backend
+    # exists, but looks for it one directory too high (config/src/Generated/...), so the Backend
+    # API never gets a route and every API Platform resource answers 404. Point the check at the
+    # project root.
+    local backend_routes="$PROJECT_DIR/config/GlueBackend/routes/api_platform.php"
+    if [ -f "$backend_routes" ] && grep -q "dirname(__DIR__, 2) \. '/src/Generated/Api/Backend'" "$backend_routes"; then
+        php -r '
+            $file = $argv[1];
+            $content = file_get_contents($file);
+            $content = str_replace(
+                "dirname(__DIR__, 2) . \x27/src/Generated/Api/Backend\x27",
+                "dirname(__DIR__, 3) . \x27/src/Generated/Api/Backend\x27",
+                $content,
+                $count,
+            );
+            if ($count) {
+                file_put_contents($file, $content);
+                echo "updated";
+            }
+        ' "$backend_routes" | grep -q updated && log_success "Fixed the Backend API route import in $(relpath "$backend_routes") (it looked for src/Generated/Api/Backend in config/)"
+    fi
+
     # Merchant Portal frontend: the Angular build collects the component entry points of
     # vendor/spryker and src/Pyz/Zed only. Add src/SprykerAcademy/Zed to the scan and to the
     # TypeScript sources, so an exercise's Presentation/Components/entry.ts is built as well.

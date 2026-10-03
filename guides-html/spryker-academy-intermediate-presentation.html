@@ -56,7 +56,7 @@
     <tr><td>9</td><td>Back Office</td><td>Tables, Forms, CRUD Controllers, Gui module</td></tr>
     <tr><td>10</td><td>Publish & Synchronize</td><td>Events, Publishers, Queues, Elasticsearch/Redis</td></tr>
     <tr><td>11</td><td>Search</td><td>Query Plugins, Result Formatters, SearchClient</td></tr>
-    <tr><td>12</td><td>Glue Storefront API</td><td>API Platform, Providers, Resource YAML</td></tr>
+    <tr><td>12</td><td>Glue Storefront and Backend API</td><td>API Platform, Providers, Resource YAML, Pagination, Includes</td></tr>
     <tr><td>13</td><td>OMS</td><td>State Machine, Commands, Conditions, Events</td></tr>
     <tr><td>14</td><td>Storage Client</td><td>Redis, StorageClient, Key Generation, SynchronizationService</td></tr>
     <tr><td>15</td><td>Merchant Portal — Table</td><td>GuiTable, DataProvider, Angular Web Components, ACL</td></tr>
@@ -600,15 +600,30 @@ $services->load('SprykerAcademy\\Zed\\', '../../src/SprykerAcademy/Zed/');</code
 </section>
 
 <!-- ============================================================ -->
-<!-- EXERCISE 12: GLUE STOREFRONT API -->
+<!-- EXERCISE 12: GLUE STOREFRONT AND BACKEND API -->
 <!-- ============================================================ -->
 <section>
   <section>
-    <h2>Exercise 12: Glue Storefront API</h2>
+    <h2>Exercise 12: Glue Storefront and Backend API</h2>
     <h3>REST API with Spryker API Platform</h3>
     <div class="box box-accent">
-      <strong>Goal:</strong> Expose supplier data through a REST API using Spryker's API Platform
+      <strong>Goal:</strong> Expose supplier data through the Storefront API and the Backend API, with pagination and an include for the supplier locations
     </div>
+  </section>
+  <section>
+    <h3>Storefront API vs Backend API</h3>
+    <table>
+      <tr><th></th><th>Storefront API</th><th>Backend API</th></tr>
+      <tr><td>Host</td><td><code>glue.eu.spryker.local</code></td><td><code>glue-backend.eu.spryker.local</code></td></tr>
+      <tr><td>Who calls it</td><td>Shops, apps, customers</td><td>ERP, PIM, back-office integrations</td></tr>
+      <tr><td>Data source</td><td>Redis and Elasticsearch, through a <strong>Client</strong></td><td>The database, through a <strong>Zed facade</strong></td></tr>
+      <tr><td>Provider base class</td><td><code>AbstractStorefrontProvider</code></td><td><code>AbstractBackendProvider</code></td></tr>
+      <tr><td>Resource files</td><td><code>resources/api/storefront/</code></td><td><code>resources/api/backend/</code></td></tr>
+    </table>
+    <ul>
+      <li>The Storefront API never queries the database</li>
+      <li>Same resource name in both directories = two resources, two providers</li>
+    </ul>
   </section>
   <section>
     <h3>Resource YAML</h3>
@@ -637,31 +652,65 @@ resource:
   </section>
   <section>
     <h3>Provider Pattern</h3>
-    <pre><code class="language-php">class SuppliersStorefrontProvider implements ProviderInterface
+    <pre><code class="language-php">class SuppliersStorefrontProvider extends AbstractStorefrontProvider
 {
     public function __construct(
-        protected SupplierClientInterface $supplierClient, // auto-wired
+        protected SupplierSearchClientInterface $supplierSearchClient, // auto-wired
     ) {}
 
-    public function provide(
-        Operation $operation,
-        array $uriVariables = [],
-        array $context = [],
-    ): object|array|null {
-        $id = $uriVariables['idSupplier'] ?? null;
+    protected function provideItem(): ?object      // GET /suppliers/{idSupplier}
+    {
+        $id = $this->getUriVariables()['idSupplier'] ?? null;
+        $supplier = $this->supplierSearchClient->findSupplierById((int)$id);
 
-        if ($id === null) {
-            return $this->provideCollection(); // → array = GetCollection
+        if ($supplier->getIdSupplier() === null) {
+            return null;                           // → null = 404
         }
 
-        $supplier = $this->supplierClient->findSupplierById((int)$id);
-        if (!$supplier) {
-            return null;                       // → null = 404
-        }
+        return $this->mapToResource($supplier);    // → object = Get
+    }
 
-        return $this->mapToResource($supplier); // → object = Get
+    protected function provideCollection(): array  // GET /suppliers
+    {
+        // ... one page of suppliers             // → array = GetCollection
     }
 }</code></pre>
+  </section>
+  <section>
+    <h3>Pagination</h3>
+    <pre><code>GET /suppliers?page[offset]=2&amp;page[limit]=2</code></pre>
+    <pre><code class="language-php">$limit = $this->getPaginationLimit();   // page[limit], default: paginationItemsPerPage
+$offset = $this->getPaginationOffset(); // page[offset], default: 0
+
+$collection = $this->supplierSearchClient->searchSuppliers([
+    SupplierSearchConfig::PARAMETER_OFFSET => $offset,
+    SupplierSearchConfig::PARAMETER_LIMIT => $limit,
+]);
+// ... map the suppliers to resources ...
+
+$resources[0]->pagination = SuppliersPaginationStorefrontObject::fromArray(
+    $this->calculatePagination($offset, $limit, $collection->getPagination()->getNbResults()),
+);</code></pre>
+    <ul>
+      <li>The <strong>data source</strong> cuts the page out (Elasticsearch <code>from</code>/<code>size</code>, SQL <code>LIMIT</code>/<code>OFFSET</code>) - never <code>array_slice()</code> over everything</li>
+      <li>The first item carries <code>pagination</code>; Glue adds the <code>first</code>/<code>prev</code>/<code>next</code>/<code>last</code> links</li>
+    </ul>
+  </section>
+  <section>
+    <h3>Includes: Related Resources in One Request</h3>
+    <pre><code>GET /suppliers?include=supplier-locations</code></pre>
+    <pre><code class="language-yaml"># resources/api/backend/suppliers.resource.yml
+    includes:
+        - relationshipName: supplier-locations   # the value of ?include=
+          targetResource: SupplierLocations      # `name` of the related resource
+          uriTemplate: /suppliers/{idSupplier}/supplier-locations
+          uriVariableMappings:
+              idSupplier: idSupplier             # target URI variable: property of the supplier</code></pre>
+    <ul>
+      <li>Glue calls the <strong>target resource's provider</strong> for every supplier, with the mapped URI variables</li>
+      <li>Response: <code>relationships</code> per supplier + a top-level <code>included</code> list</li>
+      <li>Works on one resource or a plain array - that is why the pagination travels in a property, not in a paginator object</li>
+    </ul>
   </section>
   <section>
     <h3>API Platform Commands</h3>
@@ -670,6 +719,7 @@ resource:
       <tr><td><code>docker/sdk cli GLUE_APPLICATION=GLUE glue api:generate storefront</code></td><td>Generate Storefront API resources from YAML</td></tr>
       <tr><td><code>docker/sdk cli GLUE_APPLICATION=GLUE_BACKEND glue api:generate backend</code></td><td>Generate Backend API resources</td></tr>
       <tr><td><code>docker/sdk cli GLUE_APPLICATION=GLUE glue cache:clear</code></td><td>Rebuild the Glue cache after every generate</td></tr>
+      <tr><td><code>docker/sdk cli GLUE_APPLICATION=GLUE_BACKEND glue cache:clear</code></td><td>The same for the Backend API application</td></tr>
       <tr><td><code>docker/sdk cli GLUE_APPLICATION=GLUE glue api:generate --dry-run</code></td><td>Preview without writing files</td></tr>
       <tr><td><code>docker/sdk cli GLUE_APPLICATION=GLUE glue api:generate --validate-only</code></td><td>Validate schemas only</td></tr>
       <tr><td><code>docker/sdk cli GLUE_APPLICATION=GLUE glue api:debug --list</code></td><td>List all registered resources</td></tr>

@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>Exercise 12: Glue Storefront API - Supplier</title>
+  <title>Exercise 12: Glue Storefront and Backend API - Supplier</title>
   <style>
     html {
       line-height: 1.5;
@@ -213,11 +213,41 @@
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">Exercise 12: Glue Storefront API - Supplier</h1>
+<h1 class="title">Exercise 12: Glue Storefront and Backend API - Supplier</h1>
 </header>
-<h1 id="exercise-12-glue-storefront-api---supplier">Exercise 12: Glue Storefront API - Supplier</h1>
-<p>In this exercise, you will expose supplier data through a REST API endpoint using Spryker’s API Platform. You will create a Glue Storefront API resource that provides both single-item and collection endpoints for suppliers.</p>
-<p>You will learn how to: - Define an API resource using YAML configuration (<code>.resource.yml</code>) - Implement a Provider class that fetches and maps data - Map internal Transfer objects to generated API Resource objects - Work with Spryker’s API Platform (not the legacy GlueApplication approach) - Handle both Get (single) and GetCollection (list) operations</p>
+<h1 id="exercise-12-glue-storefront-and-backend-api---supplier">Exercise 12: Glue Storefront and Backend API - Supplier</h1>
+<p>In this exercise, you will expose supplier data through REST API endpoints using Spryker’s API Platform. You will create a Storefront API resource and a Backend API resource for suppliers, page through the collections, and let API clients ask for the locations of a supplier in the same request.</p>
+<p>You will learn how to: - Define an API resource using YAML configuration (<code>.resource.yml</code>) - Implement a Provider class that fetches and maps data - Map internal Transfer objects to generated API Resource objects - Work with Spryker’s API Platform (not the legacy GlueApplication approach) - Handle both Get (single) and GetCollection (list) operations - Tell the Storefront API (published data) from the Backend API (the database, through a facade) - Page through a collection with <code>page[offset]</code> and <code>page[limit]</code> - Declare a relationship, so that <code>?include=supplier-locations</code> returns the locations of a supplier</p>
+<table>
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 12%" />
+<col style="width: 22%" />
+<col style="width: 56%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>API</th>
+<th>Host</th>
+<th>Reads from</th>
+<th>Endpoints of this exercise</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Storefront</td>
+<td><code>glue.eu.spryker.local</code></td>
+<td>Elasticsearch, through the <code>SupplierSearch</code> client</td>
+<td><code>/suppliers</code>, <code>/suppliers/{idSupplier}</code></td>
+</tr>
+<tr class="even">
+<td>Backend</td>
+<td><code>glue-backend.eu.spryker.local</code></td>
+<td>The database, through the <code>Supplier</code> facade</td>
+<td><code>/suppliers</code>, <code>/suppliers/{idSupplier}</code>, <code>/suppliers/{idSupplier}/supplier-locations</code>, <code>/supplier-locations/{idSupplierLocation}</code></td>
+</tr>
+</tbody>
+</table>
 <h2 id="prerequisites">Prerequisites</h2>
 <ul>
 <li><strong>You do not need your own solutions of the earlier exercises.</strong> The branch contains them, and <code>load.sh --run</code> imports the sample suppliers and publishes them to Redis and Elasticsearch, so <code>/suppliers</code> has data to return.</li>
@@ -242,6 +272,9 @@
 <p><strong>Important:</strong> You must specify the Glue application via the <code>GLUE_APPLICATION</code> environment variable. Without it, the command doesn’t know which application’s configuration to use. Shops with a separate storefront application (<code>glue-storefront.*</code>) use <code>GLUE_APPLICATION=GLUE_STOREFRONT</code>.</p>
 </blockquote>
 <p>This command scans all registered source directories for <code>.resource.yml</code> files and generates PHP Resource classes (e.g., <code>Generated\Api\Storefront\SuppliersStorefrontResource</code>) in <code>src/Generated/Api/Storefront</code>.</p>
+<p>The Backend API is a second application (<code>glue-backend.eu.spryker.local</code>, <code>apiTypes(['backend'])</code> in <code>config/GlueBackend/packages/spryker_api_platform.php</code>) with its own resources, generated classes (<code>src/Generated/Api/Backend</code>) and cache:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli GLUE_APPLICATION=GLUE_BACKEND glue api:generate backend</span></code></pre></div>
+<p>The API type is the directory a resource file lives in: <code>resources/api/storefront/suppliers.resource.yml</code> is a Storefront resource, <code>resources/api/backend/suppliers.resource.yml</code> a Backend one. Both may have the same name; they are two different resources with two different providers.</p>
 <h3 id="api-platform-commands-reference">API Platform Commands Reference</h3>
 <table>
 <colgroup>
@@ -268,30 +301,34 @@
 <td>Delete the compiled Glue container and its metadata cache, so the next request reads the generated resources again</td>
 </tr>
 <tr class="even">
+<td><code>docker/sdk cli GLUE_APPLICATION=GLUE_BACKEND glue cache:clear</code></td>
+<td>The same for the Backend API application</td>
+</tr>
+<tr class="odd">
 <td><code>docker/sdk cli GLUE_APPLICATION=GLUE glue api:generate --dry-run</code></td>
 <td>Preview what would be generated without writing</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>docker/sdk cli GLUE_APPLICATION=GLUE glue api:generate --validate-only</code></td>
 <td>Validate schemas without generating</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>docker/sdk cli GLUE_APPLICATION=GLUE glue api:generate storefront -r Suppliers</code></td>
 <td>Generate only the <code>Suppliers</code> resource</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>docker/sdk cli GLUE_APPLICATION=GLUE glue api:debug --list</code></td>
 <td>List all registered resources</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>docker/sdk cli GLUE_APPLICATION=GLUE glue api:debug Suppliers</code></td>
 <td>Inspect a specific resource’s merged schema</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>docker/sdk cli GLUE_APPLICATION=GLUE glue api:debug Suppliers --show-sources</code></td>
 <td>Show all source files with priority</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>docker/sdk cli GLUE_APPLICATION=GLUE glue api:debug Suppliers --show-merged</code></td>
 <td>Display the final merged YAML schema</td>
 </tr>
@@ -340,7 +377,7 @@
 </tr>
 </tbody>
 </table>
-<p><code>glue cache:clear</code> deletes that cache, and the next request builds it from the current files. <code>docker/sdk console cache:empty-all</code> does <strong>not</strong> reach it: it clears the Zed, Yves and console caches, not the per-application Glue container. Rule of thumb: <strong>after every change to a <code>resource.yml</code> run both commands, generate first.</strong></p>
+<p><code>glue cache:clear</code> deletes that cache, and the next request builds it from the current files. <code>docker/sdk console cache:empty-all</code> does <strong>not</strong> reach it: it clears the Zed, Yves and console caches, not the per-application Glue container. Rule of thumb: <strong>after every change to a <code>resource.yml</code> run both commands, generate first</strong> - and for the application the resource belongs to: <code>GLUE</code> + <code>storefront</code>, or <code>GLUE_BACKEND</code> + <code>backend</code>.</p>
 <blockquote>
 <p><strong>Docs:</strong> <a href="https://docs.spryker.com/docs/dg/dev/architecture/api-platform">Spryker API Platform Architecture</a> | <a href="https://docs.spryker.com/docs/dg/dev/architecture/api-platform/resource-schemas.html">Resource Schemas</a></p>
 </blockquote>
@@ -389,6 +426,44 @@
 </tr>
 </tbody>
 </table>
+<h3 id="storefront-api-and-backend-api">Storefront API and Backend API</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th>Storefront API</th>
+<th>Backend API</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Who calls it</td>
+<td>Shops, apps, customers</td>
+<td>ERP, PIM, back-office integrations</td>
+</tr>
+<tr class="even">
+<td>Data source</td>
+<td>Published data: Redis and Elasticsearch, through a <strong>Client</strong></td>
+<td>The database, through a <strong>Zed facade</strong></td>
+</tr>
+<tr class="odd">
+<td>Provider base class</td>
+<td><code>AbstractStorefrontProvider</code></td>
+<td><code>AbstractBackendProvider</code></td>
+</tr>
+<tr class="even">
+<td>Resource files</td>
+<td><code>resources/api/storefront/</code></td>
+<td><code>resources/api/backend/</code></td>
+</tr>
+</tbody>
+</table>
+<p>The Storefront API never queries the database: it scales with the storefront and serves what Publish &amp; Synchronize put into Redis and Elasticsearch. The Backend API runs next to Zed and works on the source data. That is why the locations of a supplier are available in the Backend API of this exercise only: they are in the database, but nothing publishes them.</p>
 <p><strong>API Platform flow:</strong></p>
 <pre><code>GET /suppliers/1
     → YAML resource definition (suppliers.resource.yml)
@@ -406,30 +481,71 @@
 <li>Add the <code>provider</code> field pointing to the full class name of the Provider class</li>
 <li>Add the resource properties: <code>name</code> (string), <code>description</code> (string), <code>status</code> (int), <code>email</code> (string), <code>phone</code> (string)</li>
 </ol>
-<p>The skeleton already has the resource name, operations (Get + GetCollection), pagination config, and the <code>idSupplier</code> identifier property.</p>
+<p>The skeleton already has the resource name, operations (Get + GetCollection), pagination config, the <code>idSupplier</code> identifier property and the <code>pagination</code> property (see <a href="#pagination-pageoffset-and-pagelimit">Pagination</a>).</p>
 <blockquote>
 <p><strong>Resource YAML structure:</strong> - <code>provider:</code> — full class name of the PHP Provider that handles requests - <code>operations:</code> — list of HTTP operations (Get, GetCollection, Post, Patch, Delete) - <code>properties:</code> — schema definition with types, descriptions, and identifier flag - <code>identifier: true</code> — marks the property used in the URL path (e.g., <code>/suppliers/{idSupplier}</code>)</p>
 </blockquote>
 <p>After modifying the YAML, regenerate the resource classes:</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli GLUE_APPLICATION=GLUE glue api:generate storefront</span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli GLUE_APPLICATION=GLUE glue api:generate storefront</span></code></pre></div>
 <p>This generates a <code>SuppliersStorefrontResource</code> class in <code>Generated\Api\Storefront\</code> that the Provider returns.</p>
 <hr />
-<h3 id="part-2-implement-the-provider">Part 2: Implement the Provider</h3>
+<h3 id="part-2-implement-the-storefront-provider">Part 2: Implement the Storefront Provider</h3>
 <p>The Provider is the core of the API resource. It receives the HTTP request context and returns data. It replaces the controller + reader pattern from the old approach.</p>
 <p><strong>Coding time:</strong></p>
-<p>Open <code>src/SprykerAcademy/Glue/Supplier/Api/Storefront/Provider/SuppliersStorefrontProvider.php</code>. The class implements <code>ApiPlatform\State\ProviderInterface</code> and receives the <code>SupplierSearchClientInterface</code> of Exercise 11 through its constructor - the storefront reads suppliers from Elasticsearch, not from the database. In the <code>provide()</code> method:</p>
+<p>Open <code>src/SprykerAcademy/Glue/Supplier/Api/Storefront/Provider/SuppliersStorefrontProvider.php</code>. The class extends <code>Spryker\ApiPlatform\State\Provider\AbstractStorefrontProvider</code> and receives the <code>SupplierSearchClientInterface</code> of Exercise 11 through its constructor - the storefront reads suppliers from Elasticsearch, not from the database.</p>
+<p><code>AbstractStorefrontProvider</code> implements <code>ApiPlatform\State\ProviderInterface::provide()</code> for you: it calls <code>provideCollection()</code> for a GetCollection operation and <code>provideItem()</code> for a Get.</p>
+<p>In <code>provideItem()</code> (<code>GET /suppliers/{idSupplier}</code>):</p>
 <ol type="1">
-<li>Read the supplier identifier from <code>$uriVariables</code> — the key name must match the <code>identifier</code> property in the YAML</li>
-<li>If the identifier is null, call <code>searchSuppliers()</code> to load suppliers. Loop over <code>SupplierCollectionTransfer::getSuppliers()</code> and map each transfer to a resource</li>
-<li>If the identifier is present, call <code>findSupplierById((int)$idSupplier)</code></li>
+<li>Read the supplier identifier from <code>$this-&gt;getUriVariables()</code> - the key name must match the <code>identifier</code> property in the YAML</li>
+<li>Call <code>findSupplierById((int)$idSupplier)</code></li>
 <li>The client returns an empty <code>SupplierTransfer</code> for an unknown id: return null then (API Platform answers with a 404)</li>
 <li>Map the <code>SupplierTransfer</code> to a <code>SuppliersStorefrontResource</code> using the provided Mapper</li>
 </ol>
+<p>In <code>provideCollection()</code> (<code>GET /suppliers</code>):</p>
+<ol start="5" type="1">
+<li>Read the requested page with <code>$this-&gt;getPaginationLimit()</code> and <code>$this-&gt;getPaginationOffset()</code></li>
+<li>Call <code>searchSuppliers()</code> with the request parameters <code>SupplierSearchConfig::PARAMETER_OFFSET</code> and <code>SupplierSearchConfig::PARAMETER_LIMIT</code></li>
+<li>Loop over <code>SupplierCollectionTransfer::getSuppliers()</code> and map each transfer to a resource</li>
+<li>Set the pagination on the first resource: <code>SuppliersPaginationStorefrontObject::fromArray($this-&gt;calculatePagination($offset, $limit, $numFound))</code>, where <code>$numFound</code> is <code>getPagination()-&gt;getNbResults()</code> of the collection transfer</li>
+</ol>
 <blockquote>
-<p><strong><code>$uriVariables</code>:</strong> For a GET request to <code>/suppliers/5</code>, this array contains <code>['idSupplier' =&gt; '5']</code>. The key name comes from the identifier property in the resource YAML.</p>
+<p><strong>URI variables:</strong> For a GET request to <code>/suppliers/5</code>, <code>$this-&gt;getUriVariables()</code> is <code>['idSupplier' =&gt; '5']</code>. The key name comes from the identifier property in the resource YAML.</p>
+</blockquote>
+<h4 id="pagination-pageoffset-and-pagelimit">Pagination: <code>page[offset]</code> and <code>page[limit]</code></h4>
+<p>Spryker’s APIs page with an offset and a limit, as the JSON:API convention of the legacy Glue API did:</p>
+<pre><code>GET /suppliers?page[offset]=2&amp;page[limit]=2</code></pre>
+<p>Three places work together:</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Where</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>The provider</td>
+<td>Reads <code>page[offset]</code> and <code>page[limit]</code> (<code>getPaginationOffset()</code>, <code>getPaginationLimit()</code>; the limit defaults to <code>paginationItemsPerPage</code> of the resource YAML) and asks the data source for <strong>that page only</strong></td>
+</tr>
+<tr class="even">
+<td>The data source</td>
+<td>Cuts the page out and counts all matches. Here: <code>SupplierPaginationQueryExpanderPlugin</code> sets Elasticsearch’s <code>from</code> and <code>size</code>, and <code>SupplierSearchResultFormatterPlugin</code> puts the total hits into <code>SupplierCollectionTransfer.pagination.nbResults</code></td>
+</tr>
+<tr class="odd">
+<td>The <code>pagination</code> property of the resource</td>
+<td>The provider sets it on the <strong>first</strong> item of the collection (<code>numFound</code>, <code>currentPage</code>, <code>maxPage</code>, <code>currentItemsPerPage</code>). Glue reads it there and adds the <code>first</code>, <code>prev</code>, <code>next</code> and <code>last</code> links to the response</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Never load everything and slice it in PHP.</strong> <code>array_slice()</code> over all suppliers returns the right page, but the database or Elasticsearch still delivers every row for every request. Pass the offset and the limit down to the data source.</p>
 </blockquote>
 <blockquote>
-<p><strong>Collection vs Single:</strong> The <code>provide()</code> method handles both. When <code>idSupplier</code> is null, it’s a GetCollection request; when present, it’s a Get request.</p>
+<p><strong>Why not API Platform’s own paginator?</strong> API Platform can page with <code>?page=2&amp;itemsPerPage=10</code> when a provider returns a <code>PaginatorInterface</code> object. Spryker’s relationship handling (<code>?include=</code>, Part 6) only works on a plain array, so a provider that returns a paginator loses its includes. Spryker’s own resources (orders, catalog search) use the convention shown here.</p>
 </blockquote>
 <hr />
 <h3 id="part-3-review-the-mapper">Part 3: Review the Mapper</h3>
@@ -439,39 +555,66 @@
 <p><strong>Generated Resource classes:</strong> API Platform generates PHP classes from the YAML properties. These classes have <code>fromArray()</code> and expose the properties defined in the YAML. The Mapper bridges the internal domain model (Transfer) to the API model (Resource).</p>
 </blockquote>
 <hr />
-<h3 id="part-4-test-the-endpoint">Part 4: Test the Endpoint</h3>
-<p>After completing all parts, generate the API resources and clear the Glue cache (see <a href="#why-cacheclear-follows-apigenerate">Why <code>cache:clear</code> Follows <code>api:generate</code></a>):</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli GLUE_APPLICATION=GLUE glue api:generate storefront</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli GLUE_APPLICATION=GLUE glue cache:clear</span></code></pre></div>
-<p>Test collection (JSON-LD format):</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-s</span> <span class="st">&#39;http://glue.eu.spryker.local/suppliers&#39;</span> <span class="dt">\</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-H</span> <span class="st">&#39;Accept: application/ld+json&#39;</span> <span class="kw">|</span> <span class="ex">python3</span> <span class="at">-m</span> json.tool</span></code></pre></div>
-<p>Test single supplier (use an <code>idSupplier</code> from the collection; in a fresh shop the first supplier has id 1):</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-s</span> <span class="st">&#39;http://glue.eu.spryker.local/suppliers/1&#39;</span> <span class="dt">\</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-H</span> <span class="st">&#39;Accept: application/ld+json&#39;</span> <span class="kw">|</span> <span class="ex">python3</span> <span class="at">-m</span> json.tool</span></code></pre></div>
-<p>Expected collection response:</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;@context&quot;</span><span class="fu">:</span> <span class="st">&quot;/contexts/Supplier&quot;</span><span class="fu">,</span></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;@id&quot;</span><span class="fu">:</span> <span class="st">&quot;/suppliers&quot;</span><span class="fu">,</span></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;@type&quot;</span><span class="fu">:</span> <span class="st">&quot;Collection&quot;</span><span class="fu">,</span></span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;totalItems&quot;</span><span class="fu">:</span> <span class="dv">4</span><span class="fu">,</span></span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;member&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;@id&quot;</span><span class="fu">:</span> <span class="st">&quot;/suppliers/1&quot;</span><span class="fu">,</span></span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;@type&quot;</span><span class="fu">:</span> <span class="st">&quot;Supplier&quot;</span><span class="fu">,</span></span>
-<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;idSupplier&quot;</span><span class="fu">:</span> <span class="dv">1</span><span class="fu">,</span></span>
-<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;Acme Supplies&quot;</span><span class="fu">,</span></span>
-<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;description&quot;</span><span class="fu">:</span> <span class="st">&quot;leading supplier of industrial equipment&quot;</span><span class="fu">,</span></span>
-<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;status&quot;</span><span class="fu">:</span> <span class="dv">1</span><span class="fu">,</span></span>
-<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;email&quot;</span><span class="fu">:</span> <span class="st">&quot;contact@acmesupplies.com&quot;</span><span class="fu">,</span></span>
-<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;phone&quot;</span><span class="fu">:</span> <span class="st">&quot;+1-555-1234&quot;</span></span>
-<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
-<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span><span class="fu">,</span></span>
-<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;view&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;@id&quot;</span><span class="fu">:</span> <span class="st">&quot;/suppliers&quot;</span><span class="fu">,</span></span>
-<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;@type&quot;</span><span class="fu">:</span> <span class="st">&quot;PartialCollectionView&quot;</span></span>
-<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
-<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<h3 id="part-4-test-the-storefront-endpoints">Part 4: Test the Storefront Endpoints</h3>
+<p>After completing Parts 1 to 3, generate the API resources and clear the Glue cache (see <a href="#why-cacheclear-follows-apigenerate">Why <code>cache:clear</code> Follows <code>api:generate</code></a>):</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli GLUE_APPLICATION=GLUE glue api:generate storefront</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli GLUE_APPLICATION=GLUE glue cache:clear</span></code></pre></div>
+<p>Test the collection:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-s</span> <span class="st">&#39;http://glue.eu.spryker.local/suppliers&#39;</span> <span class="dt">\</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-H</span> <span class="st">&#39;Accept: application/vnd.api+json&#39;</span> <span class="kw">|</span> <span class="ex">python3</span> <span class="at">-m</span> json.tool</span></code></pre></div>
+<p>Test a single supplier (use an <code>idSupplier</code> from the collection; in a fresh shop the first supplier has id 1):</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-s</span> <span class="st">&#39;http://glue.eu.spryker.local/suppliers/1&#39;</span> <span class="dt">\</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-H</span> <span class="st">&#39;Accept: application/vnd.api+json&#39;</span> <span class="kw">|</span> <span class="ex">python3</span> <span class="at">-m</span> json.tool</span></code></pre></div>
+<p>Test the second page of two suppliers (<code>-g</code> stops curl from interpreting the square brackets):</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-s</span> <span class="at">-g</span> <span class="st">&#39;http://glue.eu.spryker.local/suppliers?page[offset]=2&amp;page[limit]=2&#39;</span> <span class="dt">\</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-H</span> <span class="st">&#39;Accept: application/vnd.api+json&#39;</span> <span class="kw">|</span> <span class="ex">python3</span> <span class="at">-m</span> json.tool</span></code></pre></div>
+<p>Expected response of the paged request (4 suppliers, 2 per page, page 2):</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;links&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;self&quot;</span><span class="fu">:</span> <span class="st">&quot;http://glue.eu.spryker.local/suppliers&quot;</span><span class="fu">,</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;first&quot;</span><span class="fu">:</span> <span class="st">&quot;http://glue.eu.spryker.local/suppliers?page[limit]=2&amp;page[offset]=0&quot;</span><span class="fu">,</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;last&quot;</span><span class="fu">:</span> <span class="st">&quot;http://glue.eu.spryker.local/suppliers?page[limit]=2&amp;page[offset]=2&quot;</span><span class="fu">,</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;prev&quot;</span><span class="fu">:</span> <span class="st">&quot;http://glue.eu.spryker.local/suppliers?page[limit]=2&amp;page[offset]=0&quot;</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">},</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;meta&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;totalItems&quot;</span><span class="fu">:</span> <span class="dv">2</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">},</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;data&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="dv">3</span><span class="fu">,</span></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;Supplier&quot;</span><span class="fu">,</span></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;attributes&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;idSupplier&quot;</span><span class="fu">:</span> <span class="dv">3</span><span class="fu">,</span></span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;TechSource Inc&quot;</span><span class="fu">,</span></span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;description&quot;</span><span class="fu">:</span> <span class="st">&quot;technology products supplier&quot;</span><span class="fu">,</span></span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;status&quot;</span><span class="fu">:</span> <span class="dv">1</span><span class="fu">,</span></span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;email&quot;</span><span class="fu">:</span> <span class="st">&quot;sales@techsource.com&quot;</span><span class="fu">,</span></span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;phone&quot;</span><span class="fu">:</span> <span class="st">&quot;+1-555-9012&quot;</span><span class="fu">,</span></span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;pagination&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a>          <span class="dt">&quot;numFound&quot;</span><span class="fu">:</span> <span class="dv">4</span><span class="fu">,</span></span>
+<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a>          <span class="dt">&quot;currentPage&quot;</span><span class="fu">:</span> <span class="dv">2</span><span class="fu">,</span></span>
+<span id="cb12-25"><a href="#cb12-25" aria-hidden="true" tabindex="-1"></a>          <span class="dt">&quot;maxPage&quot;</span><span class="fu">:</span> <span class="dv">2</span><span class="fu">,</span></span>
+<span id="cb12-26"><a href="#cb12-26" aria-hidden="true" tabindex="-1"></a>          <span class="dt">&quot;currentItemsPerPage&quot;</span><span class="fu">:</span> <span class="dv">2</span></span>
+<span id="cb12-27"><a href="#cb12-27" aria-hidden="true" tabindex="-1"></a>        <span class="fu">}</span></span>
+<span id="cb12-28"><a href="#cb12-28" aria-hidden="true" tabindex="-1"></a>      <span class="fu">},</span></span>
+<span id="cb12-29"><a href="#cb12-29" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;links&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb12-30"><a href="#cb12-30" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;self&quot;</span><span class="fu">:</span> <span class="st">&quot;http://glue.eu.spryker.local/suppliers/3&quot;</span></span>
+<span id="cb12-31"><a href="#cb12-31" aria-hidden="true" tabindex="-1"></a>      <span class="fu">}</span></span>
+<span id="cb12-32"><a href="#cb12-32" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb12-33"><a href="#cb12-33" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb12-34"><a href="#cb12-34" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="dv">4</span><span class="fu">,</span></span>
+<span id="cb12-35"><a href="#cb12-35" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;Supplier&quot;</span><span class="fu">,</span></span>
+<span id="cb12-36"><a href="#cb12-36" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;attributes&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb12-37"><a href="#cb12-37" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;idSupplier&quot;</span><span class="fu">:</span> <span class="dv">4</span><span class="fu">,</span></span>
+<span id="cb12-38"><a href="#cb12-38" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;Green Earth Supply&quot;</span></span>
+<span id="cb12-39"><a href="#cb12-39" aria-hidden="true" tabindex="-1"></a>      <span class="fu">},</span></span>
+<span id="cb12-40"><a href="#cb12-40" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;links&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb12-41"><a href="#cb12-41" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;self&quot;</span><span class="fu">:</span> <span class="st">&quot;http://glue.eu.spryker.local/suppliers/4&quot;</span></span>
+<span id="cb12-42"><a href="#cb12-42" aria-hidden="true" tabindex="-1"></a>      <span class="fu">}</span></span>
+<span id="cb12-43"><a href="#cb12-43" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb12-44"><a href="#cb12-44" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span></span>
+<span id="cb12-45"><a href="#cb12-45" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>The last page has no <code>next</code> link, the first one no <code>prev</code>. <code>meta.totalItems</code> counts the items of this response; the number of all suppliers is <code>pagination.numFound</code>.</p>
 <blockquote>
 <p><strong>Response formats:</strong> API Platform supports multiple formats via the <code>Accept</code> header:</p>
 <table>
@@ -489,43 +632,212 @@
 </thead>
 <tbody>
 <tr class="odd">
-<td><code>application/ld+json</code></td>
-<td>JSON-LD</td>
-<td>Default. Linked Data with <code>@context</code>, <code>@id</code>, <code>@type</code> metadata</td>
+<td><code>application/vnd.api+json</code></td>
+<td>JSON:API</td>
+<td>Spryker’s default. <code>data</code>, <code>attributes</code>, <code>relationships</code>, <code>included</code>, <code>links</code></td>
 </tr>
 <tr class="even">
 <td><code>application/json</code></td>
-<td>Plain JSON</td>
-<td>Raw JSON without metadata</td>
+<td>JSON:API</td>
+<td>Treated like <code>application/vnd.api+json</code> in this shop</td>
 </tr>
 <tr class="odd">
-<td><code>application/vnd.api+json</code></td>
-<td>JSON:API</td>
-<td>JSON:API specification format</td>
+<td><code>application/ld+json</code></td>
+<td>JSON-LD</td>
+<td>Linked Data with <code>@context</code>, <code>@id</code>, <code>@type</code> metadata</td>
 </tr>
 </tbody>
 </table>
-<p>JSON-LD is the default and recommended format for API Platform.</p>
+<p>The page links and the <code>included</code> section of Part 6 are JSON:API features: use <code>application/vnd.api+json</code> for them.</p>
+</blockquote>
+<hr />
+<h3 id="part-5-the-backend-api-resource">Part 5: The Backend API Resource</h3>
+<p>The Backend API serves integrations that work on the source data. Its <code>suppliers</code> resource has the same properties as the Storefront one, but its provider reads the database through the <code>Supplier</code> facade.</p>
+<p><strong>Coding time:</strong></p>
+<ol type="1">
+<li>Open <code>src/SprykerAcademy/Glue/Supplier/resources/api/backend/suppliers.resource.yml</code> and add the <code>provider</code>: <code>SprykerAcademy\Glue\Supplier\Api\Backend\Provider\SuppliersBackendProvider</code>. Leave TODO-2 for Part 6.</li>
+<li>Open <code>src/SprykerAcademy/Glue/Supplier/Api/Backend/Provider/SuppliersBackendProvider.php</code>. The class extends <code>Spryker\ApiPlatform\State\Provider\AbstractBackendProvider</code> and receives the <code>SupplierFacadeInterface</code> through its constructor.</li>
+</ol>
+<p>In <code>provideItem()</code>:</p>
+<ol type="1">
+<li>Read the supplier id from <code>$this-&gt;getUriVariables()</code></li>
+<li>Load the supplier with <code>findSupplierById((int)$idSupplier)</code>; the facade returns <code>null</code> for an unknown id - return <code>null</code> then</li>
+<li>Map the <code>SupplierTransfer</code> to a <code>SuppliersBackendResource</code> with the provided <code>SupplierBackendMapper</code></li>
+</ol>
+<p>In <code>provideCollection()</code>:</p>
+<ol start="4" type="1">
+<li>Read the limit and the offset with the provided <code>getPageParameter()</code> (<code>AbstractBackendProvider</code> has no pagination helpers)</li>
+<li>Load the page with <code>getPaginatedSupplierCollection()</code>: a <code>SupplierCriteriaTransfer</code> with a <code>PaginationTransfer</code> that has the offset and the limit</li>
+<li>Map every <code>SupplierTransfer</code> to a resource</li>
+<li>Set the pagination on the first resource: <code>SuppliersPaginationBackendObject::fromArray([...])</code> with <code>numFound</code>, <code>currentPage</code>, <code>maxPage</code> and <code>currentItemsPerPage</code></li>
+</ol>
+<blockquote>
+<p><strong>The facade is provided.</strong> <code>SupplierFacade::getPaginatedSupplierCollection()</code> and <code>getSupplierLocationCollection()</code> come with the exercise. Open <code>SupplierRepository::getPaginatedSupplierCollection()</code>: it counts the matching suppliers first, then applies <code>offset()</code> and <code>limit()</code> to the query - the database cuts the page out.</p>
+</blockquote>
+<blockquote>
+<p><strong>A facade in a Glue class?</strong> In the Storefront API that is forbidden: the storefront must not depend on Zed. The Backend API application runs with access to Zed, so its providers may inject facades. The loader registered the <code>SprykerAcademy</code> Business layers as services in <code>config/GlueBackend/ApplicationServices.php</code>.</p>
+</blockquote>
+<hr />
+<h3 id="part-6-include-the-supplier-locations">Part 6: Include the Supplier Locations</h3>
+<p>A supplier has locations (<code>pyz_supplier_location</code>, imported in Exercise 8). An API client that shows a supplier usually needs them too. Instead of a second request per supplier, JSON:API lets the client ask for related resources in the same request:</p>
+<pre><code>GET /suppliers?include=supplier-locations</code></pre>
+<p>The response then has a <code>relationships</code> entry per supplier and the locations in a top-level <code>included</code> list. Without <code>?include=</code>, the response stays small.</p>
+<p>In Spryker’s API Platform a relationship is declared in the YAML of the resource that offers it. It names a <strong>target resource</strong>; Glue asks that resource’s provider for the related items.</p>
+<p><strong>Coding time:</strong></p>
+<ol type="1">
+<li><p>Review <code>src/SprykerAcademy/Glue/Supplier/resources/api/backend/supplier-locations.resource.yml</code>: the <code>SupplierLocations</code> resource. Its collection lives under its supplier (<code>/suppliers/{idSupplier}/supplier-locations</code>), a single location has its own URL (<code>/supplier-locations/{idSupplierLocation}</code>).</p></li>
+<li><p>Open <code>src/SprykerAcademy/Glue/Supplier/Api/Backend/Provider/SupplierLocationsBackendProvider.php</code> and implement <code>provide()</code>:</p>
+<ul>
+<li>With <code>idSupplierLocation</code> in <code>$uriVariables</code>: load that location (criteria <code>setIdSupplierLocation()</code>), return the first resource or <code>null</code></li>
+<li>Without <code>idSupplier</code> in <code>$uriVariables</code>: return an empty array</li>
+<li>Otherwise: return the locations of that supplier (criteria <code>setFkSupplier()</code>)</li>
+</ul></li>
+<li><p>In <code>resources/api/backend/suppliers.resource.yml</code>, add the relationship (TODO-2):</p></li>
+</ol>
+<div class="sourceCode" id="cb14"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">includes</span><span class="kw">:</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="kw">-</span><span class="at"> </span><span class="fu">relationshipName</span><span class="kw">:</span><span class="at"> supplier-locations</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">targetResource</span><span class="kw">:</span><span class="at"> SupplierLocations</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">uriTemplate</span><span class="kw">:</span><span class="at"> /suppliers/{idSupplier}/supplier-locations</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">uriVariableMappings</span><span class="kw">:</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="at">              </span><span class="fu">idSupplier</span><span class="kw">:</span><span class="at"> idSupplier</span></span></code></pre></div>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Key</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>relationshipName</code></td>
+<td>The value of <code>?include=</code> and the key in <code>relationships</code></td>
+</tr>
+<tr class="even">
+<td><code>targetResource</code></td>
+<td>The <code>name</code> of the related resource’s YAML (<code>SupplierLocations</code>), not its file name or URL</td>
+</tr>
+<tr class="odd">
+<td><code>uriTemplate</code></td>
+<td>The collection URL of the target resource</td>
+</tr>
+<tr class="even">
+<td><code>uriVariableMappings</code></td>
+<td><code>&lt;URI variable of the target provider&gt;: &lt;property of this resource&gt;</code>. For every supplier of the response Glue calls <code>SupplierLocationsBackendProvider::provide()</code> with <code>['idSupplier' =&gt; &lt;the supplier's idSupplier&gt;]</code></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>One provider, three uses.</strong> <code>SupplierLocationsBackendProvider</code> answers <code>GET /suppliers/6/supplier-locations</code>, <code>GET /supplier-locations/7</code> and the include. For the include there is no HTTP request to the locations URL: Glue calls the provider directly with the mapped URI variables.</p>
+</blockquote>
+<blockquote>
+<p><strong>One query per supplier.</strong> With <code>uriVariableMappings</code> Glue calls the target provider once for every supplier of the page: a page of 10 suppliers runs 10 location queries. That is bounded by the page size, and fine here. For larger pages, implement <code>Spryker\ApiPlatform\Provider\BatchLoadableProviderInterface</code> in the target provider (Glue then calls it once, with all suppliers’ URI variables in <code>$uriVariables['_batch_data']</code>), or write a <code>resolverClass</code> that implements <code>PerItemRelationshipResolverInterface</code>.</p>
+</blockquote>
+<blockquote>
+<p><strong>An include needs an array.</strong> Glue resolves relationships only when the provider returns one resource or a plain array of resources. That is why <code>provideCollection()</code> returns an array and carries the pagination in a property.</p>
+</blockquote>
+<hr />
+<h3 id="part-7-test-the-backend-endpoints">Part 7: Test the Backend Endpoints</h3>
+<p>Generate the Backend API resources and clear the cache of the Backend API application:</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli GLUE_APPLICATION=GLUE_BACKEND glue api:generate backend</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli GLUE_APPLICATION=GLUE_BACKEND glue cache:clear</span></code></pre></div>
+<div class="sourceCode" id="cb16"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># The collection, and a page of it</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-s</span> <span class="at">-g</span> <span class="st">&#39;http://glue-backend.eu.spryker.local/suppliers?page[offset]=0&amp;page[limit]=2&#39;</span> <span class="dt">\</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">-H</span> <span class="st">&#39;Accept: application/vnd.api+json&#39;</span> <span class="kw">|</span> <span class="ex">python3</span> <span class="at">-m</span> json.tool</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="co"># One supplier with its locations</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-s</span> <span class="st">&#39;http://glue-backend.eu.spryker.local/suppliers/1?include=supplier-locations&#39;</span> <span class="dt">\</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">-H</span> <span class="st">&#39;Accept: application/vnd.api+json&#39;</span> <span class="kw">|</span> <span class="ex">python3</span> <span class="at">-m</span> json.tool</span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a><span class="co"># A page of suppliers, each with its locations</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-s</span> <span class="at">-g</span> <span class="st">&#39;http://glue-backend.eu.spryker.local/suppliers?page[limit]=2&amp;include=supplier-locations&#39;</span> <span class="dt">\</span></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">-H</span> <span class="st">&#39;Accept: application/vnd.api+json&#39;</span> <span class="kw">|</span> <span class="ex">python3</span> <span class="at">-m</span> json.tool</span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a><span class="co"># The locations of one supplier, and one location</span></span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-s</span> <span class="st">&#39;http://glue-backend.eu.spryker.local/suppliers/1/supplier-locations&#39;</span> <span class="dt">\</span></span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">-H</span> <span class="st">&#39;Accept: application/vnd.api+json&#39;</span> <span class="kw">|</span> <span class="ex">python3</span> <span class="at">-m</span> json.tool</span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-s</span> <span class="st">&#39;http://glue-backend.eu.spryker.local/supplier-locations/1&#39;</span> <span class="dt">\</span></span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a>  <span class="at">-H</span> <span class="st">&#39;Accept: application/vnd.api+json&#39;</span> <span class="kw">|</span> <span class="ex">python3</span> <span class="at">-m</span> json.tool</span></code></pre></div>
+<p>Expected response of <code>GET /suppliers/1?include=supplier-locations</code>:</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;data&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="dv">1</span><span class="fu">,</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;Supplier&quot;</span><span class="fu">,</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;attributes&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;idSupplier&quot;</span><span class="fu">:</span> <span class="dv">1</span><span class="fu">,</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;Acme Supplies&quot;</span><span class="fu">,</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;description&quot;</span><span class="fu">:</span> <span class="st">&quot;leading supplier of industrial equipment&quot;</span><span class="fu">,</span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;status&quot;</span><span class="fu">:</span> <span class="dv">1</span><span class="fu">,</span></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;email&quot;</span><span class="fu">:</span> <span class="st">&quot;contact@acmesupplies.com&quot;</span><span class="fu">,</span></span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;phone&quot;</span><span class="fu">:</span> <span class="st">&quot;+1-555-1234&quot;</span></span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">},</span></span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;links&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;self&quot;</span><span class="fu">:</span> <span class="st">&quot;http://glue-backend.eu.spryker.local/suppliers/1?include=supplier-locations&quot;</span></span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">},</span></span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;relationships&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;supplier-locations&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;data&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a>          <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;SupplierLocation&quot;</span><span class="fu">,</span> <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;1&quot;</span> <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb17-20"><a href="#cb17-20" aria-hidden="true" tabindex="-1"></a>          <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;SupplierLocation&quot;</span><span class="fu">,</span> <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;2&quot;</span> <span class="fu">}</span></span>
+<span id="cb17-21"><a href="#cb17-21" aria-hidden="true" tabindex="-1"></a>        <span class="ot">]</span></span>
+<span id="cb17-22"><a href="#cb17-22" aria-hidden="true" tabindex="-1"></a>      <span class="fu">}</span></span>
+<span id="cb17-23"><a href="#cb17-23" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb17-24"><a href="#cb17-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">},</span></span>
+<span id="cb17-25"><a href="#cb17-25" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;included&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb17-26"><a href="#cb17-26" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb17-27"><a href="#cb17-27" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;SupplierLocation&quot;</span><span class="fu">,</span></span>
+<span id="cb17-28"><a href="#cb17-28" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;1&quot;</span><span class="fu">,</span></span>
+<span id="cb17-29"><a href="#cb17-29" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;attributes&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb17-30"><a href="#cb17-30" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;idSupplierLocation&quot;</span><span class="fu">:</span> <span class="dv">1</span><span class="fu">,</span></span>
+<span id="cb17-31"><a href="#cb17-31" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;idSupplier&quot;</span><span class="fu">:</span> <span class="dv">1</span><span class="fu">,</span></span>
+<span id="cb17-32"><a href="#cb17-32" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;city&quot;</span><span class="fu">:</span> <span class="st">&quot;New York&quot;</span><span class="fu">,</span></span>
+<span id="cb17-33"><a href="#cb17-33" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;country&quot;</span><span class="fu">:</span> <span class="st">&quot;USA&quot;</span><span class="fu">,</span></span>
+<span id="cb17-34"><a href="#cb17-34" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;address&quot;</span><span class="fu">:</span> <span class="st">&quot;123 Broadway Ave&quot;</span><span class="fu">,</span></span>
+<span id="cb17-35"><a href="#cb17-35" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;zipCode&quot;</span><span class="fu">:</span> <span class="st">&quot;10001&quot;</span><span class="fu">,</span></span>
+<span id="cb17-36"><a href="#cb17-36" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;isDefault&quot;</span><span class="fu">:</span> <span class="kw">true</span></span>
+<span id="cb17-37"><a href="#cb17-37" aria-hidden="true" tabindex="-1"></a>      <span class="fu">}</span></span>
+<span id="cb17-38"><a href="#cb17-38" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb17-39"><a href="#cb17-39" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb17-40"><a href="#cb17-40" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;SupplierLocation&quot;</span><span class="fu">,</span></span>
+<span id="cb17-41"><a href="#cb17-41" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;2&quot;</span><span class="fu">,</span></span>
+<span id="cb17-42"><a href="#cb17-42" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;attributes&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb17-43"><a href="#cb17-43" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;idSupplierLocation&quot;</span><span class="fu">:</span> <span class="dv">2</span><span class="fu">,</span></span>
+<span id="cb17-44"><a href="#cb17-44" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;idSupplier&quot;</span><span class="fu">:</span> <span class="dv">1</span><span class="fu">,</span></span>
+<span id="cb17-45"><a href="#cb17-45" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;city&quot;</span><span class="fu">:</span> <span class="st">&quot;Los Angeles&quot;</span><span class="fu">,</span></span>
+<span id="cb17-46"><a href="#cb17-46" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;country&quot;</span><span class="fu">:</span> <span class="st">&quot;USA&quot;</span><span class="fu">,</span></span>
+<span id="cb17-47"><a href="#cb17-47" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;address&quot;</span><span class="fu">:</span> <span class="st">&quot;456 Sunset Blvd&quot;</span><span class="fu">,</span></span>
+<span id="cb17-48"><a href="#cb17-48" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;zipCode&quot;</span><span class="fu">:</span> <span class="st">&quot;90028&quot;</span><span class="fu">,</span></span>
+<span id="cb17-49"><a href="#cb17-49" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;isDefault&quot;</span><span class="fu">:</span> <span class="kw">false</span></span>
+<span id="cb17-50"><a href="#cb17-50" aria-hidden="true" tabindex="-1"></a>      <span class="fu">}</span></span>
+<span id="cb17-51"><a href="#cb17-51" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb17-52"><a href="#cb17-52" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span></span>
+<span id="cb17-53"><a href="#cb17-53" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>In the collection every supplier has its own <code>relationships</code> entry, and <code>included</code> lists the locations of all suppliers of the page.</p>
+<blockquote>
+<p><strong>These endpoints are public.</strong> The Backend API of this shop lets a resource decide who may call it, and the exercise resources do not restrict anything. A real Backend resource adds a <code>security</code> expression to its YAML and is called with a Backend API access token.</p>
 </blockquote>
 <hr />
 <h2 id="registering-services-in-the-symfony-container">Registering Services in the Symfony Container</h2>
 <p>API Platform providers use <strong>Symfony’s dependency injection</strong> - not Spryker’s Factory/DependencyProvider pattern. Your provider asks for <code>SprykerAcademy\Client\SupplierSearch\SupplierSearchClientInterface</code> in its constructor, and the Glue application’s Symfony container has to resolve it.</p>
 <p>For Clients and Facades of the core and of <code>Pyz</code>, Spryker registers these services automatically. For any other namespace the automatic registration falls back to a proxy that fails as soon as it is called:</p>
 <pre><code>Could not find the &quot;SprykerAcademy\Client\SupplierSearch\SupplierSearchClientInterface&quot; in any of the attached containers.</code></pre>
-<p>So the <code>SprykerAcademy</code> Clients (and the Business layer, for Backend API providers) are registered explicitly. The exercise loader added this block to <code>config/Glue/ApplicationServices.php</code> (and to the <code>GlueStorefront</code> and <code>GlueBackend</code> ones) once:</p>
-<div class="sourceCode" id="cb11"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co">// &gt;&gt;&gt; spryker-academy setup: SprykerAcademy Clients and Facades for API Platform providers</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="va">$academyServices</span> <span class="op">=</span> <span class="va">$configurator</span>-&gt;services()-&gt;defaults()-&gt;autowire()-&gt;<span class="kw">public</span>()-&gt;autoconfigure()<span class="ot">;</span></span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">is_dir</span>(<span class="cn">__DIR__</span> <span class="op">.</span> <span class="st">&#39;/../../src/SprykerAcademy/Client&#39;</span>)) {</span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    <span class="va">$academyServices</span>-&gt;load(<span class="st">&#39;SprykerAcademy</span><span class="sc">\\</span><span class="st">Client</span><span class="sc">\\</span><span class="st">&#39;</span><span class="ot">,</span> <span class="st">&#39;../../src/SprykerAcademy/Client/&#39;</span>)<span class="ot">;</span></span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="co">// ... the same for src/SprykerAcademy/Zed/*/Business/</span></span>
-<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="co">// &lt;&lt;&lt; spryker-academy setup</span></span></code></pre></div>
+<p>So the <code>SprykerAcademy</code> Clients (and the Business layer, for the Backend API providers of Part 5 and 6) are registered explicitly. The exercise loader added this block to <code>config/Glue/ApplicationServices.php</code> (and to the <code>GlueStorefront</code> and <code>GlueBackend</code> ones) once:</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co">// &gt;&gt;&gt; spryker-academy setup: SprykerAcademy Clients and Facades for API Platform providers</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="va">$academyServices</span> <span class="op">=</span> <span class="va">$configurator</span>-&gt;services()-&gt;defaults()-&gt;autowire()-&gt;<span class="kw">public</span>()-&gt;autoconfigure()<span class="ot">;</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">is_dir</span>(<span class="cn">__DIR__</span> <span class="op">.</span> <span class="st">&#39;/../../src/SprykerAcademy/Client&#39;</span>)) {</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>    <span class="va">$academyServices</span>-&gt;load(<span class="st">&#39;SprykerAcademy</span><span class="sc">\\</span><span class="st">Client</span><span class="sc">\\</span><span class="st">&#39;</span><span class="ot">,</span> <span class="st">&#39;../../src/SprykerAcademy/Client/&#39;</span>)<span class="ot">;</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="co">// ... the same for src/SprykerAcademy/Zed/*/Business/</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a><span class="co">// &lt;&lt;&lt; spryker-academy setup</span></span></code></pre></div>
 <blockquote>
 <p><strong><code>$services-&gt;load()</code></strong> tells Symfony to scan a directory and auto-register all classes under that namespace as services. Combined with <code>-&gt;autowire()</code>, Symfony can then resolve an interface to its only implementation.</p>
 </blockquote>
 <blockquote>
 <p><strong>Alternative:</strong> You can also register individual services explicitly:</p>
-<div class="sourceCode" id="cb12"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="va">$services</span>-&gt;set(\<span class="cn">S</span>prykerAcademy\<span class="cn">C</span>lient\<span class="cn">S</span>upplierSearch\<span class="cn">S</span>upplierSearchClientInterface::<span class="kw">class</span><span class="ot">,</span> \<span class="cn">S</span>prykerAcademy\<span class="cn">C</span>lient\<span class="cn">S</span>upplierSearch\<span class="cn">S</span>upplierSearchClient::<span class="kw">class</span>)<span class="ot">;</span></span></code></pre></div>
+<div class="sourceCode" id="cb20"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="va">$services</span>-&gt;set(\<span class="cn">S</span>prykerAcademy\<span class="cn">C</span>lient\<span class="cn">S</span>upplierSearch\<span class="cn">S</span>upplierSearchClientInterface::<span class="kw">class</span><span class="ot">,</span> \<span class="cn">S</span>prykerAcademy\<span class="cn">C</span>lient\<span class="cn">S</span>upplierSearch\<span class="cn">S</span>upplierSearchClient::<span class="kw">class</span>)<span class="ot">;</span></span></code></pre></div>
 <p>This is more precise but requires updating whenever you add new dependencies.</p>
 </blockquote>
 <hr />
@@ -595,14 +907,59 @@
 <td>The provider returns an empty resource for an unknown id</td>
 <td>Return <code>null</code> when the client’s transfer has no <code>idSupplier</code></td>
 </tr>
+<tr class="odd">
+<td><code>page[limit]=2</code> still returns all suppliers</td>
+<td>The provider does not pass the offset and the limit to the client or the facade</td>
+<td><code>searchSuppliers([PARAMETER_OFFSET =&gt; $offset, PARAMETER_LIMIT =&gt; $limit])</code>; in the Backend provider a <code>PaginationTransfer</code> on the criteria</td>
+</tr>
+<tr class="even">
+<td>The page is right, but the response has no <code>first</code>/<code>next</code>/<code>last</code> links</td>
+<td>The first resource has no <code>pagination</code>, or the request did not ask for JSON:API</td>
+<td>Set <code>$resources[0]-&gt;pagination</code>; send <code>Accept: application/vnd.api+json</code></td>
+</tr>
+<tr class="odd">
+<td><code>last</code> points to a wrong page, <code>numFound</code> equals the page size</td>
+<td><code>numFound</code> was filled with <code>count($resources)</code></td>
+<td>Use <code>getPagination()-&gt;getNbResults()</code> of the collection transfer: the total of all pages</td>
+</tr>
+<tr class="even">
+<td>Every Backend API URL answers <code>{"errors":[{"status":404,"code":"007","message":"Not found"}]}</code></td>
+<td>The Backend API has no API Platform routes: <code>config/GlueBackend/routes/api_platform.php</code> of the demo shop checks for <code>src/Generated/Api/Backend</code> in the wrong directory, or the Backend resources were not generated</td>
+<td><code>load.sh</code> corrects the check (<code>dirname(__DIR__, 3)</code>); then <code>GLUE_APPLICATION=GLUE_BACKEND glue api:generate backend</code> and <code>GLUE_APPLICATION=GLUE_BACKEND glue cache:clear</code></td>
+</tr>
+<tr class="odd">
+<td>The Backend API answers that <code>404</code> although <code>glue debug:router</code> lists the route</td>
+<td>The request failed inside API Platform and Glue fell back to its own “not found”. Typical: a legacy Storefront REST plugin ran in the Backend API</td>
+<td>Read the log of the <code>gluebackend_eu</code> container. The branch ships <code>src/SprykerAcademy/Glue/GlueApplication/GlueApplicationDependencyProvider.php</code>, which keeps the Storefront plugins out of the Backend API: run <code>docker/sdk console c:e</code> and <code>glue cache:clear</code> if it is not picked up</td>
+</tr>
+<tr class="even">
+<td><code>?include=supplier-locations</code> is ignored: no <code>relationships</code>, no <code>included</code></td>
+<td>The <code>includes</code> block is missing or the resources were not regenerated; <code>relationshipName</code> differs from the value in the URL; or the provider returns something other than a resource or a plain array</td>
+<td>Check the YAML, <code>api:generate backend</code>, <code>cache:clear</code>; return an array from <code>provideCollection()</code></td>
+</tr>
+<tr class="odd">
+<td><code>included</code> is empty, <code>relationships</code> too</td>
+<td><code>uriVariableMappings</code> names a property the supplier resource does not have, or the locations provider ignores <code>$uriVariables['idSupplier']</code></td>
+<td><code>idSupplier: idSupplier</code>; filter with <code>setFkSupplier()</code></td>
+</tr>
+<tr class="even">
+<td><code>500</code>: <em>Unable to generate an IRI for the item of type …SupplierLocationsBackendResource</em></td>
+<td>The resource has no Get operation API Platform can build a link from</td>
+<td>Keep the <code>Get</code> operation with <code>uriTemplate: /supplier-locations/{idSupplierLocation}</code></td>
+</tr>
+<tr class="odd">
+<td>A change is not there right after <code>api:generate</code> + <code>cache:clear</code></td>
+<td>The generated files had not reached the Glue container yet when its cache was rebuilt (file sync of the Docker SDK)</td>
+<td>Run <code>glue cache:clear</code> once more</td>
+</tr>
 </tbody>
 </table>
 <h3 id="seeing-the-real-error-behind-a-500">Seeing the Real Error Behind a <code>500</code></h3>
 <p>A <code>500</code> from an API Platform endpoint only says <code>"detail":"Internal Server Error"</code>, even in the development environment. The full exception is in the log of the Glue container.</p>
 <p><strong>In the browser:</strong> open http://spryker.local, the Docker SDK dashboard, and choose <strong>Logs</strong>. It shows the log of every container; pick the Glue one (<code>glue_eu</code>).</p>
 <p><strong>From a shell:</strong></p>
-<div class="sourceCode" id="cb13"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> ps <span class="at">--format</span> <span class="st">&#39;{{.Names}}&#39;</span> <span class="kw">|</span> <span class="fu">grep</span> glue      <span class="co"># the container name, e.g. gluedemo_glue_eu_1</span></span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> logs <span class="at">-f</span> gluedemo_glue_eu_1                <span class="co"># follow it, then send the request again</span></span></code></pre></div>
+<div class="sourceCode" id="cb21"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> ps <span class="at">--format</span> <span class="st">&#39;{{.Names}}&#39;</span> <span class="kw">|</span> <span class="fu">grep</span> glue      <span class="co"># the container name, e.g. gluedemo_glue_eu_1</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> logs <span class="at">-f</span> gluedemo_glue_eu_1                <span class="co"># follow it, then send the request again</span></span></code></pre></div>
 <p>The line to look for:</p>
 <pre><code>[error] Uncaught exception on API Platform request &quot;GET /suppliers/5434543545&quot;: Search failed with the following reason: ...</code></pre>
 <blockquote>
@@ -616,6 +973,16 @@
 <h3 id="api-platform-vs-legacy">API Platform vs Legacy</h3>
 <p>With API Platform, there’s <strong>no need for</strong>: - DependencyProvider in the Glue layer (constructor injection is auto-wired by Symfony) - Factory in the Glue layer - Controller class (the Provider IS the handler) - Plugin registration in <code>GlueStorefrontApiApplicationDependencyProvider</code></p>
 <p>Everything is defined in YAML + one Provider class + service registration in <code>ApplicationServices.php</code>.</p>
+<h3 id="storefront-vs-backend">Storefront vs Backend</h3>
+<ul>
+<li><strong>Storefront</strong> provider: extends <code>AbstractStorefrontProvider</code>, injects a <strong>Client</strong>, reads published data.</li>
+<li><strong>Backend</strong> provider: extends <code>AbstractBackendProvider</code>, injects a <strong>Facade</strong>, reads (and in real projects writes, through a Processor) the database.</li>
+</ul>
+<h3 id="pagination-and-includes">Pagination and Includes</h3>
+<ul>
+<li>The provider passes <code>page[offset]</code> and <code>page[limit]</code> to the data source, returns the page as a plain array and sets <code>pagination</code> on its first item; Glue adds the page links.</li>
+<li><code>includes</code> in the resource YAML + a target resource with its own provider = <code>?include=&lt;relationshipName&gt;</code>.</li>
+</ul>
 <h3 id="provider-pattern">Provider Pattern</h3>
 <p>The Provider implements a single method:</p>
 <pre><code>provide(Operation $operation, array $uriVariables, array $context): object|array|null</code></pre>
@@ -624,11 +991,15 @@
 <li>Return an <strong>array</strong> → collection response</li>
 <li>Return <strong>null</strong> → 404 response</li>
 </ul>
+<p><code>AbstractStorefrontProvider</code> and <code>AbstractBackendProvider</code> implement it and split it into <code>provideItem()</code> and <code>provideCollection()</code>.</p>
 <hr />
 <h2 id="run-automated-tests">Run Automated Tests</h2>
-<div class="sourceCode" id="cb16"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/Supplier/ GlueApi</span></code></pre></div>
+<div class="sourceCode" id="cb24"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker/sdk</span> cli vendor/bin/codecept run <span class="at">-c</span> tests/SprykerAcademyTest/Zed/Supplier/ GlueApi</span></code></pre></div>
 <hr />
 <h2 id="solution">Solution</h2>
-<div class="sourceCode" id="cb17"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> supplier intermediate/glue-storefront/complete <span class="at">--run</span></span></code></pre></div>
+<div class="sourceCode" id="cb25"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./exercises/load.sh</span> supplier intermediate/glue-storefront/complete <span class="at">--run</span></span></code></pre></div>
+<blockquote>
+<p><strong>Going further:</strong> The Backend API of this exercise only reads. Writing works with a <strong>Processor</strong> (<code>processor:</code> in the YAML, <code>Post</code>/<code>Patch</code>/<code>Delete</code> operations, a class that implements <code>ApiPlatform\State\ProcessorInterface</code> and calls <code>SupplierFacade::createSupplier()</code>), see <code>Spryker\Glue\Store\Api\Backend\Processor\StoresBackendProcessor</code> in the core.</p>
+</blockquote>
 </body>
 </html>

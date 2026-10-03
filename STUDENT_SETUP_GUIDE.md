@@ -209,7 +209,7 @@ The supplier exercises build on each other: every skeleton contains the solution
 | 9 Back Office (CRUD) | `02-back-office.md` | `intermediate/back-office/skeleton` |
 | 10 Publish & Synchronize | `03-publish-synchronize.md` | `intermediate/publish-synchronize/skeleton` |
 | 11 Search | `04-search.md` | `intermediate/search/skeleton` |
-| 12 Glue Storefront API | `05-glue-storefront-api.md` | `intermediate/glue-storefront/skeleton` |
+| 12 Glue Storefront and Backend API | `05-glue-storefront-api.md` | `intermediate/glue-storefront/skeleton` |
 | 13 Order Management System | `06-oms.md` | `intermediate/oms/skeleton` |
 | 14 Storage Client | `07-storage-client.md` | `intermediate/storage-client/skeleton` |
 | 15 Merchant Portal - Supplier Table | `08-merchant-portal-table.md` | `intermediate/merchant-portal-table/skeleton` |
@@ -343,7 +343,7 @@ Check the solution. The loader wires the agent into the project for you:
 | `docker/sdk console navigation:build-cache` | After modifying navigation XML |
 | `docker/sdk console cache:empty-all` | After loading Yves or Merchant Portal exercises |
 | `docker/sdk console configuration:sync` | After adding or changing `*.configuration.yml` setting schemas |
-| `docker/sdk cli GLUE_APPLICATION=GLUE glue cache:clear` | After changing API Platform resources or source directories (see *Troubleshooting* in the Glue Storefront API guide) |
+| `docker/sdk cli GLUE_APPLICATION=GLUE glue cache:clear` | After changing API Platform resources or source directories (see *Troubleshooting* in the Glue Storefront and Backend API guide) |
 
 ## Development Settings: Fewer Cache Clears
 

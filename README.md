@@ -20,6 +20,7 @@ On its first run the loader prepares the project for the `SprykerAcademy` namesp
 - `config/Shared/config_default.php`: `SprykerAcademy` in `KernelConstants::PROJECT_NAMESPACES`, before `Pyz`
 - `config/Glue*/packages/spryker_api_platform.php`: `src/SprykerAcademy` as an API Platform source directory
 - `config/Glue*/ApplicationServices.php`: the SprykerAcademy Clients and Business layers as Symfony services, for API Platform providers
+- `config/GlueBackend/routes/api_platform.php`: the demo shop looks for `src/Generated/Api/Backend` in `config/` and so never imports the Backend API routes; the loader points the check at the project root
 - `frontend/merchant-portal/entry-points.js` and `tsconfig.mp.json`: `src/SprykerAcademy/Zed` in the Merchant Portal build
 
 It also removes what earlier loader versions wrote into project files (marked blocks, merged menu entries, `full_EU.yml` entries, copied files).
@@ -132,7 +133,7 @@ The queue workers write the search documents a few seconds after the loader retu
 
 ### How the supplier branches build on each other
 
-The supplier exercises form one chain in guide order: Data Import, Back Office, Publish & Synchronize, Search, Glue Storefront API, OMS, Storage Client, Merchant Portal Table, Form and Locations, Yves Storefront. Each `skeleton` branch is the previous exercise's `complete` branch plus the new exercise's files and TODOs, and each `complete` branch is its skeleton solved; `main` is the last complete. In git, every branch has the one before it as an ancestor (`git merge-base --is-ancestor intermediate/search/complete intermediate/glue-storefront/skeleton`). The code students wrote in earlier exercises is never rewritten later: an exercise only adds to it, as Publish & Synchronize adds the publish events to the Data Import step.
+The supplier exercises form one chain in guide order: Data Import, Back Office, Publish & Synchronize, Search, Glue Storefront and Backend API, OMS, Storage Client, Merchant Portal Table, Form and Locations, Yves Storefront. Each `skeleton` branch is the previous exercise's `complete` branch plus the new exercise's files and TODOs, and each `complete` branch is its skeleton solved; `main` is the last complete. In git, every branch has the one before it as an ancestor (`git merge-base --is-ancestor intermediate/search/complete intermediate/glue-storefront/skeleton`). The code students wrote in earlier exercises is never rewritten later: an exercise only adds to it, as Publish & Synchronize adds the publish events to the Data Import step.
 
 A fix to an exercise's code has to reach its branches and every later one: commit it on the branch, then merge it forward along the chain.
 

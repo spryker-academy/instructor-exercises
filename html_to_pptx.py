@@ -83,7 +83,7 @@ INTERMEDIATE_OBJECTIVES = [
     "Build advanced Back Office interfaces with tables, forms, and CRUD",
     "Implement Publish & Synchronize for real-time data projection",
     "Integrate Elasticsearch for product and content search",
-    "Design RESTful Glue Storefront APIs with resource routing",
+    "Design RESTful Glue Storefront and Backend APIs with pagination and includes",
     "Model order workflows using the Order Management System (OMS)",
     "Read from Storage (Redis) using the Client layer",
     "Build Yves Storefront pages with Twig, routing, and controllers",

@@ -16,7 +16,7 @@ You will learn how to:
 ## Prerequisites
 
 - The AI Commerce feature is installed and an OpenAI API token is saved in the Back Office under **Configuration > AI Vendor > OpenAI**. The Back Office Assistant is not required.
-- Completed Exercise 12 (Glue Storefront API). You know resource schemas, providers, and `glue api:generate`.
+- Completed Exercise 12 (Glue Storefront and Backend API). You know resource schemas, providers, and `glue api:generate`.
 
 ## Loading the Exercise
 
